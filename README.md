@@ -1,10 +1,4 @@
 <div align="center">
-  <img src="docs/assets/suif-readme-banner.svg" alt="Sistema de la Unidad de Inteligencia Financiera" width="100%" />
-</div>
-
-<br />
-
-<div align="center">
 
 # Sistema de la Unidad de Inteligencia Financiera
 
