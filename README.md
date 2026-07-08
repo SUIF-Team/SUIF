@@ -17,38 +17,19 @@
 ## Índice
 
 - [Descripción general](#descripción-general)
-- [Estado del proyecto](#estado-del-proyecto)
 - [Stack técnico](#stack-técnico)
 - [Arquitectura](#arquitectura)
 - [Módulos principales](#módulos-principales)
-- [Estructura sugerida del proyecto](#estructura-sugerida-del-proyecto)
 - [Configuración local](#configuración-local)
 - [Base de datos](#base-de-datos)
 - [Convenciones de desarrollo](#convenciones-de-desarrollo)
 - [Flujo de trabajo recomendado](#flujo-de-trabajo-recomendado)
-- [Checklist antes de entregar cambios](#checklist-antes-de-entregar-cambios)
-- [Notas importantes](#notas-importantes)
 
 ---
 
 ## Descripción general
 
 El **Sistema de la Unidad de Inteligencia Financiera** centraliza flujos operativos y administrativos mediante una arquitectura **MVC**. Su objetivo es separar claramente la presentación, la lógica de negocio y la persistencia de datos para facilitar mantenimiento, revisión y crecimiento controlado del sistema.
-
-> [!IMPORTANT]
-> Este proyecto trabaja sobre un stack legacy. Eso no es excusa para escribir código frágil; al contrario, exige más disciplina. Aquí cada cambio debe ser pequeño, rastreable y compatible con PHP 5.3.
-
----
-
-## Estado del proyecto
-
-| Área | Estado | Comentario |
-|---|---:|---|
-| Backend | En desarrollo | Basado en Laravel 4.1 y PHP 5.3. |
-| Frontend | En desarrollo | HTML, CSS propio, JavaScript y Vue.js para componentes puntuales. |
-| Base de datos | Definida | PostgreSQL como motor principal. |
-| Patrón de diseño | Definido | MVC como estructura base. |
-| Dependencias nuevas | Restringidas | No agregar Composer/npm, frameworks, linters o bundlers sin autorización. |
 
 ---
 
@@ -90,31 +71,7 @@ El **Sistema de la Unidad de Inteligencia Financiera** centraliza flujos operati
 |---|---|---:|
 | Participante | Flujo de usuario participante, captura de información y seguimiento. | Alta |
 | Administrador | Gestión de usuarios, revisión de registros, permisos y operaciones internas. | Alta |
-| Panel de mejoras | Visualización, seguimiento y administración de mejoras detectadas. | Media / Alta |
-| Autenticación y permisos | Control de acceso por tipo de usuario y rol. | Alta |
-| Catálogos | Administración de información reutilizable en formularios y procesos. | Media |
 | Reportes / consultas | Consulta estructurada de información relevante para operación. | Media |
-| Auditoría básica | Registro de acciones importantes dentro del sistema. | Media |
-
----
-
-## Capturas del sistema
-
-Cuando existan capturas finales o prototipos exportados, colócalos en `docs/assets/screenshots/` y actualiza las rutas siguientes.
-
-| Vista | Imagen | Descripción |
-|---|---|---|
-| Inicio / acceso | `docs/assets/screenshots/login.png` | Pantalla de entrada al sistema. |
-| Flujo participante | `docs/assets/screenshots/participante.png` | Vista principal del flujo participante. |
-| Panel administrador | `docs/assets/screenshots/admin.png` | Administración, revisión y gestión de registros. |
-| Panel de mejoras | `docs/assets/screenshots/mejoras.png` | Seguimiento visual de mejoras y estado de atención. |
-
-```md
-![Login](docs/assets/screenshots/login.png)
-![Participante](docs/assets/screenshots/participante.png)
-![Administrador](docs/assets/screenshots/admin.png)
-![Panel de mejoras](docs/assets/screenshots/mejoras.png)
-```
 
 ---
 
@@ -133,7 +90,7 @@ Cuando existan capturas finales o prototipos exportados, colócalos en `docs/ass
 
 1. Clona o copia el proyecto en tu ambiente local.
 2. Configura el virtual host o carpeta pública apuntando a `public/`.
-3. Revisa la configuración de base de datos en `app/config/database.php`.
+3. Revisa la configuración de base de datos en `SUIF/config/database.php`.
 4. Verifica que PHP tenga habilitada la extensión necesaria para PostgreSQL.
 5. Levanta el servidor local.
 6. Accede al sistema desde el navegador.
@@ -157,7 +114,7 @@ Motor principal: **PostgreSQL**.
 | Dato | Valor esperado |
 |---|---|
 | Motor | PostgreSQL |
-| Configuración Laravel | `app/config/database.php` |
+| Configuración Laravel | `SUIF/config/database.php` |
 | Charset recomendado | UTF-8 |
 | Respaldo antes de cambios | Obligatorio en ambientes compartidos |
 | Cambios estructurales | Documentados y revisados antes de aplicar |
@@ -197,19 +154,6 @@ Motor principal: **PostgreSQL**.
 
 ---
 
-## Checklist antes de entregar cambios
-
-- [ ] El cambio cumple únicamente la tarea solicitada.
-- [ ] No se agregaron dependencias nuevas sin autorización.
-- [ ] No se usó sintaxis incompatible con PHP 5.3.
-- [ ] Se probaron las rutas afectadas.
-- [ ] Se validaron formularios y mensajes de error.
-- [ ] Se revisó que la interfaz conserve consistencia visual.
-- [ ] Se verificó que no haya credenciales o datos sensibles en el código.
-- [ ] Se documentó cualquier ajuste importante en base de datos.
-
----
-
 ## Reglas de compatibilidad
 
 | Evitar | Motivo | Alternativa |
@@ -234,19 +178,6 @@ Motor principal: **PostgreSQL**.
 
 ---
 
-## Roadmap funcional sugerido
-
-| Fase | Objetivo | Entregable |
-|---|---|---|
-| 1 | Base del sistema | Rutas principales, layout, configuración y conexión a BD. |
-| 2 | Flujo participante | Formularios, validaciones y persistencia. |
-| 3 | Panel administrador | Gestión, revisión y actualización de registros. |
-| 4 | Panel de mejoras | Seguimiento visual y estado de atención. |
-| 5 | Pruebas integrales | Validación completa de flujos, permisos y datos. |
-| 6 | Preparación de entrega | Limpieza, documentación y checklist final. |
-
----
-
 ## Criterios de trabajo
 
 Este proyecto debe mantenerse bajo tres principios:
@@ -254,16 +185,6 @@ Este proyecto debe mantenerse bajo tres principios:
 1. **Compatibilidad primero.** Si el servidor usa PHP 5.3, el código debe respetarlo.
 2. **Cambios pequeños y controlados.** Cada ajuste debe poder revisarse sin arqueología digital.
 3. **Sin dependencias sorpresivas.** No introducir Composer, npm, frameworks PHP, scaffolding Vue, linters o bundlers nuevos sin autorización explícita.
-
----
-
-## Notas importantes
-
-> [!NOTE]
-> Este README está pensado para que cualquier integrante del equipo entienda el proyecto, el stack y las reglas básicas antes de tocar código.
-
-> [!TIP]
-> Si una tarea requiere cambiar muchas capas al mismo tiempo, conviene partirla: primero estructura, luego lógica, después interfaz y finalmente pruebas.
 
 ---
 
