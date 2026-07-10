@@ -1,0 +1,1335 @@
+/*
+ * Autor: MarnueLgh
+ * Fecha: 09/07/2026
+ * Versión: 1.1
+ * Descripción: Estilos CSS independientes del navbar y definición de variables globales.
+ */
+
+:root {
+	--azul-unam: #112F4B;
+	--dorado-unam: #9C6E09;
+	--fuente-texto: 'Raleway', sans-serif;
+	--alto-navbar: 80px;
+}
+
+/*** Navbar ***/
+
+/* Contenedor de logos */
+.navbar-logos {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.navbar-logo-link {
+	display: flex;
+	align-items: center;
+	transition: opacity 0.3s ease;
+}
+
+.navbar-logo-link:hover {
+	opacity: 0.8;
+}
+
+.navbar-logo {
+	height: 45px;
+	width: auto;
+	object-fit: contain;
+}
+
+.navbar-logo-unam {
+	height: 60px;
+	filter: brightness(0) invert(1);
+}
+
+.navbar-logo-fca {
+	height: 70px;
+	filter: brightness(0) invert(1);
+}
+
+.navbar-logo-uif {
+	height: 50px;
+}
+
+.navbar .dropdown-toggle::after {
+	border: none;
+	content: "\f107";
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	vertical-align: middle;
+	margin-left: 8px;
+}
+
+.navbar .navbar-nav .nav-link {
+	padding: 40px 15px;
+	font-family: var(--fuente-texto);
+	color: #ffffff;
+	outline: none;
+	font-weight: 400;
+	transition: color 0.3s ease;
+	position: relative;
+}
+
+/* Alinear el botón ¡Afíliate! como un nav-link más en desktop */
+.navbar .afiliacion-btn {
+	margin-left: 10px;
+	align-self: center;
+}
+
+.navbar .navbar-nav .nav-link:hover,
+.navbar .navbar-nav .nav-link.active {
+	color: var(--dorado-unam);
+	text-shadow: 0 0 10px rgba(184, 150, 85, 0.5);
+	/* Sombra dorada en los links del nav*/
+}
+
+/* Animated Underline */
+.navbar .navbar-nav .nav-link::after {
+	content: "";
+	position: absolute;
+	bottom: 35px;
+	left: 15px;
+	width: 0;
+	height: 2px;
+	background-color: var(--dorado-unam);
+	border-radius: 2px;
+	transition:
+		width 0.5s ease,
+		opacity 0.5s ease,
+		box-shadow 0.5s ease;
+	opacity: 0;
+}
+
+.navbar .navbar-nav .nav-link:hover::after,
+.navbar .navbar-nav .nav-link.active::after {
+	width: calc(100% - 30px);
+	opacity: 1;
+	box-shadow: 0 0 8px rgba(184, 150, 85, 0.5);
+}
+
+.navbar.fixed-top {
+	transition: 0.5s;
+	background: var(--azul-unam) !important;
+	/* Necesario: main.js agrega .bg-dark (Bootstrap !important) al hacer scroll */
+	min-height: var(--alto-navbar);
+}
+
+/* ── Navbar: responsive desktop (>= 1210px) ── */
+@media (min-width: 1210px) {
+	.navbar-expand-custom {
+		flex-flow: row nowrap;
+		justify-content: flex-start;
+	}
+
+	.navbar-expand-custom .navbar-nav {
+		flex-direction: row;
+	}
+
+	.navbar-expand-custom .navbar-nav .dropdown-menu {
+		position: absolute;
+	}
+
+	.navbar-expand-custom .navbar-nav .nav-link {
+		padding-right: .5rem;
+		padding-left: .5rem;
+	}
+
+	.navbar-expand-custom .navbar-nav-scroll {
+		overflow: visible;
+	}
+
+	.navbar-expand-custom .navbar-collapse {
+		display: flex !important;
+		flex-basis: auto;
+	}
+
+	.navbar-expand-custom .navbar-toggler {
+		display: none;
+	}
+
+	.px-custom-5 {
+		padding-right: 3rem !important;
+		padding-left: 3rem !important;
+	}
+
+	.p-custom-0 {
+		padding: 0 !important;
+	}
+}
+
+/* ── Navbar: responsive mobile (< 1210px) ── */
+@media (max-width: 1209.98px) {
+
+	/* Margen a los logos para que no estén pegados a la izquierda */
+	.navbar-logos {
+		margin-left: 1rem;
+		position: relative;
+		z-index: 1070;
+	}
+
+	/*
+	 * El overlay del menú vive dentro del navbar. Por eso necesitamos
+	 * elevar los logos y el botón hamburguesa/cerrar por encima del panel,
+	 * igual que en el ejemplo de Laravel: marca a la izquierda y X a la derecha.
+	 */
+	.navbar .navbar-toggler {
+		position: relative;
+		z-index: 1070;
+		border: 0;
+		box-shadow: none;
+		padding: 0.55rem;
+		margin-right: 1rem !important;
+	}
+
+	.navbar .navbar-toggler:focus {
+		box-shadow: none;
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+		position: relative;
+		width: 1.7rem;
+		height: 1.7rem;
+		background-image: none;
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before,
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 1.45rem;
+		height: 2px;
+		background: #ffffff;
+		border-radius: 999px;
+		transform-origin: center;
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+		transform: translate(-50%, -50%) rotate(45deg);
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+		transform: translate(-50%, -50%) rotate(-45deg);
+	}
+
+	/*
+	 * Menú colapsado en mobile.
+	 * Convertimos el contenedor colapsado en un overlay de pantalla completa
+	 * para que el menú hamburguesa abarque toda la ventana. Se fija en
+	 * la parte superior del viewport y se extiende hasta el fondo.
+	 */
+	.navbar .navbar-collapse {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 100vh;
+		/* Reservar espacio para la barra de navegación fija en la parte superior */
+		padding: var(--alto-navbar) 0 1.5rem 0;
+		background: var(--azul-unam);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+		z-index: 1050;
+		border-top: none;
+		/* Ocultamos el desbordamiento horizontal pero permitimos scroll vertical si hay muchos elementos */
+		overflow-x: hidden;
+		overflow-y: auto;
+		transition: transform 0.3s ease;
+	}
+
+	/*
+	 * Overwrite Bootstrap's collapse height animation for el overlay.
+	 * En lugar de animar la altura, movemos el overlay verticalmente.
+	 */
+	.navbar .navbar-collapse.collapse {
+		/* Asegurarse de que el panel colapsable utilice transform para su animación */
+		transition-property: transform;
+	}
+
+	.navbar .navbar-collapse.collapse:not(.show) {
+		/* Inicialmente oculto: fuera de la pantalla en la parte superior */
+		transform: translateY(-100%);
+	}
+
+	.navbar .navbar-collapse.collapse.show {
+		/* Visible: colocado en su lugar */
+		transform: translateY(0);
+	}
+
+	/* Ocultar underline animado en mobile */
+	.navbar .navbar-nav .nav-link::after {
+		display: none;
+	}
+
+	/* Centrar los links y agregar transición para deslizamiento */
+	.navbar .navbar-collapse .navbar-nav {
+		text-align: center;
+		position: relative;
+		transition: transform 0.3s ease-in-out;
+		width: 100%;
+	}
+
+	.navbar-collapse.submenu-open .navbar-nav {
+		transform: translateX(-100%);
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link {
+		padding: 12px 15px;
+	}
+
+	/* Botón ¡Afíliate! centrado y con ancho ajustado a su contenido */
+	.navbar .navbar-collapse .afiliacion-btn {
+		display: block;
+		width: max-content;
+		text-align: center;
+		margin: 8px auto 0;
+		padding: 10px 24px;
+	}
+
+	/* Quitar posicionamiento relativo en los nav-items para que el submenú se alinee al navbar-collapse */
+	.navbar .nav-item.dropdown {
+		position: static !important;
+	}
+
+	/* Estilos para menús desplegables en mobile (off-screen a la derecha) */
+	.navbar .nav-item .dropdown-menu {
+		position: absolute;
+		top: 0;
+		left: 100%;
+		width: 100%;
+		height: auto;
+		min-height: 100%;
+		background-color: var(--azul-unam);
+		border: none;
+		box-shadow: none;
+		padding: 0;
+		margin: 0;
+		transform: none !important;
+		opacity: 1 !important;
+		visibility: visible !important;
+		display: none !important;
+	}
+
+	.navbar .nav-item .dropdown-menu.show {
+		display: block !important;
+	}
+
+	.navbar .nav-item .dropdown-item {
+		color: rgba(255, 255, 255, 0.85);
+		text-align: center;
+		padding: 12px 15px;
+		font-family: var(--fuente-texto);
+		font-size: 0.95rem;
+		background: transparent;
+		transition: all 0.3s ease;
+	}
+
+	.navbar .nav-item .dropdown-item:hover,
+	.navbar .nav-item .dropdown-item:focus {
+		color: var(--dorado-unam);
+		background-color: rgba(255, 255, 255, 0.05);
+	}
+
+	.navbar .nav-item .dropdown-item.active {
+		color: var(--dorado-unam);
+		background-color: transparent;
+		font-weight: 500;
+	}
+
+	/* Botón de volver atrás solo visible en responsive */
+	.navbar .dropdown-back {
+		display: block !important;
+		font-weight: 500;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		margin-bottom: 8px;
+		color: var(--dorado-unam) !important;
+	}
+}
+
+/* ── Overrides/Media Queries ────────────────── */
+
+@media (max-width: 991.98px) {
+	.navbar .navbar-nav {
+		margin-top: 10px;
+		border-top: 1px solid rgba(255, 255, 255, 0.3);
+	}
+
+	.navbar .navbar-nav .nav-link {
+		padding: 10px 0;
+	}
+
+	.navbar-logos {
+		gap: 8px;
+	}
+
+	.navbar-logo {
+		height: 35px;
+	}
+
+	.navbar-logo-unam {
+		height: 38px;
+	}
+
+	.navbar-logo-fca {
+		height: 45px;
+	}
+
+	.navbar-logo-uif {
+		height: 30px;
+	}
+}
+
+@media (min-width: 1210px) {
+	.navbar .nav-item .dropdown-menu {
+		display: block;
+		visibility: hidden;
+		top: 100%;
+		transform: rotateX(-75deg);
+		transform-origin: 0% 0%;
+		transition: 0.5s;
+		opacity: 0;
+		background-color: var(--azul-unam);
+		border: 1px solid var(--dorado-unam);
+		border-radius: 4px;
+		padding: 10px 0;
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+	}
+
+	.navbar .nav-item:hover .dropdown-menu {
+		transform: rotateX(0deg);
+		visibility: visible;
+		transition: 0.5s;
+		opacity: 1;
+	}
+
+	.navbar .nav-item .dropdown-item {
+		color: #ffffff;
+		font-family: var(--fuente-texto);
+		font-size: 0.95rem;
+		padding: 8px 20px;
+		background: transparent;
+		transition: all 0.3s ease;
+	}
+
+	.navbar .nav-item .dropdown-item:hover,
+	.navbar .nav-item .dropdown-item:focus {
+		color: var(--dorado-unam);
+		background-color: rgba(156, 110, 9, 0.1);
+		padding-left: 24px;
+	}
+
+	.navbar .nav-item .dropdown-item.active {
+		color: var(--dorado-unam);
+		background-color: rgba(156, 110, 9, 0.15);
+		font-weight: 500;
+	}
+
+	.navbar .dropdown-back {
+		display: none !important;
+	}
+}
+
+/* ==========================================
+   NAVBAR RESPONSIVO V3 — OVERLAY DRILL-DOWN
+   Despliegue de derecha a izquierda, links alineados a la izquierda,
+   flechas laterales y transiciones más suaves.
+   ========================================== */
+@media (max-width: 1209.98px) {
+	.navbar.fixed-top {
+		align-items: center;
+	}
+
+	.navbar-logos,
+	.navbar .navbar-toggler {
+		position: relative;
+		z-index: 1070;
+	}
+
+	.navbar .navbar-toggler {
+		border: 0;
+		box-shadow: none;
+		padding: 0.55rem;
+		margin-right: 1rem !important;
+		transition:
+			transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+			opacity 0.28s ease;
+	}
+
+	.navbar .navbar-toggler:hover {
+		opacity: 0.82;
+		transform: scale(0.96);
+	}
+
+	.navbar .navbar-toggler:focus {
+		box-shadow: none;
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+		position: relative;
+		width: 1.7rem;
+		height: 1.7rem;
+		background-image: none;
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before,
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 1.45rem;
+		height: 2px;
+		background: #ffffff;
+		border-radius: 999px;
+		transform-origin: center;
+		transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+		transform: translate(-50%, -50%) rotate(45deg);
+	}
+
+	.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+		transform: translate(-50%, -50%) rotate(-45deg);
+	}
+
+	.navbar .navbar-collapse {
+		position: fixed;
+		inset: 0;
+		display: block !important;
+		height: 100vh !important;
+		padding: calc(var(--alto-navbar) + 1.15rem) clamp(1.4rem, 5vw, 3.25rem) 2rem;
+		background:
+			radial-gradient(circle at 12% 8%, rgba(156, 110, 9, 0.14), transparent 28%),
+			var(--azul-unam);
+		box-shadow: -18px 0 45px rgba(0, 0, 0, 0.28);
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		overflow-x: hidden;
+		overflow-y: auto;
+		z-index: 1050;
+		transform: translateX(100%);
+		visibility: hidden;
+		pointer-events: none;
+		will-change: transform;
+		transition:
+			transform 0.48s cubic-bezier(0.22, 0.61, 0.36, 1),
+			visibility 0s linear 0.48s;
+	}
+
+	.navbar .navbar-collapse.collapsing {
+		display: block !important;
+		height: 100vh !important;
+		overflow-x: hidden;
+		overflow-y: auto;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translateX(0);
+		transition:
+			transform 0.48s cubic-bezier(0.22, 0.61, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+
+	.navbar .navbar-collapse.collapse.show {
+		visibility: visible;
+		pointer-events: auto;
+		transform: translateX(0);
+		transition:
+			transform 0.48s cubic-bezier(0.22, 0.61, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+
+	.navbar .navbar-collapse.is-closing {
+		visibility: visible;
+		pointer-events: none;
+		transform: translateX(100%) !important;
+	}
+
+	.navbar .navbar-collapse .navbar-nav {
+		width: 100%;
+		max-width: 620px;
+		margin: 0 !important;
+		padding: 0 !important;
+		border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+		text-align: left;
+		position: relative;
+		transition: transform 0.46s cubic-bezier(0.22, 0.61, 0.36, 1);
+		will-change: transform;
+	}
+
+	.navbar-collapse.submenu-open .navbar-nav {
+		transform: translateX(-100%);
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link,
+	.navbar .nav-item .dropdown-item {
+		min-height: 58px;
+		padding: 1.05rem 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		color: rgba(255, 255, 255, 0.92);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+		text-align: left;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.1rem, 4vw, 1.32rem);
+		font-weight: 500;
+		letter-spacing: -0.01em;
+		line-height: 1.2;
+		background: transparent;
+		transition:
+			color 0.24s ease,
+			background-color 0.24s ease,
+			padding-left 0.24s ease;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link:hover,
+	.navbar .navbar-collapse .navbar-nav .nav-link:focus,
+	.navbar .nav-item .dropdown-item:hover,
+	.navbar .nav-item .dropdown-item:focus {
+		color: var(--dorado-unam);
+		background-color: rgba(255, 255, 255, 0.035);
+		padding-left: 0.35rem;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link.active,
+	.navbar .nav-item .dropdown-item.active {
+		color: var(--dorado-unam);
+		background: transparent;
+		font-weight: 600;
+		text-shadow: 0 0 10px rgba(156, 110, 9, 0.35);
+	}
+
+	.navbar .navbar-nav .nav-link::after {
+		display: none;
+	}
+
+	.navbar .dropdown-toggle {
+		gap: 1rem;
+	}
+
+	.navbar .dropdown-toggle i {
+		display: none;
+	}
+
+	.navbar .dropdown-toggle::after {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: auto;
+		height: auto;
+		margin-left: auto;
+		border: 0;
+		content: "\f105";
+		font-family: "Font Awesome 5 Free";
+		font-weight: 900;
+		font-size: 0.96rem;
+		color: var(--dorado-unam);
+		transform: none;
+		transition: transform 0.24s ease, color 0.24s ease;
+	}
+
+	.navbar .dropdown-toggle:hover::after,
+	.navbar .dropdown-toggle:focus::after {
+		transform: translateX(4px);
+		color: #ffffff;
+	}
+
+	.navbar .nav-item.dropdown {
+		position: static !important;
+	}
+
+	.navbar .nav-item .dropdown-menu {
+		position: absolute;
+		top: 0;
+		left: 100%;
+		width: 100%;
+		min-height: 100%;
+		padding: 0;
+		margin: 0;
+		background: transparent;
+		border: 0;
+		box-shadow: none;
+		transform: none !important;
+		opacity: 1 !important;
+		visibility: visible !important;
+		display: none !important;
+	}
+
+	.navbar .nav-item .dropdown-menu.show {
+		display: block !important;
+	}
+
+	.navbar .dropdown-back {
+		display: flex !important;
+		justify-content: flex-start;
+		gap: 0.65rem;
+		color: var(--dorado-unam) !important;
+		font-size: clamp(1rem, 3.8vw, 1.18rem) !important;
+		font-weight: 600;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+		margin-bottom: 0.2rem;
+	}
+
+	.navbar .dropdown-back:hover,
+	.navbar .dropdown-back:focus {
+		color: #ffffff !important;
+	}
+
+	.navbar .dropdown-back i {
+		font-size: 0.86rem;
+	}
+
+	.navbar .navbar-collapse .afiliacion-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: auto;
+		max-width: max-content;
+		margin: 1.45rem 0 0;
+		padding: 0.78rem 1.45rem;
+		font-size: 1.02rem;
+		font-weight: 600;
+		text-align: left;
+	}
+}
+
+/* ==========================================
+   NAVBAR RESPONSIVO V4 — PANEL DESDE DEBAJO DEL NAVBAR
+   Corrección: abre bajando, cierra subiendo, no tapa el navbar
+   y elimina el brillo/degradado dorado del fondo móvil.
+   ========================================== */
+@media (max-width: 1209.98px) {
+	.navbar.fixed-top {
+		z-index: 1060;
+	}
+
+	.navbar-logos,
+	.navbar .navbar-toggler {
+		position: relative;
+		z-index: 1070;
+	}
+
+	.navbar .navbar-collapse {
+		position: fixed;
+		top: var(--alto-navbar);
+		right: 0;
+		bottom: 0;
+		left: 0;
+		display: block !important;
+		height: calc(100vh - var(--alto-navbar)) !important;
+		padding: 1.15rem clamp(1.4rem, 5vw, 3.25rem) 2rem !important;
+		background: var(--azul-unam) !important;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
+		box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+		overflow-x: hidden;
+		overflow-y: auto;
+		z-index: 1050;
+		visibility: hidden;
+		pointer-events: none;
+		transform: translateY(-105%) !important;
+		will-change: transform;
+		transition:
+			transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0.5s;
+	}
+
+	.navbar .navbar-collapse.collapsing,
+	.navbar .navbar-collapse.collapse.show {
+		height: calc(100vh - var(--alto-navbar)) !important;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translateY(0) !important;
+		transition:
+			transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+
+	.navbar .navbar-collapse.is-closing {
+		visibility: visible;
+		pointer-events: none;
+		transform: translateY(-105%) !important;
+		transition:
+			transform 0.46s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0.46s;
+	}
+
+	.navbar .navbar-collapse .navbar-nav {
+		max-width: 640px;
+		margin: 0 !important;
+		padding: 0 !important;
+		border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+		text-align: left;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link,
+	.navbar .nav-item .dropdown-item {
+		justify-content: space-between;
+		min-height: 58px;
+		padding: 1.08rem 0;
+		text-align: left;
+		font-size: clamp(1.14rem, 4vw, 1.34rem);
+	}
+
+	.navbar .navbar-collapse .afiliacion-btn {
+		margin-left: 0;
+	}
+}
+
+/* ==========================================
+   NAVBAR RESPONSIVO V5 — PANEL CLIPPEADO BAJO EL NAVBAR
+   Objetivo:
+   - El menú nunca se dibuja por encima del navbar.
+   - Abre bajando y cierra subiendo desde el borde inferior del navbar.
+   - Corrige el desfase lateral de submenús.
+   - Muestra flecha lateral en secciones con submenú.
+   ========================================== */
+@media (max-width: 1209.98px) {
+	.navbar.fixed-top {
+		z-index: 1060;
+		overflow: visible;
+		background: var(--azul-unam) !important;
+	}
+
+	.navbar-logos,
+	.navbar .navbar-toggler {
+		position: relative;
+		z-index: 1070;
+	}
+
+	.navbar .navbar-collapse {
+		position: fixed;
+		top: var(--alto-navbar);
+		right: 0;
+		bottom: 0;
+		left: 0;
+		display: block !important;
+		height: calc(100vh - var(--alto-navbar)) !important;
+		padding: 0 !important;
+		background: var(--azul-unam) !important;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
+		box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+		overflow-x: hidden;
+		overflow-y: auto;
+		z-index: 1050;
+		visibility: hidden;
+		pointer-events: none;
+		transform: none !important;
+		clip-path: inset(0 0 100% 0);
+		will-change: clip-path;
+		transition:
+			clip-path 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0.48s;
+	}
+
+	.navbar .navbar-collapse.collapsing {
+		display: block !important;
+		height: calc(100vh - var(--alto-navbar)) !important;
+		overflow-x: hidden;
+		overflow-y: auto;
+		visibility: visible;
+		pointer-events: auto;
+		transform: none !important;
+		transition: none !important;
+	}
+
+	.navbar .navbar-collapse.collapsing:not(.is-closing) {
+		animation: uif-menu-baja 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.navbar .navbar-collapse.collapse.show {
+		height: calc(100vh - var(--alto-navbar)) !important;
+		visibility: visible;
+		pointer-events: auto;
+		transform: none !important;
+		clip-path: inset(0 0 0 0);
+		transition:
+			clip-path 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+
+	.navbar .navbar-collapse.is-closing {
+		visibility: visible;
+		pointer-events: none;
+		transform: none !important;
+		animation: uif-menu-sube 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes uif-menu-baja {
+		from {
+			clip-path: inset(0 0 100% 0);
+		}
+
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	@keyframes uif-menu-sube {
+		from {
+			clip-path: inset(0 0 0 0);
+		}
+
+		to {
+			clip-path: inset(0 0 100% 0);
+		}
+	}
+
+	.navbar .navbar-collapse .navbar-nav {
+		width: 100%;
+		max-width: none;
+		margin: 0 !important;
+		padding: 0 !important;
+		border-top: none !important;
+		text-align: left;
+		position: relative;
+		transition: transform 0.44s cubic-bezier(0.22, 1, 0.36, 1);
+		will-change: transform;
+	}
+
+	.navbar-collapse.submenu-open .navbar-nav {
+		transform: translateX(-100%);
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link,
+	.navbar .nav-item .dropdown-item {
+		min-height: 58px;
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1.08rem clamp(1.25rem, 5vw, 2rem) !important;
+		color: rgba(255, 255, 255, 0.92);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+		text-align: left;
+		font-family: var(--fuente-texto);
+		font-size: clamp(1.12rem, 4vw, 1.34rem);
+		font-weight: 600;
+		line-height: 1.2;
+		background: transparent !important;
+		transition:
+			color 0.24s ease,
+			background-color 0.24s ease,
+			padding-left 0.24s ease;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link:hover,
+	.navbar .navbar-collapse .navbar-nav .nav-link:focus,
+	.navbar .nav-item .dropdown-item:hover,
+	.navbar .nav-item .dropdown-item:focus {
+		color: var(--dorado-unam);
+		background-color: rgba(255, 255, 255, 0.035) !important;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link.active,
+	.navbar .nav-item .dropdown-item.active {
+		color: var(--dorado-unam);
+		background: transparent !important;
+		text-shadow: 0 0 10px rgba(156, 110, 9, 0.35);
+	}
+
+	.navbar .navbar-nav .nav-link::after {
+		display: none !important;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle {
+		gap: 1rem;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle>i {
+		display: none !important;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle::after {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		margin-left: auto;
+		border: 0 !important;
+		content: "\f105" !important;
+		font-family: "Font Awesome 5 Free";
+		font-weight: 900;
+		font-size: 0.95rem;
+		color: var(--dorado-unam);
+		transform: none;
+		transition: transform 0.24s ease, color 0.24s ease;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle:hover::after,
+	.navbar .navbar-nav .dropdown-toggle:focus::after {
+		transform: translateX(4px);
+		color: #ffffff;
+	}
+
+	.navbar .nav-item.dropdown {
+		position: static !important;
+	}
+
+	.navbar .nav-item .dropdown-menu {
+		position: absolute;
+		top: 0;
+		left: 100%;
+		width: 100%;
+		min-height: 100%;
+		padding: 0 !important;
+		margin: 0 !important;
+		background: var(--azul-unam) !important;
+		border: 0 !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
+		transform: none !important;
+		opacity: 1 !important;
+		visibility: visible !important;
+		display: none !important;
+	}
+
+	.navbar .nav-item .dropdown-menu.show {
+		display: block !important;
+	}
+
+	.navbar .dropdown-back {
+		display: flex !important;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 0.65rem;
+		color: var(--dorado-unam) !important;
+		font-size: clamp(0.98rem, 3.7vw, 1.15rem) !important;
+		font-weight: 600;
+		min-height: 58px;
+		padding: 1.08rem clamp(1.25rem, 5vw, 2rem) !important;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+		margin: 0 !important;
+		background: transparent !important;
+	}
+
+	.navbar .dropdown-back:hover,
+	.navbar .dropdown-back:focus {
+		color: #ffffff !important;
+	}
+
+	.navbar .dropdown-back i {
+		font-size: 0.86rem;
+		margin-right: 0 !important;
+	}
+
+	.navbar .navbar-collapse .afiliacion-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: auto;
+		max-width: max-content;
+		margin: 1.45rem 0 0 clamp(1.25rem, 5vw, 2rem) !important;
+		padding: 0.78rem 1.45rem !important;
+		font-size: 1.02rem;
+		font-weight: 600;
+		text-align: left;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.navbar .navbar-collapse,
+	.navbar .navbar-collapse.collapsing,
+	.navbar .navbar-collapse.is-closing,
+	.navbar .navbar-collapse .navbar-nav {
+		animation: none !important;
+		transition: none !important;
+	}
+}
+
+/* ==========================================
+   AJUSTE FINAL NAVBAR
+   - Corrige la línea dorada accidental en responsive.
+   - Alinea "Volver atrás" a la izquierda.
+   - Coloca los dropdowns desktop debajo del navbar, sin sobreponerse.
+   ========================================== */
+.navbar .nav-link:focus,
+.navbar .dropdown-item:focus,
+.navbar .afiliacion-btn:focus {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.navbar .nav-link,
+.navbar .dropdown-item,
+.navbar .afiliacion-btn {
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* Estado base: el botón de volver solo pertenece al menú móvil. */
+.navbar .dropdown-back {
+	display: none !important;
+}
+
+@media (min-width: 1210px) {
+	.navbar .nav-item.dropdown {
+		position: relative;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	/* Se usa el ícono <i>; el ::after queda fuera para no chocar con el underline del nav. */
+	.navbar .navbar-nav .dropdown-toggle::after {
+		display: none !important;
+		content: none !important;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle>i {
+		display: inline-block !important;
+		color: currentColor;
+		font-size: 0.78rem;
+		transition: transform 0.25s ease;
+	}
+
+	.navbar .nav-item.dropdown:hover>.nav-link>i,
+	.navbar .nav-item.dropdown:focus-within>.nav-link>i,
+	.navbar .nav-item.dropdown>.nav-link.show>i {
+		transform: rotate(180deg);
+	}
+
+	/* Dropdown desktop: nace exactamente debajo del navbar, sin invadirlo. */
+	.navbar .nav-item .dropdown-menu,
+	.navbar .dropdown-menu-desktop,
+	.navbar-expand-custom .navbar-nav .dropdown-menu {
+		display: block;
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		min-width: 250px;
+		padding: 0.65rem 0;
+		margin: 0 !important;
+		background: var(--azul-unam);
+		border: 0;
+		border-top: 2px solid var(--dorado-unam);
+		border-radius: 0 0 24px 24px;
+		box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transform: translateX(-50%) translateY(8px) !important;
+		transform-origin: top center;
+		transition:
+			opacity 0.22s ease,
+			visibility 0s linear 0.22s,
+			transform 0.22s ease;
+		z-index: 1040;
+		overflow: hidden;
+	}
+
+	/* Elimina el rombo/línea superior que hacía parecer que el menú se montaba sobre el navbar. */
+	.navbar .nav-item .dropdown-menu::before,
+	.navbar .nav-item .dropdown-menu::after,
+	.navbar .dropdown-menu-desktop::before,
+	.navbar .dropdown-menu-desktop::after,
+	.navbar-expand-custom .navbar-nav .dropdown-menu::before,
+	.navbar-expand-custom .navbar-nav .dropdown-menu::after {
+		display: none !important;
+		content: none !important;
+	}
+
+	.navbar .nav-item.dropdown:hover>.dropdown-menu,
+	.navbar .nav-item.dropdown:focus-within>.dropdown-menu,
+	.navbar .nav-item.dropdown>.dropdown-menu.show {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translateX(-50%) translateY(0) !important;
+		transition:
+			opacity 0.22s ease,
+			visibility 0s linear 0s,
+			transform 0.22s ease;
+	}
+
+	.navbar .nav-item .dropdown-item,
+	.navbar .dropdown-menu-desktop .dropdown-item,
+	.navbar-expand-custom .navbar-nav .dropdown-menu .dropdown-item {
+		position: relative;
+		display: block;
+		width: 100%;
+		padding: 0.8rem 1.35rem;
+		color: rgba(255, 255, 255, 0.9);
+		background: transparent !important;
+		border: 0;
+		text-align: left;
+		font-family: var(--fuente-texto);
+		font-size: 0.95rem;
+		font-weight: 500;
+		line-height: 1.2;
+		text-decoration: none;
+		transition:
+			color 0.2s ease,
+			background-color 0.2s ease,
+			padding-left 0.2s ease;
+	}
+
+	.navbar .nav-item .dropdown-item+.dropdown-item,
+	.navbar .dropdown-menu-desktop .dropdown-item+.dropdown-item,
+	.navbar-expand-custom .navbar-nav .dropdown-menu .dropdown-item+.dropdown-item {
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.navbar .nav-item .dropdown-item:hover,
+	.navbar .nav-item .dropdown-item:focus,
+	.navbar .nav-item .dropdown-item.active,
+	.navbar .dropdown-menu-desktop .dropdown-item:hover,
+	.navbar .dropdown-menu-desktop .dropdown-item:focus,
+	.navbar .dropdown-menu-desktop .dropdown-item.active {
+		color: var(--dorado-unam) !important;
+		background: rgba(255, 255, 255, 0.05) !important;
+		padding-left: 1.6rem;
+	}
+
+	.navbar .dropdown-back {
+		display: none !important;
+	}
+}
+
+@media (max-width: 1209.98px) {
+
+	/* Evita que Bootstrap/underline convierta la flecha del dropdown en una línea dorada. */
+	.navbar .navbar-nav .dropdown-toggle::after {
+		position: static !important;
+		inset: auto !important;
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: auto !important;
+		height: auto !important;
+		margin-left: auto !important;
+		padding: 0 !important;
+		border: 0 !important;
+		border-radius: 0 !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		opacity: 1 !important;
+		content: "\f105" !important;
+		font-family: "Font Awesome 5 Free";
+		font-weight: 900;
+		font-size: 0.95rem;
+		line-height: 1;
+		color: var(--dorado-unam);
+		transform: none !important;
+	}
+
+	.navbar .navbar-nav .dropdown-toggle:hover::after,
+	.navbar .navbar-nav .dropdown-toggle:focus::after,
+	.navbar .navbar-nav .dropdown-toggle.active::after {
+		width: auto !important;
+		height: auto !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		opacity: 1 !important;
+		transform: translateX(4px) !important;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .nav-link:not(.dropdown-toggle)::after {
+		display: none !important;
+		content: none !important;
+	}
+
+	.navbar .nav-item .dropdown-back {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: flex-start !important;
+		text-align: left !important;
+		gap: 0.65rem !important;
+	}
+
+	.navbar .nav-item .dropdown-back i {
+		flex: 0 0 auto;
+		margin-right: 0 !important;
+	}
+}
+
+/* ==========================================
+   AJUSTE FINAL: NAVBAR SIN SUBRAYADO Y CON MÁS ESPACIO
+   ========================================== */
+
+/* Se elimina definitivamente el subrayado animado del navbar. */
+.navbar .navbar-nav .nav-link::after,
+.navbar .navbar-nav .nav-link:hover::after,
+.navbar .navbar-nav .nav-link:focus::after,
+.navbar .navbar-nav .nav-link.active::after,
+.navbar .navbar-nav .dropdown-toggle::after,
+.navbar .navbar-nav .dropdown-toggle:hover::after,
+.navbar .navbar-nav .dropdown-toggle:focus::after,
+.navbar .navbar-nav .dropdown-toggle.active::after {
+	display: none !important;
+	content: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	opacity: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+/* Inicio ya no debe verse seleccionado por defecto en la página principal. */
+.navbar .navbar-nav .nav-link[href="index.php"] {
+	color: #ffffff;
+	text-shadow: none;
+}
+
+.navbar .navbar-nav .nav-link[href="index.php"]:hover,
+.navbar .navbar-nav .nav-link[href="index.php"]:focus {
+	color: var(--dorado-unam);
+	text-shadow: 0 0 10px rgba(184, 150, 85, 0.5);
+}
+
+@media (min-width: 1210px) {
+
+	/* Más aire entre Inicio, Nosotros, Iniciativas y el botón. */
+	.navbar .navbar-nav {
+		align-items: center;
+		column-gap: 1.15rem;
+	}
+
+	.navbar-expand-custom .navbar-nav .nav-link,
+	.navbar .navbar-nav .nav-link {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+	}
+
+	.navbar .afiliacion-btn {
+		margin-left: 0.35rem;
+	}
+
+	/* Mantener la flecha real de los dropdowns usando el ícono <i>, no pseudo-elementos. */
+	.navbar .navbar-nav .dropdown-toggle>i {
+		display: inline-block !important;
+		margin-left: 0.35rem !important;
+	}
+}
+
+@media (max-width: 1209.98px) {
+
+	/* En móvil se conserva el panel lateral, pero sin subrayados raros. */
+	.navbar .navbar-collapse .navbar-nav .nav-link::after,
+	.navbar .navbar-collapse .navbar-nav .dropdown-toggle::after {
+		display: none !important;
+		content: none !important;
+	}
+
+	.navbar .navbar-collapse .navbar-nav .dropdown-toggle>i {
+		display: inline-block !important;
+		margin-left: 0.35rem !important;
+	}
+}
+
+@media (max-width: 1209.98px) {
+
+	.navbar .dropdown-toggle i {
+		transform: rotate(-90deg);
+		transition: transform 0.25s ease;
+	}
+
+	.navbar .dropdown-toggle::after {
+		display: none !important;
+	}
+}
