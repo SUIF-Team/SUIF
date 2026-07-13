@@ -1333,3 +1333,26 @@
 		display: none !important;
 	}
 }
+
+/*** Botón estilo píldora (usado por Iniciar Sesión en el navbar) ***/
+.btn-pill {
+	border-radius: 50px;
+	padding: 10px 28px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	font-size: 0.82rem;
+	transition: all 0.3s ease;
+}
+
+.btn-blue {
+	background-color: var(--dorado-unam);
+	color: #ffffff;
+	border: 1px solid var(--dorado-unam);
+}
+
+.btn-blue:hover {
+	background-color: transparent;
+	color: var(--dorado-unam);
+	border-color: var(--dorado-unam);
+}

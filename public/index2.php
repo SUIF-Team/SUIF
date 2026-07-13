@@ -6,16 +6,22 @@
     <title>SUIF - Certificaciones FCA UNAM</title>
     
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons (requerido por footer) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Usamos tipografías con pesos más marcados para el look editorial -->
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Open+Sans:wght@300;400;500;600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- FontAwesome para íconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Estilos del proyecto (navbar, footer, etc.) -->
+    <link rel="stylesheet" href="../css/style.css">
     
     <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -55,27 +61,7 @@
             font-weight: 700;
         }
 
-        .navbar-editorial {
-            background-color: var(--unam-blue);
-            border-bottom: 1px solid var(--border-light);
-            padding: 15px 0;
-        }
-        .navbar-editorial .nav-link {
-            color: var(--bg-cream);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-            margin: 0 15px;
-            transition: color 0.3s;
-        }
-        .navbar-editorial .nav-link:hover {
-            color: var(--unam-gold);
-        }
-        .navbar-brand img {
-            height: 40px;
-            margin-right: 15px;
-        }
+        /* El navbar ahora usa los estilos de ../css/style.css */
 
         /* Botones estilo píldora */
         .btn-pill {
@@ -332,56 +318,126 @@
             font-size: 1rem;
         }
 
-        .footer-editorial {
-            background-color: var(--unam-blue);
-            color: var(--bg-white);
-            padding: 80px 0 30px 0;
+        /*** Estilos del Footer ***/
+        .footer-top {
+            background: #f7f6f2;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 2.5rem 0;
         }
-        .footer-editorial a {
-            color: var(--bg-white);
-            text-decoration: none;
-            transition: color 0.3s;
+
+        .footer-visitas {
+            color: var(--text-dark);
+            font-size: 0.95rem;
         }
-        .footer-editorial a:hover {
+
+        .footer-visitas-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .footer-visitas-item strong {
             color: var(--unam-gold);
         }
-        .footer-lines {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 2rem 0;
-            margin: 3rem 0;
+
+        .footer-redes-titulo {
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
         }
-        .logo-mix {
-            mix-blend-mode: luminosity;
-            opacity: 0.7;
-            max-height: 80px;
-            transition: opacity 0.3s;
-        }
-        .logo-mix:hover {
-            opacity: 1;
-        }
-        
-        .btn-up-editorial {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background-color: var(--bg-white);
-            border: 1px solid var(--border-light);
-            color: var(--unam-blue);
+
+        .footer-redes {
             display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .footer-redes-enlace {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.18);
+            background: #fff;
+            color: var(--text-dark);
             text-decoration: none;
-            transition: all 0.3s;
-            z-index: 99;
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
         }
-        .btn-up-editorial:hover {
+
+        .footer-redes-enlace:hover {
+            transform: translateY(-2px);
+            background: rgba(2, 16, 36, 0.06);
+            border-color: rgba(2, 16, 36, 0.35);
+        }
+
+        .footer-logo-dorado {
+            height: 80px;
+            width: auto;
+            max-width: 45%;
             background-color: var(--unam-gold);
-            color: var(--bg-white);
-            border-color: var(--unam-gold);
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            display: inline-block;
+        }
+
+        footer {
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .copyright {
+            background: var(--unam-blue);
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .justify {
+            text-align: justify !important;
+        }
+
+        .copyright a {
+            color: var(--unam-gold);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .copyright a:hover {
+            color: var(--bg-cream);
+            text-decoration: underline;
+        }
+
+        /*** Botón volver arriba ***/
+        .back-to-top {
+            position: fixed;
+            display: none;
+            right: 30px;
+            bottom: 30px;
+            z-index: 99;
+            background-color: var(--unam-gold);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 14px rgba(156, 110, 9, 0.4);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .back-to-top:hover {
+            background-color: #805a06;
+            color: #ffffff;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 22px rgba(156, 110, 9, 0.6);
+        }
+
+        .btn-lg-square {
+            width: 50px;
+            height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -390,30 +446,7 @@
 <!-- Contenedor Vue -->
 <div id="app">
 
-    <nav class="navbar navbar-expand-lg navbar-editorial sticky-top">
-        <div class="container-fluid px-4 px-lg-5">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <!-- Utilizamos los logos originales -->
-                <img src="../img/logos/unam_logo.png" alt="UNAM"> 
-                <img src="../img/logos/fca-unam-logo.png" alt="FCA UNAM">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#convocatoria">Convocatoria</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#proceso">Proceso</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#instructivo">Instructivo</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
-                </ul>
-                <div class="d-flex mt-3 mt-lg-0">
-                    <a href="#" class="btn btn-pill btn-blue">Iniciar Sesión</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <?php include '../includes/navbar.php'; ?>
 
     <section id="inicio" class="container-fluid p-0">
         <div class="row g-0 hero-split">
@@ -575,57 +608,12 @@
         </div>
     </section>
 
-    <footer class="footer-editorial">
-        <div class="container px-4 px-lg-5">
-            
-            <div class="row align-items-center mb-4">
-                <div class="col-md-6 mb-4 mb-md-0">
-                    <h3 class="serif-font mb-2">SUIF</h3>
-                    <p style="opacity: 0.7; font-size: 0.9rem; max-width: 300px;">Sistema de la Unidad de Inteligencia Financiera. Facultad de Contaduría y Administración, UNAM.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="d-flex justify-content-md-end gap-4 align-items-center">
-                        <img src="unam_gran_universidad_dorado.png" alt="UNAM Nuestra gran Universidad" class="logo-mix" style="max-height: 50px;">
-                        <img src="475_logo.jpg" alt="475 Universidad" class="logo-mix" style="max-height: 50px;">
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-lines row">
-                <div class="col-md-4 text-center text-md-start mb-3 mb-md-0" style="font-size: 0.85rem; opacity: 0.8;">
-                    <span class="d-block text-uppercase tracking-wide" style="color: var(--unam-gold); font-size: 0.7rem; letter-spacing: 1px;">Estadísticas</span>
-                    Visitas: <strong>1,044</strong> &nbsp;|&nbsp; Desde: <strong>01/03/2026</strong>
-                </div>
-                <div class="col-md-4 text-center mb-3 mb-md-0">
-                    <a href="#" class="mx-3 fs-5"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="mx-3 fs-5"><i class="fab fa-youtube"></i></a>
-                </div>
-                <div class="col-md-4 text-center text-md-end" style="font-size: 0.85rem; opacity: 0.8;">
-                    Hecho en México. D.R. &copy; 2026
-                </div>
-            </div>
-
-            <div class="row text-center text-md-start" style="font-size: 0.75rem; opacity: 0.6;">
-                <div class="col-12">
-                    <p class="mb-2">Esta página puede ser reproducida con fines no lucrativos, siempre y cuando no se mutile, se cite la fuente completa y su dirección electrónica. De otra forma requiere permiso previo por escrito de la institución. <a href="#" style="text-decoration: underline;">AVISO DE PRIVACIDAD</a>.</p>
-                    <p class="mb-0">Sitio web administrado por el Centro de Informática de la Facultad de Contaduría y Administración (CIFCA).</p>
-                    <div class="mt-3">
-                        <a href="#">Documento de seguridad</a> &nbsp;|&nbsp; 
-                        <a href="#">Instrumento jurídico</a> &nbsp;|&nbsp; 
-                        <a href="#">Aviso de privacidad simplificado</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Botón Volver Arriba -->
-    <a href="#" class="btn-up-editorial"><i class="fas fa-arrow-up"></i></a>
+    <?php include '../includes/footer.php'; ?>
 
 </div>
 
 <!-- Bootstrap Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     const { createApp } = Vue;
