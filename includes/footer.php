@@ -15,26 +15,18 @@
  */
 ?>
 
-<!-- ==========================================
-     1. DEPENDENCIAS EXTERNAS (Agregar en el <head> y antes de cerrar </body>)
-     ==========================================
-     Para que el footer se visualice correctamente, asegúrate de tener:
-     - Bootstrap 5 (CSS y JS Bundle)
-     - Bootstrap Icons
-     - Font Awesome 5 (o superior, para iconos de redes sociales)
-     - jQuery (requerido por el script del botón "volver arriba")
-
-     Ejemplo de CDN a incluir en tu nuevo sitio:
-     
-     <!-- En el <head> -->
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css" rel="stylesheet">
-
-     <!-- Antes de cerrar </body> -->
-     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
--->
+<?php
+/*
+ * ==========================================
+ * 1. DEPENDENCIAS EXTERNAS
+ * ==========================================
+ * Para que el footer se visualice correctamente, asegúrate de tener:
+ * - Bootstrap 5 (CSS y JS Bundle)
+ * - Bootstrap Icons
+ * - Font Awesome 5 (o superior, para iconos de redes sociales)
+ * - jQuery (requerido por el script del botón "volver arriba")
+ */
+?>
 
 
 <!-- ==========================================
@@ -250,12 +242,12 @@
                 <div class="col-md-4">
                     <div class="d-flex flex-nowrap justify-content-center justify-content-md-end align-items-center gap-3">
                         <div class="footer-logo-dorado"
-                            style="width: 150px; -webkit-mask-image: url('img/unam_gran_universidad_dorado.png'); mask-image: url('img/unam_gran_universidad_dorado.png');"
+                            style="width: 150px; -webkit-mask-image: url('../img/unam_gran_universidad_dorado.png'); mask-image: url('../img/unam_gran_universidad_dorado.png');"
                             role="img" aria-label="UNAM - Nuestra gran Universidad">
                         </div>
 
                         <div class="footer-logo-dorado"
-                            style="width: 150px; -webkit-mask-image: url('img/475_logo_dorado.png'); mask-image: url('img/475_logo_dorado.png');"
+                            style="width: 150px; -webkit-mask-image: url('../img/475_logo_dorado.png'); mask-image: url('../img/475_logo_dorado.png');"
                             role="img" aria-label="475+ años de historia">
                         </div>
                     </div>
@@ -303,219 +295,44 @@
 </a>
 
 
-<!-- ==========================================
-     3. ESTILOS CSS (Añadir a tu archivo .css o dentro de una etiqueta <style>)
-     ========================================== -->
-<style>
-/* Variables de color personalizadas del tema original */
-:root {
-    --dorado-unam: #9c6e09;
-    --azul-unam: #11304b;
-    --secondary: #545454;
-    --light: #fdf5eb;
-    --dark: #1a1a1a;
-    --fuente-texto: "Roboto", sans-serif;
-}
+<?php
+/*
+ * ==========================================
+ * 3. ESTILOS CSS — NOTA IMPORTANTE
+ * ==========================================
+ * Los estilos del footer (footer-top, footer-visitas, footer-redes, copyright,
+ * back-to-top, etc.) deben incluirse en el <head> de la página que use este
+ * footer. Si el footer se carga dentro de un contenedor Vue (#app), cualquier
+ * <style> aquí será ignorado por Vue al montar el componente.
+ *
+ * 4. COMPORTAMIENTO JAVASCRIPT
+ * El script del botón "volver arriba" usa vanilla JS (sin jQuery) y se
+ * incluye aquí como bloque independiente fuera del <style>.
+ *
+ * 5. RECURSOS GRÁFICOS REQUERIDOS
+ * Los logos dorados de la UNAM utilizan máscaras CSS que cargan imágenes locales:
+ * - img/unam_gran_universidad_dorado.png
+ * - img/475_logo_dorado.png
+ */
+?>
 
-/*** Estilos generales del Footer ***/
-.footer .btn.btn-link {
-    display: block;
-    margin-bottom: 5px;
-    padding: 0;
-    text-align: left;
-    color: var(--light);
-    font-weight: normal;
-    text-transform: capitalize;
-    transition: 0.3s;
-}
-
-.footer .btn.btn-link::before {
-    position: relative;
-    content: "\f105";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    color: var(--light);
-    margin-right: 10px;
-}
-
-.footer .btn.btn-link:hover {
-    color: var(--dorado-unam);
-    letter-spacing: 1px;
-    box-shadow: none;
-}
-
-/*** Footer — Sección superior ***/
-.footer-top {
-    background: #f7f6f2;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 2.5rem 0;
-}
-
-.footer-visitas {
-    color: var(--dark);
-    font-size: 0.95rem;
-}
-
-.footer-visitas-item {
-    margin-bottom: 0.25rem;
-}
-
-.footer-visitas-item strong {
-    color: var(--dorado-unam);
-}
-
-.footer-redes-titulo {
-    color: var(--dark);
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin-bottom: 0.75rem;
-}
-
-.footer-redes {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.footer-redes-enlace {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.18);
-    background: #fff;
-    color: var(--dark);
-    text-decoration: none;
-    transition:
-        transform 0.15s ease,
-        background-color 0.15s ease,
-        border-color 0.15s ease;
-}
-
-.footer-redes-enlace:hover {
-    transform: translateY(-2px);
-    background: rgba(2, 16, 36, 0.06);
-    border-color: rgba(2, 16, 36, 0.35);
-}
-
-.footer-unam-logo {
-    height: 80px;
-    width: auto;
-    object-fit: contain;
-}
-
-/* Logos con máscara (permite colorear imágenes PNG transparentes con el color de fondo especificado) */
-.footer-logo-dorado {
-    height: 80px;
-    width: auto;
-    max-width: 45%;
-
-    /* Pinta el fondo interno del color del sitio */
-    background-color: var(--dorado-unam);
-
-    /* Aplica la imagen transparente como un recorte (máscara) */
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-
-    display: inline-block;
-}
-
-/*** Footer — Copyright ***/
-footer {
-    width: 100%;
-    margin-top: auto;
-}
-
-.copyright {
-    background: var(--azul-unam);
-    font-size: 0.85rem;
-    width: 100%;
-}
-
-.justify {
-    text-align: justify !important;
-}
-
-.copyright a {
-    color: var(--dorado-unam);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.copyright a:hover {
-    color: var(--light);
-    text-decoration: underline;
-}
-
-/*** Botón volver arriba (Back to top) ***/
-.back-to-top {
-    position: fixed;
-    display: none;
-    right: 30px;
-    bottom: 30px;
-    z-index: 99;
-}
-
-.btn-gold {
-    background-color: #9c6e09 !important;
-    color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 4px 14px rgba(156, 110, 9, 0.4) !important;
-    transition: all 0.3s ease-in-out !important;
-}
-
-.btn-gold:hover {
-    background-color: #805a06 !important;
-    color: #ffffff !important;
-    transform: translateY(-5px);
-    box-shadow: 0 8px 22px rgba(156, 110, 9, 0.6) !important;
-}
-
-.btn-lg-square {
-    width: 50px;
-    height: 50px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-</style>
-
-
-<!-- ==========================================
-     4. COMPORTAMIENTO JAVASCRIPT (Añadir a tu archivo .js o etiqueta <script>)
-     ========================================== -->
+<!-- Script vanilla JS para el botón volver arriba (sin dependencia de jQuery) -->
 <script>
-$(document).ready(function() {
-    // Control de visibilidad y acción del botón volver arriba (Back to top)
-    $(window).scroll(function () {
-        if ($(this).scrollTop() > 300) {
-            $('.back-to-top').stop(true, true).fadeIn(200);
-        } else {
-            $('.back-to-top').stop(true, true).fadeOut(200);
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    var backToTop = document.querySelector('.back-to-top');
+    if (backToTop) {
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                backToTop.style.display = 'inline-flex';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
 
-    $('.back-to-top').click(function () {
-        $('html, body').stop().animate({ scrollTop: 0 }, 200, 'easeInOutExpo');
-        return false;
-    });
+        backToTop.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 });
 </script>
-
-
-<!-- ==========================================
-     5. RECURSOS GRÁFICOS REQUERIDOS (Imágenes del footer)
-     ==========================================
-     Los logos dorados de la UNAM utilizan máscaras CSS que cargan imágenes locales.
-     Asegúrate de copiar estas dos imágenes de la carpeta img/ de tu sitio actual
-     a la carpeta img/ del nuevo sitio web:
-     
-     - img/unam_gran_universidad_dorado.png
-     - img/475_logo_dorado.png
--->
