@@ -38,11 +38,16 @@
             --text-muted: #555555;
         }
         
+        html {
+            scroll-padding-top: var(--alto-navbar);
+        }
+
         body {
             font-family: 'Open Sans', sans-serif;
             color: var(--text-dark);
             background-color: var(--bg-cream);
             line-height: 1.6;
+            padding-top: var(--alto-navbar);
         }
 
         h1, h2, h3, h4, h5, .serif-font {
@@ -93,7 +98,7 @@
         }
 
         .hero-split {
-            min-height: calc(100vh - 71px); /* Resta altura del nav */
+            min-height: calc(100vh - var(--alto-navbar)); /* Resta altura del nav */
             display: flex;
             flex-wrap: wrap;
         }
