@@ -25,7 +25,7 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 	<!-- Estilos CSS propios (cargados después de Bootstrap) -->
-	<link rel="stylesheet" href="../css/style.css">
+	<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 	<!-- Navbar -->

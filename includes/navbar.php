@@ -20,13 +20,13 @@ $activo_iniciativas = in_array($pagina_actual, array('eventos.php', 'proyectos.p
     <!-- Logos: UNAM → FCA → SEFCA -->
     <div class="navbar-logos">
         <a href="https://www.unam.mx/" target="_blank" class="navbar-logo-link">
-            <img src="../img/logos/unam_logo.png" alt="UNAM" class="navbar-logo navbar-logo-unam">
+            <img src="assets/img/logos/unam_logo.png" alt="UNAM" class="navbar-logo navbar-logo-unam">
         </a>
         <a href="https://www.fca.unam.mx/" target="_blank" class="navbar-logo-link">
-            <img src="../img/logos/fca-unam-logo.png" alt="FCA" class="navbar-logo navbar-logo-fca">
+            <img src="assets/img/logos/fca-unam-logo.png" alt="FCA" class="navbar-logo navbar-logo-fca">
         </a>
         <a href="index.php" class="navbar-logo-link">
-            <img src="../img/logos/UIF_blanco.png" alt="Unidad de Inteligencia Financiera" class="navbar-logo navbar-logo-uif">
+            <img src="assets/img/logos/UIF_blanco.png" alt="Unidad de Inteligencia Financiera" class="navbar-logo navbar-logo-uif">
         </a>
     </div>
 

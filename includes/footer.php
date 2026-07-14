@@ -47,7 +47,7 @@
                                 <?php
                                 /*
                                  * Contador de visitas SEFCA
-                                 * Compatible con PHP 5.3.
+                                 * Compatible con PHP 7.1.
                                  *
                                  * Cuenta solo una visita por entrada de usuario.
                                  * Evita que el contador suba al hacer refresh.
@@ -242,12 +242,12 @@
                 <div class="col-md-4">
                     <div class="d-flex flex-nowrap justify-content-center justify-content-md-end align-items-center gap-3">
                         <div class="footer-logo-dorado"
-                            style="width: 150px; -webkit-mask-image: url('../img/unam_gran_universidad_dorado.png'); mask-image: url('../img/unam_gran_universidad_dorado.png');"
+                            style="width: 150px; -webkit-mask-image: url('assets/img/unam_gran_universidad_dorado.png'); mask-image: url('assets/img/unam_gran_universidad_dorado.png');"
                             role="img" aria-label="UNAM - Nuestra gran Universidad">
                         </div>
 
                         <div class="footer-logo-dorado"
-                            style="width: 150px; -webkit-mask-image: url('../img/475_logo_dorado.png'); mask-image: url('../img/475_logo_dorado.png');"
+                            style="width: 150px; -webkit-mask-image: url('assets/img/475_logo_dorado.png'); mask-image: url('assets/img/475_logo_dorado.png');"
                             role="img" aria-label="475+ años de historia">
                         </div>
                     </div>

@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Estilos del proyecto (navbar, footer, etc.) -->
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     
     <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -66,7 +66,7 @@
             font-weight: 700;
         }
 
-        /* El navbar ahora usa los estilos de ../css/style.css */
+        /* El navbar ahora usa los estilos de assets/css/style.css */
 
         /* Botones estilo píldora */
         .btn-pill {
@@ -476,8 +476,8 @@
             </div>
             <!-- Lado Derecho (Visual) -->
             <div class="col-lg-6 hero-right">
-                <img src="unam_logo.png" alt="Escudo UNAM" class="hero-right-bg-logo">
-                <img src="../img/logos/UIF_blanco.png" alt="Unidad de Inteligencia Financiera" class="hero-uif-logo">
+                <img src="assets/img/logos/unam_logo.png" alt="Escudo UNAM" class="hero-right-bg-logo">
+                <img src="assets/img/logos/UIF_blanco.png" alt="Unidad de Inteligencia Financiera" class="hero-uif-logo">
             </div>
         </div>
     </section>
