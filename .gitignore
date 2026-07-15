@@ -1,0 +1,77 @@
+# =============================================================================
+# SUIF — .gitignore (Laravel 5.5)
+# =============================================================================
+
+# ─── Secretos y configuración local ──────────────────────────────────────────
+.env
+
+# ─── Dependencias de Composer ─────────────────────────────────────────────────
+vendor/
+composer.lock
+
+# ─── Cache y archivos compilados de Laravel ───────────────────────────────────
+bootstrap/cache/*.php
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Conservar estructura de directorios (los .gitkeep sí se suben)
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+
+# ─── Archivos subidos / generados en runtime ─────────────────────────────────
+# Migrado: storage/comprobantes/* → storage/app/comprobantes/*
+storage/app/comprobantes/*
+storage/app/documentos/*
+storage/app/referencias/*
+storage/app/facturas/*
+storage/app/certificados/*
+storage/logs/*
+
+# Conservar estructura de carpetas en Git
+!storage/app/comprobantes/.gitkeep
+!storage/app/documentos/.gitkeep
+!storage/app/referencias/.gitkeep
+!storage/app/facturas/.gitkeep
+!storage/app/certificados/.gitkeep
+!storage/logs/.gitkeep
+
+# ─── Caché y archivos temporales de PHP ──────────────────────────────────────
+*.cache
+*.tmp
+*.swp
+*.bak
+
+# ─── IDEs y editores ─────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+nbproject/
+.DS_Store
+Thumbs.db
+
+# ─── Sistema operativo ───────────────────────────────────────────────────────
+desktop.ini
+ehthumbs.db
+
+# ─── Dumps de base de datos locales ──────────────────────────────────────────
+*.sql
+!database/schema.sql
+
+# ─── Logs generales ──────────────────────────────────────────────────────────
+*.log
+
+# ─── Node (si se usa para assets en el futuro) ───────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log
+public/hot
+public/storage
+
+# ─── Archivos de prueba locales ───────────────────────────────────────────────
+test.php
+prueba.php
+debug.php
+public/index2.php

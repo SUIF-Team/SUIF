@@ -1,0 +1,21 @@
+# =============================================================================
+# SUIF — Raíz del proyecto (.htaccess)
+# Bloquea acceso directo a todo excepto a public/
+# =============================================================================
+
+# Denegar acceso a cualquier archivo en la raíz
+Options -Indexes
+Options -ExecCGI
+
+# Bloquear acceso directo a archivos sensibles
+<FilesMatch "\.(env|json|lock|md|sql|log|sh|bat|ini|cfg)$">
+    Require all denied
+</FilesMatch>
+
+# No permitir acceso a carpetas internas
+RedirectMatch 403 ^/(app|core|config|database|storage|vendor|includes)/
+
+# Forzar HTTPS (descomenta en producción)
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
