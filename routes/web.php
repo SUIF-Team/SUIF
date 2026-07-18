@@ -40,7 +40,7 @@ Route::post('/logout', 'AuthController@logout')->name('logout');
 
 Route::group(['middleware' => 'auth', 'prefix' => 'participante', 'as' => 'participante.', 'namespace' => 'Participante'], function () {
 
-    Route::get('/dashboard', 'DashboardController@dashboard')->name('dashboard');
+    Route::get('/dashboard', 'DashboardController@index')->name('dashboard');
 
     // Pre-registro
     Route::get('/preregistro', 'PreRegistroController@create')->name('preregistro.create');
@@ -63,6 +63,9 @@ Route::group(['middleware' => 'auth', 'prefix' => 'participante', 'as' => 'parti
 
     // Resultados
     Route::get('/resultados', 'ResultadoController@resultados')->name('resultados');
+
+    // Certificado
+    Route::get('/certificado', 'CertificadoController@index')->name('certificado');
 
     // Facturación
     Route::get('/facturacion', 'FacturacionController@index')->name('facturacion.index');
