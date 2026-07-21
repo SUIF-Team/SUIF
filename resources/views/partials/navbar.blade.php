@@ -23,7 +23,7 @@ $activo_iniciativas = in_array($pagina_actual, array('eventos.php', 'proyectos.p
             <img src="{{ asset('assets/img/logos/unam-logo.png') }}" alt="UNAM" class="navbar-logo navbar-logo-unam">
         </a>
         <a href="https://www.fca.unam.mx/" target="_blank" class="navbar-logo-link">
-            <img src="assets/img/logos/fca-unam-logo.png" alt="FCA" class="navbar-logo navbar-logo-fca">
+            <img src="{{ asset('assets/img/logos/fca-unam-logo.png') }}" alt="FCA" class="navbar-logo navbar-logo-fca">
         </a>
         <a href="index.php" class="navbar-logo-link">
             <img src="{{ asset('assets/img/logos/uif-blanco.png') }}" alt="Unidad de Inteligencia Financiera" class="navbar-logo navbar-logo-uif">

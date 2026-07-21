@@ -53,8 +53,8 @@
                                  * Evita que el contador suba al hacer refresh.
                                  */
 
-                                $archivo_contador = __DIR__ . "/contador.txt";
-                                $archivo_visitantes = __DIR__ . "/contador_visitantes.txt";
+                                $archivo_contador = storage_path("app/visitas/contador.txt");
+                                $archivo_visitantes = storage_path("app/visitas/contador_visitantes.txt");
 
                                 /*
                                  * Para contar cada 30 minutos:
@@ -242,12 +242,12 @@
                 <div class="col-md-4">
                     <div class="d-flex flex-nowrap justify-content-center justify-content-md-end align-items-center gap-3">
                         <div class="footer-logo-dorado"
-                            style="width: 150px; -webkit-mask-image: url('assets/img/unam_gran_universidad_dorado.png'); mask-image: url('assets/img/unam_gran_universidad_dorado.png');"
+                            style="width: 150px; -webkit-mask-image: url('{{ asset(\"assets/img/unam_gran_universidad_dorado.png\") }}'); mask-image: url('{{ asset(\"assets/img/unam_gran_universidad_dorado.png\") }}');"
                             role="img" aria-label="UNAM - Nuestra gran Universidad">
                         </div>
 
                         <div class="footer-logo-dorado"
-                            style="width: 150px; -webkit-mask-image: url('assets/img/475_logo_dorado.png'); mask-image: url('assets/img/475_logo_dorado.png');"
+                            style="width: 150px; -webkit-mask-image: url('{{ asset(\"assets/img/475_logo_dorado.png\") }}'); mask-image: url('{{ asset(\"assets/img/475_logo_dorado.png\") }}');"
                             role="img" aria-label="475+ años de historia">
                         </div>
                     </div>
