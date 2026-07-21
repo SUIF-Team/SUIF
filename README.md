@@ -81,12 +81,41 @@ El **Sistema de la Unidad de Inteligencia Financiera** centraliza flujos operati
 
 | Requisito | Versión recomendada | Comentario |
 |---|---:|---|
-| PHP | 7.1.x | Usar la misma versión objetivo del servidor para evitar sorpresas. |
-| Servidor web | Apache / Nginx | Apache suele ser la opción más directa. |
-| PostgreSQL | 16 | Verificar credenciales y extensión PHP (`pdo_pgsql` / `pgsql`). |
+| Docker Desktop | Actual | Incluye Docker Compose v2. |
+| Git | Actual | Para clonar y actualizar la rama. |
 | Navegador | Actual | Para validar interfaz, estilos e interacciones. |
 
-### Pasos generales
+La imagen de la aplicación fija **PHP 7.1.0**, Apache y Composer 2.2.29. La base de datos usa PostgreSQL 16.
+
+### Inicio con Docker (PowerShell)
+
+```powershell
+Copy-Item .env.example .env
+docker compose build --no-cache app
+docker compose up -d db
+docker compose run --rm app composer install --no-interaction
+docker compose run --rm app php artisan key:generate
+docker compose up -d app
+```
+
+Comprueba el ambiente levantado:
+
+```powershell
+docker compose exec app php -v
+docker compose exec app composer validate --strict
+docker compose exec app composer check-platform-reqs
+docker compose ps
+```
+
+La versión mostrada debe comenzar con `PHP 7.1.0`. Abre <http://localhost:8080/>; las vistas Blade no se abren directamente desde `resources/views` ni mediante XAMPP.
+
+Para detener los contenedores sin borrar PostgreSQL:
+
+```powershell
+docker compose down
+```
+
+### Configuración manual (sin Docker)
 
 1. Clona o copia el proyecto en tu ambiente local.
 2. Ejecuta `composer install` para instalar las dependencias.
@@ -96,14 +125,8 @@ El **Sistema de la Unidad de Inteligencia Financiera** centraliza flujos operati
 6. Levanta el servidor local con `php artisan serve` o tu servidor local configurado.
 7. Accede al sistema desde el navegador y prueba login, rutas principales y módulos críticos.
 
-```bash
-# Ejemplo general. Ajustar según el ambiente local.
-cd ruta/del/proyecto/suif
-php -v
-```
-
 > [!WARNING]
-> No agregues dependencias nuevas ni ejecutes instalaciones que modifiquen el proyecto sin confirmar primero. El stack está deliberadamente limitado por compatibilidad.
+> PHP 7.1 y Laravel 5.5 ya no reciben soporte de seguridad. Este ambiente reproduce el servidor legado, pero no debe exponerse directamente a Internet.
 
 ---
 
