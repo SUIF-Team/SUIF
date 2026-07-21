@@ -52,7 +52,8 @@
     },
     "config": {
         "allow-plugins": {
-            "kylekatarnls/update-helper": true
+            "kylekatarnls/update-helper": true,
+            "symfony/thanks": false
         },
         "optimize-autoloader": true,
         "platform": {
