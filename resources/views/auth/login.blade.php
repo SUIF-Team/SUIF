@@ -10,8 +10,8 @@
 
 @section('content')
 {{-- TODO: implementar formulario de login --}}
-<form method="POST" action="{{ route('login') }}">
-    @csrf
+<form method="POST" action="{{ route('login.post') }}">
+    {{ csrf_field() }}
     {{-- campos: email, password, botón submit --}}
 </form>
 @endsection

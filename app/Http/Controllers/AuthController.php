@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 /**
  * AuthController
  *
@@ -18,5 +16,13 @@ use Illuminate\Http\Request;
  */
 class AuthController extends Controller
 {
-    //
+    /**
+     * Muestra el punto de entrada para la futura pantalla de acceso.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showLogin()
+    {
+        return view('auth.login');
+    }
 }

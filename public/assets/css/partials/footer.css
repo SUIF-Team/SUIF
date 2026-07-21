@@ -1,0 +1,186 @@
+/* Footer institucional */
+
+.site-footer {
+    width: 100%;
+    flex-shrink: 0;
+    color: #ffffff;
+    font-family: var(--font-sans);
+}
+
+.site-footer__brand {
+    padding: 1rem 0;
+    background: #34435b;
+}
+
+.site-footer__brand-inner {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.site-footer__institution {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.site-footer__unam-logo {
+    width: 58px;
+    height: 66px;
+    object-fit: contain;
+}
+
+.site-footer__divider {
+    width: 1px;
+    height: 54px;
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.site-footer__anniversary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #ffffff;
+}
+
+.site-footer__anniversary span {
+    font-family: var(--font-serif);
+    font-size: 2.25rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.site-footer__anniversary small {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.site-footer__social {
+    display: flex;
+    gap: 0.7rem;
+}
+
+.site-footer__social a {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    color: #ffffff;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.site-footer__social a:hover,
+.site-footer__social a:focus-visible {
+    border-color: var(--unam-gold);
+    background: var(--unam-gold);
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.site-footer__legal {
+    padding: 1.35rem 0;
+    background: var(--unam-blue);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+.site-footer__legal-grid {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+.site-footer__legal p {
+    margin: 0;
+}
+
+.site-footer__copyright {
+    white-space: nowrap;
+}
+
+.site-footer__legal a {
+    color: #e1bd55;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
+
+.site-footer__legal a:hover,
+.site-footer__legal a:focus-visible {
+    color: #ffffff;
+}
+
+.back-to-top {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 1030;
+    width: 3rem;
+    height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--unam-gold);
+    color: #ffffff;
+    box-shadow: 0 0.5rem 1.25rem rgba(2, 16, 36, 0.28);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.75rem);
+    transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.back-to-top.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.back-to-top:hover,
+.back-to-top:focus-visible {
+    background: var(--unam-gold-dark);
+    color: #ffffff;
+}
+
+@media (max-width: 767.98px) {
+    .site-footer__brand-inner {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1rem 2rem;
+    }
+
+    .site-footer__legal-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        text-align: left;
+    }
+
+    .site-footer__copyright {
+        white-space: normal;
+    }
+}
+
+@media (max-width: 399.98px) {
+    .site-footer__institution {
+        gap: 0.7rem;
+    }
+
+    .site-footer__unam-logo {
+        width: 48px;
+        height: 56px;
+    }
+
+    .site-footer__anniversary span {
+        font-size: 1.8rem;
+    }
+}
