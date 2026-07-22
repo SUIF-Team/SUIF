@@ -130,6 +130,15 @@ La última parte de la URL permite comprobar estados concretos del flujo:
 
 Estas rutas sólo se registran en el entorno local. En otros ambientes el dashboard real continúa protegido por el middleware `auth`.
 
+Los estados visuales del dashboard tienen una única leyenda compartida:
+
+| Color | Estado |
+|---|---|
+| Verde | Completado |
+| Amarillo | Pendiente |
+| Azul | En proceso |
+| Rojo | Rechazado |
+
 Para detener los contenedores sin borrar los datos de PostgreSQL:
 
 ```powershell

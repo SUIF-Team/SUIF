@@ -84,13 +84,12 @@ class DashboardController extends Controller
         $pasos = [];
         $pasos[] = $this->paso(1, 'Pre-registro',
             'Completa tus datos personales y carga los documentos requeridos.',
-            $pre ? 'completed' : 'active', $pre ? 'Completado' : 'En proceso',
+            $pre ? 'completed' : 'in-progress',
             $pre ? 'Revisar' : 'Continuar', 'participante.preregistro.create', true);
 
         $pasos[] = $this->paso(2, 'Obtener referencia',
             'Genera tu referencia de pago por $'.$cuota.' '.config('suif.moneda', 'MXN').'.',
-            !$pre ? 'locked' : ($ref ? 'completed' : 'active'),
-            !$pre ? 'Pendiente' : ($ref ? 'Generada' : 'Disponible'),
+            !$pre ? 'pending' : ($ref ? 'completed' : 'in-progress'),
             $ref ? 'Consultar' : 'Generar', 'participante.referencia.index', $pre);
 
         $pasos[] = $this->pasoPago($ref, $pago);
@@ -98,11 +97,11 @@ class DashboardController extends Controller
         $pasos[] = $this->pasoSede($pago, $pagoValidado, $sede);
 
         /* SUIF no administra ni aplica exámenes; solo consulta resultados publicados. */
-        $pasos[] = $this->pasoResultados($sede, $resultado, $certificado);
+        $pasos[] = $this->pasoResultados($sede, $resultado);
 
         $pasos[] = $this->paso(6, 'Certificado',
             $certificado ? 'Tu certificado está disponible para consulta y descarga.' : 'Disponible cuando el administrador emita tu certificado.',
-            $certificado ? 'active' : 'locked', $certificado ? 'Disponible' : 'Pendiente',
+            $certificado ? 'completed' : 'pending',
             'Descargar', 'participante.certificado', $certificado);
 
         return $pasos;
@@ -111,18 +110,18 @@ class DashboardController extends Controller
     private function pasoPago($referenciaGenerada, $pago)
     {
         if (!$referenciaGenerada) {
-            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'locked', 'Pendiente', 'Continuar', 'participante.pago.index', false);
+            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'pending', 'Continuar', 'participante.pago.index', false);
         }
         if ($pago === 'validado') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'Validado', 'Consultar', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'Consultar', 'participante.pago.index', true);
         }
         if ($pago === 'revision') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'Comprobante enviado', 'Consultar', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'Consultar', 'participante.pago.index', true);
         }
         if ($pago === 'rechazado') {
-            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'warning', 'Requiere atención', 'Corregir', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'rejected', 'Corregir', 'participante.pago.index', true);
         }
-        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'active', 'Disponible', 'Continuar', 'participante.pago.index', true);
+        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'in-progress', 'Continuar', 'participante.pago.index', true);
     }
 
     private function pasoSede($pago, $pagoValidado, $sede)
@@ -130,69 +129,91 @@ class DashboardController extends Controller
         if ($pago === 'revision') {
             return $this->paso(4, 'Selección de sede y horario',
                 'Se habilitará cuando termine la validación de tu pago.',
-                'review', 'Validando pago', 'Seleccionar', 'participante.sede.index', false);
+                'pending', 'Seleccionar', 'participante.sede.index', false);
         }
 
         if (!$pagoValidado) {
             return $this->paso(4, 'Selección de sede y horario',
                 'Disponible cuando el equipo administrativo valide tu pago.',
-                'locked', 'Pendiente', 'Seleccionar', 'participante.sede.index', false);
+                'pending', 'Seleccionar', 'participante.sede.index', false);
         }
 
         return $this->paso(4, 'Selección de sede y horario',
             $sede ? 'Tu sede y horario quedaron registrados.' : 'Selecciona una sede y un horario disponible.',
-            $sede ? 'completed' : 'active', $sede ? 'Seleccionada' : 'Disponible',
+            $sede ? 'completed' : 'in-progress',
             $sede ? 'Consultar' : 'Seleccionar', 'participante.sede.index', true);
     }
 
-    private function pasoResultados($sede, $resultado, $certificado)
+    private function pasoResultados($sede, $resultado)
     {
         if (!$sede) {
             return $this->paso(5, 'Resultados',
                 'Disponible después de seleccionar tu sede y horario.',
-                'locked', 'Pendiente', 'Consultar', 'participante.resultados', false);
+                'pending', 'Consultar', 'participante.resultados', false);
         }
 
         if (!$resultado) {
             return $this->paso(5, 'Resultados',
                 'Tu selección quedó registrada. Espera la publicación de tu resultado.',
-                'review', 'En espera de publicación', 'Consultar', 'participante.resultados', false);
+                'pending', 'Consultar', 'participante.resultados', false);
         }
 
         return $this->paso(5, 'Resultados',
             'Tu resultado ya fue publicado y está disponible para consulta.',
-            $certificado ? 'completed' : 'active', $certificado ? 'Publicado' : 'Disponible',
+            'completed',
             'Consultar', 'participante.resultados', true);
     }
 
-    private function paso($numero, $titulo, $descripcion, $estado, $etiqueta, $accion, $ruta, $habilitado)
+    private function paso($numero, $titulo, $descripcion, $estado, $accion, $ruta, $habilitado)
     {
+        $etiqueta = $this->etiquetaEstado($estado);
+
         return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'accion', 'ruta', 'habilitado');
     }
 
     private function estadoGeneral(array $estado)
     {
         if (!empty($estado['certificado_disponible'])) {
-            return ['texto' => 'Certificado disponible', 'clase' => 'active'];
-        }
-
-        if (!empty($estado['resultado_publicado'])) {
-            return ['texto' => 'Resultado disponible', 'clase' => 'active'];
-        }
-
-        if (!empty($estado['sede_seleccionada'])) {
-            return ['texto' => 'Resultado en preparación', 'clase' => 'review'];
+            return $this->presentacionEstado('completed');
         }
 
         if ($estado['pago_estado'] === 'rechazado') {
-            return ['texto' => 'Corrección requerida', 'clase' => 'warning'];
+            return $this->presentacionEstado('rejected');
+        }
+
+        if (!empty($estado['resultado_publicado'])) {
+            return $this->presentacionEstado('pending');
+        }
+
+        if (!empty($estado['sede_seleccionada'])) {
+            return $this->presentacionEstado('pending');
         }
 
         if ($estado['pago_estado'] === 'revision') {
-            return ['texto' => 'Pago en validación', 'clase' => 'review'];
+            return $this->presentacionEstado('pending');
         }
 
-        return ['texto' => 'Trámite en proceso', 'clase' => 'active'];
+        return $this->presentacionEstado('in-progress');
+    }
+
+    private function presentacionEstado($estado)
+    {
+        return [
+            'texto' => $this->etiquetaEstado($estado),
+            'clase' => $estado,
+        ];
+    }
+
+    private function etiquetaEstado($estado)
+    {
+        $etiquetas = [
+            'completed' => 'Completado',
+            'pending' => 'Pendiente',
+            'in-progress' => 'En proceso',
+            'rejected' => 'Rechazado',
+        ];
+
+        return isset($etiquetas[$estado]) ? $etiquetas[$estado] : $etiquetas['pending'];
     }
 
     private function normalizarEstado(array $estado)

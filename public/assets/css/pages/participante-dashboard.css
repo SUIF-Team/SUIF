@@ -49,17 +49,22 @@
     padding: 0.45rem 1rem;
 }
 
-.dashboard-status--active {
-    background: #d9e8f8;
-    color: #1e5b91;
+.dashboard-status--completed {
+    background: #d8ecdf;
+    color: #075b2c;
 }
 
-.dashboard-status--review {
+.dashboard-status--pending {
     background: #fff0bd;
     color: #785808;
 }
 
-.dashboard-status--warning {
+.dashboard-status--in-progress {
+    background: #d9e8f8;
+    color: #1e5b91;
+}
+
+.dashboard-status--rejected {
     background: #f9d8d5;
     color: #982b25;
 }
@@ -87,29 +92,24 @@
     transform: translateY(-1px);
 }
 
-.process-card--active {
-    border-color: #173f67;
-    background: #edf4fc;
-}
-
 .process-card--completed {
     border-color: #57906a;
     background: #edf7f0;
 }
 
-.process-card--review {
+.process-card--pending {
     border-color: #c69a26;
     background: #fff8df;
 }
 
-.process-card--warning {
-    border-color: #b74c45;
-    background: #fff0ee;
+.process-card--in-progress {
+    border-color: #173f67;
+    background: #edf4fc;
 }
 
-.process-card--locked {
-    border-color: #e4e2dc;
-    background: rgba(248, 247, 244, 0.86);
+.process-card--rejected {
+    border-color: #b74c45;
+    background: #fff0ee;
 }
 
 .process-card__number {
@@ -125,22 +125,22 @@
     font-weight: 700;
 }
 
-.process-card--active .process-card__number {
-    background: #173f67;
-    color: #ffffff;
-}
-
 .process-card--completed .process-card__number {
     background: #39734d;
     color: #ffffff;
 }
 
-.process-card--review .process-card__number {
+.process-card--pending .process-card__number {
     background: #9c7310;
     color: #ffffff;
 }
 
-.process-card--warning .process-card__number {
+.process-card--in-progress .process-card__number {
+    background: #173f67;
+    color: #ffffff;
+}
+
+.process-card--rejected .process-card__number {
     background: #a53630;
     color: #ffffff;
 }
@@ -177,22 +177,22 @@
     color: #656661;
 }
 
-.process-badge--active {
-    background: #d3e3fa;
-    color: #235f98;
-}
-
 .process-badge--completed {
-    background: #d5eadb;
-    color: #225b34;
+    background: #d8ecdf;
+    color: #075b2c;
 }
 
-.process-badge--review {
+.process-badge--pending {
     background: #f8e8ae;
     color: #765607;
 }
 
-.process-badge--warning {
+.process-badge--in-progress {
+    background: #d3e3fa;
+    color: #235f98;
+}
+
+.process-badge--rejected {
     background: #f7d3cf;
     color: #982b25;
 }
