@@ -1,7 +1,7 @@
 {{--
     participante/resultados.blade.php
     Migrado desde: app/views/participante/resultados.php
-    Vista para consultar resultados del examen y descargar constancias.
+    Vista para consultar resultados publicados y descargar constancias.
 --}}
 @extends('layouts.participante')
 

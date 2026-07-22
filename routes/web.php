@@ -34,6 +34,13 @@ Route::get('/login', 'AuthController@showLogin')->name('login');
 Route::post('/login', 'AuthController@login')->name('login.post');
 Route::post('/logout', 'AuthController@logout')->name('logout');
 
+/* Vista de desarrollo sin autenticación. No se registra fuera del entorno local. */
+if (app()->environment('local')) {
+    Route::get('/participante/dashboard/demo/{escenario?}', 'Participante\DashboardController@demo')
+        ->where('escenario', '[a-z-]+')
+        ->name('participante.dashboard.demo');
+}
+
 // ---------------------------------------------------------------------------
 // Panel del Participante (requiere autenticación)
 // ---------------------------------------------------------------------------

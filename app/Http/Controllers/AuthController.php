@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 /**
  * AuthController
  *
@@ -12,7 +15,7 @@ namespace App\Http\Controllers;
  *   - Illuminate\Support\Facades\Auth  (en lugar de core/Auth.php)
  *   - Illuminate\Support\Facades\Session (en lugar de core/Session.php)
  *   - Illuminate\Support\Facades\Validator (en lugar de core/Validator.php)
- *   - Directiva @csrf en las vistas Blade (en lugar de core/Csrf.php)
+ *   - csrf_field() en las vistas Blade (en lugar de core/Csrf.php)
  */
 class AuthController extends Controller
 {
@@ -24,5 +27,17 @@ class AuthController extends Controller
     public function showLogin()
     {
         return view('auth.login');
+    }
+
+    /**
+     * Cierra la sesión actual y vuelve al formulario de acceso.
+     */
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->flush();
+        $request->session()->regenerate();
+
+        return redirect()->route('login');
     }
 }

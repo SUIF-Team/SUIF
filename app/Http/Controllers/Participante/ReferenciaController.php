@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Participante;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 /**
  * ReferenciaController
@@ -12,5 +12,8 @@ use Illuminate\Http\Request;
  */
 class ReferenciaController extends Controller
 {
-    //
+    public function index()
+    {
+        return view('participante.referencia');
+    }
 }

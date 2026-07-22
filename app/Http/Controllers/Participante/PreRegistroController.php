@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Participante;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 /**
  * PreRegistroController
@@ -12,5 +12,8 @@ use Illuminate\Http\Request;
  */
 class PreRegistroController extends Controller
 {
-    //
+    public function create()
+    {
+        return view('participante.preregistro');
+    }
 }

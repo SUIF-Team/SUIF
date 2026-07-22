@@ -1,7 +1,7 @@
 {{--
     participante/sede.blade.php
     Migrado desde: app/views/participante/sede.php
-    Vista para seleccionar sede y horario de aplicación del examen.
+    Vista para seleccionar sede y horario del proceso de certificación.
 --}}
 @extends('layouts.participante')
 
