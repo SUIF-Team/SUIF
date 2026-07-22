@@ -1,8 +1,8 @@
-/* Navbar institucional sin enlaces para las pantallas internas de SUIF. */
+/* Navbar institucional sin menú de secciones para las pantallas internas de SUIF. */
 
 .navbar-sistema {
-    min-height: 150px;
-    padding: 1.5rem clamp(1.5rem, 3.2vw, 3.25rem);
+    min-height: var(--navbar-height);
+    padding: 0.75rem clamp(1.5rem, 3.2vw, 3.25rem);
     display: flex;
     align-items: center;
     flex-shrink: 0;
@@ -41,16 +41,16 @@
 }
 
 .navbar-sistema-logo-unam {
-    height: 88px;
+    height: 72px;
 }
 
 .navbar-sistema-logo-fca {
-    height: 92px;
+    height: 78px;
 }
 
 .navbar-sistema-divisor {
     width: 2px;
-    height: 96px;
+    height: 82px;
     flex-shrink: 0;
     background: rgba(255, 255, 255, 0.9);
 }
@@ -67,17 +67,20 @@
 }
 
 .navbar-sistema-logo-uif {
-    width: min(260px, 23vw);
+    width: min(220px, 21vw);
     height: auto;
     display: block;
     flex-shrink: 0;
     object-fit: contain;
 }
 
+.navbar-sistema-logo-link-uif {
+    flex-shrink: 0;
+}
+
 @media (max-width: 767.98px) {
     .navbar-sistema {
-        min-height: 118px;
-        padding: 1rem 1.25rem;
+        padding: 0.75rem 1.25rem;
     }
 
     .navbar-sistema-contenido {
@@ -115,7 +118,6 @@
 
 @media (max-width: 479.98px) {
     .navbar-sistema {
-        min-height: 94px;
         padding: 0.75rem;
     }
 

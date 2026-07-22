@@ -56,9 +56,11 @@ No se utiliza un único `style.css` ni un bundler. La organización vigente es m
 
 Las vistas Blade deben contener la estructura y las clases CSS, no bloques `<style>` ni estilos inline. Una pantalla carga su CSS particular desde la sección que expone su layout. La landing es el ejemplo actual: carga `app.css`, los parciales y después `pages/home.css`.
 
-La landing usa `partials/navbar.blade.php`, que es el único navbar con enlaces de navegación y botón de acceso. El login y las pantallas internas usan `partials/navbar-sistema.blade.php`, un encabezado institucional sin enlaces ni botón de inicio de sesión.
+La landing usa `partials/navbar.blade.php`, que es el único navbar con enlaces de navegación y botón de acceso. El login y las pantallas internas usan `partials/navbar-sistema.blade.php`, un encabezado institucional sin menú de secciones ni botón de inicio de sesión. Ambos tienen una altura base de `120px`; sus logotipos comparten la misma interacción y abren los sitios institucionales configurados en `config/suif.php`.
 
 El fondo compartido del login y las pantallas internas del sistema se conserva en `public/assets/img/backgrounds/fondo-sistema.jpg`. Se referencia desde CSS estático con `url('/assets/img/backgrounds/fondo-sistema.jpg')` o mediante la variable compartida definida en `app.css`; no se duplica, no se convierte a `data:` URI y no se declara como estilo inline. La landing mantiene su composición visual propia.
+
+La identidad común también usa `public/assets/img/logos/475_logo.png` en el footer y `public/assets/img/logos/fca-unam-logo.ico` como favicon de todos los layouts.
 
 ## Ejecutar con Docker
 

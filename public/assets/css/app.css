@@ -16,7 +16,7 @@
     --font-sans: 'Open Sans', Arial, sans-serif;
     --font-nav: 'Raleway', Arial, sans-serif;
     --font-serif: 'Merriweather', Georgia, serif;
-    --navbar-height: 88px;
+    --navbar-height: 120px;
     --alto-navbar: var(--navbar-height);
     --fondo-sistema: url('/assets/img/backgrounds/fondo-sistema.jpg');
 }
@@ -55,6 +55,19 @@ body.pagina-sistema {
     background-attachment: fixed;
     color: var(--text-dark);
     font-family: var(--font-sans);
+}
+
+/* Interacción compartida por los logotipos de ambos encabezados. */
+.navbar-logo-link {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.25rem;
+    transition: opacity 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.navbar-logo-link:focus-visible {
+    opacity: 0.78;
 }
 
 .btn-pill {

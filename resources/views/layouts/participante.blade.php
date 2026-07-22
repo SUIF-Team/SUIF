@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'SUIF') | Sistema Integral de Certificaciones</title>
+    <link rel="icon" href="{{ asset('assets/img/logos/fca-unam-logo.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +40,9 @@
 <footer class="suif-footer">
     <div class="suif-footer__brand">
         <img src="{{ asset('assets/img/logos/unam-logo.png') }}" alt="UNAM">
-        <div class="suif-475"><span>475+</span><small>Universidad<br>de México</small></div>
+        <div class="suif-475">
+            <img src="{{ asset('assets/img/logos/475_logo.png') }}" alt="475 años de la Universidad de México, 1551–2026" class="suif-475__logo">
+        </div>
     </div>
     <div class="suif-footer__legal">
         <p>Hecho en México<br>D.R. © {{ date('Y') }}</p>

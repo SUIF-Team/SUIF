@@ -39,24 +39,15 @@
 }
 
 .site-footer__anniversary {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: #ffffff;
+    display: block;
 }
 
-.site-footer__anniversary span {
-    font-family: var(--font-serif);
-    font-size: 2.25rem;
-    font-weight: 300;
-    line-height: 1;
-}
-
-.site-footer__anniversary small {
-    font-size: 0.58rem;
-    letter-spacing: 0.08em;
-    line-height: 1.25;
-    text-transform: uppercase;
+.site-footer__anniversary-logo {
+    width: auto;
+    height: 64px;
+    max-width: 130px;
+    display: block;
+    object-fit: contain;
 }
 
 .site-footer__social {
@@ -180,7 +171,8 @@
         height: 56px;
     }
 
-    .site-footer__anniversary span {
-        font-size: 1.8rem;
+    .site-footer__anniversary-logo {
+        height: 52px;
+        max-width: 105px;
     }
 }

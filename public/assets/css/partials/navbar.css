@@ -21,17 +21,6 @@
     flex-shrink: 0;
 }
 
-.navbar-logo-link {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 0.25rem;
-    transition: opacity 0.2s ease;
-}
-
-.navbar-logo-link:hover {
-    opacity: 0.78;
-}
-
 .navbar-logo-link-uif {
     margin-left: 0.25rem;
 }
@@ -157,10 +146,6 @@
 }
 
 @media (max-width: 575.98px) {
-    :root {
-        --navbar-height: 76px;
-    }
-
     .navbar-logos {
         gap: 0.4rem;
     }

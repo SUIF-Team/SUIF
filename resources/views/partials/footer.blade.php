@@ -5,8 +5,7 @@
                 <img src="{{ asset('assets/img/logos/unam-logo.png') }}" alt="Escudo de la UNAM" class="site-footer__unam-logo">
                 <span class="site-footer__divider" aria-hidden="true"></span>
                 <div class="site-footer__anniversary">
-                    <span>475+</span>
-                    <small>Universidad<br>de México</small>
+                    <img src="{{ asset('assets/img/logos/475_logo.png') }}" alt="475 años de la Universidad de México, 1551–2026" class="site-footer__anniversary-logo">
                 </div>
             </div>
 

@@ -1,16 +1,16 @@
 <nav class="navbar navbar-expand-xl navbar-dark fixed-top site-navbar" data-site-navbar aria-label="Navegación principal">
     <div class="container-fluid px-3 px-xl-5">
         <div class="navbar-logos" aria-label="Instituciones responsables">
-            <a href="https://www.unam.mx/" target="_blank" rel="noopener noreferrer" class="navbar-logo-link" aria-label="Universidad Nacional Autónoma de México">
+            <a href="{{ config('suif.enlaces.unam') }}" target="_blank" rel="noopener noreferrer" class="navbar-logo-link" aria-label="Visitar el sitio de la Universidad Nacional Autónoma de México (se abre en una pestaña nueva)">
                 <img src="{{ asset('assets/img/logos/unam-logo.png') }}" alt="" class="navbar-logo navbar-logo-unam">
             </a>
 
-            <a href="https://www.fca.unam.mx/" target="_blank" rel="noopener noreferrer" class="navbar-logo-link" aria-label="Facultad de Contaduría y Administración">
+            <a href="{{ config('suif.enlaces.fca') }}" target="_blank" rel="noopener noreferrer" class="navbar-logo-link" aria-label="Visitar el sitio de la Facultad de Contaduría y Administración (se abre en una pestaña nueva)">
                 <img src="{{ asset('assets/img/logos/fca-unam-logo.png') }}" alt="" class="navbar-logo navbar-logo-fca">
             </a>
 
-            <a href="{{ route('home') }}" class="navbar-logo-link navbar-logo-link-uif" aria-label="Ir al inicio de SUIF">
-                <img src="{{ asset('assets/img/logos/uif-blanco.png') }}" alt="Unidad de Inteligencia Financiera México" class="navbar-logo navbar-logo-uif">
+            <a href="{{ config('suif.enlaces.uif') }}" target="_blank" rel="noopener noreferrer" class="navbar-logo-link navbar-logo-link-uif" aria-label="Visitar el sitio de la Unidad de Inteligencia Financiera (se abre en una pestaña nueva)">
+                <img src="{{ asset('assets/img/logos/uif-blanco.png') }}" alt="" class="navbar-logo navbar-logo-uif">
             </a>
         </div>
 
