@@ -21,7 +21,7 @@
     <div class="process-list" aria-label="Avance del proceso de certificación">
         @foreach ($pasos as $paso)
             <article
-                class="process-card process-card--{{ $paso['estado'] }}{{ $paso['habilitado'] ? ' process-card--interactive' : '' }}"
+                class="process-card process-card--{{ $paso['estado'] }}{{ $paso['mostrarBoton'] ? ' process-card--interactive' : '' }}"
                 aria-labelledby="paso-{{ $paso['numero'] }}-titulo">
                 <div class="process-card__number" aria-hidden="true">{{ $paso['numero'] }}</div>
                 <div class="process-card__content">
@@ -30,14 +30,14 @@
                 </div>
                 <div class="process-card__actions">
                     <span class="process-badge process-badge--{{ $paso['estado'] }}">{{ $paso['etiqueta'] }}</span>
-                    @if ($paso['habilitado'])
+                    @if ($paso['mostrarBoton'])
                         @if ($modoDemo)
                             <span class="process-button process-button--demo" aria-disabled="true">
-                                {{ $paso['accion'] }}
+                                Continuar
                             </span>
                         @else
                             <a class="process-button" href="{{ route($paso['ruta']) }}">
-                                {{ $paso['accion'] }}
+                                Continuar
                             </a>
                         @endif
                     @endif

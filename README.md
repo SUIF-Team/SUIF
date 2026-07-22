@@ -139,6 +139,8 @@ Los estados visuales del dashboard tienen una única leyenda compartida:
 | Azul | En proceso |
 | Rojo | Rechazado |
 
+Los módulos completados o pendientes muestran únicamente su estado. Los módulos accionables —en proceso o rechazados— muestran un solo botón con la etiqueta `Continuar`.
+
 Para detener los contenedores sin borrar los datos de PostgreSQL:
 
 ```powershell

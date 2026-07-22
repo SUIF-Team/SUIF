@@ -85,12 +85,12 @@ class DashboardController extends Controller
         $pasos[] = $this->paso(1, 'Pre-registro',
             'Completa tus datos personales y carga los documentos requeridos.',
             $pre ? 'completed' : 'in-progress',
-            $pre ? 'Revisar' : 'Continuar', 'participante.preregistro.create', true);
+            'participante.preregistro.create');
 
         $pasos[] = $this->paso(2, 'Obtener referencia',
             'Genera tu referencia de pago por $'.$cuota.' '.config('suif.moneda', 'MXN').'.',
             !$pre ? 'pending' : ($ref ? 'completed' : 'in-progress'),
-            $ref ? 'Consultar' : 'Generar', 'participante.referencia.index', $pre);
+            'participante.referencia.index');
 
         $pasos[] = $this->pasoPago($ref, $pago);
 
@@ -102,7 +102,7 @@ class DashboardController extends Controller
         $pasos[] = $this->paso(6, 'Certificado',
             $certificado ? 'Tu certificado está disponible para consulta y descarga.' : 'Disponible cuando el administrador emita tu certificado.',
             $certificado ? 'completed' : 'pending',
-            'Descargar', 'participante.certificado', $certificado);
+            'participante.certificado');
 
         return $pasos;
     }
@@ -110,18 +110,18 @@ class DashboardController extends Controller
     private function pasoPago($referenciaGenerada, $pago)
     {
         if (!$referenciaGenerada) {
-            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'pending', 'Continuar', 'participante.pago.index', false);
+            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'pending', 'participante.pago.index');
         }
         if ($pago === 'validado') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'Consultar', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'participante.pago.index');
         }
         if ($pago === 'revision') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'Consultar', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'participante.pago.index');
         }
         if ($pago === 'rechazado') {
-            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'rejected', 'Corregir', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'rejected', 'participante.pago.index');
         }
-        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'in-progress', 'Continuar', 'participante.pago.index', true);
+        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'in-progress', 'participante.pago.index');
     }
 
     private function pasoSede($pago, $pagoValidado, $sede)
@@ -129,19 +129,19 @@ class DashboardController extends Controller
         if ($pago === 'revision') {
             return $this->paso(4, 'Selección de sede y horario',
                 'Se habilitará cuando termine la validación de tu pago.',
-                'pending', 'Seleccionar', 'participante.sede.index', false);
+                'pending', 'participante.sede.index');
         }
 
         if (!$pagoValidado) {
             return $this->paso(4, 'Selección de sede y horario',
                 'Disponible cuando el equipo administrativo valide tu pago.',
-                'pending', 'Seleccionar', 'participante.sede.index', false);
+                'pending', 'participante.sede.index');
         }
 
         return $this->paso(4, 'Selección de sede y horario',
             $sede ? 'Tu sede y horario quedaron registrados.' : 'Selecciona una sede y un horario disponible.',
             $sede ? 'completed' : 'in-progress',
-            $sede ? 'Consultar' : 'Seleccionar', 'participante.sede.index', true);
+            'participante.sede.index');
     }
 
     private function pasoResultados($sede, $resultado)
@@ -149,26 +149,27 @@ class DashboardController extends Controller
         if (!$sede) {
             return $this->paso(5, 'Resultados',
                 'Disponible después de seleccionar tu sede y horario.',
-                'pending', 'Consultar', 'participante.resultados', false);
+                'pending', 'participante.resultados');
         }
 
         if (!$resultado) {
             return $this->paso(5, 'Resultados',
                 'Tu selección quedó registrada. Espera la publicación de tu resultado.',
-                'pending', 'Consultar', 'participante.resultados', false);
+                'pending', 'participante.resultados');
         }
 
         return $this->paso(5, 'Resultados',
             'Tu resultado ya fue publicado y está disponible para consulta.',
             'completed',
-            'Consultar', 'participante.resultados', true);
+            'participante.resultados');
     }
 
-    private function paso($numero, $titulo, $descripcion, $estado, $accion, $ruta, $habilitado)
+    private function paso($numero, $titulo, $descripcion, $estado, $ruta)
     {
         $etiqueta = $this->etiquetaEstado($estado);
+        $mostrarBoton = in_array($estado, ['in-progress', 'rejected'], true);
 
-        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'accion', 'ruta', 'habilitado');
+        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton');
     }
 
     private function estadoGeneral(array $estado)
