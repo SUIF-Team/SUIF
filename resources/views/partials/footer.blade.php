@@ -1,7 +1,7 @@
 <footer class="site-footer">
     <div class="site-footer__brand">
         <div class="container site-footer__brand-inner">
-            <div class="site-footer__institution" aria-label="Universidad Nacional Autónoma de México">
+            <div class="site-footer__institution" role="group" aria-label="Universidad Nacional Autónoma de México">
                 <img src="{{ asset('assets/img/logos/unam-logo.png') }}" alt="Escudo de la UNAM" class="site-footer__unam-logo">
                 <span class="site-footer__divider" aria-hidden="true"></span>
                 <div class="site-footer__anniversary">
@@ -10,14 +10,14 @@
                 </div>
             </div>
 
-            <div class="site-footer__social" aria-label="Redes sociales">
+            <nav class="site-footer__social" aria-label="Redes sociales">
                 <a href="https://www.facebook.com/SEFCAUNAM" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                     <i class="fab fa-facebook-f" aria-hidden="true"></i>
                 </a>
                 <a href="https://www.youtube.com/@SEFCA" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                     <i class="fab fa-youtube" aria-hidden="true"></i>
                 </a>
-            </div>
+            </nav>
         </div>
     </div>
 

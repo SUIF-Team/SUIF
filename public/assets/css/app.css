@@ -18,6 +18,7 @@
     --font-serif: 'Merriweather', Georgia, serif;
     --navbar-height: 88px;
     --alto-navbar: var(--navbar-height);
+    --fondo-sistema: url('/assets/img/backgrounds/fondo-sistema.jpg');
 }
 
 *,
@@ -41,6 +42,19 @@ body.landing-page {
 
 body.landing-page .landing-main {
     flex: 1 0 auto;
+}
+
+body.pagina-sistema {
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--surface-cream);
+    background-image: var(--fondo-sistema);
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    color: var(--text-dark);
+    font-family: var(--font-sans);
 }
 
 .btn-pill {
@@ -88,5 +102,11 @@ button:focus-visible {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    body.pagina-sistema {
+        background-attachment: scroll;
     }
 }

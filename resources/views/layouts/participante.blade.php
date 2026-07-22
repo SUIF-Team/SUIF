@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'SUIF') | Sistema Integral de Certificaciones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/partials/navbar-sistema.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/pages/participante-dashboard.css') }}">
     @stack('styles')
 </head>
-<body class="suif-shell">
-<header class="suif-header">
-    <div class="suif-header__left">
-        <img src="{{ asset('assets/img/logos/fca-unam-logo.png') }}" alt="UNAM y FCA" class="suif-header__fca">
-        <span class="suif-header__line"></span>
-        <p>Sistema Integral<br>de Certificaciones</p>
-    </div>
-    <img src="{{ asset('assets/img/logos/uif-blanco.png') }}" alt="Unidad de Inteligencia Financiera México" class="suif-header__uif">
-</header>
+<body class="pagina-sistema suif-shell">
+@include('partials.navbar-sistema')
 
 <div class="suif-body">
     <aside class="suif-sidebar">

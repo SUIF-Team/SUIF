@@ -1,0 +1,154 @@
+/* Navbar institucional sin enlaces para las pantallas internas de SUIF. */
+
+.navbar-sistema {
+    min-height: 150px;
+    padding: 1.5rem clamp(1.5rem, 3.2vw, 3.25rem);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--unam-blue);
+    color: #ffffff;
+}
+
+.navbar-sistema-contenido {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(1.5rem, 4vw, 4rem);
+}
+
+.navbar-sistema-identidad,
+.navbar-sistema-emblemas {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-sistema-identidad {
+    gap: clamp(0.9rem, 1.8vw, 1.5rem);
+}
+
+.navbar-sistema-emblemas {
+    gap: clamp(0.5rem, 1vw, 0.9rem);
+    flex-shrink: 0;
+}
+
+.navbar-sistema-logo {
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.navbar-sistema-logo-unam {
+    height: 88px;
+}
+
+.navbar-sistema-logo-fca {
+    height: 92px;
+}
+
+.navbar-sistema-divisor {
+    width: 2px;
+    height: 96px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-sistema-titulo {
+    margin: 0;
+    color: #ffffff;
+    font-family: var(--font-nav);
+    font-size: clamp(1rem, 1.35vw, 1.3rem);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    line-height: 1.45;
+    text-transform: uppercase;
+}
+
+.navbar-sistema-logo-uif {
+    width: min(260px, 23vw);
+    height: auto;
+    display: block;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+@media (max-width: 767.98px) {
+    .navbar-sistema {
+        min-height: 118px;
+        padding: 1rem 1.25rem;
+    }
+
+    .navbar-sistema-contenido {
+        gap: 1rem;
+    }
+
+    .navbar-sistema-identidad {
+        gap: 0.75rem;
+    }
+
+    .navbar-sistema-emblemas {
+        gap: 0.4rem;
+    }
+
+    .navbar-sistema-logo-unam {
+        height: 62px;
+    }
+
+    .navbar-sistema-logo-fca {
+        height: 66px;
+    }
+
+    .navbar-sistema-divisor {
+        height: 64px;
+    }
+
+    .navbar-sistema-titulo {
+        font-size: 0.78rem;
+    }
+
+    .navbar-sistema-logo-uif {
+        width: min(180px, 27vw);
+    }
+}
+
+@media (max-width: 479.98px) {
+    .navbar-sistema {
+        min-height: 94px;
+        padding: 0.75rem;
+    }
+
+    .navbar-sistema-contenido {
+        gap: 0.4rem;
+    }
+
+    .navbar-sistema-identidad {
+        gap: 0.35rem;
+    }
+
+    .navbar-sistema-emblemas {
+        gap: 0.2rem;
+    }
+
+    .navbar-sistema-logo-unam {
+        height: 40px;
+    }
+
+    .navbar-sistema-logo-fca {
+        height: 44px;
+    }
+
+    .navbar-sistema-divisor {
+        height: 44px;
+    }
+
+    .navbar-sistema-titulo {
+        font-size: 0.55rem;
+        line-height: 1.35;
+    }
+
+    .navbar-sistema-logo-uif {
+        width: min(96px, 27vw);
+    }
+}

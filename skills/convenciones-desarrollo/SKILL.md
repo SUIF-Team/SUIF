@@ -1,214 +1,47 @@
 ---
 name: convenciones-desarrollo
-description: "SIEMPRE usa esta skill al escribir, modificar o revisar cualquier código (PHP, CSS, HTML, JavaScript, Laravel, Vue.js). Aplica las convenciones personales de nomenclatura, comentarios y estructura de archivos del desarrollador."
+description: "Aplica las convenciones de SUIF al crear, modificar o revisar código Laravel 5.5, PHP 7.1, Blade, CSS o JavaScript. Úsala para preservar la estructura legacy del proyecto, sus assets estáticos y sus requisitos de seguridad."
 ---
 
-# Convenciones de Desarrollo — MarnueLgh
+# Convenciones de desarrollo de SUIF
 
-Estas son las convenciones personales del desarrollador. Deben aplicarse en **todo el código generado o modificado**, sin excepciones.
+## Mantener el stack y el alcance
 
----
+- Mantén compatibilidad estricta con Laravel 5.5 y PHP 7.1.0. No introduzcas sintaxis, dependencias ni APIs de versiones posteriores.
+- Trabaja con PostgreSQL y la configuración existente. No sustituyas el framework por PHP plano, `include()`/`require()`, sesiones manuales ni consultas sin Eloquent o el query builder de Laravel.
+- Conserva el alcance del sistema: certificaciones, resultados, documentos, pagos, sedes, referencias y paneles de participante y administración. No implementes una aplicación de exámenes.
+- Ejecuta el entorno Docker en `http://localhost:8088` cuando sea necesario. Mantén Apache sirviendo `public/`; no expongas `resources/views` ni agregues `/public` a las URLs.
 
-## 1. Idioma
+## Ubicar cada responsabilidad
 
-- Todo se escribe en **español**: nombres de variables, funciones, clases, comentarios, carpetas y archivos.
-- **Excepciones permitidas** (términos universales del desarrollo web): `main`, `header`, `footer`, `hero`, `nav`, `index`, `include`, `assets`, `style`. 
-- No mezclar español e inglés en el mismo nombre. Ejemplo incorrecto: `$usuario_list`.
+- Declara rutas web en `routes/web.php`; usa grupos, prefijos, namespaces, nombres de ruta y middleware de Laravel cuando corresponda.
+- Implementa la lógica HTTP en `app/Http/Controllers/`, agrupando los controladores de cada panel en `Admin/` y `Participante/`.
+- Renderiza vistas Blade desde `resources/views/`. Reutiliza `layouts/` y `partials/`; no dupliques cabeceras, navegación, pie de página o scripts entre vistas.
+- Usa `route()` y `asset()` en Blade para URLs internas y assets. Evita URLs relativas frágiles.
+- Usa convenciones de Laravel para clases y métodos PHP: clases en `PascalCase`, métodos y variables en `camelCase`, namespaces y PSR-4 existentes. Conserva los nombres de rutas, tablas y columnas ya establecidos.
+- Usa nombres descriptivos y consistentes en español para nuevas vistas, clases CSS y textos de interfaz, salvo convenciones o términos propios de Laravel.
 
----
+## Construir vistas y assets
 
-## 2. Nomenclatura
+- Carga los assets directamente desde `public/assets`; el proyecto no usa npm, Vite, Laravel Mix, Sass ni una etapa de compilación frontend.
+- Mantén estilos globales y reutilizables en `public/assets/css/app.css`.
+- Mantén estilos de componentes compartidos en `public/assets/css/partials/` y estilos exclusivos de cada pantalla en `public/assets/css/pages/`.
+- Usa `public/assets/img/backgrounds/fondo-sistema.jpg` como fondo institucional compartido del login y del sistema. Referéncialo desde CSS estático con `url('/assets/img/backgrounds/fondo-sistema.jpg')` o una variable CSS equivalente; no lo dupliques ni uses estilos inline o `data:` URI.
+- Reserva `partials/navbar.blade.php` para la landing: es el único navbar con enlaces y botón de acceso. Usa `partials/navbar-sistema.blade.php` en autenticación y paneles internos; no agregues enlaces ni botón de inicio de sesión a esa variante institucional.
+- Haz que cada layout cargue `app.css`, los parciales que use y, mediante `@yield('styles')` o `@stack('styles')`, el CSS específico de la vista. Limita los selectores de página a una clase del `body` o del contenedor raíz para evitar filtraciones entre pantallas.
+- Mantén JavaScript compartido en `public/assets/js/main.js` y JavaScript exclusivo por pantalla en `public/assets/js/pages/`. Cárgalo desde los yields de scripts del layout; no escribas scripts ni estilos inline en Blade.
+- Usa Bootstrap 5 como base cuando ya esté disponible en el layout y extiéndelo con CSS propio. Conserva las variables CSS y los patrones visuales definidos en `app.css`.
+- Usa clases CSS con nombres legibles, minúsculas y guiones simples, por ejemplo `.login-tarjeta` o `.footer-enlace`. Reserva `id` para anclas, asociación `label`/campo o selección puntual de JavaScript.
+- Mantén una indentación coherente con el archivo que edites y comenta únicamente decisiones no evidentes o bloques relevantes.
 
-### Variables y funciones (PHP, JavaScript)
-- Usar **snake_case** siempre.
-- Ejemplos correctos: `$nombre_usuario`, `$total_carrito`, `calcular_descuento()`, `obtener_socios()`.
-- Ejemplos incorrectos: `$nombreUsuario`, `$NombreUsuario`, `calcularDescuento()`.
+## Proteger datos y acceso
 
-### Clases CSS
-- Usar **un solo guión medio** (`-`). Nunca doble guión (`--`) ni guión bajo.
-- Formato: **sección + elemento** → `.seccion-elemento`.
-- Ejemplos correctos: `.footer-texto`, `.nav-enlace`, `.hero-titulo`, `.formulario-campo`.
-- Ejemplos incorrectos: `.footerTexto`, `.footer_texto`, `.footer--texto`, `.section-footer-principal-color-dark`.
-- Clases globales reutilizables pueden ser cortas: `.btn`, `.titulo`, `.contenedor`.
+- Incluye `{{ csrf_field() }}` en todo formulario con método distinto de `GET`; es la sintaxis compatible con Laravel 5.5. Muestra errores de validación sin exponer información sensible.
+- Protege rutas y acciones privadas con los middleware de autenticación y autorización adecuados. Usa `Auth`, sesiones y validadores de Laravel; nunca autentiques con comparaciones manuales de contraseñas.
+- Valida entradas, restringe archivos cargados y conserva documentos, comprobantes, certificados, facturas y referencias fuera de `public`, bajo `storage/app/private/` según la estructura existente.
+- No reveles secretos, credenciales, rutas privadas ni datos personales en vistas, logs o respuestas.
 
-### Archivos y carpetas
-- Usar **guión bajo** para nombres de archivos: `galeria_socios.php`, `proyectos_sefca.php`.
-- Carpetas en minúsculas sin espacios: `includes/`, `css/`, `js/`, `img/`.
+## Verificar cambios
 
-### IDs vs Clases
-- Usar **clases siempre** para estilos CSS, sin excepción.
-- Usar `id` únicamente para:
-  - Anclas de navegación interna (`<a href="#contacto">` → `<section id="contacto">`)
-  - Vincular `<label>` con `<input>` (`for="correo"` → `id="correo"`)
-  - Selección específica en JS (`document.getElementById`)
-- Nunca usar `id` para aplicar estilos CSS.
-
-### Regla general
-No combinar múltiples convenciones de nomenclatura en el mismo proyecto. Un estilo, aplicado de manera consistente en todo el código.
-
----
-
-## 3. Estructura de Archivos (PHP)
-
-- Las **páginas completas** van en la raíz junto a `index.php`.
-- La carpeta `includes/` es **exclusivamente** para fragmentos que se reutilizan con `include()` y que nunca se abren directamente por URL.
-- No mezclar páginas completas con fragmentos en la misma carpeta.
-
----
-
-## 4. Stack Tecnológico y Convenciones Técnicas
-
-### Stack
-Bootstrap + CSS (Flexbox, Grid, Media Queries) + HTML + PHP + JS vanilla + Laravel + Vue.js.
-
-### Bootstrap y CSS propio
-- Bootstrap se usa como **base estructural**: layout, grid, componentes y utilidades.
-- El CSS propio **personaliza y extiende** Bootstrap, nunca lo reemplaza completamente.
-- Todo el CSS personalizado va en un **único archivo** `css/style.css`, cargado después de Bootstrap.
-- Al inicio de `style.css` se definen las **variables globales** en `:root`:
-
-```css
-:root {
-	--color-primario: #112F4B;
-	--color-secundario: #9C6E09;
-	--fuente-principal: 'Nombre', sans-serif;
-}
-```
-
-- Las secciones dentro de `style.css` se delimitan con comentarios:
-
-```css
-/* ── Sección: Header ─────────────────────────── */
-
-/* ── Sección: Hero ───────────────────────────── */
-
-/* ── Sección: Footer ─────────────────────────── */
-```
-
-### Media Queries
-- Escribir media queries donde el diseño lo necesite, no forzosamente en los breakpoints de Bootstrap.
-- Todas las media queries van **al final del archivo** `style.css`, agrupadas y delimitadas con comentario:
-
-```css
-/* ── Media Queries ───────────────────────────── */
-
-@media (max-width: 768px) {
-	.hero-contenedor {
-		padding: 2rem 1rem;
-	}
-}
-
-@media (max-width: 480px) {
-	.nav-enlace {
-		font-size: 0.9rem;
-	}
-}
-```
-
-### JavaScript
-- El JS propio del proyecto va en `js/main.js`.
-- Las librerías externas y scripts de terceros se gestionan desde `includes/scripts.php`.
-- El archivo `includes/scripts.php` se incluye al final del `<body>` en cada página.
-- No escribir JS suelto dentro del HTML de las páginas.
-
-### Indentación
-- Usar **tabs** en todos los lenguajes (PHP, HTML, CSS, JS).
-
----
-
-## 5. Comentarios
-
-### 5.1 Encabezado de archivo
-Va al inicio de cada archivo, siempre.
-
-```php
-/*
- * Autor: MarnueLgh
- * Fecha: dd/mm/aaaa
- * Versión: 1.0
- * Descripción: Texto descriptivo de lo que hace este archivo.
- */
-```
-
-### 5.2 Encabezado de función o sección
-Flexible: incluir solo los campos que apliquen. No forzar campos vacíos.
-
-```php
-// Descripción: Calcula el total del carrito aplicando descuento.
-// Parámetros: $productos (array), $descuento (float)
-// Retorna: float
-function calcular_total($productos, $descuento) { ... }
-```
-
-```php
-// Descripción: Cierra la sesión y redirige al login.
-function cerrar_sesion() { ... }
-```
-
-```css
-/* Sección: Footer — estilos base del pie de página */
-.footer { ... }
-```
-
-### 5.3 Comentarios de sección o aclaración
-Usar comentarios simples únicamente cuando el código lo necesite o para delimitar secciones visualmente.
-
-```php
-// Validar que el usuario esté autenticado
-if (!isset($_SESSION['usuario'])) { ... }
-```
-
-```php
-// ── Conexión a la base de datos ──────────────────
-$conexion = new mysqli(...);
-
-// ── Consulta principal ───────────────────────────
-$resultado = $conexion->query(...);
-```
-
-```css
-/* ── Sección: Header ─────────────────────────── */
-.header { ... }
-
-/* ── Sección: Footer ─────────────────────────── */
-.footer { ... }
-```
-
-No comentar código que se explica solo. Si el nombre de la variable o función es claro, no necesita comentario.
-
----
-
-## 6. Versionado
-
-Formato: `MAYOR.MENOR` (dos niveles únicamente).
-
-| Versión | Cuándo usarla |
-|---------|--------------|
-| `1.0` → `2.0` | Cambio mayor: reescritura de lógica, nueva funcionalidad significativa |
-| `1.0` → `1.1` | Ajuste menor: corrección, pequeña mejora, refactor puntual |
-
-Actualizar la versión en el encabezado del archivo cada vez que se realice un cambio relevante.
-
----
-
-## Resumen rápido
-
-| Elemento | Convención |
-|----------|-----------|
-| Variables/funciones | `snake_case` en español |
-| Clases CSS | `seccion-elemento` con un solo guión medio |
-| Archivos | `nombre_descriptivo.ext` con guión bajo |
-| Idioma | Español (excepto términos universales) |
-| IDs | Solo anclas, label-input y JS; nunca para CSS |
-| Indentación | Tabs en todos los lenguajes |
-| Bootstrap | Base estructural, personalizado con `style.css` |
-| Variables CSS | Definidas en `:root` al inicio de `style.css` |
-| Media queries | Al final de `style.css`, agrupadas con comentario |
-| JS propio | `js/main.js` |
-| JS librerías | `includes/scripts.php` al final del `<body>` |
-| Encabezado de archivo | Autor, Fecha, Versión, Descripción |
-| Encabezado de función | Flexible, solo campos que apliquen |
-| Comentarios | Solo cuando se necesiten o para delimitar secciones |
-| Versionado | `1.0` mayor, `1.1` menor |
-| Páginas PHP | En la raíz del proyecto |
-| Fragmentos PHP | En `includes/` |
+- Comprueba que las rutas, nombres de vistas, controladores, assets y métodos referenciados existan antes de terminar.
+- Ejecuta las comprobaciones compatibles con el entorno legacy cuando cambies comportamiento: carga de la ruta, `php artisan` pertinente y pruebas disponibles. No actualices dependencias como atajo para resolver incompatibilidades.

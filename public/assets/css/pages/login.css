@@ -1,0 +1,247 @@
+/* Pantalla de acceso de SUIF. */
+
+.auth-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-contenido {
+    min-width: 0;
+    flex: 1 0 auto;
+}
+
+.login-seccion {
+    min-height: 720px;
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(360px, 5fr);
+}
+
+.login-panel {
+    min-width: 0;
+    padding: clamp(3rem, 6vw, 6.5rem);
+    display: flex;
+    align-items: center;
+}
+
+.login-panel-informacion {
+    justify-content: center;
+    background-color: #59636e;
+    background-image:
+        linear-gradient(rgba(69, 81, 93, 0.9), rgba(69, 81, 93, 0.9)),
+        var(--fondo-sistema);
+    background-position: center;
+    background-size: cover;
+    color: #ffffff;
+}
+
+.login-informacion-contenido {
+    width: min(100%, 700px);
+}
+
+.login-bienvenida,
+.login-titulo-proceso {
+    margin: 0;
+    font-family: var(--font-nav);
+    font-style: italic;
+    letter-spacing: -0.035em;
+}
+
+.login-bienvenida {
+    font-size: clamp(2.25rem, 4.25vw, 3.65rem);
+    font-weight: 700;
+    line-height: 1.05;
+}
+
+.login-titulo-proceso {
+    color: #e1e5e8;
+    font-size: clamp(2.25rem, 4.25vw, 3.65rem);
+    font-weight: 300;
+    line-height: 1.12;
+}
+
+.login-divisor {
+    width: min(80%, 500px);
+    height: 1px;
+    margin: 1.5rem 0 2.5rem;
+    display: block;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.login-descripcion,
+.login-lista,
+.login-indicacion {
+    color: #f0f2f4;
+    font-size: clamp(1rem, 1.25vw, 1.15rem);
+    font-weight: 300;
+    line-height: 1.65;
+}
+
+.login-descripcion {
+    margin: 0 0 1.5rem;
+}
+
+.login-lista {
+    margin: 0;
+    padding-left: 1.35rem;
+}
+
+.login-lista li {
+    margin-bottom: 1.15rem;
+    padding-left: 0.35rem;
+}
+
+.login-lista strong,
+.login-indicacion {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.login-indicacion {
+    margin: 2rem 0 0;
+}
+
+.login-panel-formulario {
+    justify-content: center;
+    background-color: rgba(248, 249, 250, 0.94);
+    background-image:
+        linear-gradient(rgba(248, 249, 250, 0.88), rgba(248, 249, 250, 0.88)),
+        var(--fondo-sistema);
+    background-position: center;
+    background-size: cover;
+}
+
+.login-tarjeta {
+    width: min(100%, 430px);
+    padding: clamp(2.25rem, 4vw, 3.25rem) clamp(1.5rem, 3vw, 2.75rem);
+    border: 1px solid rgba(17, 47, 75, 0.08);
+    border-radius: 1.5rem;
+    background: rgba(226, 228, 231, 0.96);
+    box-shadow: 0 1rem 2.5rem rgba(2, 16, 36, 0.1);
+}
+
+.login-titulo-formulario {
+    margin: 0 0 2.5rem;
+    color: #2a333f;
+    font-size: 1.65rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.login-formulario {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.login-grupo {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.login-etiqueta {
+    margin: 0;
+    color: #3b4550;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.login-campo {
+    min-height: 50px;
+    padding: 0.8rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.55rem;
+    background: #ffffff;
+    color: #2b3138;
+    font-size: 0.96rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(2, 16, 36, 0.06);
+}
+
+.login-campo:focus {
+    border-color: var(--unam-gold);
+    box-shadow: 0 0 0 0.22rem rgba(181, 139, 42, 0.2);
+}
+
+.login-campo::placeholder {
+    color: #90969d;
+}
+
+.login-ayuda {
+    color: #69727c;
+    font-size: 0.75rem;
+}
+
+.login-acciones {
+    margin-top: 0.85rem;
+    text-align: center;
+}
+
+.login-boton {
+    min-width: 150px;
+    padding: 0.7rem 2.25rem;
+    border: 1px solid var(--unam-blue-dark);
+    border-radius: 0.45rem;
+    background: var(--unam-blue-dark);
+    color: #ffffff;
+    font-weight: 700;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.login-boton:hover,
+.login-boton:focus-visible {
+    border-color: var(--unam-blue);
+    background: var(--unam-blue);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.login-preregistro {
+    margin: 0;
+    text-align: center;
+}
+
+.login-preregistro a {
+    color: var(--unam-gold-dark);
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.login-preregistro a:hover,
+.login-preregistro a:focus-visible {
+    color: #6f5112;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+@media (max-width: 991.98px) {
+    .login-seccion {
+        min-height: 0;
+        grid-template-columns: 1fr;
+    }
+
+    .login-panel {
+        padding: 4rem clamp(1.5rem, 7vw, 5rem);
+    }
+
+    .login-panel-formulario {
+        min-height: 600px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .login-panel {
+        padding: 3rem 1.25rem;
+    }
+
+    .login-panel-formulario {
+        min-height: 540px;
+    }
+
+    .login-tarjeta {
+        border-radius: 1.1rem;
+    }
+
+    .login-divisor {
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+}

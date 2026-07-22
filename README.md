@@ -1,216 +1,156 @@
-<div align="center">
+# SUIF — Sistema Integral de Certificaciones
 
-# Sistema de la Unidad de Inteligencia Financiera
+SUIF es una aplicación web de la Facultad de Contaduría y Administración de la UNAM para el seguimiento administrativo de un proceso de certificación. El proyecto conserva un stack legado y se está reconstruyendo de forma gradual; por ello se priorizan la compatibilidad, los cambios acotados y la trazabilidad.
 
-**SUIF** es una aplicación web orientada a la gestión del proceso de certificación. El proyecto conserva un stack legacy controlado, por lo que las decisiones técnicas deben priorizar estabilidad, compatibilidad y cambios acotados.
+> SUIF no aplica ni administra exámenes. Su alcance es el pre-registro, documentación, referencias y pagos, selección de sede, consulta de resultados, certificados y los paneles de participante y administración.
 
-![PHP](https://img.shields.io/badge/PHP-7.1-777BB4?style=for-the-badge&logo=php&logoColor=white)
-![Laravel](https://img.shields.io/badge/Laravel-5.5-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
-![Vue](https://img.shields.io/badge/Vue.js-Frontend-42B883?style=for-the-badge&logo=vuedotjs&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![MVC](https://img.shields.io/badge/Pattern-MVC-C59B43?style=for-the-badge)
+## Estado actual
 
-</div>
+- La landing pública (`/`) está maquetada y muestra información de la certificación. Parte de su contenido (periodo, nombre de certificación, fechas y enlaces de descarga) continúa como texto de ejemplo.
+- La pantalla de acceso en `resources/views/auth/login.blade.php` ya está adaptada visualmente a Blade con campos CURP y clave, CSRF, espacios para mostrar errores de validación, navbar institucional y footer. La validación del servidor, la persistencia y la autenticación real por CURP/clave siguen pendientes: las rutas `POST /login` y `POST /logout` están declaradas, pero sus métodos de controlador aún no existen.
+- El dashboard de participante (`/participante/dashboard`) construye temporalmente su avance a partir de datos de sesión y valores de ejemplo; aún no consulta modelos ni una base de datos de negocio.
+- Las vistas, rutas y controladores de los módulos de participante y administración están en diferentes etapas de preparación. Varios controladores no tienen acciones implementadas y sus vistas contienen `TODO`; no se deben considerar funcionalidades terminadas.
+- Las rutas administrativas sólo exigen el middleware `auth` en este momento. La autorización por rol de administrador no está implementada.
+- No hay migraciones, seeders ni pruebas automatizadas versionadas. Antes de conectar flujos reales se debe definir el esquema de datos y la estrategia de pruebas.
 
----
+## Stack y compatibilidad
 
-## Índice
-
-- [Descripción general](#descripción-general)
-- [Stack técnico](#stack-técnico)
-- [Arquitectura](#arquitectura)
-- [Módulos principales](#módulos-principales)
-- [Configuración local](#configuración-local)
-- [Base de datos](#base-de-datos)
-- [Convenciones de desarrollo](#convenciones-de-desarrollo)
-- [Flujo de trabajo recomendado](#flujo-de-trabajo-recomendado)
-
----
-
-## Descripción general
-
-El **Sistema de la Unidad de Inteligencia Financiera** centraliza flujos operativos y administrativos mediante una arquitectura **MVC**. Su objetivo es separar claramente la presentación, la lógica de negocio y la persistencia de datos para facilitar mantenimiento, revisión y crecimiento controlado del sistema.
-
----
-
-## Stack técnico
-
-| Capa | Tecnología | Versión / criterio | Uso principal |
-|---|---|---:|---|
-| Lenguaje backend | PHP | 7.1 | Lógica del servidor y compatibilidad con el ambiente disponible. |
-| Framework backend | Laravel | 5.5 | Rutas, controladores, modelos y estructura MVC basada en framework. |
-| Frontend base | HTML | — | Maquetación de vistas. |
-| Estilos | CSS propio | — | Diseño visual del sistema sin depender de frameworks externos. |
-| Interactividad | JavaScript | Moderno compatible | Comportamientos dinámicos del lado cliente. |
-| Componentes frontend | Vue.js | Según integración actual | Componentes e interacciones controladas. |
-| Base de datos | PostgreSQL | 16 | Persistencia de información. |
-| Patrón | MVC | — | Separación de responsabilidades. |
-
----
-
-## Arquitectura
-
-<div align="center">
-  <img src="docs/assets/suif-architecture.svg" alt="Arquitectura MVC del proyecto" width="100%" />
-</div>
-
-### Lectura rápida de la arquitectura
-
-| Componente | Responsabilidad | Debe evitar |
+| Capa | Tecnología / versión | Uso |
 |---|---|---|
-| **View** | Mostrar datos, formularios, tablas, estados e interacciones visuales. | Consultar directamente la base de datos o meter lógica pesada. |
-| **Controller** | Recibir solicitudes, validar, coordinar modelos y devolver respuestas. | Convertirse en archivo gigante con lógica mezclada y repetida. |
-| **Model** | Representar entidades, consultas y reglas cercanas a datos. | Renderizar HTML o depender de detalles visuales. |
-| **PostgreSQL** | Guardar la información estructurada del sistema. | Recibir datos sin validar desde formularios. |
+| Backend | PHP **7.1.0** | Versión exacta de la imagen Docker y plataforma de Composer. |
+| Framework | Laravel **5.5** | Rutas, controladores, Blade y estructura MVC. |
+| Servidor web | Apache | El `DocumentRoot` apunta a `public/`. |
+| Dependencias PHP | Composer **2.2.29** | Instalado dentro de la imagen de la aplicación. |
+| Base de datos | PostgreSQL **16** | Servicio Docker `db`. |
+| Frontend | Blade, CSS y JavaScript directos | Los assets se sirven desde `public/assets`; no hay Node, Vite, Mix, Sass ni un paso de compilación. |
+| Bibliotecas en la interfaz pública | Bootstrap 5.3.3, Font Awesome 6.4.0 y Vue 3 | Se cargan por CDN en las vistas que los usan. |
 
----
+PHP 7.1 y Laravel 5.5 son versiones sin soporte de seguridad. Este entorno existe para reproducir y mantener el sistema legado; no debe exponerse a Internet sin una revisión de seguridad y actualización planificada.
 
-## Módulos principales
+## Estructura relevante
 
-| Módulo | Descripción | Prioridad técnica |
-|---|---|---:|
-| Participante | Flujo de usuario participante, captura de información y seguimiento. | Alta |
-| Administrador | Gestión de usuarios, revisión de registros, permisos y operaciones internas. | Alta |
-| Reportes / consultas | Consulta estructurada de información relevante para operación. | Media |
+```text
+app/Http/Controllers/       Controladores HTTP
+config/                     Configuración de Laravel y SUIF
+database/                   Directorios de migraciones, factories y seeders (sin implementación versionada)
+docker/apache/              VirtualHost de Apache (DocumentRoot: public/)
+public/assets/
+  css/app.css               Base visual y variables compartidas
+  css/partials/             Estilos de componentes comunes (navbar y footer)
+  css/pages/                Estilos exclusivos de cada pantalla
+  img/backgrounds/          Fondos visuales compartidos del sistema
+  js/main.js                Comportamientos compartidos de la interfaz pública
+  js/pages/                 JavaScript exclusivo por pantalla
+resources/views/            Vistas Blade, layouts y parciales
+routes/web.php              Rutas web
+```
 
----
+### Estilos y scripts
 
-## Configuración local
+No se utiliza un único `style.css` ni un bundler. La organización vigente es modular y los archivos se cargan directamente desde `public/assets` con `asset()`:
 
-### Requisitos previos
+1. `css/app.css`: tokens, reglas base y utilidades que se reutilizan.
+2. `css/partials/*.css`: componentes comunes, actualmente navbar y footer.
+3. `css/pages/*.css`: reglas de una pantalla concreta, por ejemplo `home.css` o `participante-dashboard.css`.
+4. `js/main.js` y `js/pages/*.js`: comportamiento compartido o exclusivo de una pantalla, respectivamente.
 
-| Requisito | Versión recomendada | Comentario |
-|---|---:|---|
-| Docker Desktop | Actual | Incluye Docker Compose v2. |
-| Git | Actual | Para clonar y actualizar la rama. |
-| Navegador | Actual | Para validar interfaz, estilos e interacciones. |
+Las vistas Blade deben contener la estructura y las clases CSS, no bloques `<style>` ni estilos inline. Una pantalla carga su CSS particular desde la sección que expone su layout. La landing es el ejemplo actual: carga `app.css`, los parciales y después `pages/home.css`.
 
-La imagen de la aplicación fija **PHP 7.1.0**, Apache y Composer 2.2.29. La base de datos usa PostgreSQL 16.
+La landing usa `partials/navbar.blade.php`, que es el único navbar con enlaces de navegación y botón de acceso. El login y las pantallas internas usan `partials/navbar-sistema.blade.php`, un encabezado institucional sin enlaces ni botón de inicio de sesión.
 
-### Inicio con Docker (PowerShell)
+El fondo compartido del login y las pantallas internas del sistema se conserva en `public/assets/img/backgrounds/fondo-sistema.jpg`. Se referencia desde CSS estático con `url('/assets/img/backgrounds/fondo-sistema.jpg')` o mediante la variable compartida definida en `app.css`; no se duplica, no se convierte a `data:` URI y no se declara como estilo inline. La landing mantiene su composición visual propia.
+
+## Ejecutar con Docker
+
+### Requisitos
+
+- Docker Desktop con Docker Compose v2.
+- Git para obtener el repositorio.
+
+El puerto definitivo de la aplicación es **8088**. La aplicación se abre en <http://localhost:8088/> y Apache sirve Laravel desde `public/`; no se debe abrir `resources/views` directamente ni añadir `/public` a la URL.
+
+### Primera instalación (PowerShell)
+
+Desde la raíz del repositorio:
 
 ```powershell
 Copy-Item .env.example .env
-docker compose build --no-cache app
+```
+
+Antes de iniciar PostgreSQL, abre `.env` y define una contraseña local no vacía en `DB_PASSWORD`. No reutilices esa contraseña fuera del entorno de desarrollo. Después ejecuta:
+
+```powershell
+docker compose build app
 docker compose up -d db
-docker compose run --rm app composer install --no-interaction
+docker compose run --rm app composer install --no-interaction --prefer-dist --no-plugins
 docker compose run --rm app php artisan key:generate
 docker compose up -d app
 ```
 
-Comprueba el ambiente levantado:
+`.env.example` y el valor de respaldo de `compose.yaml` fijan el mapeo definitivo `8088:80`. Si ya existe un archivo `.env` anterior, comprueba que contenga `APP_URL=http://localhost:8088` y `APP_PORT=8088`.
+
+Para comprobar el entorno:
 
 ```powershell
-docker compose exec app php -v
-docker compose exec app composer validate --strict
-docker compose exec app composer check-platform-reqs
 docker compose ps
+docker compose exec app php -v
+docker compose exec app composer --version
+docker compose exec app php artisan --version
 ```
 
-La versión mostrada debe comenzar con `PHP 7.1.0`. Abre <http://localhost:8080/>; las vistas Blade no se abren directamente desde `resources/views` ni mediante XAMPP.
+La salida de PHP debe empezar con `PHP 7.1.0` y Composer debe indicar `2.2.29`.
 
-Para detener los contenedores sin borrar PostgreSQL:
+En inicios posteriores basta con:
+
+```powershell
+docker compose up -d
+```
+
+Para detener los contenedores sin borrar los datos de PostgreSQL:
 
 ```powershell
 docker compose down
 ```
 
-### Configuración manual (sin Docker)
+La base de datos se expone al equipo anfitrión en `localhost:5433` de forma predeterminada. Dentro de Docker, Laravel usa el host `db` y el puerto `5432`.
 
-1. Clona o copia el proyecto en tu ambiente local.
-2. Ejecuta `composer install` para instalar las dependencias.
-3. Crea tu archivo `.env` basado en `.env.example` y genera la clave de aplicación con `php artisan key:generate`.
-4. Configura el virtual host o servidor web apuntando a la carpeta `public/`.
-5. Verifica que PHP tenga habilitada la extensión necesaria para PostgreSQL (`pdo_pgsql`).
-6. Levanta el servidor local con `php artisan serve` o tu servidor local configurado.
-7. Accede al sistema desde el navegador y prueba login, rutas principales y módulos críticos.
+### Configuración de base de datos
 
-> [!WARNING]
-> PHP 7.1 y Laravel 5.5 ya no reciben soporte de seguridad. Este ambiente reproduce el servidor legado, pero no debe exponerse directamente a Internet.
+La configuración inicial está en `.env.example`:
 
----
+```dotenv
+DB_CONNECTION=pgsql
+DB_HOST=db
+DB_PORT=5432
+DB_DATABASE=suif
+DB_USERNAME=suif
+DB_PASSWORD=
+DB_FORWARD_PORT=5433
+```
 
-## Base de datos
+Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona. Las demás credenciales de ejemplo son sólo para desarrollo y no se deben reutilizar en un ambiente compartido o de producción.
 
-Motor principal: **PostgreSQL**.
+## Rutas disponibles
 
-| Dato | Valor esperado |
-|---|---|
-| Motor | PostgreSQL 16 |
-| Configuración Laravel | Archivo `.env` |
-| Charset recomendado | UTF-8 |
-| Respaldo antes de cambios | Obligatorio en ambientes compartidos |
-| Cambios estructurales | Documentados y revisados antes de aplicar |
-
-### Buenas prácticas para cambios en base de datos
-
-- Evitar cambios destructivos sin respaldo.
-- Usar nombres claros y consistentes.
-- Validar impacto en vistas, controladores y consultas existentes.
-- Probar con datos similares a producción antes de entregar.
-
----
-
-## Convenciones de desarrollo
-
-| Elemento | Convención | Ejemplo |
+| Área | Rutas principales | Estado verificable |
 |---|---|---|
-| Variables PHP | `snake_case` | `$usuario_actual` |
-| Funciones | `snake_case` | `obtener_registros()` |
-| Clases | `StudlyCase` | `UsuarioController` |
-| Archivos CSS | Nombres descriptivos | `panel_administrador.css` |
-| Commits | Mensajes claros | `feat: agrega tabla de mejoras` |
-| Cambios | Acotados a la tarea | No mezclar refactor, diseño y lógica en el mismo cambio. |
+| Pública | `GET /` | Landing disponible. |
+| Autenticación | `GET /login`, `POST /login`, `POST /logout` | El diseño del formulario CURP/clave está integrado; falta definir el esquema de datos e implementar login y logout. |
+| Participante | `/participante/dashboard`, pre-registro, pago, referencia, documentos, sede, resultados, certificado y facturación | Rutas declaradas y protegidas con `auth`; dashboard y certificado tienen acciones de lectura implementadas, y el dashboard usa datos temporales. Los demás controladores están pendientes o no coinciden aún con las acciones de sus rutas. |
+| Administración | `/admin/dashboard`, participantes, pagos, referencias, documentos, sedes y resultados | Rutas declaradas y protegidas con `auth`; acciones y autorización administrativa están mayormente pendientes. |
 
----
+`routes/web.php` es la fuente de verdad para el detalle de verbos HTTP y nombres de ruta. No se debe enlazar una pantalla como funcional hasta que su controlador, validaciones, persistencia y autorización estén implementados.
 
-## Flujo de trabajo recomendado
+## Lineamientos de mantenimiento
 
-| Paso | Acción | Resultado esperado |
-|---:|---|---|
-| 1 | Revisar tarea asignada | Entender alcance y criterio de aceptación. |
-| 2 | Crear rama o respaldo | Evitar romper el avance principal. |
-| 3 | Modificar solo archivos necesarios | Mantener cambios pequeños y revisables. |
-| 4 | Probar manualmente el flujo afectado | Confirmar que no se rompió funcionalidad cercana. |
-| 5 | Revisar compatibilidad con PHP 7.1 | Evitar sintaxis moderna incompatible. |
-| 6 | Documentar cambios relevantes | Facilitar mantenimiento futuro. |
+- Mantener compatibilidad con PHP 7.1.0; no introducir sintaxis ni dependencias que requieran versiones posteriores sin una decisión explícita de actualización.
+- No agregar paquetes Composer, npm, bundlers ni frameworks nuevos sin validar su compatibilidad y acordar el cambio.
+- Mantener la separación MVC: las vistas presentan, los controladores coordinan y los modelos/persistencia encapsulan datos.
+- Usar formularios `POST`, protección CSRF con `{{ csrf_field() }}` —compatible con Laravel 5.5— y validación del lado servidor al implementar flujos.
+- Aplicar autorización por rol antes de habilitar operaciones administrativas.
+- Antes de cambios estructurales en PostgreSQL, definir migraciones y contar con respaldo del ambiente afectado.
+- Mantener los cambios pequeños, revisables y documentar los límites o `TODO` que permanezcan.
 
----
+## Documentación de referencia
 
-## Reglas de compatibilidad
-
-| Evitar | Motivo | Alternativa |
-|---|---|---|
-| Sintaxis incompatible con PHP 7.1 | PHP 7.1 no la soporta. | Usar sintaxis compatible con 7.1. |
-| Dependencias Composer nuevas | Puede romper la compatibilidad con PHP 7.1. | Reutilizar lo existente o pedir autorización. |
-| Bundlers npm nuevos | No forman parte del stack definido. | CSS/JS integrado de forma controlada. |
-| Refactors masivos | Aumentan riesgo y dificultan revisión. | Cambios pequeños por módulo. |
-| Mezclar lógica en vistas | Rompe MVC. | Mover lógica a controlador/modelo. |
-
----
-
-## Seguridad mínima esperada
-
-| Riesgo | Medida recomendada |
-|---|---|
-| Acceso no autorizado | Validar sesión y permisos por ruta. |
-| Datos inválidos | Validar entradas del usuario antes de guardar. |
-| Exposición de errores | Evitar mostrar errores internos en producción. |
-| Credenciales visibles | No subir contraseñas, tokens o dumps sensibles. |
-| Cambios no rastreables | Documentar ajustes y mantener commits claros. |
-
----
-
-## Criterios de trabajo
-
-Este proyecto debe mantenerse bajo tres principios:
-
-1. **Compatibilidad primero.** Si el servidor usa PHP 7.1, el código debe respetarlo.
-2. **Cambios pequeños y controlados.** Cada ajuste debe poder revisarse sin arqueología digital.
-3. **Sin dependencias sorpresivas.** No introducir Composer, npm, frameworks PHP, scaffolding Vue, linters o bundlers nuevos sin autorización explícita y validación en PHP 7.1.
-
----
-
-<div align="center">
-
-</div>
+El directorio `docs/` conserva material institucional de referencia, incluido el instructivo, convocatoria, preguntas frecuentes y lineamientos de pago. Esos documentos no sustituyen la implementación de los flujos en la aplicación.
