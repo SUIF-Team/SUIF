@@ -1,3 +1,4 @@
+name: suif
 services:
   app:
     platform: linux/amd64
