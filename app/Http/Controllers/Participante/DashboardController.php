@@ -21,19 +21,53 @@ class DashboardController extends Controller
                 : $request->session()->get('suif.participante.folio', 'FCA-2026-01842'),
         ];
 
-        $estado = array_merge([
-            'preregistro_completo' => false,
-            'referencia_generada' => false,
-            'pago_estado' => 'sin_cargar',
-            'sede_seleccionada' => false,
-            'resultado_publicado' => false,
-            'certificado_disponible' => false,
-        ], (array) $request->session()->get('suif.participante.estado', []));
+        /* Sustituir el estado de sesión por modelos cuando se defina la persistencia. */
+        $estado = $this->normalizarEstado(
+            (array) $request->session()->get('suif.participante.estado', [])
+        );
 
+        return $this->mostrarDashboard($participante, $estado);
+    }
+
+    /**
+     * Permite revisar los estados visuales sin autenticación únicamente en local.
+     */
+    public function demo($escenario = 'inicio')
+    {
+        if (!app()->environment('local')) {
+            abort(404);
+        }
+
+        $escenarios = $this->escenariosDemo();
+
+        if (!array_key_exists($escenario, $escenarios)) {
+            abort(404);
+        }
+
+        $participante = [
+            'nombre' => 'Juana García Martínez',
+            'folio' => 'FCA-2026-01842',
+        ];
+
+        return $this->mostrarDashboard(
+            $participante,
+            $this->normalizarEstado($escenarios[$escenario]),
+            true
+        );
+    }
+
+    private function mostrarDashboard(array $participante, array $estado, $modoDemo = false)
+    {
         $pasos = $this->construirPasos($estado);
         $tramite = $this->estadoGeneral($estado);
 
-        return view('participante.dashboard', compact('participante', 'estado', 'pasos', 'tramite'));
+        return view('participante.dashboard', compact(
+            'participante',
+            'estado',
+            'pasos',
+            'tramite',
+            'modoDemo'
+        ));
     }
 
     private function construirPasos(array $estado)
@@ -50,32 +84,25 @@ class DashboardController extends Controller
         $pasos = [];
         $pasos[] = $this->paso(1, 'Pre-registro',
             'Completa tus datos personales y carga los documentos requeridos.',
-            $pre ? 'completed' : 'active', $pre ? 'Completado' : 'En proceso',
-            'Continuar', 'participante.preregistro.index', !$pre);
+            $pre ? 'completed' : 'in-progress',
+            'participante.preregistro.create');
 
         $pasos[] = $this->paso(2, 'Obtener referencia',
             'Genera tu referencia de pago por $'.$cuota.' '.config('suif.moneda', 'MXN').'.',
-            !$pre ? 'locked' : ($ref ? 'completed' : 'active'),
-            !$pre ? 'Pendiente' : ($ref ? 'Generada' : 'Disponible'),
-            'Continuar', 'participante.referencia.index', $pre && !$ref);
+            !$pre ? 'pending' : ($ref ? 'completed' : 'in-progress'),
+            'participante.referencia.index');
 
         $pasos[] = $this->pasoPago($ref, $pago);
 
-        $pasos[] = $this->paso(4, 'Selección de sede y horario',
-            $pagoValidado ? 'Selecciona una sede y un horario disponible.' : 'Disponible cuando el administrador valide tu pago.',
-            !$pagoValidado ? 'locked' : ($sede ? 'completed' : 'active'),
-            !$pagoValidado ? 'Pendiente' : ($sede ? 'Seleccionada' : 'Disponible'),
-            'Continuar', 'participante.sede.index', $pagoValidado && !$sede);
+        $pasos[] = $this->pasoSede($pago, $pagoValidado, $sede);
 
-        $pasos[] = $this->paso(5, 'Resultados',
-            $resultado ? 'Tu resultado ya fue publicado y está disponible para consulta.' : 'Disponible cuando el administrador publique tu resultado.',
-            $resultado ? 'available' : 'locked', $resultado ? 'Disponible' : 'Pendiente',
-            'Continuar', 'participante.resultados', $resultado);
+        /* SUIF no administra ni aplica exámenes; solo consulta resultados publicados. */
+        $pasos[] = $this->pasoResultados($sede, $resultado);
 
         $pasos[] = $this->paso(6, 'Certificado',
             $certificado ? 'Tu certificado está disponible para consulta y descarga.' : 'Disponible cuando el administrador emita tu certificado.',
-            $certificado ? 'available' : 'locked', $certificado ? 'Disponible' : 'Pendiente',
-            'Continuar', 'participante.certificado', $certificado);
+            $certificado ? 'completed' : 'pending',
+            'participante.certificado');
 
         return $pasos;
     }
@@ -83,31 +110,210 @@ class DashboardController extends Controller
     private function pasoPago($referenciaGenerada, $pago)
     {
         if (!$referenciaGenerada) {
-            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'locked', 'Pendiente', 'Continuar', 'participante.pago.index', false);
+            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'pending', 'participante.pago.index');
         }
         if ($pago === 'validado') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el administrador.', 'completed', 'Validado', 'Continuar', 'participante.pago.index', false);
+            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'participante.pago.index');
         }
         if ($pago === 'revision') {
-            return $this->paso(3, 'Pago', 'Tu comprobante está siendo revisado.', 'review', 'En revisión', 'Continuar', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'participante.pago.index');
         }
         if ($pago === 'rechazado') {
-            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'warning', 'Rechazado', 'Continuar', 'participante.pago.index', true);
+            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'rejected', 'participante.pago.index');
         }
-        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el administrador valide el pago.', 'active', 'Disponible', 'Continuar', 'participante.pago.index', true);
+        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'in-progress', 'participante.pago.index');
     }
 
-    private function paso($numero, $titulo, $descripcion, $estado, $etiqueta, $accion, $ruta, $habilitado)
+    private function pasoSede($pago, $pagoValidado, $sede)
     {
-        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'accion', 'ruta', 'habilitado');
+        if ($pago === 'revision') {
+            return $this->paso(4, 'Selección de sede y horario',
+                'Se habilitará cuando termine la validación de tu pago.',
+                'pending', 'participante.sede.index');
+        }
+
+        if (!$pagoValidado) {
+            return $this->paso(4, 'Selección de sede y horario',
+                'Disponible cuando el equipo administrativo valide tu pago.',
+                'pending', 'participante.sede.index');
+        }
+
+        return $this->paso(4, 'Selección de sede y horario',
+            $sede ? 'Tu sede y horario quedaron registrados.' : 'Selecciona una sede y un horario disponible.',
+            $sede ? 'completed' : 'in-progress',
+            'participante.sede.index');
+    }
+
+    private function pasoResultados($sede, $resultado)
+    {
+        if (!$sede) {
+            return $this->paso(5, 'Resultados',
+                'Disponible después de seleccionar tu sede y horario.',
+                'pending', 'participante.resultados');
+        }
+
+        if (!$resultado) {
+            return $this->paso(5, 'Resultados',
+                'Tu selección quedó registrada. Espera la publicación de tu resultado.',
+                'pending', 'participante.resultados');
+        }
+
+        return $this->paso(5, 'Resultados',
+            'Tu resultado ya fue publicado y está disponible para consulta.',
+            'completed',
+            'participante.resultados');
+    }
+
+    private function paso($numero, $titulo, $descripcion, $estado, $ruta)
+    {
+        $etiqueta = $this->etiquetaEstado($estado);
+        $mostrarBoton = in_array($estado, ['in-progress', 'rejected'], true);
+
+        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton');
     }
 
     private function estadoGeneral(array $estado)
     {
-        if (!empty($estado['certificado_disponible'])) return ['texto' => 'Certificado disponible', 'clase' => 'completed'];
-        if (!empty($estado['resultado_publicado'])) return ['texto' => 'Resultado publicado', 'clase' => 'available'];
-        if (isset($estado['pago_estado']) && $estado['pago_estado'] === 'rechazado') return ['texto' => 'Corrección requerida', 'clase' => 'warning'];
-        if (isset($estado['pago_estado']) && $estado['pago_estado'] === 'revision') return ['texto' => 'Pago en revisión', 'clase' => 'review'];
-        return ['texto' => 'Trámite en proceso', 'clase' => 'active'];
+        if (!empty($estado['certificado_disponible'])) {
+            return $this->presentacionEstado('completed');
+        }
+
+        if ($estado['pago_estado'] === 'rechazado') {
+            return $this->presentacionEstado('rejected');
+        }
+
+        if (!empty($estado['resultado_publicado'])) {
+            return $this->presentacionEstado('pending');
+        }
+
+        if (!empty($estado['sede_seleccionada'])) {
+            return $this->presentacionEstado('pending');
+        }
+
+        if ($estado['pago_estado'] === 'revision') {
+            return $this->presentacionEstado('pending');
+        }
+
+        return $this->presentacionEstado('in-progress');
+    }
+
+    private function presentacionEstado($estado)
+    {
+        return [
+            'texto' => $this->etiquetaEstado($estado),
+            'clase' => $estado,
+        ];
+    }
+
+    private function etiquetaEstado($estado)
+    {
+        $etiquetas = [
+            'completed' => 'Completado',
+            'pending' => 'Pendiente',
+            'in-progress' => 'En proceso',
+            'rejected' => 'Rechazado',
+        ];
+
+        return isset($etiquetas[$estado]) ? $etiquetas[$estado] : $etiquetas['pending'];
+    }
+
+    private function normalizarEstado(array $estado)
+    {
+        $estado = array_merge($this->estadoBase(), $estado);
+        $pagosPermitidos = ['sin_cargar', 'revision', 'rechazado', 'validado'];
+
+        $estado['preregistro_completo'] = !empty($estado['preregistro_completo']);
+        $estado['referencia_generada'] = !empty($estado['referencia_generada']);
+        $estado['sede_seleccionada'] = !empty($estado['sede_seleccionada']);
+        $estado['resultado_publicado'] = !empty($estado['resultado_publicado']);
+        $estado['certificado_disponible'] = !empty($estado['certificado_disponible']);
+
+        if (!in_array($estado['pago_estado'], $pagosPermitidos, true)) {
+            $estado['pago_estado'] = 'sin_cargar';
+        }
+
+        if (!$estado['preregistro_completo']) {
+            $estado['referencia_generada'] = false;
+        }
+
+        if (!$estado['referencia_generada']) {
+            $estado['pago_estado'] = 'sin_cargar';
+        }
+
+        if ($estado['pago_estado'] !== 'validado') {
+            $estado['sede_seleccionada'] = false;
+        }
+
+        if (!$estado['sede_seleccionada']) {
+            $estado['resultado_publicado'] = false;
+        }
+
+        if (!$estado['resultado_publicado']) {
+            $estado['certificado_disponible'] = false;
+        }
+
+        return $estado;
+    }
+
+    private function estadoBase()
+    {
+        return [
+            'preregistro_completo' => false,
+            'referencia_generada' => false,
+            'pago_estado' => 'sin_cargar',
+            'sede_seleccionada' => false,
+            'resultado_publicado' => false,
+            'certificado_disponible' => false,
+        ];
+    }
+
+    private function escenariosDemo()
+    {
+        return [
+            'inicio' => [],
+            'preregistro-completo' => [
+                'preregistro_completo' => true,
+            ],
+            'referencia-generada' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+            ],
+            'validando-pago' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+                'pago_estado' => 'revision',
+            ],
+            'pago-validado' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+                'pago_estado' => 'validado',
+            ],
+            'sede-seleccionada' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+                'pago_estado' => 'validado',
+                'sede_seleccionada' => true,
+            ],
+            'resultado-publicado' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+                'pago_estado' => 'validado',
+                'sede_seleccionada' => true,
+                'resultado_publicado' => true,
+            ],
+            'certificado-disponible' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+                'pago_estado' => 'validado',
+                'sede_seleccionada' => true,
+                'resultado_publicado' => true,
+                'certificado_disponible' => true,
+            ],
+            'pago-rechazado' => [
+                'preregistro_completo' => true,
+                'referencia_generada' => true,
+                'pago_estado' => 'rechazado',
+            ],
+        ];
     }
 }
