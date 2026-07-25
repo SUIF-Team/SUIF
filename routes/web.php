@@ -8,7 +8,9 @@ Route::get('/login', 'AuthController@showLogin')->name('login');
 Route::post('/login', 'AuthController@login')->name('login.post');
 Route::post('/logout', 'AuthController@logout')->name('logout');
 
-Route::group(['middleware' => 'auth', 'prefix' => 'participante', 'as' => 'participante.', 'namespace' => 'Participante'], function () {
+// Ajuste temporal: se eliminó 'middleware' => 'auth' (va al inicio de route::group)
+
+Route::group(['prefix' => 'participante', 'as' => 'participante.', 'namespace' => 'Participante'], function () {
     Route::get('/dashboard', 'DashboardController@index')->name('dashboard');
 
     Route::get('/preregistro', 'PreRegistroController@index')->name('preregistro.index');

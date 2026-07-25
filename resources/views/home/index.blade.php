@@ -55,7 +55,7 @@
             <div class="convocation-panel">
                 <div class="col-12 col-lg-7 convocation-copy">
                     <span class="period-label">Periodo vigente [2026-1]</span>
-                    <h2 id="convocation-title">Certificación en<br>[Nombre de la certificación]</h2>
+                    <h2 id="convocation-title">Certificación en<br>Materia de Prevención de Operaciones con Recursos de Procedencia Ilícita</h2>
                     <p>
                         Te invitamos a consultar el documento normativo completo donde encontrarás los requisitos detallados, fechas límite, sedes de aplicación disponibles y toda la información oficial necesaria para participar en este ciclo.
                     </p>
@@ -113,10 +113,10 @@
                     <article class="instruction-card">
                         <h3>Documentos requeridos</h3>
                         <ul>
-                            <li>Identificación oficial vigente (INE, pasaporte o cédula)</li>
-                            <li>Título profesional o acta de examen profesional</li>
-                            <li>Cédula profesional (copia legible)</li>
-                            <li>Fotografía digital reciente (.jpg, fondo blanco)</li>
+                            <li>Formatos requeridos (Solicitud, Aceptación, Carta, Autorización)</li>
+                            <li>Identificación oficial vigente (Credencial para votar o pasaporte)</li>
+                            <li>Clave Única de Registro de Población (CURP)</li>
+                            <li>Comprobante de pago (Transferencia electrónica o Factura)</li>
                         </ul>
                     </article>
                 </div>
