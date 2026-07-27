@@ -3,21 +3,16 @@
 @section('title', 'SUIF — Pre-registro')
 
 @push('styles')
-<style>
-.pr-shell{min-height:760px;padding:38px 44px 54px;background:rgba(255,255,255,.82)}.pr-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;max-width:1220px;margin:auto}.pr-side{background:#101927;color:#fff;border-radius:16px;padding:22px;height:max-content;position:sticky;top:20px}.pr-step{display:flex;gap:12px;align-items:center;padding:14px;border-radius:12px;background:#1d2a3c}.pr-step__icon{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#c39208;font-weight:700}.pr-step--done .pr-step__icon{background:#19a956}.pr-step small{display:block;color:#bac3ce;margin-top:3px}.pr-card{background:#fff;border-radius:18px;padding:32px;box-shadow:0 12px 35px rgba(23,42,68,.09)}.pr-card h1,.pr-card h2{margin-top:0;color:#172a44}.pr-muted{color:#6e7887}.pr-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.pr-field{display:grid;gap:7px}.pr-field label{font-size:13px;font-weight:700}.pr-field input,.pr-field select{width:100%;padding:13px 14px;border:1px solid #d9dee7;border-radius:9px;background:#fff}.pr-actions{margin-top:24px;display:flex;justify-content:flex-end;gap:12px}.pr-btn{display:inline-flex;align-items:center;justify-content:center;min-width:150px;padding:12px 18px;border:0;border-radius:9px;background:#b98709;color:#fff;text-decoration:none;font-weight:700;cursor:pointer}.pr-btn--secondary{background:#fff3bd;color:#172a44;border:1px solid #ead99a}.pr-btn[disabled]{background:#dfe3e9;cursor:not-allowed}.pr-key{display:inline-block;padding:15px 24px;border-radius:10px;background:#b98709;color:#fff;font-size:21px;letter-spacing:1px}.pr-docs{display:grid;gap:13px;margin-top:24px}.pr-doc{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:14px;align-items:center;padding:14px;border:1px solid #dce1e9;border-radius:12px}.pr-status{min-width:110px;padding:8px 12px;border-radius:999px;text-align:center;font-size:12px}.pr-status--pending{background:#e5e8ed}.pr-status--loaded{background:#dff2e4;color:#22713b}.pr-status--review{background:#ffe0a9;color:#7a4d00}.pr-status--approved{background:#16a653;color:#fff}.pr-status--rejected{background:#b5000a;color:#fff}.pr-file{position:relative;overflow:hidden}.pr-file input{position:absolute;inset:0;opacity:0;cursor:pointer}.pr-observation{margin-top:18px;padding:18px;border:1px solid #ebc7c7;border-radius:12px;background:#fff8f8;color:#8d1117}.pr-format{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:14px;border:1px solid #dce1e9;border-radius:12px}.pr-alert{margin-bottom:18px;padding:13px 16px;border-radius:10px;background:#eef7f0;color:#245f35}.pr-error{background:#fff0f0;color:#9b1717}.pr-center{text-align:center;padding:58px 20px}.pr-demo{margin-top:22px;padding-top:16px;border-top:1px dashed #d7dce5;font-size:12px}.pr-demo a{margin-right:12px}.pr-preview{display:none;margin-top:8px;font-size:12px}.pr-preview.is-visible{display:block}.pr-preview iframe{width:100%;height:360px;border:1px solid #dce1e9;border-radius:10px;margin-top:8px}@media(max-width:900px){.pr-layout{grid-template-columns:1fr}.pr-side{position:static}.pr-grid{grid-template-columns:1fr}.pr-doc,.pr-format{grid-template-columns:1fr}.pr-shell{padding:24px 16px}}
-</style>
+<link rel="stylesheet" href="{{ asset('assets/css/pages/participante-preregistro.css') }}">
 @endpush
+
+@section('participante_sidebar')
+<div class="pr-sidebar-step"><span>1</span><div><strong>Pre-registro</strong><small>Captura de datos</small></div></div>
+@endsection
 
 @section('content')
 <section class="pr-shell">
     <div class="pr-layout">
-        <aside class="pr-side">
-            <div class="pr-step {{ $estado['fase'] === 'completado' ? 'pr-step--done' : '' }}">
-                <span class="pr-step__icon">{{ $estado['fase'] === 'completado' ? '✓' : '1' }}</span>
-                <div><strong>Pre-registro</strong><small>Datos y documentación</small></div>
-            </div>
-        </aside>
-
         <main class="pr-card">
             @if(session('success'))<div class="pr-alert">{{ session('success') }}</div>@endif
             @if($errors->any())<div class="pr-alert pr-error"><strong>Revisa la información:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
@@ -40,7 +35,7 @@
                         <div class="pr-field"><label>¿Realiza actividades vulnerables? *</label><select name="actividad_vulnerable" required><option value="">Selecciona una opción</option><option value="si">Sí</option><option value="no">No</option></select></div>
                         <div class="pr-field"><label>¿Es responsable de cumplimiento? *</label><select name="responsable_cumplimiento" required><option value="">Selecciona una opción</option><option value="si">Sí</option><option value="no">No</option></select></div>
                     </div>
-                    <div class="pr-actions"><button class="pr-btn" type="submit">Continuar</button></div>
+                    <p class="pr-notice">Al continuar, la clave de acceso se enviará al correo principal y podrás continuar el proceso desde la plataforma.</p><div class="pr-actions"><button class="pr-btn" type="submit" disabled>Continuar</button></div>
                 </form>
 
             @elseif($estado['fase'] === 'clave')
@@ -88,6 +83,7 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('assets/js/pages/participante-preregistro.js') }}"></script>
 <script>
 (function(){
   var copy=document.querySelector('[data-copy-key]');if(copy){copy.addEventListener('click',function(){var t=document.getElementById('pr-key').textContent;navigator.clipboard&&navigator.clipboard.writeText(t);copy.textContent='Clave copiada';});}

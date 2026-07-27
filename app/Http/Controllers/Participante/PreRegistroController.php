@@ -37,6 +37,9 @@ class PreRegistroController extends Controller
 
     public function guardarDatos(Request $request)
     {
+        $entidades = implode(',', $this->entidades());
+        $grados = implode(',', array_keys($this->grados()));
+
         $datos = $this->validate($request, [
             'nombre' => 'required|string|max:100',
             'primer_apellido' => 'required|string|max:80',
@@ -44,9 +47,9 @@ class PreRegistroController extends Controller
             'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/'],
             'correo_principal' => 'required|email|max:150',
             'telefono' => 'required|digits:10',
-            'entidad_federativa' => 'required|string',
+            'entidad_federativa' => 'required|in:'.$entidades,
             'correo_alterno' => 'required|email|max:150|different:correo_principal',
-            'grado_estudios' => 'required|string',
+            'grado_estudios' => 'required|in:'.$grados,
             'actividad_vulnerable' => 'required|in:si,no',
             'responsable_cumplimiento' => 'required|in:si,no',
         ], [
@@ -54,7 +57,9 @@ class PreRegistroController extends Controller
             'email' => 'Escribe un correo válido.',
             'digits' => 'El teléfono debe contener exactamente 10 dígitos.',
             'size' => 'La CURP debe contener exactamente 18 caracteres.',
+            'regex' => 'La CURP solo debe contener letras y números.',
             'different' => 'El correo alterno debe ser distinto al principal.',
+            'in' => 'Selecciona una opción válida.',
         ]);
 
         $estado = $this->estado($request);

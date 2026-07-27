@@ -1,0 +1,1 @@
+(function(){'use strict';document.addEventListener('DOMContentLoaded',function(){var f=document.getElementById('pr-data-form');if(!f)return;var b=f.querySelector('button[type=submit]');function u(){b.disabled=!f.checkValidity();}f.addEventListener('input',u);f.addEventListener('change',u);u();});}());
