@@ -39,8 +39,25 @@
                 </form>
 
             @elseif($estado['fase'] === 'clave')
-                <div class="pr-center"><h1>¡Datos registrados!</h1><p>Tu clave de acceso es:</p><p><span class="pr-key" id="pr-key">{{ $estado['clave'] }}</span></p><button type="button" class="pr-btn pr-btn--secondary" data-copy-key>Copiar clave</button></div>
-                <form method="POST" action="{{ route('participante.preregistro.avanzar') }}" class="pr-actions">{{ csrf_field() }}<button class="pr-btn">Continuar</button></form>
+                <section class="pr-clave" aria-labelledby="pr-clave-titulo">
+                    <span class="pr-clave__icon" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                    <p class="pr-clave__eyebrow">Pre-registro iniciado</p>
+                    <h1 id="pr-clave-titulo">Tus datos fueron registrados correctamente</h1>
+                    <p class="pr-clave__texto">Guarda tu clave de acceso. También la enviamos a tu correo principal para que puedas retomar el proceso.</p>
+
+                    <div class="pr-clave__codigo" aria-label="Clave de acceso generada">
+                        <span id="pr-key">{{ $estado['clave'] }}</span>
+                        <button type="button" class="pr-clave__copiar" data-copy-key aria-describedby="pr-clave-ayuda">
+                            <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                            <span>Copiar</span>
+                        </button>
+                    </div>
+                    <p id="pr-clave-ayuda" class="pr-clave__ayuda">La necesitarás para consultar y continuar tu trámite.</p>
+                    <form method="POST" action="{{ route('participante.preregistro.avanzar') }}" class="pr-actions">
+                        {{ csrf_field() }}
+                        <button class="pr-btn" type="submit">Continuar</button>
+                    </form>
+                </section>
 
             @elseif($estado['fase'] === 'formatos')
                 <h1>Formatos requeridos</h1><p class="pr-muted">Previsualiza cada formato antes de descargarlo.</p>

@@ -53,7 +53,7 @@
         </aside>
 
         <main id="contenido-principal" class="participante-main">
-            @include('partials.alertas')
+            {{-- @include('partials.alertas') --}}
             @yield('content')
         </main>
     </div>
