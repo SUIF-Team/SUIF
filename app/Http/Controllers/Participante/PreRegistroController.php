@@ -70,8 +70,8 @@ class PreRegistroController extends Controller
         $request->session()->put('suif.preregistro', $estado);
         $this->enviarClave($datos['correo_principal'], $estado['clave']);
 
-        // return redirect()->route('participante.preregistro.index')
-        //     ->with('success', 'Tus datos fueron guardados correctamente.');
+        return redirect()->route('participante.preregistro.index')
+        ->with('success', 'Tus datos fueron guardados correctamente.');
     }
 
     public function avanzar(Request $request)
