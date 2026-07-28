@@ -1,12 +1,12 @@
+name: suif
 services:
   app:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: suif_app
-    restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${APP_PORT:-8088}:80"
     volumes:
       - ./:/var/www/html
     depends_on:
@@ -14,40 +14,20 @@ services:
         condition: service_healthy
 
   db:
-    image: mysql:5.7
-    container_name: suif_db
-    restart: unless-stopped
+    image: postgres:16
     environment:
-      MYSQL_DATABASE: suif
-      MYSQL_USER: suif
-      MYSQL_PASSWORD: suif123
-      MYSQL_ROOT_PASSWORD: root123
+      POSTGRES_DB: "${DB_DATABASE:-suif}"
+      POSTGRES_USER: "${DB_USERNAME:-suif}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
     ports:
-      - "3307:3306"
+      - "${DB_FORWARD_PORT:-5433}:5432"
     volumes:
-      - suif_mysql_data:/var/lib/mysql
+      - suif_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h localhost -proot123 --silent"
-        ]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 5s
       retries: 20
 
-  phpmyadmin:
-    image: phpmyadmin:5-apache
-    container_name: suif_phpmyadmin
-    restart: unless-stopped
-    ports:
-      - "8081:80"
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-    depends_on:
-      db:
-        condition: service_healthy
-
 volumes:
-  suif_mysql_data:
+  suif_postgres_data:

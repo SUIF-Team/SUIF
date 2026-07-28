@@ -7,7 +7,6 @@
 
 # ─── Dependencias de Composer ─────────────────────────────────────────────────
 vendor/
-composer.lock
 
 # ─── Cache y archivos compilados de Laravel ───────────────────────────────────
 bootstrap/cache/*.php

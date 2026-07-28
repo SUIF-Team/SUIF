@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Participante;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 /**
- * EvaluacionController
- *
- * Migrado desde: app/controllers/EvaluacionController.php
- * Responsabilidad: consulta y gestión de resultados de evaluación.
+ * Responsabilidad: consulta de resultados publicados para el participante.
  */
 class ResultadoController extends Controller
 {
-    //
+    public function resultados()
+    {
+        return view('participante.resultados');
+    }
 }
