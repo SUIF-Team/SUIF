@@ -39,7 +39,7 @@
                 @else
                     <a href="{{ route('home') }}" class="participante-salir">
                         <span class="participante-salir__icon" aria-hidden="true">
-                            <i class="fa-solid fa-arrow-left"></i>
+                            <i class="fa-solid fa-door-open"></i>
                         </span>
                         <span>Salir</span>
                     </a>
