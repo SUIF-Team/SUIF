@@ -1,20 +1,21 @@
 /* Dashboard y estados del proceso de certificación del participante. */
+/* Valores tomados del Figma "Página principal - Mi proceso" (nodos 1358:250 y 1370:763). */
 
 .participante-dashboard {
     min-height: 720px;
     padding: clamp(3rem, 7vw, 5.5rem) clamp(1.5rem, 5vw, 4rem) clamp(4.5rem, 10vw, 8rem);
-    color: #172a44;
+    color: #16263f;
 }
 
 .participante-dashboard__header,
 .process-list {
-    width: min(100%, 1035px);
+    width: min(100%, 1112px);
     margin-right: auto;
     margin-left: auto;
 }
 
 .participante-dashboard__header {
-    margin-bottom: 1.4rem;
+    margin-bottom: 1.125rem;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -22,46 +23,46 @@
 }
 
 .participante-dashboard__header h1 {
-    margin: 0 0 0.3rem;
-    color: #121829;
+    margin: 0 0 0.25rem;
+    color: #16263f;
     font-family: var(--font-nav);
-    font-size: clamp(1.45rem, 2.5vw, 1.8rem);
+    font-size: clamp(1.35rem, 2.5vw, 1.5rem);
     font-weight: 600;
 }
 
 .participante-dashboard__header p {
     margin: 0;
-    color: #6b7280;
-    font-size: 0.9rem;
+    color: #6b6b66;
+    font-size: 0.875rem;
 }
 
 .dashboard-status,
 .process-badge {
     border-radius: 999px;
-    font-size: 0.76rem;
-    font-weight: 700;
+    font-size: 0.75rem;
+    font-weight: 500;
     line-height: 1.2;
     white-space: nowrap;
 }
 
 .dashboard-status {
     margin-top: 0.35rem;
-    padding: 0.45rem 1rem;
+    padding: 0.3125rem 0.75rem;
 }
 
 .dashboard-status--completed {
-    background: #d8ecdf;
-    color: #075b2c;
+    background: #e8e8e0;
+    color: #6b6b66;
 }
 
 .dashboard-status--pending {
-    background: #fff0bd;
-    color: #785808;
+    background: #e8e8e0;
+    color: #6b6b66;
 }
 
 .dashboard-status--in-progress {
-    background: #d9e8f8;
-    color: #1e5b91;
+    background: #e5edf7;
+    color: #185fa5;
 }
 
 .dashboard-status--rejected {
@@ -71,19 +72,18 @@
 
 .process-list {
     display: grid;
-    gap: 0.85rem;
+    gap: 0.875rem;
 }
 
 .process-card {
-    min-height: 5rem;
-    padding: 1rem 1.35rem;
+    padding: 1.375rem 1.5rem;
     display: grid;
-    grid-template-columns: 2.45rem minmax(0, 1fr) auto;
+    grid-template-columns: 2.375rem minmax(0, 1fr) auto;
     align-items: center;
-    gap: 1rem;
+    gap: 1.125rem;
     border: 2px solid transparent;
-    border-radius: 0.8rem;
-    background: #f7f6f2;
+    border-radius: 14px;
+    background: #f4f3ed;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
@@ -93,18 +93,16 @@
 }
 
 .process-card--completed {
-    border-color: #57906a;
-    background: #edf7f0;
+    background: #e8f5ed;
 }
 
 .process-card--pending {
-    border-color: #c69a26;
-    background: #fff8df;
+    background: #f4f3ed;
 }
 
 .process-card--in-progress {
-    border-color: #173f67;
-    background: #edf4fc;
+    border-color: #16263f;
+    background: #e5edf7;
 }
 
 .process-card--rejected {
@@ -113,30 +111,25 @@
 }
 
 .process-card__number {
-    width: 2.45rem;
-    height: 2.45rem;
+    width: 2.375rem;
+    height: 2.375rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: #deded8;
-    color: #70716d;
-    font-size: 0.88rem;
-    font-weight: 700;
+    background: #dbdbd4;
+    color: #6b6b66;
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 .process-card--completed .process-card__number {
-    background: #39734d;
-    color: #ffffff;
-}
-
-.process-card--pending .process-card__number {
-    background: #9c7310;
+    background: #0f6e56;
     color: #ffffff;
 }
 
 .process-card--in-progress .process-card__number {
-    background: #173f67;
+    background: #16263f;
     color: #ffffff;
 }
 
@@ -151,16 +144,16 @@
 
 .process-card__content h2 {
     margin: 0 0 0.2rem;
-    color: #121829;
+    color: #16263f;
     font-family: var(--font-nav);
-    font-size: 1.02rem;
-    font-weight: 600;
+    font-size: 1.0625rem;
+    font-weight: 500;
 }
 
 .process-card__content p {
     margin: 0;
-    color: #6b7280;
-    font-size: 0.82rem;
+    color: #6b6b66;
+    font-size: 0.8125rem;
     line-height: 1.45;
 }
 
@@ -172,24 +165,24 @@
 }
 
 .process-badge {
-    padding: 0.38rem 0.85rem;
-    background: #e7e7e2;
-    color: #656661;
+    padding: 0.3125rem 0.75rem;
+    background: #e8e8e0;
+    color: #6b6b66;
 }
 
 .process-badge--completed {
-    background: #d8ecdf;
-    color: #075b2c;
+    background: #d6edde;
+    color: #0f6e56;
 }
 
 .process-badge--pending {
-    background: #f8e8ae;
-    color: #765607;
+    background: #e8e8e0;
+    color: #6b6b66;
 }
 
 .process-badge--in-progress {
-    background: #d3e3fa;
-    color: #235f98;
+    background: #d4e0f7;
+    color: #185fa5;
 }
 
 .process-badge--rejected {
@@ -199,24 +192,24 @@
 
 .process-button {
     min-width: 6.1rem;
-    padding: 0.65rem 1.05rem;
+    padding: 0.625rem 1.125rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #173f67;
-    border-radius: 0.45rem;
-    background: #173f67;
+    border: 1px solid #16263f;
+    border-radius: 8px;
+    background: #16263f;
     color: #ffffff;
-    font-size: 0.78rem;
-    font-weight: 700;
+    font-size: 0.8125rem;
+    font-weight: 500;
     text-decoration: none;
     transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .process-button:hover,
 .process-button:focus-visible {
-    border-color: #0b263f;
-    background: #0b263f;
+    border-color: #0d1727;
+    background: #0d1727;
     color: #ffffff;
     transform: translateY(-1px);
 }
@@ -226,8 +219,8 @@
 }
 
 .process-button--demo:hover {
-    border-color: #173f67;
-    background: #173f67;
+    border-color: #16263f;
+    background: #16263f;
     transform: none;
 }
 
@@ -247,12 +240,12 @@
     }
 
     .process-card {
-        grid-template-columns: 2.45rem minmax(0, 1fr);
+        grid-template-columns: 2.375rem minmax(0, 1fr);
     }
 
     .process-card__actions {
         grid-column: 1 / -1;
-        padding-left: 3.45rem;
+        padding-left: 3.5rem;
         justify-content: flex-start;
         flex-wrap: wrap;
     }

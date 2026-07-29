@@ -83,12 +83,16 @@ class DashboardController extends Controller
 
         $pasos = [];
         $pasos[] = $this->paso(1, 'Pre-registro',
-            'Completa tus datos personales y carga los documentos requeridos.',
+            $pre
+                ? 'Completaste tus datos personales y documentos requeridos.'
+                : 'Completa tus datos personales y sube los documentos requeridos.',
             $pre ? 'completed' : 'in-progress',
-            'participante.preregistro.create');
+            'participante.preregistro.index');
 
         $pasos[] = $this->paso(2, 'Obtener referencia',
-            'Genera tu referencia de pago por $'.$cuota.' '.config('suif.moneda', 'MXN').'.',
+            $ref
+                ? 'Referencia de pago generada ($'.$cuota.' '.config('suif.moneda', 'MXN').').'
+                : 'Genera tu referencia de pago por la cantidad de $'.$cuota.' '.config('suif.moneda', 'MXN').'.',
             !$pre ? 'pending' : ($ref ? 'completed' : 'in-progress'),
             'participante.referencia.index');
 

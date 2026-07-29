@@ -23,7 +23,8 @@
             <article
                 class="process-card process-card--{{ $paso['estado'] }}{{ $paso['mostrarBoton'] ? ' process-card--interactive' : '' }}"
                 aria-labelledby="paso-{{ $paso['numero'] }}-titulo">
-                <div class="process-card__number" aria-hidden="true">{{ $paso['numero'] }}</div>
+                {{-- Las etapas completadas muestran palomita en lugar del número (Figma 1370:775). --}}
+                <div class="process-card__number" aria-hidden="true">{{ $paso['estado'] === 'completed' ? '✓' : $paso['numero'] }}</div>
                 <div class="process-card__content">
                     <h2 id="paso-{{ $paso['numero'] }}-titulo">{{ $paso['titulo'] }}</h2>
                     <p>{{ $paso['descripcion'] }}</p>
