@@ -1,0 +1,39 @@
+/* Botón de salida compartido por los paneles internos de SUIF. */
+
+.sistema-salir {
+    width: max-content;
+    max-width: 100%;
+    padding: 0.35rem 1rem 0.35rem 0.35rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    border: 0;
+    border-radius: 0.65rem;
+    background: #21293c;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.sistema-salir:hover,
+.sistema-salir:focus-visible {
+    background: #2a344d;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.sistema-salir-icono {
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.45rem;
+    background: #d92d20;
+    color: #ffffff;
+    font-size: 0.85rem;
+}

@@ -1,0 +1,169 @@
+/* Panel administrativo: indicadores, acciones y salida. */
+
+.admin-dashboard {
+    flex: 1 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) 1.25rem;
+    background-color: rgba(255, 255, 255, 0.91);
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
+        var(--fondo-sistema);
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.admin-dashboard-contenedor {
+    width: min(100%, 1200px);
+    margin: 0 auto;
+}
+
+.admin-dashboard-titulo {
+    margin: 0 0 1.8rem;
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 700;
+}
+
+.admin-dashboard-indicadores {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.8rem;
+}
+
+.admin-dashboard-indicador {
+    min-height: 142px;
+    padding: 1.4rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.65rem;
+    background: var(--surface-white);
+    box-shadow: 0 1px 2px rgba(17, 47, 75, 0.08);
+}
+
+.admin-dashboard-indicador h2 {
+    margin: 0 0 0.75rem;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.admin-dashboard-indicador p {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.admin-dashboard-indicador-azul p {
+    color: #1e5095;
+}
+
+.admin-dashboard-indicador-naranja p {
+    color: #a05a2c;
+}
+
+.admin-dashboard-indicador-verde p {
+    color: #297a38;
+}
+
+.admin-dashboard-acciones {
+    margin-bottom: 2rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--border-light);
+    border-radius: 0.8rem;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.08);
+}
+
+.admin-dashboard-acciones > h2 {
+    margin: 0 0 1.5rem;
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.admin-dashboard-acciones-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.admin-dashboard-accion {
+    min-width: 0;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.65rem;
+    background: #f2f0eb;
+}
+
+.admin-dashboard-accion h3 {
+    margin: 0 0 0.3rem;
+    color: var(--text-dark);
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.admin-dashboard-accion p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.admin-dashboard-accion-pendiente {
+    padding: 0.4rem 1rem;
+    border: 1px solid #a9a9a9;
+    border-radius: 999px;
+    background: #e2e2e2;
+    color: #656565;
+    cursor: not-allowed;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+}
+
+.admin-dashboard-salida {
+    margin: 0;
+}
+
+@media (min-width: 768px) {
+    .admin-dashboard-indicadores,
+    .admin-dashboard-acciones-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-dashboard-accion {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .admin-dashboard-accion-pendiente {
+        flex-shrink: 0;
+    }
+}
+
+@media (min-width: 1024px) {
+    .admin-dashboard-indicadores {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .admin-dashboard-acciones-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-dashboard-accion {
+        min-height: 168px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+}
