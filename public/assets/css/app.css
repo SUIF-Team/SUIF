@@ -47,6 +47,7 @@ body.landing-page .landing-main {
 body.pagina-sistema {
     min-height: 100vh;
     margin: 0;
+    padding-top: var(--navbar-height);
     background-color: var(--surface-cream);
     background-image: var(--fondo-sistema);
     background-position: center top;

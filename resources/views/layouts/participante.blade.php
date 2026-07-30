@@ -40,7 +40,7 @@
                 @else
                     <a href="{{ route('home') }}" class="sistema-salir">
                         <span class="sistema-salir-icono" aria-hidden="true">
-                            <i class="fa-solid fa-door-open"></i>
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </span>
                         <span>Salir</span>
                     </a>
