@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 /**
  * Admin\DashboardController
@@ -13,5 +12,58 @@ use Illuminate\Http\Request;
  */
 class DashboardController extends Controller
 {
-    //
+    /**
+     * Muestra el resumen provisional del panel administrativo.
+     *
+     * Los indicadores se sustituirán por datos persistidos cuando se apruebe
+     * e implemente la base de datos del sistema.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function index()
+    {
+        $resumen = [
+            'participantes_registrados' => 0,
+            'preregistros_pendientes' => 0,
+            'pagos_pendientes' => 0,
+            'certificados_pendientes' => 0,
+        ];
+
+        /*
+         * Se conservan los accesos del diseño aprobado. Ninguno se habilita
+         * hasta que su módulo tenga controlador, autorización y flujo listos.
+         */
+        $acciones = [
+            [
+                'titulo' => 'Pre-registro',
+                'descripcion' => 'Valida los pre-registros y documentación existentes.',
+            ],
+            [
+                'titulo' => 'Pagos',
+                'descripcion' => 'Gestiona los pagos realizados.',
+            ],
+            [
+                'titulo' => 'Referencias bancarias',
+                'descripcion' => 'Consulta la correspondencia de referencias bancarias.',
+            ],
+            [
+                'titulo' => 'Certificados',
+                'descripcion' => 'Administra la emisión de certificados.',
+            ],
+            [
+                'titulo' => 'Participantes registrados',
+                'descripcion' => 'Consulta los participantes registrados.',
+            ],
+            [
+                'titulo' => 'Subir referencias bancarias',
+                'descripcion' => 'Carga la lista de referencias bancarias.',
+            ],
+            [
+                'titulo' => 'Sedes',
+                'descripcion' => 'Gestiona las sedes activas.',
+            ],
+        ];
+
+        return view('admin.dashboard', compact('resumen', 'acciones'));
+    }
 }

@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/partials/navbar-sistema.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/partials/salida-sistema.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/partials/sidebar-participante.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/partials/footer.css') }}">
     @yield('styles')
@@ -29,17 +30,17 @@
                 @if (auth()->check())
                     <form method="POST" action="{{ route('logout') }}">
                         {{ csrf_field() }}
-                        <button type="submit" class="participante-salir">
-                            <span class="participante-salir__icon" aria-hidden="true">
+                        <button type="submit" class="sistema-salir">
+                            <span class="sistema-salir-icono" aria-hidden="true">
                                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
                             </span>
                             <span>Salir</span>
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('home') }}" class="participante-salir">
-                        <span class="participante-salir__icon" aria-hidden="true">
-                            <i class="fa-solid fa-door-open"></i>
+                    <a href="{{ route('home') }}" class="sistema-salir">
+                        <span class="sistema-salir-icono" aria-hidden="true">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </span>
                         <span>Salir</span>
                     </a>

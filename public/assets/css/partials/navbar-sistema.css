@@ -1,6 +1,11 @@
 /* Navbar institucional sin menú de secciones para las pantallas internas de SUIF. */
 
 .navbar-sistema {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1030;
+    width: 100%;
     min-height: var(--navbar-height);
     padding: 0.75rem clamp(1.5rem, 3.2vw, 3.25rem);
     display: flex;

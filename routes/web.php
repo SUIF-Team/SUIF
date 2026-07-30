@@ -41,7 +41,9 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.', 'namespace' =
     Route::post('/facturacion', 'FacturacionController@store')->name('facturacion.store');
 });
 
-Route::group(['middleware' => ['auth'], 'prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin'], function () {
+// Acceso temporal sin autenticación para desarrollar los módulos administrativos.
+// Restaurar el middleware 'auth' antes de desplegar el proyecto.
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin'], function () {
     Route::get('/dashboard', 'DashboardController@index')->name('dashboard');
     Route::get('/participantes', 'ParticipanteController@index')->name('participantes.index');
     Route::get('/participantes/{id}', 'ParticipanteController@show')->name('participantes.show');
