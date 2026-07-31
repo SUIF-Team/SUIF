@@ -6,10 +6,6 @@
 <link rel="stylesheet" href="{{ asset('assets/css/pages/participante-preregistro.css') }}">
 @endpush
 
-@section('participante_sidebar')
-<div class="pr-sidebar-step"><span>1</span><div><strong>Pre-registro</strong><small>Captura de datos</small></div></div>
-@endsection
-
 @section('content')
 <section class="pr-shell">
     <div class="pr-layout">
