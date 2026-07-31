@@ -87,7 +87,7 @@
                         <span class="sede-boton sede-boton--deshabilitado">Sin cupo</span>
                     @else
                         <form method="POST" action="{{ route('participante.sede.seleccionar') }}">
-                            {{ csrf_field() }}
+                            @csrf
                             <input type="hidden" name="sede_id" value="{{ $sede['id'] }}">
                             <button type="submit" class="sede-boton">Seleccionar</button>
                         </form>

@@ -5,24 +5,25 @@
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": ">=7.1.0",
-        "fideloper/proxy": "~4.0",
-        "laravel/framework": "5.5.*",
-        "laravel/tinker": "~1.0"
+        "php": "^8.3",
+        "laravel/framework": "^13.8",
+        "laravel/tinker": "^3.0"
     },
     "require-dev": {
-        "filp/whoops": "~2.0",
-        "fzaninotto/faker": "~1.4",
-        "mockery/mockery": "~1.0",
-        "phpunit/phpunit": "~6.0"
+        "fakerphp/faker": "^1.23",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^12.5"
     },
     "autoload": {
         "classmap": [
-            "database/seeds",
+            "database/seeders",
             "database/factories"
         ],
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
             "app/Helpers/functions.php"
@@ -47,23 +48,16 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover"
+            "@php artisan package:discover --ansi"
         ]
     },
     "config": {
-        "allow-plugins": {
-            "kylekatarnls/update-helper": true,
-            "symfony/thanks": false
-        },
         "optimize-autoloader": true,
-        "platform": {
-            "php": "7.1.0"
-        },
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "kylekatarnls/update-helper": true,
-            "symfony/thanks": true
+            "php-http/discovery": true,
+            "kylekatarnls/update-helper": true
         }
     },
     "minimum-stability": "stable",

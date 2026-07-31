@@ -41,7 +41,7 @@
             <h1>Sube tu comprobante de pago</h1>
             <p class="pago-muted">Adjunta el comprobante de tu pago por ${{ $cuota }} {{ $moneda }}. Solo se acepta un archivo PDF de máximo 1 MB.</p>
             <form method="POST" action="{{ route('participante.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
-                {{ csrf_field() }}
+                @csrf
                 <label class="pago-archivo">
                     Seleccionar PDF
                     <input type="file" name="comprobante" accept="application/pdf" required>
@@ -75,7 +75,7 @@
                     <h2 class="pago-tarjeta__titulo pago-tarjeta__titulo--error">Comentarios</h2>
                     <p>Su comprobante de pago fue rechazado porque no cumple con los requisitos necesarios. Para subsanar esta situación, le solicitamos cargar nuevamente el comprobante correcto y legible.</p>
                     <form method="POST" action="{{ route('participante.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
-                        {{ csrf_field() }}
+                        @csrf
                         <label class="pago-archivo">
                             Seleccionar PDF
                             <input type="file" name="comprobante" accept="application/pdf" required>

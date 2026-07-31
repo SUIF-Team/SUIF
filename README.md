@@ -1,6 +1,6 @@
 # SUIF — Sistema Integral de Certificaciones
 
-SUIF es una aplicación web de la Facultad de Contaduría y Administración de la UNAM para el seguimiento administrativo de un proceso de certificación. El proyecto conserva un stack legado y se está reconstruyendo de forma gradual; por ello se priorizan la compatibilidad, los cambios acotados y la trazabilidad.
+SUIF es una aplicación web de la Facultad de Contaduría y Administración de la UNAM para el seguimiento administrativo de un proceso de certificación. El proyecto se está reconstruyendo de forma gradual sobre un stack moderno y fijado por versión exacta (ver tabla abajo); por ello se priorizan la compatibilidad entre el equipo, los cambios acotados y la trazabilidad.
 
 > SUIF no aplica ni administra exámenes. Su alcance es el pre-registro, documentación, referencias y pagos, selección de sede, consulta de resultados, certificados y los paneles de participante y administración.
 
@@ -17,15 +17,16 @@ SUIF es una aplicación web de la Facultad de Contaduría y Administración de l
 
 | Capa | Tecnología / versión | Uso |
 |---|---|---|
-| Backend | PHP **7.1.0** | Versión exacta de la imagen Docker y plataforma de Composer. |
-| Framework | Laravel **5.5** | Rutas, controladores, Blade y estructura MVC. |
+| Backend | PHP **8.4.23** | Versión exacta de la imagen Docker y plataforma de Composer. |
+| Framework | Laravel **13.x** (`^13.8`) | Rutas, controladores, Blade y estructura MVC. Configuración vía `bootstrap/app.php` (sin `Kernel.php`). |
 | Servidor web | Apache | El `DocumentRoot` apunta a `public/`. |
-| Dependencias PHP | Composer **2.2.29** | Instalado dentro de la imagen de la aplicación. |
-| Base de datos | PostgreSQL **16** | Servicio Docker `db`. |
-| Frontend | Blade, CSS y JavaScript directos | Los assets se sirven desde `public/assets`; no hay Node, Vite, Mix, Sass ni un paso de compilación. |
+| Dependencias PHP | Composer **2.10.2** | Instalado dentro de la imagen de la aplicación. |
+| Base de datos | PostgreSQL **18.4** | Servicio Docker `db`; el volumen se monta en `/var/lib/postgresql` (formato requerido desde Postgres 18+). |
+| Node.js | **24.18 LTS** | Instalado dentro de la imagen de la aplicación, listo para Vite. |
+| Frontend | Blade, CSS y JavaScript directos | Los assets se sirven desde `public/assets` con `asset()`. Vite/Vue quedan disponibles en el contenedor para adopción futura; hoy no hay paso de compilación obligatorio. |
 | Bibliotecas en la interfaz pública | Bootstrap 5.3.3, Font Awesome 6.4.0 y Vue 3 | Se cargan por CDN en las vistas que los usan. |
 
-PHP 7.1 y Laravel 5.5 son versiones sin soporte de seguridad. Este entorno existe para reproducir y mantener el sistema legado; no debe exponerse a Internet sin una revisión de seguridad y actualización planificada.
+Todas las versiones anteriores están fijadas de forma exacta (misma imagen Docker, mismo `composer.json`) para que el equipo trabaje en entornos idénticos aunque cada quien use su propia PC. No cambies una versión sin acordarlo con el resto del equipo.
 
 ## Estructura relevante
 
@@ -82,11 +83,9 @@ Copy-Item .env.example .env
 Antes de iniciar PostgreSQL, abre `.env` y define una contraseña local no vacía en `DB_PASSWORD`. No reutilices esa contraseña fuera del entorno de desarrollo. Después ejecuta:
 
 ```powershell
-docker compose build app
-docker compose up -d db
-docker compose run --rm app composer install --no-interaction --prefer-dist --no-plugins
-docker compose run --rm app php artisan key:generate
-docker compose up -d app
+docker compose up -d --build
+docker compose exec app composer install --no-interaction --prefer-dist
+docker compose exec app php artisan key:generate
 ```
 
 `.env.example` y el valor de respaldo de `compose.yaml` fijan el mapeo definitivo `8088:80`. Si ya existe un archivo `.env` anterior, comprueba que contenga `APP_URL=http://localhost:8088` y `APP_PORT=8088`.
@@ -100,7 +99,7 @@ docker compose exec app composer --version
 docker compose exec app php artisan --version
 ```
 
-La salida de PHP debe empezar con `PHP 7.1.0` y Composer debe indicar `2.2.29`.
+La salida de PHP debe empezar con `PHP 8.4.23` y Composer debe indicar `2.10.2`.
 
 En inicios posteriores basta con:
 
@@ -178,10 +177,10 @@ Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona.
 
 ## Lineamientos de mantenimiento
 
-- Mantener compatibilidad con PHP 7.1.0; no introducir sintaxis ni dependencias que requieran versiones posteriores sin una decisión explícita de actualización.
+- Mantener el stack fijado a PHP 8.4.23 / Laravel ^13.8 / PostgreSQL 18.4 (ver tabla arriba); si el equipo decide actualizar, cambiar `Dockerfile`, `compose.yaml` y `composer.json` juntos y avisar a todo el equipo antes de reconstruir.
 - No agregar paquetes Composer, npm, bundlers ni frameworks nuevos sin validar su compatibilidad y acordar el cambio.
 - Mantener la separación MVC: las vistas presentan, los controladores coordinan y los modelos/persistencia encapsulan datos.
-- Usar formularios `POST`, protección CSRF con `{{ csrf_field() }}` —compatible con Laravel 5.5— y validación del lado servidor al implementar flujos.
+- Usar formularios `POST`, protección CSRF con `@csrf` —Laravel 13 renombró el middleware a `PreventRequestForgery`— y validación del lado servidor al implementar flujos.
 - Aplicar autorización por rol antes de habilitar operaciones administrativas.
 - Antes de cambios estructurales en PostgreSQL, definir migraciones y contar con respaldo del ambiente afectado.
 - Mantener los cambios pequeños, revisables y documentar los límites o `TODO` que permanezcan.

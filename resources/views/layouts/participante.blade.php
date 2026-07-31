@@ -29,7 +29,7 @@
             <div class="participante-sidebar__bottom">
                 @if (auth()->check())
                     <form method="POST" action="{{ route('logout') }}">
-                        {{ csrf_field() }}
+                        @csrf
                         <button type="submit" class="sistema-salir">
                             <span class="sistema-salir-icono" aria-hidden="true">
                                 <i class="fa-solid fa-arrow-right-from-bracket"></i>

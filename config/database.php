@@ -43,7 +43,7 @@ return [
             'engine'      => null,
         ],
 
-        // Conexión principal del proyecto SUIF — PostgreSQL 16
+        // Conexión principal del proyecto SUIF — PostgreSQL 18
         'pgsql' => [
             'driver'   => 'pgsql',
             'host'     => env('DB_HOST', '127.0.0.1'),
