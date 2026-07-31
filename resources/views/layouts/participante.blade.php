@@ -24,7 +24,7 @@
 
     <div class="participante-shell flex-grow-1">
         <aside class="participante-sidebar" aria-label="Opciones de la cuenta">
-            @yield('participante_sidebar')
+            @include('partials.sidebar-progreso')
             <div class="participante-sidebar__bottom">
                 @if (auth()->check())
                     <form method="POST" action="{{ route('logout') }}">

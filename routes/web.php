@@ -30,11 +30,13 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.', 'namespace' =
 
     Route::get('/pago', 'PagoController@index')->name('pago.index');
     Route::post('/pago/comprobante', 'PagoController@subirComprobante')->name('pago.comprobante');
+    Route::get('/pago/demo/{estado}', 'PagoController@demo')->name('pago.demo');
     Route::get('/referencia', 'ReferenciaController@index')->name('referencia.index');
     Route::get('/documentos', 'DocumentoController@index')->name('documentos.index');
     Route::post('/documentos', 'DocumentoController@store')->name('documentos.store');
     Route::get('/sede', 'SedeController@index')->name('sede.index');
     Route::post('/sede', 'SedeController@seleccionar')->name('sede.seleccionar');
+    Route::get('/sede/reiniciar', 'SedeController@reiniciar')->name('sede.reiniciar');
     Route::get('/resultados', 'ResultadoController@resultados')->name('resultados');
     Route::get('/certificado', 'CertificadoController@index')->name('certificado');
     Route::get('/facturacion', 'FacturacionController@index')->name('facturacion.index');
