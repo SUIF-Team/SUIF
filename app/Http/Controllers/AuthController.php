@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
  *   - Illuminate\Support\Facades\Auth  (en lugar de core/Auth.php)
  *   - Illuminate\Support\Facades\Session (en lugar de core/Session.php)
  *   - Illuminate\Support\Facades\Validator (en lugar de core/Validator.php)
- *   - csrf_field() en las vistas Blade (en lugar de core/Csrf.php)
+ *   - @csrf en las vistas Blade (en lugar de core/Csrf.php)
  */
 class AuthController extends Controller
 {

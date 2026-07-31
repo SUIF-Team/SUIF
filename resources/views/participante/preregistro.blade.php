@@ -17,7 +17,7 @@
                 <h1>Datos de identificación</h1>
                 <p class="pr-muted">Todos los campos son obligatorios. No podrás avanzar hasta completarlos.</p>
                 <form method="POST" action="{{ route('participante.preregistro.datos.store') }}" id="pr-data-form">
-                    {{ csrf_field() }}
+                    @csrf
                     <div class="pr-grid">
                         <div class="pr-field"><label>Nombre *</label><input name="nombre" value="{{ old('nombre', isset($estado['datos']['nombre']) ? $estado['datos']['nombre'] : '') }}" required></div>
                         <div class="pr-field"><label>Primer apellido *</label><input name="primer_apellido" value="{{ old('primer_apellido', isset($estado['datos']['primer_apellido']) ? $estado['datos']['primer_apellido'] : '') }}" required></div>
@@ -50,7 +50,7 @@
                     </div>
                     <p id="pr-clave-ayuda" class="pr-clave__ayuda">La necesitarás para consultar y continuar tu trámite.</p>
                     <form method="POST" action="{{ route('participante.preregistro.avanzar') }}" class="pr-actions">
-                        {{ csrf_field() }}
+                        @csrf
                         <button class="pr-btn" type="submit">Continuar</button>
                     </form>
                 </section>
@@ -58,7 +58,7 @@
             @elseif($estado['fase'] === 'formatos')
                 <h1>Formatos requeridos</h1><p class="pr-muted">Previsualiza cada formato antes de descargarlo.</p>
                 <div class="pr-docs">@foreach($documentos as $slug => $nombre)<div class="pr-format"><strong>{{ $nombre }}</strong><a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.formatos.ver', $slug) }}">Previsualizar</a><a class="pr-btn" href="{{ route('participante.preregistro.formatos.descargar', $slug) }}">Descargar</a></div>@endforeach</div>
-                <form method="POST" action="{{ route('participante.preregistro.avanzar') }}" class="pr-actions">{{ csrf_field() }}<button class="pr-btn">Continuar</button></form>
+                <form method="POST" action="{{ route('participante.preregistro.avanzar') }}" class="pr-actions">@csrf<button class="pr-btn">Continuar</button></form>
 
             @elseif(in_array($estado['fase'], ['documentos','revision','rechazado','aprobado']))
                 <h1>Documentación requerida</h1><p class="pr-muted">Adjunta un PDF por documento. Tamaño máximo: 1 MB.</p>
@@ -71,7 +71,7 @@
                             @if($doc)<a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.documentos.ver', $slug) }}">Abrir</a>@endif
                             @if(!in_array($estado['fase'], ['revision','aprobado']))
                             <form method="POST" action="{{ route('participante.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
-                                {{ csrf_field() }}
+                                @csrf
                                 <label class="pr-btn pr-file">{{ $docEstado === 'rechazado' ? 'Subsanar' : 'Seleccionar PDF' }}<input type="file" name="archivo" accept="application/pdf" required></label>
                                 <div class="pr-preview"><span></span><iframe title="Previsualización del archivo"></iframe><button class="pr-btn" type="submit">Confirmar carga</button></div>
                             </form>
@@ -81,9 +81,9 @@
                     @endforeach
                 </div>
                 @if($estado['fase'] === 'aprobado')
-                    <form method="POST" action="{{ route('participante.preregistro.finalizar') }}" class="pr-actions">{{ csrf_field() }}<button class="pr-btn">Finalizar pre-registro</button></form>
+                    <form method="POST" action="{{ route('participante.preregistro.finalizar') }}" class="pr-actions">@csrf<button class="pr-btn">Finalizar pre-registro</button></form>
                 @elseif(!in_array($estado['fase'], ['revision','rechazado']))
-                    <form method="POST" action="{{ route('participante.preregistro.documentos.enviar') }}" class="pr-actions">{{ csrf_field() }}<button class="pr-btn">Enviar a revisión</button></form>
+                    <form method="POST" action="{{ route('participante.preregistro.documentos.enviar') }}" class="pr-actions">@csrf<button class="pr-btn">Enviar a revisión</button></form>
                 @endif
                 @if(config('app.debug'))<div class="pr-demo">Simular: <a href="{{ route('participante.preregistro.demo','revision') }}">En revisión</a><a href="{{ route('participante.preregistro.demo','rechazado') }}">Rechazado</a><a href="{{ route('participante.preregistro.demo','aprobado') }}">Aprobado</a><a href="{{ route('participante.preregistro.reiniciar') }}">Reiniciar</a></div>@endif
 

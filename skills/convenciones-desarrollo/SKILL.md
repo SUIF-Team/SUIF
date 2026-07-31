@@ -1,13 +1,13 @@
 ---
 name: convenciones-desarrollo
-description: "Aplica las convenciones de SUIF al crear, modificar o revisar código Laravel 5.5, PHP 7.1, Blade, CSS o JavaScript. Úsala para preservar la estructura legacy del proyecto, sus assets estáticos y sus requisitos de seguridad."
+description: "Aplica las convenciones de SUIF al crear, modificar o revisar código Laravel 13, PHP 8.4, Blade, CSS o JavaScript. Úsala para preservar la estructura del proyecto, sus assets estáticos y sus requisitos de seguridad."
 ---
 
 # Convenciones de desarrollo de SUIF
 
 ## Mantener el stack y el alcance
 
-- Mantén compatibilidad estricta con Laravel 5.5 y PHP 7.1.0. No introduzcas sintaxis, dependencias ni APIs de versiones posteriores.
+- Mantén el stack fijado a Laravel `^13.8` y PHP 8.4.23 (ver README). No cambies estas versiones sin acordarlo con el equipo, y usa `bootstrap/app.php` (no `Kernel.php`) para configurar middleware, rutas y excepciones.
 - Trabaja con PostgreSQL y la configuración existente. No sustituyas el framework por PHP plano, `include()`/`require()`, sesiones manuales ni consultas sin Eloquent o el query builder de Laravel.
 - Conserva el alcance del sistema: certificaciones, resultados, documentos, pagos, sedes, referencias y paneles de participante y administración. No implementes una aplicación de exámenes.
 - Ejecuta el entorno Docker en `http://localhost:8088` cuando sea necesario. Mantén Apache sirviendo `public/`; no expongas `resources/views` ni agregues `/public` a las URLs.
@@ -23,7 +23,7 @@ description: "Aplica las convenciones de SUIF al crear, modificar o revisar cód
 
 ## Construir vistas y assets
 
-- Carga los assets directamente desde `public/assets`; el proyecto no usa npm, Vite, Laravel Mix, Sass ni una etapa de compilación frontend.
+- Carga los assets directamente desde `public/assets`; aunque el contenedor ya trae Node/Vite disponibles para el futuro, hoy no hay una etapa de compilación obligatoria — no muevas assets existentes a `resources/` sin acordarlo primero.
 - Mantén estilos globales y reutilizables en `public/assets/css/app.css`.
 - Mantén estilos de componentes compartidos en `public/assets/css/partials/` y estilos exclusivos de cada pantalla en `public/assets/css/pages/`.
 - Usa `public/assets/img/backgrounds/fondo-sistema.jpg` como fondo institucional compartido del login y del sistema. Referéncialo desde CSS estático con `url('/assets/img/backgrounds/fondo-sistema.jpg')` o una variable CSS equivalente; no lo dupliques ni uses estilos inline o `data:` URI.
@@ -37,7 +37,7 @@ description: "Aplica las convenciones de SUIF al crear, modificar o revisar cód
 
 ## Proteger datos y acceso
 
-- Incluye `{{ csrf_field() }}` en todo formulario con método distinto de `GET`; es la sintaxis compatible con Laravel 5.5. Muestra errores de validación sin exponer información sensible.
+- Incluye `@csrf` en todo formulario con método distinto de `GET` (Laravel 13 renombró el middleware a `PreventRequestForgery`, pero la directiva Blade sigue siendo `@csrf`). Muestra errores de validación sin exponer información sensible.
 - Protege rutas y acciones privadas con los middleware de autenticación y autorización adecuados. Usa `Auth`, sesiones y validadores de Laravel; nunca autentiques con comparaciones manuales de contraseñas.
 - Valida entradas, restringe archivos cargados y conserva documentos, comprobantes, certificados, facturas y referencias fuera de `public`, bajo `storage/app/private/` según la estructura existente.
 - No reveles secretos, credenciales, rutas privadas ni datos personales en vistas, logs o respuestas.
@@ -45,4 +45,4 @@ description: "Aplica las convenciones de SUIF al crear, modificar o revisar cód
 ## Verificar cambios
 
 - Comprueba que las rutas, nombres de vistas, controladores, assets y métodos referenciados existan antes de terminar.
-- Ejecuta las comprobaciones compatibles con el entorno legacy cuando cambies comportamiento: carga de la ruta, `php artisan` pertinente y pruebas disponibles. No actualices dependencias como atajo para resolver incompatibilidades.
+- Ejecuta las comprobaciones pertinentes cuando cambies comportamiento: carga de la ruta, `php artisan` pertinente y pruebas disponibles. No actualices dependencias como atajo para resolver incompatibilidades sin acordarlo con el equipo.

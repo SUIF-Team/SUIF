@@ -48,7 +48,7 @@
             @endif
 
             <form method="POST" action="{{ route('login.post') }}" class="login-formulario">
-                {{ csrf_field() }}
+                @csrf
 
                 <div class="login-grupo">
                     <label for="curp" class="login-etiqueta">CURP</label>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Participante;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 /**
@@ -12,5 +13,14 @@ use Illuminate\Http\Request;
  */
 class FacturacionController extends Controller
 {
-    //
+    public function index()
+    {
+        return view('participante.facturacion');
+    }
+
+    public function store(Request $request)
+    {
+        // TODO: guardar datos fiscales y generar la factura/ticket.
+        return redirect()->route('participante.facturacion.index');
+    }
 }

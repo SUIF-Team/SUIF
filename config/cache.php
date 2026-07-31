@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Str;
+
 return [
 
     'default' => env('CACHE_DRIVER', 'file') ?: 'file',
@@ -51,7 +53,7 @@ return [
 
     'prefix' => env(
         'CACHE_PREFIX',
-        str_slug(env('APP_NAME', 'suif'), '_') . '_cache'
+        Str::slug(env('APP_NAME', 'suif'), '_') . '_cache'
     ),
 
 ];
