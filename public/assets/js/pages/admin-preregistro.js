@@ -61,6 +61,11 @@
             },
             hayDocumentosRechazados: function () {
                 return Object.values(this.estados_documentos).includes('rechazado');
+            },
+            todosDocumentosResueltos: function () {
+                return this.participante.documentos.every(function (documento) {
+                    return ['aprobado', 'rechazado'].includes(this.estadoDocumento(documento.id));
+                }, this);
             }
         },
         methods: {

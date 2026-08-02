@@ -424,6 +424,12 @@
     width: 100%;
 }
 
+.admin-preregistro-mensaje-validacion {
+    margin: 1rem 0 0;
+    color: #a53630;
+    font-size: 0.8125rem;
+}
+
 .admin-preregistro-observaciones {
     padding: 1.25rem;
 }
@@ -519,6 +525,42 @@
     background: #e4e4e4;
 }
 
+.admin-preregistro-enlace-atras:focus-visible {
+    outline: 3px solid var(--unam-blue);
+    outline-offset: 0.25rem;
+}
+
+.admin-preregistro-resultado-flujo .admin-preregistro-progreso {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    padding-bottom: 0;
+}
+
+.admin-preregistro-resultado-principal {
+    min-height: clamp(16rem, 36vw, 25rem);
+    padding: clamp(1.5rem, 5vw, 3rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-preregistro-resultado-mensaje {
+    width: min(100%, 52rem);
+    min-width: 0;
+    padding: clamp(1.5rem, 5vw, 3rem);
+}
+
+.admin-preregistro-resultado-mensaje h2 {
+    margin: 0;
+    font-family: var(--font-nav);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
 @media (max-width: 767.98px) {
     .admin-preregistro-participante,
     .admin-preregistro-perfil,
@@ -560,5 +602,9 @@
 
     .admin-preregistro-documento-acciones {
         flex-wrap: wrap;
+    }
+
+    .admin-preregistro-resultado-flujo .admin-preregistro-progreso {
+        grid-template-columns: 1fr;
     }
 }

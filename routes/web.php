@@ -74,6 +74,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::post('/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
     Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
     Route::get('/documentos', [AdminDocumentoController::class, 'index'])->name('documentos.index');
+    Route::get('/documentos/{id}/resultado', [AdminDocumentoController::class, 'resultado'])->name('documentos.resultado');
     Route::get('/documentos/{id}', [AdminDocumentoController::class, 'show'])->name('documentos.show');
     Route::post('/documentos/{id}/validar', [AdminDocumentoController::class, 'validar'])->name('documentos.validar');
     Route::get('/sedes', [AdminSedeController::class, 'index'])->name('sedes.index');

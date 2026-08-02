@@ -33,7 +33,9 @@
         </div>
     </nav>
 
-    <div class="admin-preregistro-contenido-principal">
+    <form method="POST" action="{{ route('admin.documentos.validar', ['id' => $participante['id']]) }}" class="admin-preregistro-contenido-principal" v-on:submit="enviando = true">
+        @csrf
+        <input v-for="documento in participante.documentos" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
         <main class="admin-preregistro-tarjeta admin-preregistro-documentos" aria-labelledby="lista-documentos-titulo">
             <h2 id="lista-documentos-titulo">Documentación</h2>
             <ul class="admin-preregistro-lista-documentos">
@@ -53,8 +55,16 @@
                 <h2 id="acciones-generales-titulo">Acciones generales</h2>
                 <div>
                     <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="button">Interrumpir trámite</button>
-                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="button">Guardar</button>
+                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando || !todosDocumentosResueltos">
+                        @{{ enviando ? 'Guardando...' : 'Guardar' }}
+                    </button>
                 </div>
+                <p v-if="!todosDocumentosResueltos" id="estado-documentos-pendientes" class="admin-preregistro-mensaje-validacion" role="status">
+                    Resuelve todos los documentos para guardar la revisi&oacute;n.
+                </p>
+                @if ($errors->has('documentos'))
+                    <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $errors->first('documentos') }}</p>
+                @endif
             </section>
 
             <section v-if="hayDocumentosRechazados" class="admin-preregistro-tarjeta admin-preregistro-observaciones" aria-labelledby="observaciones-titulo">
@@ -73,7 +83,7 @@
                 </div>
             </section>
         </aside>
-    </div>
+    </form>
 
     <back-navigation destino="{{ route('admin.participantes.show', ['id' => $participante['id']]) }}"></back-navigation>
 </section>
