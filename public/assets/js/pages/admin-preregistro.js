@@ -63,9 +63,11 @@
                 return Object.values(this.estados_documentos).includes('rechazado');
             },
             todosDocumentosResueltos: function () {
+                var estados_documentos = this.estados_documentos;
+
                 return this.participante.documentos.every(function (documento) {
-                    return ['aprobado', 'rechazado'].includes(this.estadoDocumento(documento.id));
-                }, this);
+                    return ['aprobado', 'rechazado'].includes(estados_documentos[documento.id]);
+                });
             }
         },
         methods: {
@@ -86,7 +88,9 @@
                 return this.estados_documentos[id] || null;
             },
             actualizarDocumento: function (id, estado) {
-                this.estados_documentos[id] = this.estadoDocumento(id) === estado ? null : estado;
+                this.estados_documentos = Object.assign({}, this.estados_documentos, {
+                    [id]: this.estadoDocumento(id) === estado ? null : estado
+                });
             }
         }
     }).mount(root);
