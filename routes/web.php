@@ -68,11 +68,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/participantes', [AdminParticipanteController::class, 'index'])->name('participantes.index');
     Route::get('/participantes/{id}', [AdminParticipanteController::class, 'show'])->name('participantes.show');
+    Route::post('/participantes/{id}/aceptar-preregistro', [AdminParticipanteController::class, 'aceptarPreRegistro'])->name('participantes.preregistro.aceptar');
     Route::get('/pagos', [AdminPagoController::class, 'index'])->name('pagos.index');
     Route::post('/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');
     Route::post('/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
     Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
     Route::get('/documentos', [AdminDocumentoController::class, 'index'])->name('documentos.index');
+    Route::get('/documentos/{id}', [AdminDocumentoController::class, 'show'])->name('documentos.show');
     Route::post('/documentos/{id}/validar', [AdminDocumentoController::class, 'validar'])->name('documentos.validar');
     Route::get('/sedes', [AdminSedeController::class, 'index'])->name('sedes.index');
     Route::post('/sedes', [AdminSedeController::class, 'store'])->name('sedes.store');

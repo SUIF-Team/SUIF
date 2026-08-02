@@ -36,6 +36,7 @@ class DashboardController extends Controller
         $acciones = [
             [
                 'titulo' => 'Pre-registro',
+                'ruta' => 'admin.participantes.index',
                 'descripcion' => 'Valida los pre-registros y documentación existentes.',
             ],
             [

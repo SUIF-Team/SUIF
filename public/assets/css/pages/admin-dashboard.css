@@ -130,6 +130,27 @@
     user-select: none;
 }
 
+.admin-dashboard-accion-disponible {
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--unam-blue);
+    border-radius: 999px;
+    background: var(--unam-blue);
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-dashboard-accion-disponible:hover,
+.admin-dashboard-accion-disponible:focus-visible {
+    border-color: var(--unam-blue-dark);
+    background: var(--unam-blue-dark);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
 .admin-dashboard-salida {
     margin: 0;
 }

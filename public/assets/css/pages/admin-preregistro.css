@@ -1,0 +1,503 @@
+[v-cloak] {
+    display: none;
+}
+
+.admin-preregistro-bandeja,
+.admin-preregistro-flujo {
+    width: min(100%, 1100px);
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
+}
+
+.admin-preregistro-encabezado {
+    margin-bottom: 1.5rem;
+}
+
+.admin-preregistro-encabezado h1,
+.admin-preregistro-encabezado p,
+.admin-preregistro-perfil h1,
+.admin-preregistro-perfil p,
+.admin-preregistro-detalle h2,
+.admin-preregistro-documentos h2,
+.admin-preregistro-acciones-generales h2 {
+    margin-top: 0;
+}
+
+.admin-preregistro-encabezado h1,
+.admin-preregistro-perfil h1,
+.admin-preregistro-detalle h2,
+.admin-preregistro-documentos h2,
+.admin-preregistro-acciones-generales h2 {
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-weight: 700;
+}
+
+.admin-preregistro-encabezado h1 {
+    margin-bottom: 0.35rem;
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+.admin-preregistro-encabezado p,
+.admin-preregistro-perfil p {
+    color: var(--text-muted);
+}
+
+.admin-preregistro-sobretitulo {
+    margin-bottom: 0.35rem;
+    color: var(--unam-gold) !important;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-preregistro-tarjeta {
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: var(--surface-white);
+    box-shadow: 0 1px 3px rgba(17, 47, 75, 0.08);
+}
+
+.admin-preregistro-lista {
+    display: grid;
+}
+
+.admin-preregistro-participante {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.admin-preregistro-participante:last-child {
+    border-bottom: 0;
+}
+
+.admin-preregistro-participante-datos,
+.admin-preregistro-participante-acciones,
+.admin-preregistro-usuario,
+.admin-preregistro-documento-acciones {
+    display: flex;
+    align-items: center;
+}
+
+.admin-preregistro-participante-datos,
+.admin-preregistro-usuario {
+    gap: 1rem;
+}
+
+.admin-preregistro-participante-acciones,
+.admin-preregistro-documento-acciones {
+    gap: 0.5rem;
+}
+
+.admin-preregistro-participante h2 {
+    margin: 0 0 0.15rem;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.admin-preregistro-participante p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.admin-preregistro-avatar {
+    width: 3rem;
+    height: 3rem;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.admin-preregistro-estado {
+    padding: 0.25rem 0.75rem;
+    display: inline-block;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-preregistro-estado--revision {
+    background: #fdf6ec;
+    color: #8b6717;
+}
+
+.admin-preregistro-ver,
+.admin-preregistro-previsualizar,
+.admin-preregistro-icono,
+.admin-preregistro-boton {
+    border-radius: 0.25rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-preregistro-ver {
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--unam-blue);
+    background: var(--unam-blue);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.admin-preregistro-ver:hover,
+.admin-preregistro-ver:focus-visible {
+    border-color: var(--unam-blue-dark);
+    background: var(--unam-blue-dark);
+    color: #ffffff;
+}
+
+.admin-preregistro-flujo {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin-preregistro-perfil {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.admin-preregistro-perfil h1 {
+    margin-bottom: 0.15rem;
+    font-size: 1.125rem;
+}
+
+.admin-preregistro-perfil p {
+    margin-bottom: 0;
+    font-size: 0.8125rem;
+}
+
+.admin-preregistro-progreso {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.admin-preregistro-paso {
+    min-width: min(80%, 16rem);
+    flex: 1 0 0;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.admin-preregistro-paso-titulo {
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.admin-preregistro-paso-estado {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.admin-preregistro-paso--completado {
+    border-color: transparent;
+    background: #eafaf1;
+}
+
+.admin-preregistro-paso--completado .admin-preregistro-paso-estado {
+    color: #207a45;
+}
+
+.admin-preregistro-paso--actual {
+    border: 2px solid var(--unam-gold);
+    background: var(--surface-white);
+}
+
+.admin-preregistro-paso--actual .admin-preregistro-paso-estado {
+    color: #8b6717;
+}
+
+.admin-preregistro-paso--pendiente {
+    border-color: transparent;
+    background: #f4f4f4;
+}
+
+.admin-preregistro-paso--pendiente .admin-preregistro-paso-estado {
+    color: #a53630;
+}
+
+.admin-preregistro-detalle,
+.admin-preregistro-documentos,
+.admin-preregistro-acciones-generales {
+    padding: 1.5rem;
+}
+
+.admin-preregistro-detalle h2,
+.admin-preregistro-documentos h2,
+.admin-preregistro-acciones-generales h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.125rem;
+}
+
+.admin-preregistro-datos {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+}
+
+.admin-preregistro-dato {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.admin-preregistro-dato:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+.admin-preregistro-dato dt {
+    margin-bottom: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.admin-preregistro-dato dd {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+}
+
+.admin-preregistro-acciones {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.admin-preregistro-boton {
+    padding: 0.625rem 1rem;
+    border: 1px solid currentColor;
+    background: var(--surface-white);
+}
+
+.admin-preregistro-boton--aceptar {
+    border-color: #207a45;
+    color: #207a45;
+}
+
+.admin-preregistro-boton--aceptar:hover,
+.admin-preregistro-boton--aceptar:focus-visible {
+    background: #f5fcf7;
+}
+
+.admin-preregistro-boton--rechazar {
+    border-color: #a53630;
+    color: #a53630;
+}
+
+.admin-preregistro-boton--rechazar:hover,
+.admin-preregistro-boton--rechazar:focus-visible {
+    background: #fdf5f5;
+}
+
+.admin-preregistro-boton:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.admin-preregistro-contenido-principal {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    gap: 1.5rem;
+}
+
+.admin-preregistro-lista-documentos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.admin-preregistro-documento {
+    padding: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.admin-preregistro-documento:first-child {
+    padding-top: 0;
+}
+
+.admin-preregistro-documento:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.admin-preregistro-documento-titulo {
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.admin-preregistro-icono {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--border-light);
+    background: var(--surface-white);
+}
+
+.admin-preregistro-icono--aprobar:hover {
+    border-color: #207a45;
+    background: #f5fcf7;
+    color: #207a45;
+}
+
+.admin-preregistro-icono--rechazar:hover {
+    border-color: #a53630;
+    background: #fdf5f5;
+    color: #a53630;
+}
+
+.admin-preregistro-icono--aprobar.esta-seleccionado {
+    border-color: #207a45;
+    background: #207a45;
+    color: #ffffff;
+}
+
+.admin-preregistro-icono--rechazar.esta-seleccionado {
+    border-color: #a53630;
+    background: #a53630;
+    color: #ffffff;
+}
+
+.admin-preregistro-previsualizar {
+    height: 2rem;
+    padding: 0 1rem;
+    border: 1px solid var(--border-light);
+    background: var(--surface-white);
+    color: var(--text-dark);
+}
+
+.admin-preregistro-previsualizar:hover,
+.admin-preregistro-previsualizar:focus-visible {
+    background: #f0f0f0;
+}
+
+.admin-preregistro-acciones-generales {
+    align-self: start;
+}
+
+.admin-preregistro-acciones-generales div {
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-preregistro-acciones-generales .admin-preregistro-boton {
+    width: 100%;
+}
+
+.admin-preregistro-barra-atras {
+    padding: 1rem 1.5rem;
+}
+
+.admin-preregistro-enlace-atras {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.25rem;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-preregistro-icono-atras {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.admin-preregistro-icono-atras svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.admin-preregistro-enlace-atras:hover .admin-preregistro-icono-atras {
+    background: #e4e4e4;
+}
+
+@media (max-width: 767.98px) {
+    .admin-preregistro-participante,
+    .admin-preregistro-perfil,
+    .admin-preregistro-documento {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-preregistro-participante-acciones {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .admin-preregistro-perfil .admin-preregistro-estado {
+        align-self: flex-start;
+    }
+
+    .admin-preregistro-datos,
+    .admin-preregistro-contenido-principal {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-preregistro-dato:nth-last-child(-n + 2) {
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .admin-preregistro-dato:last-child {
+        border-bottom: 0;
+    }
+
+    .admin-preregistro-acciones {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-preregistro-boton {
+        width: 100%;
+    }
+
+    .admin-preregistro-documento-acciones {
+        flex-wrap: wrap;
+    }
+}

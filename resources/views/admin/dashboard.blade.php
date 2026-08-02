@@ -46,7 +46,11 @@
                             <h3>{{ $accion['titulo'] }}</h3>
                             <p>{{ $accion['descripcion'] }}</p>
                         </div>
-                        <span class="admin-dashboard-accion-pendiente" aria-disabled="true">Próximamente</span>
+                        @if (!empty($accion['ruta']))
+                            <a class="admin-dashboard-accion-disponible" href="{{ route($accion['ruta']) }}">Ver participantes</a>
+                        @else
+                            <span class="admin-dashboard-accion-pendiente" aria-disabled="true">Próximamente</span>
+                        @endif
                     </article>
                 @endforeach
             </div>
