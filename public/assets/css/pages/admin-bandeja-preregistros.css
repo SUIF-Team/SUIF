@@ -1,0 +1,345 @@
+.admin-bandeja-preregistros {
+    width: min(100%, 1060px);
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
+}
+
+.admin-bandeja-preregistros-contenedor {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin-bandeja-preregistros-encabezado h1,
+.admin-bandeja-preregistros-solicitudes h2,
+.admin-bandeja-preregistros-solicitud h3,
+.admin-bandeja-preregistros-encabezado p,
+.admin-bandeja-preregistros-solicitud p {
+    margin-top: 0;
+}
+
+.admin-bandeja-preregistros-encabezado h1,
+.admin-bandeja-preregistros-solicitudes h2 {
+    margin-bottom: 0.4rem;
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-weight: 700;
+}
+
+.admin-bandeja-preregistros-encabezado h1 {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+.admin-bandeja-preregistros-encabezado p,
+.admin-bandeja-preregistros-solicitud p {
+    margin-bottom: 0;
+    color: var(--text-muted);
+}
+
+.admin-bandeja-preregistros-tarjeta {
+    padding: 1.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
+}
+
+.admin-bandeja-preregistros-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 1.25rem;
+}
+
+.admin-bandeja-preregistros-campo {
+    display: flex;
+    flex: 1 1 12rem;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.admin-bandeja-preregistros-campo-tipo,
+.admin-bandeja-preregistros-campo-estado {
+    flex-grow: 0.8;
+}
+
+.admin-bandeja-preregistros-campo-termino {
+    flex-grow: 1.2;
+}
+
+.admin-bandeja-preregistros-campo label {
+    color: #334155;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.admin-bandeja-preregistros-campo input,
+.admin-bandeja-preregistros-campo select {
+    width: 100%;
+    min-height: 2.7rem;
+    padding: 0.625rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: var(--surface-white);
+    color: var(--text-dark);
+    font: inherit;
+}
+
+.admin-bandeja-preregistros-campo input:focus,
+.admin-bandeja-preregistros-campo select:focus {
+    border-color: var(--unam-gold);
+    outline: 3px solid rgba(181, 139, 42, 0.22);
+    outline-offset: 0;
+}
+
+.admin-bandeja-preregistros-acciones-filtro {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.admin-bandeja-preregistros-boton,
+.admin-bandeja-preregistros-expediente {
+    min-height: 2.7rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-bandeja-preregistros-boton-filtrar {
+    border-color: #bae6fd;
+    background: #e0f2fe;
+    color: #0276ad;
+}
+
+.admin-bandeja-preregistros-boton-filtrar:hover,
+.admin-bandeja-preregistros-boton-filtrar:focus-visible {
+    background: #bae6fd;
+    color: #025f8b;
+}
+
+.admin-bandeja-preregistros-boton-limpiar {
+    border-color: #fecaca;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.admin-bandeja-preregistros-boton-limpiar:hover,
+.admin-bandeja-preregistros-boton-limpiar:focus-visible {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.admin-bandeja-preregistros-solicitudes h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.125rem;
+}
+
+.admin-bandeja-preregistros-lista {
+    max-height: 28rem;
+    overflow-y: auto;
+    padding-right: 0.75rem;
+}
+
+.admin-bandeja-preregistros-lista::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+.admin-bandeja-preregistros-lista::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: #f1f5f9;
+}
+
+.admin-bandeja-preregistros-lista::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #cbd5e1;
+}
+
+.admin-bandeja-preregistros-fila {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(8rem, 1fr) minmax(9rem, 1fr);
+    gap: 1rem;
+    align-items: center;
+}
+
+.admin-bandeja-preregistros-encabezados {
+    margin-bottom: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.admin-bandeja-preregistros-encabezados span:nth-child(n + 2) {
+    text-align: center;
+}
+
+.admin-bandeja-preregistros-solicitud {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    transition: background-color 0.2s ease;
+}
+
+.admin-bandeja-preregistros-solicitud:hover {
+    background: #f8fafc;
+}
+
+.admin-bandeja-preregistros-solicitud:last-of-type {
+    border-bottom: 0;
+}
+
+.admin-bandeja-preregistros-participante {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-bandeja-preregistros-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.admin-bandeja-preregistros-solicitud h3 {
+    margin-bottom: 0.2rem;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.admin-bandeja-preregistros-solicitud p {
+    font-size: 0.78rem;
+}
+
+.admin-bandeja-preregistros-estado-contenedor,
+.admin-bandeja-preregistros-accion {
+    display: flex;
+    justify-content: center;
+}
+
+.admin-bandeja-preregistros-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 7.5rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.admin-bandeja-preregistros-estado-revision {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-bandeja-preregistros-estado-aceptado {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.admin-bandeja-preregistros-estado-rechazado {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.admin-bandeja-preregistros-expediente {
+    border-color: #94a3b8;
+    background: transparent;
+    color: #334155;
+}
+
+.admin-bandeja-preregistros-expediente:hover,
+.admin-bandeja-preregistros-expediente:focus-visible {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.admin-bandeja-preregistros-vacio {
+    margin: 0;
+    padding: 1.5rem 1rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+@media (max-width: 767.98px) {
+    .admin-bandeja-preregistros {
+        padding-top: 2rem;
+    }
+
+    .admin-bandeja-preregistros-filtros {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-bandeja-preregistros-campo {
+        flex-basis: auto;
+    }
+
+    .admin-bandeja-preregistros-acciones-filtro {
+        justify-content: flex-end;
+    }
+
+    .admin-bandeja-preregistros-fila {
+        grid-template-columns: minmax(0, 1.5fr) minmax(7rem, 1fr) minmax(8rem, 1fr);
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .admin-bandeja-preregistros-tarjeta {
+        padding: 1rem;
+    }
+
+    .admin-bandeja-preregistros-acciones-filtro {
+        flex-direction: column;
+    }
+
+    .admin-bandeja-preregistros-boton {
+        width: 100%;
+    }
+
+    .admin-bandeja-preregistros-lista {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+    }
+
+    .admin-bandeja-preregistros-encabezados {
+        display: none;
+    }
+
+    .admin-bandeja-preregistros-solicitud {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .admin-bandeja-preregistros-estado-contenedor,
+    .admin-bandeja-preregistros-accion {
+        justify-content: flex-start;
+        padding-left: 3.5rem;
+    }
+
+    .admin-bandeja-preregistros-expediente {
+        width: 100%;
+    }
+}

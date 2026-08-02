@@ -14,11 +14,26 @@ use Illuminate\Http\Request;
  */
 class ParticipanteController extends Controller
 {
-    public function index(PreRegistroDatosPrueba $datos_prueba)
+    public function index(Request $request, PreRegistroDatosPrueba $datos_prueba)
     {
+        $participantes = collect($datos_prueba->participantes())
+            ->map(function (array $participante) use ($request, $datos_prueba): array {
+                $estados = (array) $request->session()->get($this->claveEstado($participante['id']), []);
+
+                if (($estados['preregistro'] ?? null) === $datos_prueba->estadoAceptado()['preregistro']) {
+                    $participante['estado_bandeja'] = 'Aceptado';
+                }
+
+                $participante['ruta_expediente'] = route('admin.participantes.show', ['id' => $participante['id']]);
+
+                return $participante;
+            })
+            ->sortByDesc('fecha_registro')
+            ->values()
+            ->all();
+
         return view('admin.participantes', [
-            'participantes' => array_values($datos_prueba->participantes()),
-            'estados_iniciales' => $datos_prueba->estadoInicial(),
+            'datos_vista' => ['participantes' => $participantes],
         ]);
     }
 
