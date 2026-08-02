@@ -330,6 +330,12 @@
     gap: 1.5rem;
 }
 
+.admin-preregistro-columna-lateral {
+    align-self: start;
+    display: grid;
+    gap: 1.5rem;
+}
+
 .admin-preregistro-lista-documentos {
     margin: 0;
     padding: 0;
@@ -416,6 +422,61 @@
 
 .admin-preregistro-acciones-generales .admin-preregistro-boton {
     width: 100%;
+}
+
+.admin-preregistro-observaciones {
+    padding: 1.25rem;
+}
+
+.admin-preregistro-observaciones h2 {
+    margin: 0 0 1rem;
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.admin-preregistro-campo-observacion {
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 0.85rem;
+}
+
+.admin-preregistro-campo-observacion:first-of-type {
+    margin-top: 0;
+}
+
+.admin-preregistro-campo-observacion label {
+    color: #b3261e;
+    font-size: 0.875rem;
+}
+
+.admin-preregistro-campo-observacion input,
+.admin-preregistro-campo-observacion textarea {
+    width: 100%;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: #fcfbf9;
+    color: var(--text-dark);
+    font: inherit;
+}
+
+.admin-preregistro-campo-observacion input {
+    min-height: 2.25rem;
+    padding: 0.5rem 0.65rem;
+}
+
+.admin-preregistro-campo-observacion textarea {
+    min-height: 5.75rem;
+    padding: 0.6rem;
+    resize: vertical;
+}
+
+.admin-preregistro-campo-observacion input:focus,
+.admin-preregistro-campo-observacion textarea:focus {
+    border-color: #b3261e;
+    outline: 3px solid rgba(179, 38, 30, 0.16);
+    outline-offset: 0;
 }
 
 .admin-preregistro-barra-atras {

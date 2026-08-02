@@ -48,12 +48,30 @@
             </ul>
         </main>
 
-        <aside class="admin-preregistro-tarjeta admin-preregistro-acciones-generales" aria-labelledby="acciones-generales-titulo">
-            <h2 id="acciones-generales-titulo">Acciones generales</h2>
-            <div>
-                <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="button">Interrumpir trámite</button>
-                <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="button">Guardar</button>
-            </div>
+        <aside class="admin-preregistro-columna-lateral" aria-label="Acciones y observaciones">
+            <section class="admin-preregistro-tarjeta admin-preregistro-acciones-generales" aria-labelledby="acciones-generales-titulo">
+                <h2 id="acciones-generales-titulo">Acciones generales</h2>
+                <div>
+                    <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="button">Interrumpir trámite</button>
+                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="button">Guardar</button>
+                </div>
+            </section>
+
+            <section v-if="hayDocumentosRechazados" class="admin-preregistro-tarjeta admin-preregistro-observaciones" aria-labelledby="observaciones-titulo">
+                <h2 id="observaciones-titulo">Observaciones</h2>
+                <div class="admin-preregistro-campo-observacion">
+                    <label for="motivo-rechazo">Motivo del rechazo</label>
+                    <textarea id="motivo-rechazo" v-model="observaciones.motivo" rows="4" placeholder="Describe el motivo del rechazo."></textarea>
+                </div>
+                <div class="admin-preregistro-campo-observacion">
+                    <label for="fecha-limite">Fecha límite</label>
+                    <input id="fecha-limite" v-model="observaciones.fecha_limite" type="date">
+                </div>
+                <div class="admin-preregistro-campo-observacion">
+                    <label for="hora-limite">Hora límite</label>
+                    <input id="hora-limite" v-model="observaciones.hora_limite" type="time">
+                </div>
+            </section>
         </aside>
     </div>
 

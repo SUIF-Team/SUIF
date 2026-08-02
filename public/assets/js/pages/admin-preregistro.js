@@ -25,7 +25,12 @@
                 estados: datos_vista.estados,
                 enviando: false,
                 estados_documentos: {},
-                documentoPrevisualizado: null
+                documentoPrevisualizado: null,
+                observaciones: {
+                    motivo: '',
+                    fecha_limite: '',
+                    hora_limite: ''
+                }
             };
         },
         computed: {
@@ -53,6 +58,9 @@
                     { etiqueta: 'Actividad vulnerable', valor: this.participante.actividad_vulnerable },
                     { etiqueta: 'Persona responsable de su cumplimiento', valor: this.participante.responsable_cumplimiento }
                 ];
+            },
+            hayDocumentosRechazados: function () {
+                return Object.values(this.estados_documentos).includes('rechazado');
             }
         },
         methods: {
