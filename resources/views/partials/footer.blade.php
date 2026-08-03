@@ -10,10 +10,10 @@
             </div>
 
             <nav class="site-footer__social" aria-label="Redes sociales">
-                <a href="https://www.facebook.com/SEFCAUNAM" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <a href="https://www.facebook.com/FCAUNAMOFICIAL/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                     <i class="fab fa-facebook-f" aria-hidden="true"></i>
                 </a>
-                <a href="https://www.youtube.com/@SEFCA" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                <a href="https://www.youtube.com/@FCAUNAMOFICIAL" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                     <i class="fab fa-youtube" aria-hidden="true"></i>
                 </a>
             </nav>

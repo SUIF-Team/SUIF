@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\Admin\NotificacionResultado;
 use App\Support\Admin\PreRegistroDatosPrueba;
+use App\Support\Admin\ParticipanteRegistradoDatosPrueba;
 use Illuminate\Http\Request;
 
 /**
@@ -29,6 +30,7 @@ class ParticipanteController extends Controller
                     $participante['estado_bandeja'] = 'Rechazado';
                 }
 
+                $participante['clase_estado'] = $this->claseEstado($participante['estado_bandeja']);
                 $participante['ruta_expediente'] = route('admin.participantes.show', ['id' => $participante['id']]);
 
                 return $participante;
@@ -38,6 +40,23 @@ class ParticipanteController extends Controller
             ->all();
 
         return view('admin.participantes', [
+            'datos_vista' => ['participantes' => $participantes],
+        ]);
+    }
+
+    public function registrados(ParticipanteRegistradoDatosPrueba $datos_prueba)
+    {
+        $participantes = collect($datos_prueba->participantes())
+            ->map(function (array $participante): array {
+                $participante['ruta_expediente'] = route('admin.participantes.show', ['id' => $participante['id']]);
+
+                return $participante;
+            })
+            ->sortByDesc('fecha_registro')
+            ->values()
+            ->all();
+
+        return view('admin.participantes-registrados', [
             'datos_vista' => ['participantes' => $participantes],
         ]);
     }
@@ -138,5 +157,14 @@ class ParticipanteController extends Controller
     private function claveEstado(string $id): string
     {
         return 'suif.admin.preregistro.'.$id;
+    }
+
+    private function claseEstado(string $estado): string
+    {
+        return match ($estado) {
+            'Aceptado', 'Aprobado' => 'admin-bandeja-preregistros-estado-aceptado',
+            'Rechazado' => 'admin-bandeja-preregistros-estado-rechazado',
+            default => 'admin-bandeja-preregistros-estado-revision',
+        };
     }
 }

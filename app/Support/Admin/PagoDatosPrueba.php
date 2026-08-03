@@ -14,6 +14,9 @@ class PagoDatosPrueba
         return [
             [
                 'id' => 'jordan-carrillo-guevara',
+                'nombre' => 'Jordan',
+                'primer_apellido' => 'Carrillo',
+                'segundo_apellido' => 'Guevara',
                 'nombre_completo' => 'Jordan Carrillo Guevara',
                 'iniciales' => 'JC',
                 'curp' => 'CAGJ900315HDFRVR01',
@@ -34,6 +37,9 @@ class PagoDatosPrueba
             ],
             [
                 'id' => 'maria-fernanda-lopez-castillo',
+                'nombre' => 'María Fernanda',
+                'primer_apellido' => 'López',
+                'segundo_apellido' => 'Castillo',
                 'nombre_completo' => 'María Fernanda López Castillo',
                 'iniciales' => 'ML',
                 'curp' => 'LOCM900315MDFPSTR02',
@@ -54,6 +60,9 @@ class PagoDatosPrueba
             ],
             [
                 'id' => 'luis-alberto-reyes-mendoza',
+                'nombre' => 'Luis Alberto',
+                'primer_apellido' => 'Reyes',
+                'segundo_apellido' => 'Mendoza',
                 'nombre_completo' => 'Luis Alberto Reyes Mendoza',
                 'iniciales' => 'LR',
                 'curp' => 'REML880921HDFYNS07',
@@ -74,6 +83,9 @@ class PagoDatosPrueba
             ],
             [
                 'id' => 'claudia-hernandez-ruiz',
+                'nombre' => 'Claudia',
+                'primer_apellido' => 'Hernández',
+                'segundo_apellido' => 'Ruiz',
                 'nombre_completo' => 'Claudia Hernández Ruiz',
                 'iniciales' => 'CH',
                 'curp' => 'HERC920614MDFRZL05',
@@ -94,6 +106,9 @@ class PagoDatosPrueba
             ],
             [
                 'id' => 'diego-morales-cruz',
+                'nombre' => 'Diego',
+                'primer_apellido' => 'Morales',
+                'segundo_apellido' => 'Cruz',
                 'nombre_completo' => 'Diego Morales Cruz',
                 'iniciales' => 'DM',
                 'curp' => 'MOCD950408HDFRRG03',

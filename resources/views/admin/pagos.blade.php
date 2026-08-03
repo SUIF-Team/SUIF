@@ -12,6 +12,8 @@
     id="bandeja-pagos-app"
     class="admin-bandeja-preregistros"
     data-bandeja-administrativa="pagos"
+    data-campo-estado="estatus"
+    data-campo-fecha="fecha_envio_comprobante"
     data-vista='@json($datos_vista)'
     aria-labelledby="bandeja-pagos-titulo"
     v-cloak>
@@ -21,19 +23,10 @@
             <p>Consulta y revisa los comprobantes de pago enviados por los participantes.</p>
         </header>
 
-        <section class="admin-bandeja-preregistros-tarjeta" aria-label="Filtros de búsqueda">
-            <form class="admin-bandeja-preregistros-filtros" v-on:submit.prevent="filtrar">
-                <div class="admin-bandeja-preregistros-campo admin-bandeja-preregistros-campo-termino">
-                    <label for="bandeja-pagos-buscar">Buscar participante</label>
-                    <input id="bandeja-pagos-buscar" v-model="filtros.termino" type="search" placeholder="Escribe aquí tu búsqueda..." autocomplete="off">
-                </div>
-
-                <div class="admin-bandeja-preregistros-acciones-filtro">
-                    <button class="admin-bandeja-preregistros-boton admin-bandeja-preregistros-boton-filtrar" type="submit">Filtrar</button>
-                    <button class="admin-bandeja-preregistros-boton admin-bandeja-preregistros-boton-limpiar" type="button" v-on:click="limpiar">Limpiar</button>
-                </div>
-            </form>
-        </section>
+        @include('admin.partials.bandeja-filtros', [
+            'prefijo_filtros' => 'bandeja-pagos',
+            'estados_filtro' => ['Todos', 'Por revisar', 'Aprobado', 'Rechazado'],
+        ])
 
         <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="pagos-recibidos-titulo">
             <h2 id="pagos-recibidos-titulo">Pagos recibidos</h2>
@@ -50,11 +43,11 @@
                         <span class="admin-bandeja-preregistros-avatar" aria-hidden="true">@{{ iniciales(pago) }}</span>
                         <div>
                             <h3>@{{ pago.nombre_completo }}</h3>
-                            <p>Comprobante enviado: @{{ fechaRegistro(pago.fecha_envio_comprobante) }}</p>
+                            <p>Comprobante enviado: @{{ fechaRegistro(pago[campoFecha]) }}</p>
                         </div>
                     </div>
                     <div class="admin-bandeja-preregistros-estado-contenedor">
-                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(pago.estatus)">@{{ pago.estatus }}</span>
+                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(pago)">@{{ pago.estatus }}</span>
                     </div>
                     <div class="admin-bandeja-preregistros-accion">
                         <a v-if="pago.puede_revisarse" class="admin-bandeja-preregistros-expediente" :href="pago.ruta_detalle">Revisar pago</a>

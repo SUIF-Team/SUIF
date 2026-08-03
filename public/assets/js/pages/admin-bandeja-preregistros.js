@@ -15,7 +15,8 @@
         return;
     }
 
-    var es_bandeja_pagos = root.dataset.bandejaAdministrativa === 'pagos';
+    var campo_estado = root.dataset.campoEstado || 'estado_bandeja';
+    var campo_fecha = root.dataset.campoFecha || 'fecha_registro';
 
     window.Vue.createApp({
         components: {
@@ -23,17 +24,14 @@
         },
         data: function () {
             return {
-                participantes: es_bandeja_pagos ? datos_vista.pagos : datos_vista.participantes,
-                filtros: es_bandeja_pagos ? {
-                    termino: ''
-                } : {
+                participantes: datos_vista.participantes || datos_vista.pagos || [],
+                campoFecha: campo_fecha,
+                filtros: {
                     campo: 'nombre',
                     termino: '',
                     estado: 'Todos'
                 },
-                filtros_aplicados: es_bandeja_pagos ? {
-                    termino: ''
-                } : {
+                filtros_aplicados: {
                     campo: 'nombre',
                     termino: '',
                     estado: 'Todos'
@@ -45,22 +43,9 @@
                 var filtros = this.filtros_aplicados;
                 var termino = this.normalizar(filtros.termino);
 
-                if (es_bandeja_pagos) {
-                    return this.participantes.filter(function (pago) {
-                        return !termino || [
-                            pago.nombre_completo,
-                            pago.curp,
-                            pago.folio,
-                            pago.estatus
-                        ].some(function (valor) {
-                            return this.normalizar(valor).includes(termino);
-                        }, this);
-                    }, this);
-                }
-
-                return this.participantes.filter(function (participante) {
-                    var coincide_termino = !termino || this.normalizar(participante[filtros.campo]).includes(termino);
-                    var coincide_estado = filtros.estado === 'Todos' || participante.estado_bandeja === filtros.estado;
+                return this.participantes.filter(function (registro) {
+                    var coincide_termino = !termino || this.normalizar(registro[filtros.campo]).includes(termino);
+                    var coincide_estado = filtros.estado === 'Todos' || registro[campo_estado] === filtros.estado;
 
                     return coincide_termino && coincide_estado;
                 }, this);
@@ -68,14 +53,6 @@
         },
         methods: {
             filtrar: function () {
-                if (es_bandeja_pagos) {
-                    this.filtros_aplicados = {
-                        termino: this.filtros.termino.trim()
-                    };
-
-                    return;
-                }
-
                 this.filtros_aplicados = {
                     campo: this.filtros.campo,
                     termino: this.filtros.termino.trim(),
@@ -83,17 +60,6 @@
                 };
             },
             limpiar: function () {
-                if (es_bandeja_pagos) {
-                    this.filtros = {
-                        termino: ''
-                    };
-                    this.filtros_aplicados = {
-                        termino: ''
-                    };
-
-                    return;
-                }
-
                 this.filtros = {
                     campo: 'nombre',
                     termino: '',
@@ -124,12 +90,8 @@
                     year: 'numeric'
                 }).format(fecha_registro);
             },
-            claseEstado: function (estado) {
-                return {
-                    'admin-bandeja-preregistros-estado-revision': estado === 'En revisión' || estado === 'Por revisar',
-                    'admin-bandeja-preregistros-estado-aceptado': estado === 'Aceptado' || estado === 'Aprobado',
-                    'admin-bandeja-preregistros-estado-rechazado': estado === 'Rechazado'
-                };
+            claseEstado: function (registro) {
+                return registro.clase_estado || '';
             }
         }
     }).mount(root);

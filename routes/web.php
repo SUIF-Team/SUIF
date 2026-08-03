@@ -67,6 +67,7 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/participantes', [AdminParticipanteController::class, 'index'])->name('participantes.index');
+    Route::get('/participantes-registrados', [AdminParticipanteController::class, 'registrados'])->name('participantes.registrados.index');
     Route::get('/participantes/{id}', [AdminParticipanteController::class, 'show'])->name('participantes.show');
     Route::post('/participantes/{id}/aceptar-preregistro', [AdminParticipanteController::class, 'aceptarPreRegistro'])->name('participantes.preregistro.aceptar');
     Route::post('/participantes/{id}/rechazar-preregistro', [AdminParticipanteController::class, 'rechazarPreRegistro'])->name('participantes.preregistro.rechazar');

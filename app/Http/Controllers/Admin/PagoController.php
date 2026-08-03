@@ -27,6 +27,7 @@ class PagoController extends Controller
                     $pago['estatus'] = 'Rechazado';
                 }
 
+                $pago['clase_estado'] = $this->claseEstado($pago['estatus']);
                 $pago['ruta_detalle'] = route('admin.pagos.show', ['id' => $pago['id']]);
                 $pago['puede_revisarse'] = ($estado['resultado'] ?? null) !== 'rechazado'
                     && $datos_prueba->mensajeNoDisponibleParaRevision($pago) === null;
@@ -181,5 +182,14 @@ class PagoController extends Controller
     private function claveEstado(string $id): string
     {
         return 'suif.admin.pago.'.$id;
+    }
+
+    private function claseEstado(string $estatus): string
+    {
+        return match ($estatus) {
+            'Aprobado' => 'admin-bandeja-preregistros-estado-aceptado',
+            'Rechazado' => 'admin-bandeja-preregistros-estado-rechazado',
+            default => 'admin-bandeja-preregistros-estado-revision',
+        };
     }
 }
