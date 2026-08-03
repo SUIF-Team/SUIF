@@ -70,9 +70,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/participantes/{id}', [AdminParticipanteController::class, 'show'])->name('participantes.show');
     Route::post('/participantes/{id}/aceptar-preregistro', [AdminParticipanteController::class, 'aceptarPreRegistro'])->name('participantes.preregistro.aceptar');
     Route::get('/pagos', [AdminPagoController::class, 'index'])->name('pagos.index');
+    Route::get('/pagos/{id}/comprobante', [AdminPagoController::class, 'comprobante'])->name('pagos.comprobante');
+    Route::match(['get', 'post'], '/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');
+    Route::match(['get', 'post'], '/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
     Route::get('/pagos/{id}', [AdminPagoController::class, 'show'])->name('pagos.show');
-    Route::post('/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');
-    Route::post('/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
     Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
     Route::get('/documentos', [AdminDocumentoController::class, 'index'])->name('documentos.index');
     Route::get('/documentos/{id}/resultado', [AdminDocumentoController::class, 'resultado'])->name('documentos.resultado');
