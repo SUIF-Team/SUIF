@@ -587,6 +587,18 @@
     text-transform: uppercase;
 }
 
+.admin-preregistro-resultado-mensaje.admin-preregistro-paso--completado h2 {
+    color: #207a45;
+}
+
+.admin-preregistro-resultado-mensaje.admin-preregistro-paso--actual h2 {
+    color: #8b6717;
+}
+
+.admin-preregistro-resultado-mensaje.admin-preregistro-paso--rechazado h2 {
+    color: #a53630;
+}
+
 @media (max-width: 767.98px) {
     .admin-preregistro-participante,
     .admin-preregistro-perfil,
