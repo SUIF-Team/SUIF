@@ -4,7 +4,7 @@
 
 - SUIF es una aplicación Laravel para el proceso administrativo de certificaciones de la FCA-UNAM.
 - Stack fijado: PHP 8.4.23, Laravel 13.x, PostgreSQL 18.4, Apache y Node.js 24.18 LTS.
-- Usa Docker Compose. La aplicación local se sirve en `http://localhost:8088`; Apache apunta a `public/`.
+- El entorno de desarrollo y despliegue se ejecuta directamente en la VM, sin Docker. Apache nativo sirve la aplicación en `http://localhost` y apunta a `public/`.
 - No cambies versiones del stack ni agregues dependencias Composer, npm, bundlers o frameworks sin acuerdo explícito.
 - El archivo `.env` es local y no se versiona. No expongas secretos, datos reales ni configuraciones privadas.
 
@@ -38,8 +38,9 @@
 
 ## Entorno y verificación
 
-- Inicia el entorno con `docker compose up -d`; en la primera instalación ejecuta además `docker compose exec app composer install --no-interaction --prefer-dist` y `docker compose exec app php artisan key:generate`.
-- Ejecuta las comprobaciones de Laravel dentro del contenedor para usar la versión fijada de PHP: `docker compose exec app php artisan route:list`, `docker compose exec app php artisan test` y, cuando corresponda, `docker compose exec app php artisan view:cache`.
-- La base de datos de Docker se expone por defecto en `localhost:5433`; dentro de Docker Laravel usa `db:5432`.
+- La aplicación se visualiza mediante Apache nativo en `http://localhost`; su `DocumentRoot` es `/var/www/SUIF/public`. No iniciar ni usar Docker Compose para ejecutar o visualizar el proyecto.
+- En una primera instalación, ejecuta directamente en la VM `composer install --no-interaction --prefer-dist` y `php artisan key:generate` cuando aún no exista `APP_KEY`.
+- Ejecuta las comprobaciones de Laravel con el PHP instalado en la VM: `php artisan route:list`, `php artisan test` y, cuando corresponda, `php artisan view:cache`.
+- PostgreSQL 18 se ejecuta como servicio nativo y Laravel conecta a `127.0.0.1:5432` con los valores de `.env`. Verifica los servicios con `systemctl is-active httpd` y `systemctl is-active postgresql-18` cuando se requiera acceso administrativo.
 - No hay migraciones, seeders ni pruebas automatizadas de negocio versionadas actualmente. Antes de conectar datos reales, define el esquema y la estrategia de pruebas.
 - Antes de entregar, revisa el diff, ejecuta las pruebas pertinentes y documenta los límites o `TODO` que queden pendientes.
