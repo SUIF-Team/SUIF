@@ -20,7 +20,9 @@ class ParticipanteController extends Controller
             ->map(function (array $participante) use ($request, $datos_prueba): array {
                 $estados = (array) $request->session()->get($this->claveEstado($participante['id']), []);
 
-                if (($estados['preregistro'] ?? null) === $datos_prueba->estadoAceptado()['preregistro']) {
+                if (($estados['resultado'] ?? null) === 'revision') {
+                    $participante['estado_bandeja'] = 'En revisión';
+                } elseif (($estados['resultado'] ?? null) === 'aprobado') {
                     $participante['estado_bandeja'] = 'Aceptado';
                 }
 
