@@ -1,0 +1,27 @@
+<h2>Patrón de notificación reutilizable</h2>
+<p class="subtitle">La propuesta conserva la pantalla actual y varía sólo los datos de cada flujo.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Vista propuesta: rechazo durante documentación</div>
+  <div class="mockup-body">
+    <div class="mock-nav">Barra institucional existente</div>
+    <div style="padding:18px; display:grid; gap:14px; background:#f6f7f8;">
+      <div style="border:1px solid #d7dde4; border-radius:8px; padding:14px; display:flex; justify-content:space-between; gap:16px; background:white;">
+        <div><strong>Jordan Carrillo Guevara</strong><br><span style="font-size:13px;color:#64748b;">CURP · Folio · Ciudad de México</span></div>
+        <span style="align-self:center; padding:5px 16px; border-radius:4px; background:#fde8e8; color:#a53630; font-weight:600;">Rechazado</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
+        <div style="padding:15px;text-align:center;border-radius:8px;background:#eafaf1;color:#207a45;"><strong>Pre-registro</strong><br><small>Completado</small></div>
+        <div style="padding:15px;text-align:center;border:1px solid #f3b0ae;border-radius:8px;background:#fde8e8;color:#a53630;"><strong>Documentación</strong><br><small>Rechazado</small></div>
+      </div>
+      <div style="min-height:180px;display:grid;place-items:center;border:1px solid #d7dde4;border-radius:8px;background:white;padding:24px;">
+        <div style="width:min(100%,620px);padding:32px;text-align:center;border:2px solid #f3b0ae;background:#fde8e8;color:#8b1e1e;font-size:clamp(20px,4vw,34px);font-weight:800;letter-spacing:.06em;">SOLICITUD RECHAZADA</div>
+      </div>
+      <div style="border:1px solid #d7dde4;border-radius:8px;background:white;padding:14px;font-weight:700;">◀ &nbsp; Volver a la bandeja</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <p>Los mismos bloques cubren pre-registro, documentación y pago: se cambian título, estado, pasos y destino de regreso, sin duplicar la vista.</p>
+</div>

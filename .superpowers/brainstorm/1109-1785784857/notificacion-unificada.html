@@ -1,0 +1,36 @@
+<h2>Una plantilla, tres contextos</h2>
+<p class="subtitle">El diseño se mantiene idéntico; el controlador entrega el mensaje, pasos, estado y destino.</p>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-image" style="padding:16px;background:#f6f7f8;">
+      <div style="padding:12px;border:1px solid #d7dde4;border-radius:7px;background:white;display:flex;justify-content:space-between;"><strong>Participante</strong><span style="color:#a53630">Rechazado</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"><div style="padding:10px;background:#fde8e8;color:#a53630;text-align:center;border-radius:6px;">Pre-registro<br><small>Rechazado</small></div><div style="padding:10px;background:#f4f4f4;text-align:center;border-radius:6px;">Documentación<br><small>Pendiente</small></div></div>
+      <div style="margin-top:8px;padding:20px;border:2px solid #f3b0ae;background:#fde8e8;color:#8b1e1e;text-align:center;font-weight:800;">SOLICITUD RECHAZADA</div>
+    </div>
+    <div class="card-body"><h3>Pre-registro</h3><p>Dos pasos; el primero rojo.</p></div>
+  </div>
+  <div class="card">
+    <div class="card-image" style="padding:16px;background:#f6f7f8;">
+      <div style="padding:12px;border:1px solid #d7dde4;border-radius:7px;background:white;display:flex;justify-content:space-between;"><strong>Participante</strong><span style="color:#a53630">Rechazado</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"><div style="padding:10px;background:#eafaf1;color:#207a45;text-align:center;border-radius:6px;">Pre-registro<br><small>Completado</small></div><div style="padding:10px;background:#fde8e8;color:#a53630;text-align:center;border-radius:6px;">Documentación<br><small>Rechazado</small></div></div>
+      <div style="margin-top:8px;padding:20px;border:2px solid #f3b0ae;background:#fde8e8;color:#8b1e1e;text-align:center;font-weight:800;">SOLICITUD RECHAZADA</div>
+    </div>
+    <div class="card-body"><h3>Documentación</h3><p>Dos pasos; el segundo rojo.</p></div>
+  </div>
+  <div class="card">
+    <div class="card-image" style="padding:16px;background:#f6f7f8;">
+      <div style="padding:12px;border:1px solid #d7dde4;border-radius:7px;background:white;display:flex;justify-content:space-between;"><strong>Participante</strong><span style="color:#a53630">Rechazado</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;font-size:12px;"><div style="padding:10px;background:#eafaf1;color:#207a45;text-align:center;border-radius:6px;">Pre-registro<br><small>Completado</small></div><div style="padding:10px;background:#eafaf1;color:#207a45;text-align:center;border-radius:6px;">Documentación<br><small>Completado</small></div><div style="padding:10px;background:#fde8e8;color:#a53630;text-align:center;border-radius:6px;">Pago<br><small>Rechazado</small></div></div>
+      <div style="margin-top:8px;padding:20px;border:2px solid #f3b0ae;background:#fde8e8;color:#8b1e1e;text-align:center;font-weight:800;">PAGO RECHAZADO</div>
+    </div>
+    <div class="card-body"><h3>Pago</h3><p>Tres pasos; sólo pago cambia a rojo.</p></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Alternativas de implementación</h3>
+  <p><strong>Recomendada — vista Blade configurable:</strong> una vista de resultado recibe el participante, título, estado, pasos y ruta de regreso. Evita markup duplicado y conserva el CSS actual.</p>
+  <p><strong>Parcial Blade:</strong> extrae sólo el contenido común, pero deja contenedores similares en cada pantalla; reduce algo de duplicación, aunque permite que vuelvan a divergir.</p>
+  <p><strong>Componente Vue:</strong> centraliza la UI en JavaScript, pero añade complejidad a datos que ya están listos en Blade y no aporta valor para estas notificaciones.</p>
+</div>

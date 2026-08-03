@@ -79,7 +79,7 @@
 
         <section id="acciones-pago" class="admin-preregistro-acciones admin-pago-acciones" aria-label="Acciones del pago">
             <p id="acciones-pago-ayuda" class="visually-hidden">
-                Las acciones están preparadas y no modifican el estado del pago todavía.
+                Revisa el comprobante antes de validar o rechazar el pago.
             </p>
             <a
                 class="admin-preregistro-boton admin-preregistro-boton--aceptar"
@@ -87,12 +87,15 @@
                 aria-describedby="acciones-pago-ayuda">
                 Validar pago
             </a>
-            <a
-                class="admin-preregistro-boton admin-preregistro-boton--rechazar"
-                href="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}"
-                aria-describedby="acciones-pago-ayuda">
-                Rechazar pago
-            </a>
+            <form method="POST" action="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}">
+                @csrf
+                <button
+                    class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                    type="submit"
+                    aria-describedby="acciones-pago-ayuda">
+                    Rechazar pago
+                </button>
+            </form>
         </section>
     </main>
 

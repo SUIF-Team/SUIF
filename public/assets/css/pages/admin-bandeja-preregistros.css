@@ -272,6 +272,12 @@
     color: #1e293b;
 }
 
+.admin-bandeja-preregistros-accion-no-disponible {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
 .admin-bandeja-preregistros-vacio {
     margin: 0;
     padding: 1.5rem 1rem;

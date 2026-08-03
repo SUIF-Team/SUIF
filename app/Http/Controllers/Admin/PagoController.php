@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\NotificacionResultado;
 use App\Support\Admin\PagoDatosPrueba;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 /**
  * Admin\PagoController
@@ -14,12 +16,20 @@ use Illuminate\Http\RedirectResponse;
  */
 class PagoController extends Controller
 {
-    public function index(PagoDatosPrueba $datos_prueba)
+    public function index(Request $request, PagoDatosPrueba $datos_prueba)
     {
         $pagos = collect($datos_prueba->pagos())
             ->sortByDesc('fecha_envio_comprobante')
-            ->map(function (array $pago): array {
+            ->map(function (array $pago) use ($request, $datos_prueba): array {
+                $estado = (array) $request->session()->get($this->claveEstado($pago['id']), []);
+
+                if (($estado['resultado'] ?? null) === 'rechazado') {
+                    $pago['estatus'] = 'Rechazado';
+                }
+
                 $pago['ruta_detalle'] = route('admin.pagos.show', ['id' => $pago['id']]);
+                $pago['puede_revisarse'] = ($estado['resultado'] ?? null) !== 'rechazado'
+                    && $datos_prueba->mensajeNoDisponibleParaRevision($pago) === null;
 
                 return $pago;
             })
@@ -31,12 +41,18 @@ class PagoController extends Controller
         ]);
     }
 
-    public function show(string $id, PagoDatosPrueba $datos_prueba)
+    public function show(Request $request, string $id, PagoDatosPrueba $datos_prueba)
     {
         $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
 
         if ($pago instanceof RedirectResponse) {
             return $pago;
+        }
+
+        $estado = (array) $request->session()->get($this->claveEstado($id), []);
+
+        if (($estado['resultado'] ?? null) === 'rechazado') {
+            return redirect()->route('admin.pagos.resultado', ['id' => $id]);
         }
 
         return view('admin.pago-detalle', compact('pago'));
@@ -67,12 +83,56 @@ class PagoController extends Controller
         return $this->redireccionAccionPendiente($id, $datos_prueba, 'La validación del pago estará disponible próximamente.');
     }
 
-    /**
-     * La ruta acepta enlaces temporales sin efectuar cambios de estado.
-     */
-    public function rechazar(string $id, PagoDatosPrueba $datos_prueba): RedirectResponse
-    {
-        return $this->redireccionAccionPendiente($id, $datos_prueba, 'El rechazo del pago estará disponible próximamente.');
+    public function rechazar(
+        Request $request,
+        string $id,
+        PagoDatosPrueba $datos_prueba
+    ): RedirectResponse {
+        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
+
+        if ($pago instanceof RedirectResponse) {
+            return $pago;
+        }
+
+        $estado = (array) $request->session()->get($this->claveEstado($id), []);
+
+        if (($estado['resultado'] ?? null) === 'rechazado') {
+            return redirect()
+                ->route('admin.pagos.resultado', ['id' => $id])
+                ->with('warning', 'El pago ya fue rechazado.');
+        }
+
+        $request->session()->put($this->claveEstado($id), [
+            'resultado' => 'rechazado',
+        ]);
+
+        return redirect()->route('admin.pagos.resultado', ['id' => $id]);
+    }
+
+    public function resultado(
+        Request $request,
+        string $id,
+        PagoDatosPrueba $datos_prueba,
+        NotificacionResultado $notificacion_resultado
+    ) {
+        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
+
+        if ($pago instanceof RedirectResponse) {
+            return $pago;
+        }
+
+        $estado = (array) $request->session()->get($this->claveEstado($id), []);
+
+        if (($estado['resultado'] ?? null) !== 'rechazado') {
+            return redirect()->route('admin.pagos.show', ['id' => $id]);
+        }
+
+        $notificacion = $notificacion_resultado->paraPago($pago);
+
+        return view('admin.notificacion-resultado', [
+            'participante' => $notificacion['participante'],
+            'notificacion' => $notificacion,
+        ]);
     }
 
     private function redireccionAccionPendiente(
@@ -116,5 +176,10 @@ class PagoController extends Controller
         }
 
         return $pago;
+    }
+
+    private function claveEstado(string $id): string
+    {
+        return 'suif.admin.pago.'.$id;
     }
 }

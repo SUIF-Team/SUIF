@@ -42,13 +42,20 @@
             </div>
         </dl>
 
-        <form method="POST" action="{{ route('admin.participantes.preregistro.aceptar', ['id' => $participante['id']]) }}" class="admin-preregistro-acciones" v-on:submit="enviando = true">
-            @csrf
-            <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando">
-                @{{ enviando ? 'Procesando…' : 'Aceptar solicitud' }}
-            </button>
-            <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="button">Rechazar solicitud</button>
-        </form>
+        <div class="admin-preregistro-acciones">
+            <form method="POST" action="{{ route('admin.participantes.preregistro.aceptar', ['id' => $participante['id']]) }}" v-on:submit="enviando = true">
+                @csrf
+                <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando">
+                    @{{ enviando ? 'Procesando…' : 'Aceptar solicitud' }}
+                </button>
+            </form>
+            <form method="POST" action="{{ route('admin.participantes.preregistro.rechazar', ['id' => $participante['id']]) }}" v-on:submit="enviando = true">
+                @csrf
+                <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="submit" :disabled="enviando">
+                    @{{ enviando ? 'Procesando…' : 'Rechazar solicitud' }}
+                </button>
+            </form>
+        </div>
     </section>
 
     <back-navigation destino="{{ route('admin.participantes.index') }}"></back-navigation>

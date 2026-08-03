@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\NotificacionResultado;
 use App\Support\Admin\PreRegistroDatosPrueba;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -26,6 +27,16 @@ class DocumentoController extends Controller
             (array) $request->session()->get('suif.admin.preregistro.'.$id, [])
         );
 
+        if (in_array($estados['resultado'] ?? null, ['aprobado', 'revision', 'rechazado'], true)) {
+            return redirect()->route('admin.documentos.resultado', ['id' => $id]);
+        }
+
+        if (($estados['preregistro'] ?? null) !== 'Completado') {
+            return redirect()
+                ->route('admin.participantes.show', ['id' => $id])
+                ->with('warning', 'Completa el pre-registro antes de revisar la documentación.');
+        }
+
         return view('admin.preregistro-documentacion', compact('participante', 'estados'));
     }
 
@@ -34,6 +45,18 @@ class DocumentoController extends Controller
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
+
+        $estados_actuales = array_merge(
+            $datos_prueba->estadoInicial(),
+            (array) $request->session()->get($this->claveEstado($id), [])
+        );
+
+        if (($estados_actuales['preregistro'] ?? null) !== 'Completado'
+            || ($estados_actuales['documentacion'] ?? null) !== 'En revisión') {
+            return redirect()
+                ->route('admin.documentos.show', ['id' => $id])
+                ->with('warning', 'La documentación ya fue resuelta o no está disponible para revisión.');
+        }
 
         $documentos = $request->input('documentos', []);
         $documentos_requeridos = array_column($participante['documentos'], 'id');
@@ -74,24 +97,55 @@ class DocumentoController extends Controller
         return redirect()->route('admin.documentos.resultado', ['id' => $id]);
     }
 
-    public function resultado(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function interrumpir(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
     {
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
 
-        $estados = (array) $request->session()->get($this->claveEstado($id), []);
-        $tipo_resultado = $estados['resultado'] ?? null;
+        $estados = array_merge(
+            $datos_prueba->estadoInicial(),
+            (array) $request->session()->get($this->claveEstado($id), [])
+        );
 
-        if (!in_array($tipo_resultado, ['aprobado', 'revision'], true)) {
+        if (($estados['preregistro'] ?? null) !== 'Completado'
+            || ($estados['documentacion'] ?? null) !== 'En revisión') {
+            return redirect()
+                ->route('admin.documentos.show', ['id' => $id])
+                ->with('warning', 'La documentación ya fue resuelta o no está disponible para revisión.');
+        }
+
+        $request->session()->put($this->claveEstado($id), array_merge($estados, [
+            'general' => 'Rechazado',
+            'documentacion' => 'Rechazado',
+            'resultado' => 'rechazado',
+        ]));
+
+        return redirect()->route('admin.documentos.resultado', ['id' => $id]);
+    }
+
+    public function resultado(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        NotificacionResultado $notificacion_resultado
+    ) {
+        $participante = $datos_prueba->participante($id);
+
+        abort_unless($participante, 404);
+
+        $estados = (array) $request->session()->get($this->claveEstado($id), []);
+
+        if (!in_array($estados['resultado'] ?? null, ['aprobado', 'revision', 'rechazado'], true)) {
             return redirect()->route('admin.documentos.show', ['id' => $id]);
         }
 
-        return view('admin.preregistro-resultado', compact(
-            'participante',
-            'estados',
-            'tipo_resultado'
-        ));
+        $notificacion = $notificacion_resultado->paraPreRegistro($participante, $estados);
+
+        return view('admin.notificacion-resultado', [
+            'participante' => $notificacion['participante'],
+            'notificacion' => $notificacion,
+        ]);
     }
 
     private function claveEstado(string $id): string

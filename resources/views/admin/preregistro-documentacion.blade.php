@@ -54,7 +54,14 @@
             <section class="admin-preregistro-tarjeta admin-preregistro-acciones-generales" aria-labelledby="acciones-generales-titulo">
                 <h2 id="acciones-generales-titulo">Acciones generales</h2>
                 <div>
-                    <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="button">Interrumpir trámite</button>
+                    <button
+                        class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                        type="submit"
+                        formaction="{{ route('admin.documentos.interrumpir', ['id' => $participante['id']]) }}"
+                        formmethod="POST"
+                        :disabled="enviando">
+                        @{{ enviando ? 'Procesando...' : 'Interrumpir trámite' }}
+                    </button>
                     <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando || !todosDocumentosResueltos">
                         @{{ enviando ? 'Guardando...' : 'Guardar' }}
                     </button>

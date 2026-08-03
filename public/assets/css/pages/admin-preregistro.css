@@ -136,6 +136,16 @@
     color: #8b6717;
 }
 
+.admin-preregistro-estado--completado {
+    background: #eafaf1;
+    color: #207a45;
+}
+
+.admin-preregistro-estado--rechazado {
+    background: #fde8e8;
+    color: #a53630;
+}
+
 .admin-preregistro-ver,
 .admin-preregistro-previsualizar,
 .admin-preregistro-icono,
@@ -233,6 +243,15 @@
 
 .admin-preregistro-paso--actual .admin-preregistro-paso-estado {
     color: #8b6717;
+}
+
+.admin-preregistro-paso--rechazado {
+    border-color: #f3b0ae;
+    background: #fde8e8;
+}
+
+.admin-preregistro-paso--rechazado .admin-preregistro-paso-estado {
+    color: #a53630;
 }
 
 .admin-preregistro-paso--pendiente {
@@ -532,13 +551,20 @@
 
 .admin-preregistro-resultado-flujo .admin-preregistro-progreso {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: visible;
     padding-bottom: 0;
 }
 
+.admin-preregistro-progreso--dos-pasos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-preregistro-progreso--tres-pasos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .admin-preregistro-resultado-principal {
-    min-height: clamp(16rem, 36vw, 25rem);
+    min-height: clamp(11rem, 24vw, 16rem);
     padding: clamp(1.5rem, 5vw, 3rem);
     display: flex;
     align-items: center;

@@ -57,7 +57,8 @@
                         <span class="admin-bandeja-preregistros-estado" :class="claseEstado(pago.estatus)">@{{ pago.estatus }}</span>
                     </div>
                     <div class="admin-bandeja-preregistros-accion">
-                        <a class="admin-bandeja-preregistros-expediente" :href="pago.ruta_detalle">Revisar pago</a>
+                        <a v-if="pago.puede_revisarse" class="admin-bandeja-preregistros-expediente" :href="pago.ruta_detalle">Revisar pago</a>
+                        <span v-else class="admin-bandeja-preregistros-accion-no-disponible">Revisión no disponible</span>
                     </div>
                 </article>
 
@@ -69,7 +70,7 @@
 
         <back-navigation
             destino="{{ route('admin.dashboard') }}"
-            etiqueta="Volver al dashboard"
+            etiqueta="Atrás"
             etiqueta-accesible="Volver al dashboard administrativo"></back-navigation>
     </div>
 </section>
