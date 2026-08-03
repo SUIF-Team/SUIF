@@ -41,6 +41,7 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Pagos',
+                'ruta' => 'admin.pagos.index',
                 'descripcion' => 'Gestiona los pagos realizados.',
             ],
             [

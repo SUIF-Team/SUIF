@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var root = document.querySelector('[data-bandeja-preregistros]');
+    var root = document.querySelector('[data-bandeja-administrativa]');
 
     if (!root || !window.Vue || !window.SUIFComponentes || !window.SUIFComponentes.BackNavigation) {
         return;
@@ -15,19 +15,25 @@
         return;
     }
 
+    var es_bandeja_pagos = root.dataset.bandejaAdministrativa === 'pagos';
+
     window.Vue.createApp({
         components: {
             'back-navigation': window.SUIFComponentes.BackNavigation
         },
         data: function () {
             return {
-                participantes: datos_vista.participantes,
-                filtros: {
+                participantes: es_bandeja_pagos ? datos_vista.pagos : datos_vista.participantes,
+                filtros: es_bandeja_pagos ? {
+                    termino: ''
+                } : {
                     campo: 'nombre',
                     termino: '',
                     estado: 'Todos'
                 },
-                filtros_aplicados: {
+                filtros_aplicados: es_bandeja_pagos ? {
+                    termino: ''
+                } : {
                     campo: 'nombre',
                     termino: '',
                     estado: 'Todos'
@@ -39,6 +45,19 @@
                 var filtros = this.filtros_aplicados;
                 var termino = this.normalizar(filtros.termino);
 
+                if (es_bandeja_pagos) {
+                    return this.participantes.filter(function (pago) {
+                        return !termino || [
+                            pago.nombre_completo,
+                            pago.curp,
+                            pago.folio,
+                            pago.estatus
+                        ].some(function (valor) {
+                            return this.normalizar(valor).includes(termino);
+                        }, this);
+                    }, this);
+                }
+
                 return this.participantes.filter(function (participante) {
                     var coincide_termino = !termino || this.normalizar(participante[filtros.campo]).includes(termino);
                     var coincide_estado = filtros.estado === 'Todos' || participante.estado_bandeja === filtros.estado;
@@ -49,6 +68,14 @@
         },
         methods: {
             filtrar: function () {
+                if (es_bandeja_pagos) {
+                    this.filtros_aplicados = {
+                        termino: this.filtros.termino.trim()
+                    };
+
+                    return;
+                }
+
                 this.filtros_aplicados = {
                     campo: this.filtros.campo,
                     termino: this.filtros.termino.trim(),
@@ -56,6 +83,17 @@
                 };
             },
             limpiar: function () {
+                if (es_bandeja_pagos) {
+                    this.filtros = {
+                        termino: ''
+                    };
+                    this.filtros_aplicados = {
+                        termino: ''
+                    };
+
+                    return;
+                }
+
                 this.filtros = {
                     campo: 'nombre',
                     termino: '',
@@ -71,6 +109,10 @@
                 return String(valor || '').trim().toLocaleLowerCase('es-MX');
             },
             iniciales: function (participante) {
+                if (participante.iniciales) {
+                    return participante.iniciales;
+                }
+
                 return participante.nombre.charAt(0) + participante.primer_apellido.charAt(0);
             },
             fechaRegistro: function (fecha) {
@@ -84,8 +126,8 @@
             },
             claseEstado: function (estado) {
                 return {
-                    'admin-bandeja-preregistros-estado-revision': estado === 'En revisión',
-                    'admin-bandeja-preregistros-estado-aceptado': estado === 'Aceptado',
+                    'admin-bandeja-preregistros-estado-revision': estado === 'En revisión' || estado === 'Por revisar',
+                    'admin-bandeja-preregistros-estado-aceptado': estado === 'Aceptado' || estado === 'Aprobado',
                     'admin-bandeja-preregistros-estado-rechazado': estado === 'Rechazado'
                 };
             }

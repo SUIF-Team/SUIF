@@ -11,7 +11,7 @@
 <section
     id="bandeja-preregistros-app"
     class="admin-bandeja-preregistros"
-    data-bandeja-preregistros
+    data-bandeja-administrativa="preregistros"
     data-vista='@json($datos_vista)'
     aria-labelledby="bandeja-preregistros-titulo"
     v-cloak>
