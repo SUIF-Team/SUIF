@@ -58,6 +58,7 @@ ehthumbs.db
 # ─── Dumps de base de datos locales ──────────────────────────────────────────
 *.sql
 !database/schema.sql
+!database/scripts/*.sql
 
 # ─── Logs generales ──────────────────────────────────────────────────────────
 *.log
