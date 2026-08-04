@@ -21,7 +21,7 @@ class OrigenBandejaAdmin
             return [
                 'origen' => $origen_normalizado,
                 'ruta' => route('admin.participantes.registrados.index'),
-                'etiqueta' => 'Volver a participantes registrados',
+                'etiqueta' => 'Volver a la bandeja',
                 'etiqueta_accesible' => 'Volver a la bandeja de participantes registrados',
             ];
         }
