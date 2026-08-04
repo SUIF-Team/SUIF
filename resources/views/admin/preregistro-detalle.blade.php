@@ -43,14 +43,16 @@
         </dl>
 
         <div class="admin-preregistro-acciones">
-            <form method="POST" action="{{ route('admin.participantes.preregistro.aceptar', ['id' => $participante['id']]) }}" v-on:submit="enviando = true">
+            <form method="POST" action="{{ route('admin.participantes.preregistro.aceptar', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}" v-on:submit="enviando = true">
                 @csrf
+                <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
                 <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando">
                     @{{ enviando ? 'Procesando…' : 'Aceptar solicitud' }}
                 </button>
             </form>
-            <form method="POST" action="{{ route('admin.participantes.preregistro.rechazar', ['id' => $participante['id']]) }}" v-on:submit="enviando = true">
+            <form method="POST" action="{{ route('admin.participantes.preregistro.rechazar', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}" v-on:submit="enviando = true">
                 @csrf
+                <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
                 <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="submit" :disabled="enviando">
                     @{{ enviando ? 'Procesando…' : 'Rechazar solicitud' }}
                 </button>
@@ -58,7 +60,10 @@
         </div>
     </section>
 
-    <back-navigation destino="{{ route('admin.participantes.index') }}"></back-navigation>
+    <back-navigation
+        destino="{{ $contexto_bandeja['ruta'] }}"
+        etiqueta="{{ $contexto_bandeja['etiqueta'] }}"
+        etiqueta-accesible="{{ $contexto_bandeja['etiqueta_accesible'] }}"></back-navigation>
 </section>
 @endsection
 

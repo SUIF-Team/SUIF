@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Admin\NotificacionResultado;
+use App\Support\Admin\OrigenBandejaAdmin;
 use App\Support\Admin\PreRegistroDatosPrueba;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Admin\DocumentacionController
@@ -16,8 +17,14 @@ use Illuminate\Validation\ValidationException;
  */
 class DocumentoController extends Controller
 {
-    public function show(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function show(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
@@ -28,20 +35,32 @@ class DocumentoController extends Controller
         );
 
         if (in_array($estados['resultado'] ?? null, ['aprobado', 'revision', 'rechazado'], true)) {
-            return redirect()->route('admin.documentos.resultado', ['id' => $id]);
+            return redirect()->route('admin.documentos.resultado', [
+                'id' => $id,
+                'origen' => $contexto_bandeja['origen'],
+            ]);
         }
 
         if (($estados['preregistro'] ?? null) !== 'Completado') {
             return redirect()
-                ->route('admin.participantes.show', ['id' => $id])
+                ->route('admin.participantes.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
                 ->with('warning', 'Completa el pre-registro antes de revisar la documentación.');
         }
 
-        return view('admin.preregistro-documentacion', compact('participante', 'estados'));
+        return view('admin.preregistro-documentacion', compact('participante', 'estados', 'contexto_bandeja'));
     }
 
-    public function validar(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function validar(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
@@ -54,17 +73,30 @@ class DocumentoController extends Controller
         if (($estados_actuales['preregistro'] ?? null) !== 'Completado'
             || ($estados_actuales['documentacion'] ?? null) !== 'En revisión') {
             return redirect()
-                ->route('admin.documentos.show', ['id' => $id])
+                ->route('admin.documentos.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
                 ->with('warning', 'La documentación ya fue resuelta o no está disponible para revisión.');
         }
 
         $documentos = $request->input('documentos', []);
         $documentos_requeridos = array_column($participante['documentos'], 'id');
 
-        $request->validate([
+        $validador = Validator::make($request->all(), [
             'documentos' => ['required', 'array'],
             'documentos.*' => ['required', 'in:aprobado,rechazado'],
         ]);
+
+        if ($validador->fails()) {
+            return redirect()
+                ->route('admin.documentos.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
+                ->withErrors($validador)
+                ->withInput();
+        }
 
         $documentos_recibidos = array_keys($documentos);
 
@@ -72,9 +104,15 @@ class DocumentoController extends Controller
             array_diff($documentos_requeridos, $documentos_recibidos) ||
             array_diff($documentos_recibidos, $documentos_requeridos)
         ) {
-            throw ValidationException::withMessages([
-                'documentos' => 'Resuelve todos los documentos requeridos antes de guardar.',
-            ]);
+            return redirect()
+                ->route('admin.documentos.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
+                ->withErrors([
+                    'documentos' => 'Resuelve todos los documentos requeridos antes de guardar.',
+                ])
+                ->withInput();
         }
 
         $resultado = collect($documentos)->every(
@@ -94,11 +132,20 @@ class DocumentoController extends Controller
 
         $request->session()->put($this->claveEstado($id), $estados);
 
-        return redirect()->route('admin.documentos.resultado', ['id' => $id]);
+        return redirect()->route('admin.documentos.resultado', [
+            'id' => $id,
+            'origen' => $contexto_bandeja['origen'],
+        ]);
     }
 
-    public function interrumpir(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function interrumpir(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
@@ -111,7 +158,10 @@ class DocumentoController extends Controller
         if (($estados['preregistro'] ?? null) !== 'Completado'
             || ($estados['documentacion'] ?? null) !== 'En revisión') {
             return redirect()
-                ->route('admin.documentos.show', ['id' => $id])
+                ->route('admin.documentos.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
                 ->with('warning', 'La documentación ya fue resuelta o no está disponible para revisión.');
         }
 
@@ -121,15 +171,20 @@ class DocumentoController extends Controller
             'resultado' => 'rechazado',
         ]));
 
-        return redirect()->route('admin.documentos.resultado', ['id' => $id]);
+        return redirect()->route('admin.documentos.resultado', [
+            'id' => $id,
+            'origen' => $contexto_bandeja['origen'],
+        ]);
     }
 
     public function resultado(
         Request $request,
         string $id,
         PreRegistroDatosPrueba $datos_prueba,
-        NotificacionResultado $notificacion_resultado
+        NotificacionResultado $notificacion_resultado,
+        OrigenBandejaAdmin $origen_bandeja
     ) {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
@@ -137,10 +192,18 @@ class DocumentoController extends Controller
         $estados = (array) $request->session()->get($this->claveEstado($id), []);
 
         if (!in_array($estados['resultado'] ?? null, ['aprobado', 'revision', 'rechazado'], true)) {
-            return redirect()->route('admin.documentos.show', ['id' => $id]);
+            return redirect()->route('admin.documentos.show', [
+                'id' => $id,
+                'origen' => $contexto_bandeja['origen'],
+            ]);
         }
 
         $notificacion = $notificacion_resultado->paraPreRegistro($participante, $estados);
+        $notificacion = array_merge($notificacion, [
+            'ruta_regreso' => $contexto_bandeja['ruta'],
+            'etiqueta_regreso' => $contexto_bandeja['etiqueta'],
+            'etiqueta_regreso_accesible' => $contexto_bandeja['etiqueta_accesible'],
+        ]);
 
         return view('admin.notificacion-resultado', [
             'participante' => $notificacion['participante'],

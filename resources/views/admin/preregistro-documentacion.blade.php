@@ -33,8 +33,9 @@
         </div>
     </nav>
 
-    <form method="POST" action="{{ route('admin.documentos.validar', ['id' => $participante['id']]) }}" class="admin-preregistro-contenido-principal" v-on:submit="enviando = true">
+    <form method="POST" action="{{ route('admin.documentos.validar', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}" class="admin-preregistro-contenido-principal" v-on:submit="enviando = true">
         @csrf
+        <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
         <input v-for="documento in participante.documentos" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
         <main class="admin-preregistro-tarjeta admin-preregistro-documentos" aria-labelledby="lista-documentos-titulo">
             <h2 id="lista-documentos-titulo">Documentación</h2>
@@ -57,7 +58,7 @@
                     <button
                         class="admin-preregistro-boton admin-preregistro-boton--rechazar"
                         type="submit"
-                        formaction="{{ route('admin.documentos.interrumpir', ['id' => $participante['id']]) }}"
+                        formaction="{{ route('admin.documentos.interrumpir', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}"
                         formmethod="POST"
                         :disabled="enviando">
                         @{{ enviando ? 'Procesando...' : 'Interrumpir trámite' }}
@@ -92,7 +93,10 @@
         </aside>
     </form>
 
-    <back-navigation destino="{{ route('admin.participantes.show', ['id' => $participante['id']]) }}"></back-navigation>
+    <back-navigation
+        destino="{{ $contexto_bandeja['ruta'] }}"
+        etiqueta="{{ $contexto_bandeja['etiqueta'] }}"
+        etiqueta-accesible="{{ $contexto_bandeja['etiqueta_accesible'] }}"></back-navigation>
 </section>
 @endsection
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Admin\NotificacionResultado;
+use App\Support\Admin\OrigenBandejaAdmin;
 use App\Support\Admin\PreRegistroDatosPrueba;
 use App\Support\Admin\ParticipanteRegistradoDatosPrueba;
 use Illuminate\Http\Request;
@@ -16,10 +17,14 @@ use Illuminate\Http\Request;
  */
 class ParticipanteController extends Controller
 {
-    public function index(Request $request, PreRegistroDatosPrueba $datos_prueba)
+    public function index(
+        Request $request,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
         $participantes = collect($datos_prueba->participantes())
-            ->map(function (array $participante) use ($request, $datos_prueba): array {
+            ->map(function (array $participante) use ($request, $datos_prueba, $origen_bandeja): array {
                 $estados = (array) $request->session()->get($this->claveEstado($participante['id']), []);
 
                 if (($estados['resultado'] ?? null) === 'revision') {
@@ -31,7 +36,10 @@ class ParticipanteController extends Controller
                 }
 
                 $participante['clase_estado'] = $this->claseEstado($participante['estado_bandeja']);
-                $participante['ruta_expediente'] = route('admin.participantes.show', ['id' => $participante['id']]);
+                $participante['ruta_expediente'] = route('admin.participantes.show', [
+                    'id' => $participante['id'],
+                    'origen' => $origen_bandeja->contexto(OrigenBandejaAdmin::PREREGISTROS)['origen'],
+                ]);
 
                 return $participante;
             })
@@ -44,11 +52,17 @@ class ParticipanteController extends Controller
         ]);
     }
 
-    public function registrados(ParticipanteRegistradoDatosPrueba $datos_prueba)
+    public function registrados(
+        ParticipanteRegistradoDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
         $participantes = collect($datos_prueba->participantes())
-            ->map(function (array $participante): array {
-                $participante['ruta_expediente'] = route('admin.participantes.show', ['id' => $participante['id']]);
+            ->map(function (array $participante) use ($origen_bandeja): array {
+                $participante['ruta_expediente'] = route('admin.participantes.show', [
+                    'id' => $participante['id'],
+                    'origen' => $origen_bandeja->contexto(OrigenBandejaAdmin::PARTICIPANTES_REGISTRADOS)['origen'],
+                ]);
 
                 return $participante;
             })
@@ -61,8 +75,14 @@ class ParticipanteController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function show(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
@@ -70,45 +90,73 @@ class ParticipanteController extends Controller
         $estados = $this->estados($request, $id, $datos_prueba);
 
         if (($estados['resultado'] ?? null) === 'rechazado') {
-            return redirect()->route('admin.participantes.resultado', ['id' => $id]);
+            return redirect()->route('admin.participantes.resultado', [
+                'id' => $id,
+                'origen' => $contexto_bandeja['origen'],
+            ]);
         }
 
         if (($estados['preregistro'] ?? null) === 'Completado') {
-            return redirect()->route('admin.documentos.show', ['id' => $id]);
+            return redirect()->route('admin.documentos.show', [
+                'id' => $id,
+                'origen' => $contexto_bandeja['origen'],
+            ]);
         }
 
         return view('admin.preregistro-detalle', [
             'participante' => $participante,
             'estados' => $estados,
+            'contexto_bandeja' => $contexto_bandeja,
         ]);
     }
 
-    public function aceptarPreRegistro(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function aceptarPreRegistro(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         abort_unless($datos_prueba->participante($id), 404);
 
         $estados = $this->estados($request, $id, $datos_prueba);
 
         if (($estados['preregistro'] ?? null) !== 'En revisión') {
             return redirect()
-                ->route('admin.participantes.show', ['id' => $id])
+                ->route('admin.participantes.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
                 ->with('warning', 'La solicitud ya fue resuelta y no puede aceptarse nuevamente.');
         }
 
         $request->session()->put($this->claveEstado($id), $datos_prueba->estadoAceptado());
 
-        return redirect()->route('admin.documentos.show', ['id' => $id]);
+        return redirect()->route('admin.documentos.show', [
+            'id' => $id,
+            'origen' => $contexto_bandeja['origen'],
+        ]);
     }
 
-    public function rechazarPreRegistro(Request $request, string $id, PreRegistroDatosPrueba $datos_prueba)
+    public function rechazarPreRegistro(
+        Request $request,
+        string $id,
+        PreRegistroDatosPrueba $datos_prueba,
+        OrigenBandejaAdmin $origen_bandeja
+    )
     {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         abort_unless($datos_prueba->participante($id), 404);
 
         $estados = $this->estados($request, $id, $datos_prueba);
 
         if (($estados['preregistro'] ?? null) !== 'En revisión') {
             return redirect()
-                ->route('admin.participantes.show', ['id' => $id])
+                ->route('admin.participantes.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ])
                 ->with('warning', 'La solicitud ya fue resuelta y no puede rechazarse nuevamente.');
         }
 
@@ -119,15 +167,20 @@ class ParticipanteController extends Controller
             'resultado' => 'rechazado',
         ]);
 
-        return redirect()->route('admin.participantes.resultado', ['id' => $id]);
+        return redirect()->route('admin.participantes.resultado', [
+            'id' => $id,
+            'origen' => $contexto_bandeja['origen'],
+        ]);
     }
 
     public function resultado(
         Request $request,
         string $id,
         PreRegistroDatosPrueba $datos_prueba,
-        NotificacionResultado $notificacion_resultado
+        NotificacionResultado $notificacion_resultado,
+        OrigenBandejaAdmin $origen_bandeja
     ) {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
@@ -135,10 +188,18 @@ class ParticipanteController extends Controller
         $estados = $this->estados($request, $id, $datos_prueba);
 
         if (($estados['resultado'] ?? null) !== 'rechazado') {
-            return redirect()->route('admin.participantes.show', ['id' => $id]);
+            return redirect()->route('admin.participantes.show', [
+                'id' => $id,
+                'origen' => $contexto_bandeja['origen'],
+            ]);
         }
 
         $notificacion = $notificacion_resultado->paraPreRegistro($participante, $estados);
+        $notificacion = array_merge($notificacion, [
+            'ruta_regreso' => $contexto_bandeja['ruta'],
+            'etiqueta_regreso' => $contexto_bandeja['etiqueta'],
+            'etiqueta_regreso_accesible' => $contexto_bandeja['etiqueta_accesible'],
+        ]);
 
         return view('admin.notificacion-resultado', [
             'participante' => $notificacion['participante'],
