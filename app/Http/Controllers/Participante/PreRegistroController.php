@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Participante;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -35,20 +37,20 @@ class PreRegistroController extends Controller
         ]);
     }
 
-    public function guardarDatos(Request $request)
+       public function guardarDatos(Request $request)
     {
         $entidades = implode(',', $this->entidades());
         $grados = implode(',', array_keys($this->grados()));
 
         $datos = $this->validate($request, [
-            'nombre' => 'required|string|max:100',
-            'primer_apellido' => 'required|string|max:80',
-            'segundo_apellido' => 'required|string|max:80',
-            'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/'],
-            'correo_principal' => 'required|email|max:150',
+            'nombre' => 'required|string|max:45',
+            'primer_apellido' => 'required|string|max:45',
+            'segundo_apellido' => 'required|string|max:45',
+            'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/', 'unique:persona,pers_curp'],
+            'correo_principal' => 'required|email|max:65',
             'telefono' => 'required|digits:10',
             'entidad_federativa' => 'required|in:'.$entidades,
-            'correo_alterno' => 'required|email|max:150|different:correo_principal',
+            'correo_alterno' => 'required|email|max:65|different:correo_principal',
             'grado_estudios' => 'required|in:'.$grados,
             'actividad_vulnerable' => 'required|in:si,no',
             'responsable_cumplimiento' => 'required|in:si,no',
@@ -60,18 +62,100 @@ class PreRegistroController extends Controller
             'regex' => 'La CURP solo debe contener letras y números.',
             'different' => 'El correo alterno debe ser distinto al principal.',
             'in' => 'Selecciona una opción válida.',
+            'curp.unique' => 'Esa CURP ya tiene un pre-registro. Inicia sesión con tu clave de acceso.',
         ]);
 
-        $estado = $this->estado($request);
         $datos['curp'] = strtoupper($datos['curp']);
+
+        $estado = $this->estado($request);
+        $clave = empty($estado['clave']) ? $this->generarClave() : $estado['clave'];
+
+        /* Alta real del participante en la base de datos. */
+        $this->registrarParticipante($datos, $clave);
+
         $estado['datos'] = $datos;
-        $estado['clave'] = empty($estado['clave']) ? $this->generarClave() : $estado['clave'];
+        $estado['clave'] = $clave;
         $estado['fase'] = 'clave';
         $request->session()->put('suif.preregistro', $estado);
-        $this->enviarClave($datos['correo_principal'], $estado['clave']);
+        $this->enviarClave($datos['correo_principal'], $clave);
 
         return redirect()->route('participante.preregistro.index')
-        ->with('success', 'Tus datos fueron guardados correctamente.');
+            ->with('success', 'Tus datos fueron guardados correctamente.');
+    }
+
+    /**
+     * Da de alta al participante en la base de datos.
+     *
+     * Todo ocurre dentro de una transacción: si algo falla a la mitad,
+     * no queda un participante incompleto.
+     */
+    private function registrarParticipante(array $datos, $clave)
+    {
+        DB::transaction(function () use ($datos, $clave) {
+            $idRol = DB::table('rol')
+                ->where('rol_tipo_rol', 'Participante')
+                ->value('rol_id_rol');
+
+            $idUsuario = DB::table('usuario')->insertGetId([
+                'usua_id_rol' => $idRol,
+                'usua_clave_acceso' => Hash::make($clave),
+            ], 'usua_id_usuario');
+
+            $claveInegi = DB::table('entidad_federativa')
+                ->where('enfe_entidad_federativa', $datos['entidad_federativa'])
+                ->value('enfe_clave_inegi');
+
+            $idPersona = DB::table('persona')->insertGetId([
+                'pers_clave_inegi' => $claveInegi,
+                'pers_id_usuario' => $idUsuario,
+                'pers_curp' => $datos['curp'],
+                'pers_nombre' => $datos['nombre'],
+                'pers_apellido_paterno' => $datos['primer_apellido'],
+                'pers_apellido_materno' => $datos['segundo_apellido'],
+                'pers_fecha_registro' => now()->toDateString(),
+            ], 'pers_id_persona');
+
+            /* Los correos y el teléfono no son columnas: son renglones de COMUNICACION. */
+            $tipos = DB::table('tipo_comunicacion')
+                ->pluck('tico_id_tipo_comunicacion', 'tico_tipo_comunicacion');
+
+            DB::table('comunicacion')->insert([
+                [
+                    'comu_id_persona' => $idPersona,
+                    'comu_id_tipo_comunicacion' => $tipos['Correo principal'],
+                    'comu_descripcion' => $datos['correo_principal'],
+                ],
+                [
+                    'comu_id_persona' => $idPersona,
+                    'comu_id_tipo_comunicacion' => $tipos['Correo alterno'],
+                    'comu_descripcion' => $datos['correo_alterno'],
+                ],
+                [
+                    'comu_id_persona' => $idPersona,
+                    'comu_id_tipo_comunicacion' => $tipos['Teléfono celular'],
+                    'comu_descripcion' => $datos['telefono'],
+                ],
+            ]);
+
+            $idTrabajo = DB::table('trabajo')->insertGetId([
+                'trab_actividad_vulnerable' => $datos['actividad_vulnerable'] === 'si',
+                'trab_responsable' => $datos['responsable_cumplimiento'] === 'si',
+            ], 'trab_id_trabajo');
+
+            DB::table('trabajo_persona')->insert([
+                'trpe_id_trabajo' => $idTrabajo,
+                'trpe_id_persona' => $idPersona,
+            ]);
+
+            $idNivel = DB::table('nivel_profesional')
+                ->where('nipr_nivel_profesional', $this->grados()[$datos['grado_estudios']])
+                ->value('nipr_id_nivel_profesional');
+
+            DB::table('grado_persona')->insert([
+                'grpe_id_nivel_profesional' => $idNivel,
+                'grpe_id_persona' => $idPersona,
+            ]);
+        });
     }
 
     public function avanzar(Request $request)

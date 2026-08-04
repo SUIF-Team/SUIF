@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Persona;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * AuthController
@@ -27,6 +29,36 @@ class AuthController extends Controller
     public function showLogin()
     {
         return view('auth.login');
+    }
+
+        /**
+     * Valida la CURP y la clave de acceso, y abre la sesión del participante.
+     */
+    public function login(Request $request)
+    {
+        $datos = $this->validate($request, [
+            'curp' => 'required|string|size:18',
+            'clave' => 'required|string',
+        ], [
+            'curp.required' => 'Escribe tu CURP.',
+            'curp.size' => 'La CURP debe tener 18 caracteres.',
+            'clave.required' => 'Escribe tu clave de acceso.',
+        ]);
+
+        $persona = Persona::where('pers_curp', strtoupper($datos['curp']))->first();
+
+        // Un solo mensaje para ambos casos: no se revela si la CURP existe.
+        if (!$persona || !$persona->usuario
+            || !Hash::check($datos['clave'], $persona->usuario->usua_clave_acceso)) {
+            return back()
+                ->withInput($request->only('curp'))
+                ->with('error', 'La CURP o la clave de acceso no son correctas.');
+        }
+
+        Auth::login($persona->usuario);
+        $request->session()->regenerate();
+
+        return redirect()->route('participante.dashboard');
     }
 
     /**
