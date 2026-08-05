@@ -12,14 +12,17 @@
         <main class="pr-card">
             @if(session('success'))<div class="pr-alert">{{ session('success') }}</div>@endif
             @if($errors->any())<div class="pr-alert pr-error"><strong>Revisa la información:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+            
+            @if($verFormatos)
+                @include('partials.preregistro-formatos', ['soloConsulta' => true])
 
-            @if($estado['fase'] === 'datos')
+            @elseif($estado['fase'] === 'datos')
                 <h1>Datos de identificación</h1>
                 <p class="pr-muted">Todos los campos son obligatorios. No podrás avanzar hasta completarlos.</p>
                                 <div class="pr-notice pr-notice--identidad">
                     <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial</strong>, incluidos los acentos.</p>
                 </div>
-                <form method="POST" action="{{ route('participante.preregistro.datos.store') }}" id="pr-data-form">
+                    <form method="POST" action="{{ route('participante.preregistro.datos.store') }}" id="pr-data-form">
                     @csrf
                     <div class="pr-grid">
                         <div class="pr-field"><label>Nombre *</label><input name="nombre" value="{{ old('nombre', isset($estado['datos']['nombre']) ? $estado['datos']['nombre'] : '') }}" required></div>
@@ -58,31 +61,118 @@
                     </form>
                 </section>
 
-            @elseif($estado['fase'] === 'formatos')
-                <h1>Formatos requeridos</h1><p class="pr-muted">Previsualiza cada formato antes de descargarlo.</p>
-                <div class="pr-docs">@foreach($documentos as $slug => $nombre)<div class="pr-format"><strong>{{ $nombre }}</strong><a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.formatos.ver', $slug) }}">Previsualizar</a><a class="pr-btn" href="{{ route('participante.preregistro.formatos.descargar', $slug) }}">Descargar</a></div>@endforeach</div>
-                <form method="POST" action="{{ route('participante.preregistro.avanzar') }}" class="pr-actions">@csrf<button class="pr-btn">Continuar</button></form>
+                       @elseif($estado['fase'] === 'formatos')
+                @include('partials.preregistro-formatos', ['soloConsulta' => false])
+            
+                @elseif(in_array($estado['fase'], ['documentos','revision','rechazado','aprobado']))
+                <h1>Documentación requerida</h1>
+                <p class="pr-muted">Sube los documentos uno por uno. Cada PDF debe pesar máximo 1 MB.</p>
+                <p class="pr-volver-formatos">
+                    <a href="{{ route('participante.preregistro.index', ['ver' => 'formatos']) }}">
+                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                        Ver o descargar los formatos otra vez
+                    </a>
+                </p>
 
-            @elseif(in_array($estado['fase'], ['documentos','revision','rechazado','aprobado']))
-                <h1>Documentación requerida</h1><p class="pr-muted">Adjunta un PDF por documento. Tamaño máximo: 1 MB.</p>
-                <div class="pr-docs">
-                    @foreach($documentos as $slug => $nombre)
-                        <?php $doc = isset($estado['documentos'][$slug]) ? $estado['documentos'][$slug] : null; $docEstado = $doc ? $doc['estado'] : 'pendiente'; ?>
-                        <div class="pr-doc">
-                            <strong>{{ $nombre }}</strong>
-                            <span class="pr-status pr-status--{{ $docEstado === 'cargado' ? 'loaded' : ($docEstado === 'revision' ? 'review' : ($docEstado === 'aprobado' ? 'approved' : ($docEstado === 'rechazado' ? 'rejected' : 'pending'))) }}">{{ $docEstado === 'cargado' ? 'Cargado' : ($docEstado === 'revision' ? 'En revisión' : ($docEstado === 'aprobado' ? 'Aprobado' : ($docEstado === 'rechazado' ? 'Rechazado' : 'Pendiente'))) }}</span>
-                            @if($doc)<a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.documentos.ver', $slug) }}">Abrir</a>@endif
-                            @if(!in_array($estado['fase'], ['revision','aprobado']))
-                            <form method="POST" action="{{ route('participante.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
-                                @csrf
-                                <label class="pr-btn pr-file">{{ $docEstado === 'rechazado' ? 'Subsanar' : 'Seleccionar PDF' }}<input type="file" name="archivo" accept="application/pdf" required></label>
-                                <div class="pr-preview"><span></span><iframe title="Previsualización del archivo"></iframe><button class="pr-btn" type="submit">Confirmar carga</button></div>
-                            </form>
-                            @endif
-                        </div>
-                        @if($doc && $docEstado === 'rechazado' && !empty($doc['observacion']))<div class="pr-observation"><strong>Motivo del rechazo</strong><p>{{ $doc['observacion'] }}</p></div>@endif
-                    @endforeach
+                <div class="pr-tabla-envoltorio">
+                    <table class="pr-tabla">
+                        <thead>
+                            <tr>
+                                <th scope="col">Documento</th>
+                                <th scope="col">Formato</th>
+                                <th scope="col">Mi archivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($documentos as $slug => $nombre)
+                                <?php
+                                    $doc = isset($estado['documentos'][$slug]) ? $estado['documentos'][$slug] : null;
+                                    $docEstado = $doc ? $doc['estado'] : 'pendiente';
+                                    $clasesEstado = [
+                                        'pendiente' => 'pending',
+                                        'cargado' => 'loaded',
+                                        'revision' => 'review',
+                                        'aprobado' => 'approved',
+                                        'rechazado' => 'rejected',
+                                    ];
+                                    $etiquetasEstado = [
+                                        'pendiente' => 'Pendiente',
+                                        'cargado' => 'Cargado',
+                                        'revision' => 'En revisión',
+                                        'aprobado' => 'Aprobado',
+                                        'rechazado' => 'Rechazado',
+                                    ];
+                                ?>
+                                <tr class="pr-fila pr-fila--{{ $docEstado }}">
+                                    <td data-titulo="Documento">
+                                        <strong class="pr-fila__nombre">{{ $nombre }}</strong>
+                                        <span class="pr-status pr-status--{{ $clasesEstado[$docEstado] }}">{{ $etiquetasEstado[$docEstado] }}</span>
+                                    </td>
+
+                                    <td data-titulo="Formato">
+                                        @if(in_array($slug, $formatos))
+                                            <div class="pr-fila__acciones">
+                                                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.formatos.ver', $slug) }}">
+                                                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                                    <span>Previsualizar</span>
+                                                </a>
+                                                <a class="pr-btn" href="{{ route('participante.preregistro.formatos.descargar', $slug) }}">
+                                                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                                    <span>Descargar</span>
+                                                </a>
+                                            </div>
+                                        @else
+                                            <span class="pr-format__nota">Documento personal</span>
+                                        @endif
+                                    </td>
+
+                                    <td data-titulo="Mi archivo">
+                                        <div class="pr-fila__acciones">
+                                            @if($doc)
+                                                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.documentos.ver', $slug) }}">
+                                                    <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                                                    <span>Abrir</span>
+                                                </a>
+                                            @endif
+
+                                            @if(!in_array($estado['fase'], ['revision','aprobado']))
+                                                <form method="POST" action="{{ route('participante.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
+                                                    @csrf
+                                                    <label class="pr-btn pr-file">
+                                                        <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+                                                        <span>{{ $docEstado === 'rechazado' ? 'Subsanar' : ($doc ? 'Reemplazar' : 'Adjuntar') }}</span>
+                                                        <input type="file" name="archivo" accept="application/pdf" required>
+                                                    </label>
+                                                    <div class="pr-preview">
+                                                        <span></span>
+                                                        <iframe title="Previsualización del archivo"></iframe>
+                                                        <button class="pr-btn" type="submit">Confirmar carga</button>
+                                                    </div>
+                                                </form>
+                                            @endif
+                                        </div>
+
+                                        @if($doc)
+                                            <small class="pr-fila__archivo">{{ $doc['nombre_original'] }}</small>
+                                        @endif
+                                    </td>
+                                </tr>
+
+                                @if($doc && $docEstado === 'rechazado' && !empty($doc['observacion']))
+                                    <tr class="pr-fila-observacion">
+                                        <td colspan="3">
+                                            <div class="pr-observation">
+                                                <strong>Motivo del rechazo</strong>
+                                                <p>{{ $doc['observacion'] }}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+
                 @if($estado['fase'] === 'aprobado')
                     <form method="POST" action="{{ route('participante.preregistro.finalizar') }}" class="pr-actions">@csrf<button class="pr-btn">Finalizar pre-registro</button></form>
                 @elseif(!in_array($estado['fase'], ['revision','rechazado']))
@@ -90,7 +180,7 @@
                 @endif
                 @if(config('app.debug'))<div class="pr-demo">Simular: <a href="{{ route('participante.preregistro.demo','revision') }}">En revisión</a><a href="{{ route('participante.preregistro.demo','rechazado') }}">Rechazado</a><a href="{{ route('participante.preregistro.demo','aprobado') }}">Aprobado</a><a href="{{ route('participante.preregistro.reiniciar') }}">Reiniciar</a></div>@endif
 
-            @elseif($estado['fase'] === 'completado')
+                  @elseif($estado['fase'] === 'completado')
                 <div class="pr-center"><h1>¡Registro completado!</h1><p>Tu registro está sujeto a validación. Espera el correo de confirmación.</p><a class="pr-btn" href="{{ route('participante.dashboard') }}">Volver al inicio</a></div>
             @endif
         </main>

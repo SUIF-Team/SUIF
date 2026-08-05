@@ -42,9 +42,9 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () 
         Route::get('/preregistro/formatos/{documento}/descargar', function ($documento) {
             return app(PreRegistroController::class)->formato($documento, true);
         })->name('preregistro.formatos.descargar');
+        Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
         Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
         Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
-        Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
         Route::post('/preregistro/finalizar', [PreRegistroController::class, 'finalizar'])->name('preregistro.finalizar');
         Route::get('/preregistro/completado', [PreRegistroController::class, 'completado'])->name('preregistro.completado');
         Route::get('/preregistro/demo/{estado}', [PreRegistroController::class, 'demo'])->name('preregistro.demo');

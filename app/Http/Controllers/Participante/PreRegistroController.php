@@ -23,6 +23,18 @@ class PreRegistroController extends Controller
         'identificacion-oficial' => 'Identificación oficial',
     ];
 
+        /**
+     * Documentos que tienen un formato oficial descargable.
+     * La CURP y la identificación oficial son documentos propios del
+     * participante: no hay nada que previsualizar ni descargar.
+     */
+    private $formatos = [
+        'solicitud-firmada',
+        'aceptacion-notificaciones',
+        'carta-bajo-protesta',
+        'autorizacion-publicacion',
+    ];
+
         public function index(Request $request)
     {
         $estado = $this->estado($request);
@@ -31,6 +43,7 @@ class PreRegistroController extends Controller
            se reconstruye su avance desde la base de datos. */
         if (empty($estado['datos'])) {
             $guardados = $this->datosGuardados();
+
             if ($guardados) {
                 $estado['datos'] = $guardados;
                 $estado['fase'] = 'formatos';
@@ -42,9 +55,20 @@ class PreRegistroController extends Controller
             return redirect()->route('participante.preregistro.completado');
         }
 
+        /* Los documentos ya no viven en la sesión: se leen de la base. */
+        $estado['documentos'] = $this->documentosGuardados($this->solicitudActual());
+
+        if (!empty($estado['documentos'])
+            || in_array($estado['fase'], ['documentos', 'revision', 'rechazado', 'aprobado'], true)) {
+            $estado['fase'] = $this->faseSegunDocumentos($estado['documentos']);
+        }
+
         return view('participante.preregistro', [
             'estado' => $estado,
             'documentos' => $this->documentos,
+            'formatos' => $this->formatos,
+            'verFormatos' => $request->query('ver') === 'formatos'
+                && in_array($estado['fase'], ['documentos', 'revision', 'rechazado', 'aprobado'], true),
             'entidades' => $this->entidades(),
             'grados' => $this->grados(),
         ]);
@@ -285,13 +309,15 @@ class PreRegistroController extends Controller
         return redirect()->route('participante.preregistro.index');
     }
 
-    public function formato($documento, $descargar = false)
+        public function formato($documento, $descargar = false)
     {
-        if (!isset($this->documentos[$documento])) {
+        /* Solo los cuatro que tienen formato oficial. */
+        if (!in_array($documento, $this->formatos, true)) {
             abort(404);
         }
 
         $archivo = storage_path('app/preregistro/formatos/'.$documento.'.pdf');
+
         if (!is_file($archivo)) {
             abort(404, 'El formato todavía no está disponible.');
         }
@@ -307,7 +333,7 @@ class PreRegistroController extends Controller
         ]);
     }
 
-    public function subirDocumento(Request $request, $documento)
+        public function subirDocumento(Request $request, $documento)
     {
         if (!isset($this->documentos[$documento])) {
             abort(404);
@@ -321,32 +347,82 @@ class PreRegistroController extends Controller
             'archivo.max' => 'El PDF no puede pesar más de 1 MB.',
         ]);
 
-        $estado = $this->estado($request);
-        $directorio = 'preregistro/cargas/'.sha1($request->session()->getId());
-        $nombre = $documento.'-'.time().'.pdf';
-        $ruta = $request->file('archivo')->storeAs($directorio, $nombre);
+        $idSolicitud = $this->solicitudActual();
 
-        $estado['documentos'][$documento] = [
-            'ruta' => $ruta,
-            'nombre_original' => $request->file('archivo')->getClientOriginalName(),
-            'estado' => 'cargado',
-            'observacion' => null,
-        ];
-        $estado['fase'] = 'documentos';
-        $request->session()->put('suif.preregistro', $estado);
+        if (!$idSolicitud) {
+            return redirect()->route('participante.preregistro.index')
+                ->withErrors(['documentos' => 'No encontramos tu solicitud. Vuelve a iniciar sesión.']);
+        }
+
+        $idTipo = DB::table('tipo_documento')
+            ->where('tido_tipo_documento', $this->documentos[$documento])
+            ->value('tido_id_tipo_documento');
+
+        $ruta = $request->file('archivo')->storeAs(
+            'preregistro/cargas/'.$idSolicitud,
+            $documento.'-'.time().'.pdf'
+        );
+
+        /* El nombre original puede venir más largo que la columna. */
+        $nombreOriginal = mb_substr($request->file('archivo')->getClientOriginalName(), 0, 150);
+
+        DB::transaction(function () use ($idSolicitud, $idTipo, $ruta, $nombreOriginal) {
+            $existente = DB::table('documento')
+                ->where('soli_id_solicitud', $idSolicitud)
+                ->where('tido_id_tipo_documento', $idTipo)
+                ->first();
+
+            if ($existente) {
+                /* Reemplazo: se actualiza el renglón, no se duplica. */
+                DB::table('documento')
+                    ->where('docu_id_documento', $existente->docu_id_documento)
+                    ->update([
+                        'docu_nombre' => $nombreOriginal,
+                        'docu_path' => $ruta,
+                        'docu_fecha_carga' => now()->toDateString(),
+                        'docu_hora_carga' => now()->toTimeString(),
+                        'docu_fecha_autorizacion' => null,
+                        'docu_hora_autorizacion' => null,
+                    ]);
+
+                $idDocumento = $existente->docu_id_documento;
+            } else {
+                $idDocumento = DB::table('documento')->insertGetId([
+                    'tido_id_tipo_documento' => $idTipo,
+                    'soli_id_solicitud' => $idSolicitud,
+                    'docu_nombre' => $nombreOriginal,
+                    'docu_path' => $ruta,
+                    'docu_fecha_carga' => now()->toDateString(),
+                    'docu_hora_carga' => now()->toTimeString(),
+                ], 'docu_id_documento');
+            }
+
+            $this->registrarEstadoDocumento($idDocumento, 'Cargado');
+        });
 
         return redirect()->route('participante.preregistro.index')
             ->with('success', 'Documento cargado. Revísalo antes de continuar.');
     }
 
-    public function verDocumento(Request $request, $documento)
+        public function verDocumento(Request $request, $documento)
     {
-        $estado = $this->estado($request);
-        if (empty($estado['documentos'][$documento]['ruta'])) {
+        if (!isset($this->documentos[$documento])) {
             abort(404);
         }
 
-        $archivo = storage_path('app/'.$estado['documentos'][$documento]['ruta']);
+        /* Solo se sirve el documento de la solicitud de quien inició sesión. */
+        $ruta = DB::table('documento as d')
+            ->join('tipo_documento as t', 't.tido_id_tipo_documento', '=', 'd.tido_id_tipo_documento')
+            ->where('d.soli_id_solicitud', $this->solicitudActual())
+            ->where('t.tido_tipo_documento', $this->documentos[$documento])
+            ->value('d.docu_path');
+
+        if (!$ruta) {
+            abort(404);
+        }
+
+        $archivo = storage_path('app/'.$ruta);
+
         if (!is_file($archivo)) {
             abort(404);
         }
@@ -358,36 +434,42 @@ class PreRegistroController extends Controller
         ]);
     }
 
-    public function enviarRevision(Request $request)
+        public function enviarRevision(Request $request)
     {
-        $estado = $this->estado($request);
+        $idSolicitud = $this->solicitudActual();
+        $documentos = $this->documentosGuardados($idSolicitud);
 
-        foreach (array_keys($this->documentos) as $documento) {
-            if (empty($estado['documentos'][$documento]['ruta'])) {
+        foreach (array_keys($this->documentos) as $slug) {
+            if (empty($documentos[$slug])) {
                 return redirect()->route('participante.preregistro.index')
                     ->withErrors(['documentos' => 'Debes cargar todos los documentos antes de continuar.']);
             }
-            $estado['documentos'][$documento]['estado'] = 'revision';
         }
 
-        $estado['fase'] = 'revision';
-        $request->session()->put('suif.preregistro', $estado);
+        DB::transaction(function () use ($idSolicitud, $documentos) {
+            foreach ($documentos as $doc) {
+                $this->registrarEstadoDocumento($doc['id'], 'En revisión');
+            }
+
+            $this->registrarEstadoSolicitud($idSolicitud, 'En revisión');
+        });
 
         return redirect()->route('participante.preregistro.index')
             ->with('success', 'Tus documentos fueron enviados a revisión.');
     }
 
-    public function finalizar(Request $request)
+        public function finalizar(Request $request)
     {
-        $estado = $this->estado($request);
+        $documentos = $this->documentosGuardados($this->solicitudActual());
 
-        foreach (array_keys($this->documentos) as $documento) {
-            if (empty($estado['documentos'][$documento]) || $estado['documentos'][$documento]['estado'] !== 'aprobado') {
+        foreach (array_keys($this->documentos) as $slug) {
+            if (empty($documentos[$slug]) || $documentos[$slug]['estado'] !== 'aprobado') {
                 return redirect()->route('participante.preregistro.index')
                     ->withErrors(['documentos' => 'El pre-registro solo puede finalizar cuando todos los documentos estén aprobados.']);
             }
         }
 
+        $estado = $this->estado($request);
         $estado['fase'] = 'completado';
         $request->session()->put('suif.preregistro', $estado);
         $request->session()->put('suif.participante.estado.preregistro_completo', true);
@@ -395,50 +477,60 @@ class PreRegistroController extends Controller
         return redirect()->route('participante.preregistro.completado');
     }
 
-    public function completado(Request $request)
+        public function completado(Request $request)
     {
         $estado = $this->estado($request);
+
         if ($estado['fase'] !== 'completado') {
             return redirect()->route('participante.preregistro.index');
         }
 
+        $estado['documentos'] = $this->documentosGuardados($this->solicitudActual());
+
         return view('participante.preregistro', [
             'estado' => $estado,
             'documentos' => $this->documentos,
+            'formatos' => $this->formatos,
+            'verFormatos' => false,
             'entidades' => $this->entidades(),
             'grados' => $this->grados(),
         ]);
     }
 
-    public function demo(Request $request, $estadoDemo)
+       public function demo(Request $request, $estadoDemo)
     {
         if (!config('app.debug')) {
             abort(404);
         }
 
-        $estado = $this->estado($request);
-        foreach (array_keys($this->documentos) as $documento) {
-            if (empty($estado['documentos'][$documento]['ruta'])) {
+        $documentos = $this->documentosGuardados($this->solicitudActual());
+
+        foreach (array_keys($this->documentos) as $slug) {
+            if (empty($documentos[$slug])) {
                 return redirect()->route('participante.preregistro.index')
                     ->withErrors(['documentos' => 'Carga todos los documentos antes de simular estados.']);
             }
-            $estado['documentos'][$documento]['estado'] = $estadoDemo === 'aprobado' ? 'aprobado' : 'revision';
-            $estado['documentos'][$documento]['observacion'] = null;
         }
 
-        if ($estadoDemo === 'rechazado') {
-            $claves = array_keys($this->documentos);
-            $primero = reset($claves);
-            $estado['documentos'][$primero]['estado'] = 'rechazado';
-            $estado['documentos'][$primero]['observacion'] = 'El documento se ve borroso. Sustituye el archivo por una copia legible.';
-            $estado['fase'] = 'rechazado';
-        } elseif ($estadoDemo === 'aprobado') {
-            $estado['fase'] = 'aprobado';
-        } else {
-            $estado['fase'] = 'revision';
-        }
+        DB::transaction(function () use ($documentos, $estadoDemo) {
+            $primero = true;
 
-        $request->session()->put('suif.preregistro', $estado);
+            foreach ($documentos as $doc) {
+                if ($estadoDemo === 'rechazado' && $primero) {
+                    $this->registrarEstadoDocumento(
+                        $doc['id'],
+                        'Rechazado',
+                        'El documento se ve borroso. Sustituye el archivo por una copia legible.'
+                    );
+                } elseif ($estadoDemo === 'aprobado') {
+                    $this->registrarEstadoDocumento($doc['id'], 'Aprobado');
+                } else {
+                    $this->registrarEstadoDocumento($doc['id'], 'En revisión');
+                }
+
+                $primero = false;
+            }
+        });
 
         return redirect()->route('participante.preregistro.index');
     }
@@ -502,6 +594,155 @@ class PreRegistroController extends Controller
         }
 
         return implode(' ', $palabras);
+    }
+
+    /**
+     * Devuelve el id de la solicitud del participante que inició sesión.
+     */
+    private function solicitudActual()
+    {
+        $usuario = Auth::user();
+
+        if (!$usuario) {
+            return null;
+        }
+
+        return DB::table('solicitud as s')
+            ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
+            ->where('p.pers_id_usuario', $usuario->usua_id_usuario)
+            ->orderByDesc('s.soli_id_solicitud')
+            ->value('s.soli_id_solicitud');
+    }
+
+    /**
+     * Registra un cambio de estado de un documento.
+     * No se pisa el anterior: cada cambio es un renglón nuevo.
+     */
+    private function registrarEstadoDocumento($idDocumento, $estado, $comentario = null)
+    {
+        $idEstado = DB::table('c_estado_documento')
+            ->where('esdo_estado_documento', $estado)
+            ->value('esdo_id_c_estado_documento');
+
+        DB::table('estado_documento')->insert([
+            'esdo_id_c_estado_documento' => $idEstado,
+            'esdo_id_documento' => $idDocumento,
+            'esdo_comentarios' => $comentario,
+            'esdo_fecha' => now()->toDateString(),
+            'esdo_hora' => now()->toTimeString(),
+        ]);
+    }
+
+    /**
+     * Registra un cambio de estado de la solicitud completa.
+     */
+    private function registrarEstadoSolicitud($idSolicitud, $estado, $motivo = null)
+    {
+        $idEstado = DB::table('c_estado_solicitud')
+            ->where('esso_estatus_solicitud', $estado)
+            ->value('esso_id_c_estado_solicitud');
+
+        DB::table('estado_solicitud')->insert([
+            'esso_id_c_estado_solicitud' => $idEstado,
+            'esso_id_solicitud' => $idSolicitud,
+            'esso_fecha' => now()->toDateString(),
+            'esso_hora' => now()->toTimeString(),
+            'esso_motivo_rechazo' => $motivo,
+        ]);
+    }
+
+    /**
+     * Deduce la fase de la documentación a partir del estado real de los
+     * documentos, en vez de confiar en lo que traiga la sesión.
+     */
+    private function faseSegunDocumentos(array $documentos)
+    {
+        $estados = [];
+
+        foreach (array_keys($this->documentos) as $slug) {
+            $estados[] = isset($documentos[$slug]) ? $documentos[$slug]['estado'] : 'pendiente';
+        }
+
+        $unicos = array_unique($estados);
+
+        if (in_array('rechazado', $estados, true)) {
+            return 'rechazado';
+        }
+
+        if (count($unicos) === 1 && $estados[0] === 'aprobado') {
+            return 'aprobado';
+        }
+
+        if (count($unicos) === 1 && $estados[0] === 'revision') {
+            return 'revision';
+        }
+
+        return 'documentos';
+    }
+
+    /**
+     * Documentos guardados de una solicitud, con el mismo formato que
+     * antes armaba la sesión, para no cambiar la vista.
+     */
+    private function documentosGuardados($idSolicitud)
+    {
+        if (!$idSolicitud) {
+            return [];
+        }
+
+        $filas = DB::table('documento as d')
+            ->join('tipo_documento as t', 't.tido_id_tipo_documento', '=', 'd.tido_id_tipo_documento')
+            ->where('d.soli_id_solicitud', $idSolicitud)
+            ->select('d.docu_id_documento', 'd.docu_path', 'd.docu_nombre', 't.tido_tipo_documento')
+            ->get();
+
+        if ($filas->isEmpty()) {
+            return [];
+        }
+
+        /* El estado vigente es el ÚLTIMO renglón de ESTADO_DOCUMENTO.
+           Al ordenar de menor a mayor, keyBy conserva el último de cada
+           documento, que es justo el más reciente. */
+        $estados = DB::table('estado_documento as ed')
+            ->join('c_estado_documento as ce', 'ce.esdo_id_c_estado_documento', '=', 'ed.esdo_id_c_estado_documento')
+            ->whereIn('ed.esdo_id_documento', $filas->pluck('docu_id_documento'))
+            ->orderBy('ed.esdo_id_estado_documento')
+            ->select('ed.esdo_id_documento', 'ed.esdo_comentarios', 'ce.esdo_estado_documento')
+            ->get()
+            ->keyBy('esdo_id_documento');
+
+        $equivalencias = [
+            'Pendiente' => 'pendiente',
+            'Cargado' => 'cargado',
+            'En revisión' => 'revision',
+            'Aprobado' => 'aprobado',
+            'Rechazado' => 'rechazado',
+        ];
+
+        $porNombre = array_flip($this->documentos);
+        $resultado = [];
+
+        foreach ($filas as $fila) {
+            if (!isset($porNombre[$fila->tido_tipo_documento])) {
+                continue;
+            }
+
+            $estado = isset($estados[$fila->docu_id_documento])
+                ? $estados[$fila->docu_id_documento]
+                : null;
+
+            $nombreEstado = $estado ? $estado->esdo_estado_documento : 'Cargado';
+
+            $resultado[$porNombre[$fila->tido_tipo_documento]] = [
+                'id' => $fila->docu_id_documento,
+                'ruta' => $fila->docu_path,
+                'nombre_original' => $fila->docu_nombre,
+                'estado' => isset($equivalencias[$nombreEstado]) ? $equivalencias[$nombreEstado] : 'cargado',
+                'observacion' => $estado ? $estado->esdo_comentarios : null,
+            ];
+        }
+
+        return $resultado;
     }
 
     private function entidades()
