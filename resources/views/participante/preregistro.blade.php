@@ -3,7 +3,7 @@
 @section('title', 'SUIF — Pre-registro')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/participante-preregistro.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/participante-preregistro.css') }}">
 @endpush
 
 @section('content')
@@ -96,7 +96,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/pages/participante-preregistro.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/participante-preregistro.js') }}"></script>
 <script>
 (function(){
   var copy=document.querySelector('[data-copy-key]');if(copy){copy.addEventListener('click',function(){var t=document.getElementById('pr-key').textContent;navigator.clipboard&&navigator.clipboard.writeText(t);copy.textContent='Clave copiada';});}

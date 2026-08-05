@@ -4,7 +4,7 @@
 @section('body_class', 'pagina-sistema auth-page login-pagina')
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/pages/login.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/login.css') }}">
 @endsection
 
 @section('content')

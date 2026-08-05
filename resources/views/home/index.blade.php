@@ -4,7 +4,7 @@
 @section('body_class', 'landing-page home-page')
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/pages/home.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/home.css') }}">
 @endsection
 
 @section('content')
@@ -172,5 +172,5 @@
 
 @section('scripts')
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <script src="{{ asset('assets/js/pages/home.js') }}"></script>
+    <script src="{{ asset_versionado('assets/js/pages/home.js') }}"></script>
 @endsection

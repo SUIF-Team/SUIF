@@ -8,7 +8,7 @@
 @section('title', 'SUIF — Mi Pago')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/participante-pago.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/participante-pago.css') }}">
 @endpush
 
 

@@ -6,7 +6,7 @@
 @section('title', 'SUIF - Panel Administrador')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-dashboard.css') }}">
 @endsection
 
 @section('content')

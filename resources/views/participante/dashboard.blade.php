@@ -3,7 +3,7 @@
 @section('title', 'Dashboard del participante')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/participante-dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/participante-dashboard.css') }}">
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
     <header class="participante-dashboard__header">
         <div>
             <h1 id="dashboard-title">Hola, {{ $participante['nombre'] }}</h1>
-            <p>Folio {{ $participante['folio'] }} · Este es tu avance. Continúa donde te quedaste.</p>
+            <p>{{ $participante['identificador'] }} · Este es tu avance. Continúa donde te quedaste.</p>
         </div>
         <span class="dashboard-status dashboard-status--{{ $tramite['clase'] }}" role="status">
             {{ $tramite['texto'] }}

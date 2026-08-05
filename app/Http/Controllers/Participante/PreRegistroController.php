@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class PreRegistroController extends Controller
 {
@@ -21,9 +22,20 @@ class PreRegistroController extends Controller
         'identificacion-oficial' => 'Identificación oficial',
     ];
 
-    public function index(Request $request)
+        public function index(Request $request)
     {
         $estado = $this->estado($request);
+
+        /* Si la sesión viene vacía pero el participante ya se registró antes,
+           se reconstruye su avance desde la base de datos. */
+        if (empty($estado['datos'])) {
+            $guardados = $this->datosGuardados();
+            if ($guardados) {
+                $estado['datos'] = $guardados;
+                $estado['fase'] = 'formatos';
+                $request->session()->put('suif.preregistro', $estado);
+            }
+        }
 
         if ($estado['fase'] === 'completado') {
             return redirect()->route('participante.preregistro.completado');
@@ -156,6 +168,58 @@ class PreRegistroController extends Controller
                 'grpe_id_persona' => $idPersona,
             ]);
         });
+    }
+
+    /**
+     * Recupera de la base los datos del participante que inició sesión.
+     * Devuelve null si todavía no tiene un pre-registro.
+     */
+    private function datosGuardados()
+    {
+        $usuario = Auth::user();
+
+        if (!$usuario) {
+            return null;
+        }
+
+        $persona = DB::table('persona as p')
+            ->join('entidad_federativa as e', 'e.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
+            ->where('p.pers_id_usuario', $usuario->usua_id_usuario)
+            ->select('p.*', 'e.enfe_entidad_federativa')
+            ->first();
+
+        if (!$persona) {
+            return null;
+        }
+
+        /* Los tipos 1, 2 y 3 quedan fijos en suif_catalogos.sql. */
+        $contactos = DB::table('comunicacion')
+            ->where('comu_id_persona', $persona->pers_id_persona)
+            ->pluck('comu_descripcion', 'comu_id_tipo_comunicacion');
+
+        $trabajo = DB::table('trabajo as t')
+            ->join('trabajo_persona as tp', 'tp.trpe_id_trabajo', '=', 't.trab_id_trabajo')
+            ->where('tp.trpe_id_persona', $persona->pers_id_persona)
+            ->first();
+
+        $nivel = DB::table('nivel_profesional as n')
+            ->join('grado_persona as g', 'g.grpe_id_nivel_profesional', '=', 'n.nipr_id_nivel_profesional')
+            ->where('g.grpe_id_persona', $persona->pers_id_persona)
+            ->value('n.nipr_nivel_profesional');
+
+        return [
+            'nombre' => $persona->pers_nombre,
+            'primer_apellido' => $persona->pers_apellido_paterno,
+            'segundo_apellido' => $persona->pers_apellido_materno,
+            'curp' => $persona->pers_curp,
+            'correo_principal' => isset($contactos[1]) ? $contactos[1] : '',
+            'correo_alterno' => isset($contactos[2]) ? $contactos[2] : '',
+            'telefono' => isset($contactos[3]) ? $contactos[3] : '',
+            'entidad_federativa' => $persona->enfe_entidad_federativa,
+            'grado_estudios' => $nivel ? array_search($nivel, $this->grados()) : '',
+            'actividad_vulnerable' => ($trabajo && $trabajo->trab_actividad_vulnerable) ? 'si' : 'no',
+            'responsable_cumplimiento' => ($trabajo && $trabajo->trab_responsable) ? 'si' : 'no',
+        ];
     }
 
     public function avanzar(Request $request)
