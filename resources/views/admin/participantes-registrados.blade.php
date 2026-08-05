@@ -62,8 +62,8 @@
 
         <back-navigation
             destino="{{ route('admin.dashboard') }}"
-            etiqueta="Atrás"
-            etiqueta-accesible="Volver al dashboard administrativo"></back-navigation>
+            etiqueta="Volver al dashboard"
+            etiqueta-accesible="Volver al dashboard"></back-navigation>
     </div>
 </section>
 @endsection

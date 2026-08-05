@@ -101,8 +101,8 @@
 
     <back-navigation
         destino="{{ route('admin.pagos.index') }}"
-        etiqueta="Volver a la bandeja"
-        etiqueta-accesible="Volver a la bandeja de pagos"></back-navigation>
+        etiqueta="Atrás"
+        etiqueta-accesible="Atrás"></back-navigation>
 </section>
 @endsection
 

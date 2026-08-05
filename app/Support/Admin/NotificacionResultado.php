@@ -50,7 +50,7 @@ class NotificacionResultado
             'clase_progreso' => 'admin-preregistro-progreso--dos-pasos',
             'ruta_regreso' => route('admin.participantes.index'),
             'etiqueta_regreso' => 'Volver a la bandeja',
-            'etiqueta_regreso_accesible' => 'Volver a la bandeja de pre-registros',
+            'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => $es_rechazo_preregistro ? 'preregistro' : 'documentacion',
         ];
     }
@@ -78,7 +78,7 @@ class NotificacionResultado
             'clase_progreso' => 'admin-preregistro-progreso--tres-pasos',
             'ruta_regreso' => route('admin.pagos.index'),
             'etiqueta_regreso' => 'Volver a la bandeja',
-            'etiqueta_regreso_accesible' => 'Volver a la bandeja de pagos',
+            'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => 'pago',
         ];
     }

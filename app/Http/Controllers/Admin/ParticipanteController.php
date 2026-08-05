@@ -197,8 +197,8 @@ class ParticipanteController extends Controller
         $notificacion = $notificacion_resultado->paraPreRegistro($participante, $estados);
         $notificacion = array_merge($notificacion, [
             'ruta_regreso' => $contexto_bandeja['ruta'],
-            'etiqueta_regreso' => $contexto_bandeja['etiqueta'],
-            'etiqueta_regreso_accesible' => $contexto_bandeja['etiqueta_accesible'],
+            'etiqueta_regreso' => 'Volver a la bandeja',
+            'etiqueta_regreso_accesible' => 'Volver a la bandeja',
         ]);
 
         return view('admin.notificacion-resultado', [

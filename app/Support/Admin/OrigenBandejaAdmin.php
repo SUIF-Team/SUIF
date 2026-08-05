@@ -21,16 +21,16 @@ class OrigenBandejaAdmin
             return [
                 'origen' => $origen_normalizado,
                 'ruta' => route('admin.participantes.registrados.index'),
-                'etiqueta' => 'Volver a la bandeja',
-                'etiqueta_accesible' => 'Volver a la bandeja de participantes registrados',
+                'etiqueta' => 'Atrás',
+                'etiqueta_accesible' => 'Atrás',
             ];
         }
 
         return [
             'origen' => $origen_normalizado,
             'ruta' => route('admin.participantes.index'),
-            'etiqueta' => 'Volver a la bandeja de pre-registros',
-            'etiqueta_accesible' => 'Volver a la bandeja de pre-registros',
+            'etiqueta' => 'Atrás',
+            'etiqueta_accesible' => 'Atrás',
         ];
     }
 }
