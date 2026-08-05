@@ -25,3 +25,188 @@
 .pr-field input[name="curp"] {
     text-transform: uppercase;
 }
+
+/* ─── Aviso de la pantalla de formatos ───────────────────────────────── */
+
+.pr-notice--formatos {
+    text-align: left;
+}
+
+.pr-notice--formatos p {
+    margin: 0 0 0.5rem;
+}
+
+.pr-notice--formatos ul {
+    margin: 0;
+    padding-left: 1.15rem;
+}
+
+.pr-notice--formatos li + li {
+    margin-top: 0.3rem;
+}
+
+/* Documentos personales, sin formato descargable. */
+.pr-format__nota {
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Enlace para volver a consultar los formatos desde la carga. */
+.pr-volver-formatos {
+    margin: 0 0 1.25rem;
+}
+
+.pr-volver-formatos a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #b38612;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pr-volver-formatos a:hover,
+.pr-volver-formatos a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+
+/* ─── Tabla de documentación ─────────────────────────────────────────── */
+
+.pr-tabla-envoltorio {
+    margin-bottom: 1.75rem;
+    overflow-x: auto;
+}
+
+.pr-tabla {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.6rem;
+}
+
+.pr-tabla thead th {
+    padding: 0 1rem 0.35rem;
+    color: #6b7280;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.pr-tabla tbody td {
+    padding: 1rem;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.pr-tabla tbody td:first-child {
+    border-left: 1px solid #e5e7eb;
+    border-radius: 10px 0 0 10px;
+}
+
+.pr-tabla tbody td:last-child {
+    border-right: 1px solid #e5e7eb;
+    border-radius: 0 10px 10px 0;
+}
+
+.pr-fila__nombre {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: #112f4b;
+}
+
+.pr-fila__acciones {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pr-fila__archivo {
+    display: block;
+    margin-top: 0.45rem;
+    color: #6b7280;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+}
+
+/* El color del borde refuerza el estado, además del texto del chip. */
+.pr-fila--rechazado td {
+    border-color: #dc2626;
+}
+
+.pr-fila--aprobado td {
+    border-color: #16a34a;
+}
+
+/* La observación cuelga visualmente de la fila anterior. */
+.pr-fila-observacion td {
+    padding-top: 0;
+    background: transparent;
+    border: 0;
+}
+
+/* La previsualización se abre dentro de su celda. */
+.pr-tabla .pr-preview {
+    width: 100%;
+    margin-top: 0.6rem;
+}
+
+.pr-tabla .pr-preview iframe {
+    width: 100%;
+    height: 180px;
+}
+
+/* ─── En pantallas chicas cada fila se apila ─────────────────────────── */
+
+@media (max-width: 767.98px) {
+    .pr-tabla thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .pr-tabla tbody tr {
+        display: block;
+        margin-bottom: 0.6rem;
+    }
+
+    .pr-tabla tbody td {
+        display: block;
+        border: 1px solid #e5e7eb;
+        border-bottom: 0;
+        border-radius: 0;
+    }
+
+    .pr-tabla tbody td:first-child {
+        border-radius: 10px 10px 0 0;
+    }
+
+    .pr-tabla tbody td:last-child {
+        border-bottom: 1px solid #e5e7eb;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .pr-tabla tbody td::before {
+        content: attr(data-titulo);
+        display: block;
+        margin-bottom: 0.4rem;
+        color: #6b7280;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .pr-fila-observacion td::before {
+        content: none;
+    }
+}

@@ -1,0 +1,80 @@
+/* Pantallas de error del sistema. */
+
+.error-pagina .auth-contenido {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+}
+
+.error-seccion {
+    width: 100%;
+    max-width: 640px;
+}
+
+.error-tarjeta {
+    padding: 2.5rem;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(17, 47, 75, 0.12);
+    text-align: center;
+}
+
+.error-codigo {
+    margin: 0 0 0.75rem;
+    color: #b38612;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.error-titulo {
+    margin: 0 0 1rem;
+    color: #112f4b;
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    line-height: 1.25;
+}
+
+.error-mensaje {
+    margin: 0 0 1.75rem;
+    color: #4b5563;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.error-acciones {
+    margin-bottom: 1.75rem;
+}
+
+.error-boton {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.7rem 1.6rem;
+    border-radius: 8px;
+    background: #112f4b;
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.error-boton:hover,
+.error-boton:focus-visible {
+    background: #1c4570;
+    color: #ffffff;
+}
+
+.error-soporte {
+    margin: 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 0.88rem;
+}
+
+.error-soporte a {
+    color: #b38612;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
