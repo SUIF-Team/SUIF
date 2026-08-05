@@ -312,6 +312,12 @@
     gap: 0.75rem;
 }
 
+.admin-preregistro-solo-lectura {
+    margin: 1.25rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
 .admin-preregistro-boton {
     padding: 0.625rem 1rem;
     border: 1px solid currentColor;

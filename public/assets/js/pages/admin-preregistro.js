@@ -59,6 +59,26 @@
                     { etiqueta: 'Persona responsable de su cumplimiento', valor: this.participante.responsable_cumplimiento }
                 ];
             },
+            claseEstadoGeneral: function () {
+                if (this.estados.general === 'Aprobada') {
+                    return 'admin-preregistro-estado--completado';
+                }
+
+                if (this.estados.general === 'Rechazada') {
+                    return 'admin-preregistro-estado--rechazado';
+                }
+
+                return 'admin-preregistro-estado--revision';
+            },
+            pasoActual: function () {
+                if (this.estados.preregistro === 'En revisión') {
+                    return 'preregistro';
+                }
+
+                return this.estados.documentacion === 'En revisión'
+                    ? 'documentacion'
+                    : null;
+            },
             hayDocumentosRechazados: function () {
                 return Object.values(this.estados_documentos).includes('rechazado');
             },
@@ -80,6 +100,10 @@
 
                 if (estado === 'En revisión') {
                     return 'admin-preregistro-paso--actual';
+                }
+
+                if (estado === 'Rechazado') {
+                    return 'admin-preregistro-paso--rechazado';
                 }
 
                 return 'admin-preregistro-paso--pendiente';

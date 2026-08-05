@@ -25,7 +25,7 @@
 
         @include('admin.partials.bandeja-filtros', [
             'prefijo_filtros' => 'bandeja-preregistros',
-            'estados_filtro' => ['Todos', 'En revisión', 'Aceptado', 'Rechazado'],
+            'estados_filtro' => ['Todos', 'En revisión', 'Aprobada', 'Rechazada'],
         ])
 
         <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="solicitudes-titulo">

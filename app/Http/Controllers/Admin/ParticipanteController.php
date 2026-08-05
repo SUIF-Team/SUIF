@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\ConsultaPreRegistros;
 use App\Support\Admin\NotificacionResultado;
 use App\Support\Admin\OrigenBandejaAdmin;
 use App\Support\Admin\PreRegistroDatosPrueba;
@@ -18,24 +19,12 @@ use Illuminate\Http\Request;
 class ParticipanteController extends Controller
 {
     public function index(
-        Request $request,
-        PreRegistroDatosPrueba $datos_prueba,
+        ConsultaPreRegistros $consulta_pre_registros,
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $participantes = collect($datos_prueba->participantes())
-            ->map(function (array $participante) use ($request, $datos_prueba, $origen_bandeja): array {
-                $estados = (array) $request->session()->get($this->claveEstado($participante['id']), []);
-
-                if (($estados['resultado'] ?? null) === 'revision') {
-                    $participante['estado_bandeja'] = 'En revisión';
-                } elseif (($estados['resultado'] ?? null) === 'aprobado') {
-                    $participante['estado_bandeja'] = 'Aceptado';
-                } elseif (($estados['resultado'] ?? null) === 'rechazado') {
-                    $participante['estado_bandeja'] = 'Rechazado';
-                }
-
-                $participante['clase_estado'] = $this->claseEstado($participante['estado_bandeja']);
+        $participantes = collect($consulta_pre_registros->bandeja())
+            ->map(function (array $participante) use ($origen_bandeja): array {
                 $participante['ruta_expediente'] = route('admin.participantes.show', [
                     'id' => $participante['id'],
                     'origen' => $origen_bandeja->contexto(OrigenBandejaAdmin::PREREGISTROS)['origen'],
@@ -78,11 +67,28 @@ class ParticipanteController extends Controller
     public function show(
         Request $request,
         string $id,
+        ConsultaPreRegistros $consulta_pre_registros,
         PreRegistroDatosPrueba $datos_prueba,
         OrigenBandejaAdmin $origen_bandeja
     )
     {
         $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+
+        if ($contexto_bandeja['origen'] === OrigenBandejaAdmin::PREREGISTROS) {
+            abort_unless(ctype_digit($id), 404);
+
+            $expediente = $consulta_pre_registros->solicitud((int) $id);
+
+            abort_unless($expediente, 404);
+
+            return view('admin.preregistro-detalle', [
+                'participante' => $expediente['participante'],
+                'estados' => $expediente['estados'],
+                'contexto_bandeja' => $contexto_bandeja,
+                'modo_solo_lectura' => true,
+            ]);
+        }
+
         $participante = $datos_prueba->participante($id);
 
         abort_unless($participante, 404);
