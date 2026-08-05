@@ -16,6 +16,9 @@
             @if($estado['fase'] === 'datos')
                 <h1>Datos de identificación</h1>
                 <p class="pr-muted">Todos los campos son obligatorios. No podrás avanzar hasta completarlos.</p>
+                                <div class="pr-notice pr-notice--identidad">
+                    <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial</strong>, incluidos los acentos.</p>
+                </div>
                 <form method="POST" action="{{ route('participante.preregistro.datos.store') }}" id="pr-data-form">
                     @csrf
                     <div class="pr-grid">

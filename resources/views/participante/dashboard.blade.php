@@ -11,7 +11,7 @@
     <header class="participante-dashboard__header">
         <div>
             <h1 id="dashboard-title">Hola, {{ $participante['nombre'] }}</h1>
-            <p>{{ $participante['identificador'] }} · Este es tu avance. Continúa donde te quedaste.</p>
+            <p>@if($participante['identificador']){{ $participante['identificador'] }} · @endif Este es tu avance. Continúa donde te quedaste.</p>
         </div>
         <span class="dashboard-status dashboard-status--{{ $tramite['clase'] }}" role="status">
             {{ $tramite['texto'] }}

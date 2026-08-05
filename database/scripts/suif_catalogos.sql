@@ -70,3 +70,66 @@ ON CONFLICT (nipr_id_nivel_profesional) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('nivel_profesional', 'nipr_id_nivel_profesional'),
               (SELECT MAX(nipr_id_nivel_profesional) FROM nivel_profesional));
+
+/* Tipos de documento del pre-registro */
+INSERT INTO tipo_documento (tido_id_tipo_documento, tido_tipo_documento) VALUES
+    (1, 'Solicitud firmada'),
+    (2, 'Aceptación de notificaciones'),
+    (3, 'Carta bajo protesta'),
+    (4, 'Autorización de la publicación'),
+    (5, 'CURP'),
+    (6, 'Identificación oficial')
+ON CONFLICT (tido_id_tipo_documento) DO NOTHING;
+
+SELECT setval(pg_get_serial_sequence('tipo_documento', 'tido_id_tipo_documento'),
+              (SELECT MAX(tido_id_tipo_documento) FROM tipo_documento));
+
+/* Estados posibles de cada documento */
+INSERT INTO c_estado_documento (esdo_id_c_estado_documento, esdo_estado_documento) VALUES
+    (1, 'Pendiente'),
+    (2, 'Cargado'),
+    (3, 'En revisión'),
+    (4, 'Aprobado'),
+    (5, 'Rechazado')
+ON CONFLICT (esdo_id_c_estado_documento) DO NOTHING;
+
+SELECT setval(pg_get_serial_sequence('c_estado_documento', 'esdo_id_c_estado_documento'),
+              (SELECT MAX(esdo_id_c_estado_documento) FROM c_estado_documento));
+
+/* Estados posibles de la solicitud */
+INSERT INTO c_estado_solicitud (esso_id_c_estado_solicitud, esso_estatus_solicitud) VALUES
+    (1, 'Pre-registro'),
+    (2, 'Documentación'),
+    (3, 'En revisión'),
+    (4, 'Aprobada'),
+    (5, 'Rechazada'),
+    (6, 'Cancelada')
+ON CONFLICT (esso_id_c_estado_solicitud) DO NOTHING;
+
+SELECT setval(pg_get_serial_sequence('c_estado_solicitud', 'esso_id_c_estado_solicitud'),
+              (SELECT MAX(esso_id_c_estado_solicitud) FROM c_estado_solicitud));
+
+/* Convocatoria vigente */
+INSERT INTO convocatoria (
+    conv_id_convocatoria,
+    conv_nombre,
+    conv_monto_recuperacion,
+    conv_fecha_inicio_registro,
+    conv_fecha_fin_registro,
+    conv_fin_fecha_entrega_docs,
+    conv_fecha_inicio,
+    conv_fecha_fin
+) VALUES (
+    1,
+    'Certificación 2026 en materia de prevención de operaciones con recursos de procedencia ilícita',
+    7000.00::money,
+    '2026-01-01',
+    '2026-12-31',
+    '2026-12-31',
+    '2026-01-01',
+    '2026-12-31'
+)
+ON CONFLICT (conv_id_convocatoria) DO NOTHING;
+
+SELECT setval(pg_get_serial_sequence('convocatoria', 'conv_id_convocatoria'),
+              (SELECT MAX(conv_id_convocatoria) FROM convocatoria));

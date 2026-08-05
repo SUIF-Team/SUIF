@@ -29,37 +29,42 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Ajuste temporal: se eliminó 'middleware' => 'auth' (va al inicio de route::group)
 
 Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () {
-    Route::get('/dashboard', [ParticipanteDashboardController::class, 'index'])->name('dashboard');
-
+    /* Públicas: el participante todavía no tiene cuenta cuando entra aquí. */
     Route::get('/preregistro', [PreRegistroController::class, 'index'])->name('preregistro.index');
     Route::post('/preregistro/datos', [PreRegistroController::class, 'guardarDatos'])->name('preregistro.datos.store');
-    Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');
-    Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'formato'])->name('preregistro.formatos.ver');
-    Route::get('/preregistro/formatos/{documento}/descargar', function ($documento) {
-        return app(PreRegistroController::class)->formato($documento, true);
-    })->name('preregistro.formatos.descargar');
-    Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
-    Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
-    Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
-    Route::post('/preregistro/finalizar', [PreRegistroController::class, 'finalizar'])->name('preregistro.finalizar');
-    Route::get('/preregistro/completado', [PreRegistroController::class, 'completado'])->name('preregistro.completado');
-    Route::get('/preregistro/demo/{estado}', [PreRegistroController::class, 'demo'])->name('preregistro.demo');
-    Route::get('/preregistro/reiniciar', [PreRegistroController::class, 'reiniciar'])->name('preregistro.reiniciar');
 
-    Route::get('/pago', [ParticipantePagoController::class, 'index'])->name('pago.index');
-    Route::post('/pago/comprobante', [ParticipantePagoController::class, 'subirComprobante'])->name('pago.comprobante');
-    Route::get('/pago/demo/{estado}', [ParticipantePagoController::class, 'demo'])->name('pago.demo');
-    Route::get('/referencia', [ParticipanteReferenciaController::class, 'index'])->name('referencia.index');
-    Route::get('/documentos', [ParticipanteDocumentoController::class, 'index'])->name('documentos.index');
-    Route::post('/documentos', [ParticipanteDocumentoController::class, 'store'])->name('documentos.store');
-    Route::get('/sede', [ParticipanteSedeController::class, 'index'])->name('sede.index');
-    Route::post('/sede', [ParticipanteSedeController::class, 'seleccionar'])->name('sede.seleccionar');
-    Route::get('/sede/reiniciar', [ParticipanteSedeController::class, 'reiniciar'])->name('sede.reiniciar');
-    Route::get('/resultados', [ParticipanteResultadoController::class, 'resultados'])->name('resultados');
-    Route::get('/resultados/demo/{estado}', [ParticipanteResultadoController::class, 'demo'])->name('resultados.demo');
-    Route::get('/certificado', [CertificadoController::class, 'index'])->name('certificado');
-    Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
-    Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
+    /* A partir de aquí ya existe la cuenta: se exige sesión iniciada. */
+    Route::middleware('auth')->group(function () {
+        Route::get('/dashboard', [ParticipanteDashboardController::class, 'index'])->name('dashboard');
+
+        Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');
+        Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'formato'])->name('preregistro.formatos.ver');
+        Route::get('/preregistro/formatos/{documento}/descargar', function ($documento) {
+            return app(PreRegistroController::class)->formato($documento, true);
+        })->name('preregistro.formatos.descargar');
+        Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
+        Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
+        Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
+        Route::post('/preregistro/finalizar', [PreRegistroController::class, 'finalizar'])->name('preregistro.finalizar');
+        Route::get('/preregistro/completado', [PreRegistroController::class, 'completado'])->name('preregistro.completado');
+        Route::get('/preregistro/demo/{estado}', [PreRegistroController::class, 'demo'])->name('preregistro.demo');
+        Route::get('/preregistro/reiniciar', [PreRegistroController::class, 'reiniciar'])->name('preregistro.reiniciar');
+
+        Route::get('/pago', [ParticipantePagoController::class, 'index'])->name('pago.index');
+        Route::post('/pago/comprobante', [ParticipantePagoController::class, 'subirComprobante'])->name('pago.comprobante');
+        Route::get('/pago/demo/{estado}', [ParticipantePagoController::class, 'demo'])->name('pago.demo');
+        Route::get('/referencia', [ParticipanteReferenciaController::class, 'index'])->name('referencia.index');
+        Route::get('/documentos', [ParticipanteDocumentoController::class, 'index'])->name('documentos.index');
+        Route::post('/documentos', [ParticipanteDocumentoController::class, 'store'])->name('documentos.store');
+        Route::get('/sede', [ParticipanteSedeController::class, 'index'])->name('sede.index');
+        Route::post('/sede', [ParticipanteSedeController::class, 'seleccionar'])->name('sede.seleccionar');
+        Route::get('/sede/reiniciar', [ParticipanteSedeController::class, 'reiniciar'])->name('sede.reiniciar');
+        Route::get('/resultados', [ParticipanteResultadoController::class, 'resultados'])->name('resultados');
+        Route::get('/resultados/demo/{estado}', [ParticipanteResultadoController::class, 'demo'])->name('resultados.demo');
+        Route::get('/certificado', [CertificadoController::class, 'index'])->name('certificado');
+        Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
+        Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
+    });
 });
 
 // Acceso temporal sin autenticación para desarrollar los módulos administrativos.

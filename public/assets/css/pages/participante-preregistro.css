@@ -6,3 +6,22 @@
 .pr-shell{min-height:760px;background-image:linear-gradient(rgba(255,255,255,.86),rgba(255,255,255,.86)),var(--fondo-sistema);background-position:center;background-repeat:no-repeat;background-size:cover}.pr-card{min-height:640px}@media(max-width:767px){.pr-shell{min-height:0;background-size:auto 100%}.pr-card{min-height:0}}
 .pr-clave{width:min(100%,640px);margin:0 auto;padding:4.5rem 1rem 3.5rem;text-align:center}.pr-clave__icon{width:3.5rem;height:3.5rem;display:inline-grid;place-items:center;border-radius:50%;background:#e6f4ea;color:#20753e;font-size:1.35rem}.pr-clave__eyebrow{margin:1.35rem 0 .35rem;color:#8b6717;font-size:.76rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.pr-clave h1{font-size:1.55rem!important}.pr-clave__texto{max-width:47ch;margin:1rem auto 1.75rem;color:#5f6b7a;line-height:1.6}.pr-clave__codigo{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .8rem .7rem 1.2rem;border:1px solid #dfc77f;border-radius:.7rem;background:#fffaf0}.pr-clave__codigo>span{color:#172a44;font-size:1.1rem;font-weight:700;letter-spacing:.08em}.pr-clave__copiar{padding:.55rem .75rem;display:inline-flex;align-items:center;gap:.45rem;border:1px solid #d9b75d;border-radius:.45rem;background:#fff;color:#6f4d00;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}.pr-clave__copiar:hover,.pr-clave__copiar:focus-visible{background:#fff2c9}.pr-clave__ayuda{margin:.75rem 0 0;color:#667085;font-size:.78rem}.pr-clave+.pr-actions{width:min(100%,640px);margin:0 auto;padding-top:1.5rem}@media(max-width:767px){.pr-clave{padding:2.5rem 0 2rem}.pr-clave h1{font-size:1.3rem!important}.pr-clave__codigo{align-items:stretch;flex-direction:column}.pr-clave__copiar{justify-content:center}.pr-clave+.pr-actions{width:100%}}
 .pr-clave .pr-actions{justify-content:flex-end;width:100%;margin:2rem 0 0;padding:0}@media(max-width:767px){.pr-clave .pr-actions{width:100%;margin-top:1.5rem}}
+
+/* ─── Aviso de captura de datos personales ───────────────────────────── */
+
+.pr-notice--identidad {
+    text-align: left;
+}
+
+.pr-notice--identidad p {
+    margin: 0;
+}
+
+.pr-notice--identidad p + p {
+    margin-top: 0.4rem;
+}
+
+/* La CURP se ve en mayúsculas mientras se escribe. */
+.pr-field input[name="curp"] {
+    text-transform: uppercase;
+}
