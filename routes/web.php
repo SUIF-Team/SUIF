@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\ResultadoController as AdminResultadoController;
 use App\Http\Controllers\Admin\SedeController as AdminSedeController;
 use App\Http\Controllers\Participante\CertificadoController;
 use App\Http\Controllers\Participante\DashboardController as ParticipanteDashboardController;
-use App\Http\Controllers\Participante\DocumentoController as ParticipanteDocumentoController;
 use App\Http\Controllers\Participante\FacturacionController;
 use App\Http\Controllers\Participante\PagoController as ParticipantePagoController;
 use App\Http\Controllers\Participante\PreRegistroController;
@@ -45,17 +44,16 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () 
         Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
         Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
         Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
-        Route::post('/preregistro/finalizar', [PreRegistroController::class, 'finalizar'])->name('preregistro.finalizar');
-        Route::get('/preregistro/completado', [PreRegistroController::class, 'completado'])->name('preregistro.completado');
         Route::get('/preregistro/demo/{estado}', [PreRegistroController::class, 'demo'])->name('preregistro.demo');
         Route::get('/preregistro/reiniciar', [PreRegistroController::class, 'reiniciar'])->name('preregistro.reiniciar');
+        Route::get('/preregistro/editar', [PreRegistroController::class, 'editar'])->name('preregistro.editar');
+        Route::post('/preregistro/editar', [PreRegistroController::class, 'actualizarDatos'])->name('preregistro.editar.store');
 
         Route::get('/pago', [ParticipantePagoController::class, 'index'])->name('pago.index');
         Route::post('/pago/comprobante', [ParticipantePagoController::class, 'subirComprobante'])->name('pago.comprobante');
         Route::get('/pago/demo/{estado}', [ParticipantePagoController::class, 'demo'])->name('pago.demo');
         Route::get('/referencia', [ParticipanteReferenciaController::class, 'index'])->name('referencia.index');
-        Route::get('/documentos', [ParticipanteDocumentoController::class, 'index'])->name('documentos.index');
-        Route::post('/documentos', [ParticipanteDocumentoController::class, 'store'])->name('documentos.store');
+        Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
         Route::get('/sede', [ParticipanteSedeController::class, 'index'])->name('sede.index');
         Route::post('/sede', [ParticipanteSedeController::class, 'seleccionar'])->name('sede.seleccionar');
         Route::get('/sede/reiniciar', [ParticipanteSedeController::class, 'reiniciar'])->name('sede.reiniciar');
