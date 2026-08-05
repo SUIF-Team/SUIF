@@ -8,7 +8,7 @@
 @section('title', 'SUIF — Selección de Sede')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/participante-sede.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/participante-sede.css') }}">
 @endpush
 
 @section('content')

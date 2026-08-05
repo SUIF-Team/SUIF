@@ -13,9 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,400&family=Open+Sans:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/partials/navbar.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/partials/footer.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/navbar.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/footer.css') }}">
 
     @yield('styles')
     @yield('head')
