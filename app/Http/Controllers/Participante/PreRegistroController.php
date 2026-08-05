@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Usuario;
 
 class PreRegistroController extends Controller
 {
@@ -51,6 +52,11 @@ class PreRegistroController extends Controller
 
        public function guardarDatos(Request $request)
     {
+        /* Se normaliza la CURP antes de validar para que la comprobación
+           de duplicados no dependa de cómo la haya escrito el participante. */
+        $request->merge([
+            'curp' => mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8'),
+        ]);
         $entidades = implode(',', $this->entidades());
         $grados = implode(',', array_keys($this->grados()));
 
@@ -77,13 +83,28 @@ class PreRegistroController extends Controller
             'curp.unique' => 'Esa CURP ya tiene un pre-registro. Inicia sesión con tu clave de acceso.',
         ]);
 
-        $datos['curp'] = strtoupper($datos['curp']);
+                /* Formato uniforme sin importar cómo lo haya escrito el participante. */
+        $datos['nombre'] = $this->nombrePropio($datos['nombre']);
+        $datos['primer_apellido'] = $this->nombrePropio($datos['primer_apellido']);
+        $datos['segundo_apellido'] = $this->nombrePropio($datos['segundo_apellido']);
+        $datos['curp'] = mb_strtoupper(trim($datos['curp']), 'UTF-8');
+        $datos['correo_principal'] = mb_strtolower(trim($datos['correo_principal']), 'UTF-8');
+        $datos['correo_alterno'] = mb_strtolower(trim($datos['correo_alterno']), 'UTF-8');
 
         $estado = $this->estado($request);
         $clave = empty($estado['clave']) ? $this->generarClave() : $estado['clave'];
 
-        /* Alta real del participante en la base de datos. */
-        $this->registrarParticipante($datos, $clave);
+               /* Alta real del participante en la base de datos. */
+        $idUsuario = $this->registrarParticipante($datos, $clave);
+
+        /* Se inicia la sesión del participante recién creado para que pueda
+           continuar con sus documentos sin pasar de nuevo por el login. */
+        $usuario = Usuario::find($idUsuario);
+
+        if ($usuario) {
+            Auth::login($usuario);
+            $request->session()->regenerate();
+        }
 
         $estado['datos'] = $datos;
         $estado['clave'] = $clave;
@@ -103,7 +124,7 @@ class PreRegistroController extends Controller
      */
     private function registrarParticipante(array $datos, $clave)
     {
-        DB::transaction(function () use ($datos, $clave) {
+       return DB::transaction(function () use ($datos, $clave) {
             $idRol = DB::table('rol')
                 ->where('rol_tipo_rol', 'Participante')
                 ->value('rol_id_rol');
@@ -167,6 +188,33 @@ class PreRegistroController extends Controller
                 'grpe_id_nivel_profesional' => $idNivel,
                 'grpe_id_persona' => $idPersona,
             ]);
+
+                /* La SOLICITUD es la que amarra al participante con su trámite:
+               convocatoria, pago, documentos, evaluación y certificado. */
+            $idConvocatoria = DB::table('convocatoria')
+                ->whereDate('conv_fecha_inicio_registro', '<=', now()->toDateString())
+                ->whereDate('conv_fecha_fin_registro', '>=', now()->toDateString())
+                ->orderByDesc('conv_id_convocatoria')
+                ->value('conv_id_convocatoria');
+
+            $idSolicitud = DB::table('solicitud')->insertGetId([
+                'soli_id_persona' => $idPersona,
+                'soli_id_convocatoria' => $idConvocatoria,
+            ], 'soli_id_solicitud');
+
+            $idEstadoInicial = DB::table('c_estado_solicitud')
+                ->where('esso_estatus_solicitud', 'Pre-registro')
+                ->value('esso_id_c_estado_solicitud');
+
+            DB::table('estado_solicitud')->insert([
+                'esso_id_c_estado_solicitud' => $idEstadoInicial,
+                'esso_id_solicitud' => $idSolicitud,
+                'esso_fecha' => now()->toDateString(),
+                'esso_hora' => now()->toTimeString(),
+            ]);
+
+            return $idUsuario;
+
         });
     }
 
@@ -431,6 +479,29 @@ class PreRegistroController extends Controller
         } catch (\Throwable $exception) {
             Log::warning('No fue posible enviar la clave de pre-registro.', ['error' => $exception->getMessage()]);
         }
+    }
+   
+    /**
+     * Normaliza un nombre o apellido: primera letra de cada palabra en
+     * mayúscula y el resto en minúsculas, respetando acentos.
+     * Las partículas de los apellidos compuestos quedan en minúscula
+     * salvo cuando abren el texto: "Ponce de León", "De la Cruz Pérez".
+     */
+    private function nombrePropio($texto)
+    {
+        $texto = trim(preg_replace('/\s+/u', ' ', (string) $texto));
+        $texto = mb_convert_case($texto, MB_CASE_TITLE, 'UTF-8');
+
+        $particulas = ['De', 'Del', 'La', 'Las', 'Los', 'Y', 'E', 'Da', 'Das', 'Do', 'Dos', 'Van', 'Von'];
+        $palabras = explode(' ', $texto);
+
+        foreach ($palabras as $indice => $palabra) {
+            if ($indice > 0 && in_array($palabra, $particulas, true)) {
+                $palabras[$indice] = mb_strtolower($palabra, 'UTF-8');
+            }
+        }
+
+        return implode(' ', $palabras);
     }
 
     private function entidades()
