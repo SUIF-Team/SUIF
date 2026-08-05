@@ -8,20 +8,17 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+       public function index(Request $request)
     {
         $usuario = Auth::user();
+        $persona = $usuario ? $usuario->persona : null;
 
         $participante = [
-            'nombre' => ($usuario && !empty($usuario->name))
-                ? $usuario->name
-                : $request->session()->get('suif.participante.nombre', 'Juana García Martínez'),
-            'folio' => ($usuario && isset($usuario->folio) && !empty($usuario->folio))
-                ? $usuario->folio
-                : $request->session()->get('suif.participante.folio', 'FCA-2026-01842'),
+            'nombre' => $persona ? $persona->nombreCompleto() : 'Participante',
+            'identificador' => $persona ? 'CURP '.$persona->pers_curp : '',
         ];
 
-        /* Sustituir el estado de sesión por modelos cuando se defina la persistencia. */
+        /* Sustituir el estado de sesión por modelos cuando exista la SOLICITUD. */
         $estado = $this->normalizarEstado(
             (array) $request->session()->get('suif.participante.estado', [])
         );
@@ -44,9 +41,9 @@ class DashboardController extends Controller
             abort(404);
         }
 
-        $participante = [
+            $participante = [
             'nombre' => 'Juana García Martínez',
-            'folio' => 'FCA-2026-01842',
+            'identificador' => 'CURP GAMJ900101MDFRRN01',
         ];
 
         return $this->mostrarDashboard(
