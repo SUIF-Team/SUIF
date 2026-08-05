@@ -210,3 +210,27 @@
         content: none;
     }
 }
+
+/* ─── Resumen de datos del participante ──────────────────────────────── */
+
+.pr-datos {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0 0 1.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.pr-datos dt {
+    color: #6b7280;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.pr-datos dd {
+    margin: 0.2rem 0 0;
+    color: #112f4b;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}

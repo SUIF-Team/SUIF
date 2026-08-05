@@ -14,64 +14,153 @@ use App\Models\Usuario;
 
 class PreRegistroController extends Controller
 {
-    private $documentos = [
-        'solicitud-firmada' => 'Solicitud firmada',
-        'aceptacion-notificaciones' => 'Aceptación de notificaciones',
-        'carta-bajo-protesta' => 'Carta bajo protesta',
-        'autorizacion-publicacion' => 'Autorización de la publicación',
-        'curp' => 'CURP',
-        'identificacion-oficial' => 'Identificación oficial',
-    ];
+   private $documentos = [];
 
-        /**
-     * Documentos que tienen un formato oficial descargable.
-     * La CURP y la identificación oficial son documentos propios del
-     * participante: no hay nada que previsualizar ni descargar.
-     */
-    private $formatos = [
-        'solicitud-firmada',
-        'aceptacion-notificaciones',
-        'carta-bajo-protesta',
-        'autorizacion-publicacion',
-    ];
+   private $formatos = [];
 
-        public function index(Request $request)
+       public function __construct()
+    {
+        $this->documentos = config('suif.documentos');
+        $this->formatos = config('suif.formatos_descargables');
+    }     
+   
+         public function index(Request $request)
     {
         $estado = $this->estado($request);
 
-        /* Si la sesión viene vacía pero el participante ya se registró antes,
-           se reconstruye su avance desde la base de datos. */
+        /* Si ya tiene solicitud, sus datos están en la base. */
         if (empty($estado['datos'])) {
             $guardados = $this->datosGuardados();
 
             if ($guardados) {
                 $estado['datos'] = $guardados;
-                $estado['fase'] = 'formatos';
+                $estado['fase'] = 'registrado';
                 $request->session()->put('suif.preregistro', $estado);
             }
         }
 
-        if ($estado['fase'] === 'completado') {
-            return redirect()->route('participante.preregistro.completado');
+        /* Quien ya tiene solicitud ve el resumen de sus datos, no el formulario. */
+        if ($this->solicitudActual() && $estado['fase'] !== 'clave') {
+            $estado['fase'] = 'registrado';
         }
 
-        /* Los documentos ya no viven en la sesión: se leen de la base. */
-        $estado['documentos'] = $this->documentosGuardados($this->solicitudActual());
+             return view('participante.preregistro', [
+            'estado' => $estado,
+            'entidades' => $this->entidades(),
+            'grados' => $this->grados(),
+            'puedeEditar' => $this->solicitudActual() ? $this->puedeEditar() : false,
+        ]);
+    }
 
-        if (!empty($estado['documentos'])
-            || in_array($estado['fase'], ['documentos', 'revision', 'rechazado', 'aprobado'], true)) {
-            $estado['fase'] = $this->faseSegunDocumentos($estado['documentos']);
+        /**
+     * Pantalla de documentación: formatos descargables y carga de archivos.
+     */
+    public function documentos(Request $request)
+    {
+        $idSolicitud = $this->solicitudActual();
+
+        if (!$idSolicitud) {
+            return redirect()->route('participante.preregistro.index');
         }
 
-        return view('participante.preregistro', [
+        $estado = $this->estado($request);
+        $estado['documentos'] = $this->documentosGuardados($idSolicitud);
+        $estado['fase'] = $this->faseSegunDocumentos($estado['documentos']);
+
+        return view('participante.documentos', [
             'estado' => $estado,
             'documentos' => $this->documentos,
             'formatos' => $this->formatos,
-            'verFormatos' => $request->query('ver') === 'formatos'
-                && in_array($estado['fase'], ['documentos', 'revision', 'rechazado', 'aprobado'], true),
+            'verFormatos' => $request->query('ver') === 'formatos',
+        ]);
+    }
+
+        /**
+     * Muestra el formulario con los datos actuales para modificarlos.
+     */
+    public function editar(Request $request)
+    {
+        if (!$this->solicitudActual()) {
+            return redirect()->route('participante.preregistro.index');
+        }
+
+        if (!$this->puedeEditar()) {
+            return redirect()->route('participante.preregistro.index')
+                ->withErrors(['datos' => 'Tus datos ya no se pueden modificar porque tu documentación está en revisión.']);
+        }
+
+        $estado = $this->estado($request);
+        $estado['datos'] = $this->datosGuardados();
+        $estado['fase'] = 'editar';
+
+        return view('participante.preregistro', [
+            'estado' => $estado,
             'entidades' => $this->entidades(),
             'grados' => $this->grados(),
+            'puedeEditar' => true,
         ]);
+    }
+
+    /**
+     * Guarda los cambios sobre los datos ya registrados.
+     */
+    public function actualizarDatos(Request $request)
+    {
+        $idPersona = $this->personaActual();
+
+        /* Se vuelve a comprobar aquí: el permiso pudo cambiar entre que
+           se abrió el formulario y se envió. */
+        if (!$idPersona || !$this->puedeEditar()) {
+            return redirect()->route('participante.preregistro.index')
+                ->withErrors(['datos' => 'Tus datos ya no se pueden modificar porque tu documentación está en revisión.']);
+        }
+
+        $request->merge([
+            'curp' => mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8'),
+        ]);
+
+        $entidades = implode(',', $this->entidades());
+        $grados = implode(',', array_keys($this->grados()));
+
+        $datos = $this->validate($request, [
+            'nombre' => 'required|string|max:45',
+            'primer_apellido' => 'required|string|max:45',
+            'segundo_apellido' => 'required|string|max:45',
+            'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/', 'unique:persona,pers_curp,'.$idPersona.',pers_id_persona'],
+            'correo_principal' => 'required|email|max:65',
+            'telefono' => 'required|digits:10',
+            'entidad_federativa' => 'required|in:'.$entidades,
+            'correo_alterno' => 'required|email|max:65|different:correo_principal',
+            'grado_estudios' => 'required|in:'.$grados,
+            'actividad_vulnerable' => 'required|in:si,no',
+            'responsable_cumplimiento' => 'required|in:si,no',
+        ], [
+            'required' => 'El campo :attribute es obligatorio.',
+            'email' => 'Escribe un correo válido.',
+            'digits' => 'El teléfono debe contener exactamente 10 dígitos.',
+            'size' => 'La CURP debe contener exactamente 18 caracteres.',
+            'regex' => 'La CURP solo debe contener letras y números.',
+            'different' => 'El correo alterno debe ser distinto al principal.',
+            'in' => 'Selecciona una opción válida.',
+            'curp.unique' => 'Esa CURP ya está registrada por otra persona.',
+        ]);
+
+        $datos['nombre'] = $this->nombrePropio($datos['nombre']);
+        $datos['primer_apellido'] = $this->nombrePropio($datos['primer_apellido']);
+        $datos['segundo_apellido'] = $this->nombrePropio($datos['segundo_apellido']);
+        $datos['curp'] = mb_strtoupper(trim($datos['curp']), 'UTF-8');
+        $datos['correo_principal'] = mb_strtolower(trim($datos['correo_principal']), 'UTF-8');
+        $datos['correo_alterno'] = mb_strtolower(trim($datos['correo_alterno']), 'UTF-8');
+
+        $this->actualizarParticipante($idPersona, $datos);
+
+        $estado = $this->estado($request);
+        $estado['datos'] = $datos;
+        $estado['fase'] = 'registrado';
+        $request->session()->put('suif.preregistro', $estado);
+
+        return redirect()->route('participante.preregistro.index')
+            ->with('success', 'Tus datos fueron actualizados correctamente.');
     }
 
        public function guardarDatos(Request $request)
@@ -242,6 +331,67 @@ class PreRegistroController extends Controller
         });
     }
 
+        /**
+     * Actualiza los datos personales sobre las tablas ya existentes.
+     * No se toca pers_fecha_registro: es la fecha del alta original.
+     */
+    private function actualizarParticipante($idPersona, array $datos)
+    {
+        DB::transaction(function () use ($idPersona, $datos) {
+            $claveInegi = DB::table('entidad_federativa')
+                ->where('enfe_entidad_federativa', $datos['entidad_federativa'])
+                ->value('enfe_clave_inegi');
+
+            DB::table('persona')
+                ->where('pers_id_persona', $idPersona)
+                ->update([
+                    'pers_clave_inegi' => $claveInegi,
+                    'pers_curp' => $datos['curp'],
+                    'pers_nombre' => $datos['nombre'],
+                    'pers_apellido_paterno' => $datos['primer_apellido'],
+                    'pers_apellido_materno' => $datos['segundo_apellido'],
+                ]);
+
+            $tipos = DB::table('tipo_comunicacion')
+                ->pluck('tico_id_tipo_comunicacion', 'tico_tipo_comunicacion');
+
+            $contactos = [
+                'Correo principal' => $datos['correo_principal'],
+                'Correo alterno' => $datos['correo_alterno'],
+                'Teléfono celular' => $datos['telefono'],
+            ];
+
+            foreach ($contactos as $tipo => $valor) {
+                DB::table('comunicacion')->updateOrInsert(
+                    [
+                        'comu_id_persona' => $idPersona,
+                        'comu_id_tipo_comunicacion' => $tipos[$tipo],
+                    ],
+                    ['comu_descripcion' => $valor]
+                );
+            }
+
+            DB::table('trabajo')
+                ->whereIn('trab_id_trabajo', function ($consulta) use ($idPersona) {
+                    $consulta->select('trpe_id_trabajo')
+                        ->from('trabajo_persona')
+                        ->where('trpe_id_persona', $idPersona);
+                })
+                ->update([
+                    'trab_actividad_vulnerable' => $datos['actividad_vulnerable'] === 'si',
+                    'trab_responsable' => $datos['responsable_cumplimiento'] === 'si',
+                ]);
+
+            $idNivel = DB::table('nivel_profesional')
+                ->where('nipr_nivel_profesional', $this->grados()[$datos['grado_estudios']])
+                ->value('nipr_id_nivel_profesional');
+
+            DB::table('grado_persona')
+                ->where('grpe_id_persona', $idPersona)
+                ->update(['grpe_id_nivel_profesional' => $idNivel]);
+        });
+    }
+
     /**
      * Recupera de la base los datos del participante que inició sesión.
      * Devuelve null si todavía no tiene un pre-registro.
@@ -306,7 +456,7 @@ class PreRegistroController extends Controller
 
         $request->session()->put('suif.preregistro', $estado);
 
-        return redirect()->route('participante.preregistro.index');
+        return redirect()->route('participante.documentos.index');
     }
 
         public function formato($documento, $descargar = false)
@@ -350,7 +500,7 @@ class PreRegistroController extends Controller
         $idSolicitud = $this->solicitudActual();
 
         if (!$idSolicitud) {
-            return redirect()->route('participante.preregistro.index')
+            return redirect()->route('participante.documentos.index')
                 ->withErrors(['documentos' => 'No encontramos tu solicitud. Vuelve a iniciar sesión.']);
         }
 
@@ -400,7 +550,7 @@ class PreRegistroController extends Controller
             $this->registrarEstadoDocumento($idDocumento, 'Cargado');
         });
 
-        return redirect()->route('participante.preregistro.index')
+        return redirect()->route('participante.documentos.index')
             ->with('success', 'Documento cargado. Revísalo antes de continuar.');
     }
 
@@ -441,7 +591,7 @@ class PreRegistroController extends Controller
 
         foreach (array_keys($this->documentos) as $slug) {
             if (empty($documentos[$slug])) {
-                return redirect()->route('participante.preregistro.index')
+                return redirect()->route('participante.documentos.index')
                     ->withErrors(['documentos' => 'Debes cargar todos los documentos antes de continuar.']);
             }
         }
@@ -454,47 +604,8 @@ class PreRegistroController extends Controller
             $this->registrarEstadoSolicitud($idSolicitud, 'En revisión');
         });
 
-        return redirect()->route('participante.preregistro.index')
+        return redirect()->route('participante.documentos.index')
             ->with('success', 'Tus documentos fueron enviados a revisión.');
-    }
-
-        public function finalizar(Request $request)
-    {
-        $documentos = $this->documentosGuardados($this->solicitudActual());
-
-        foreach (array_keys($this->documentos) as $slug) {
-            if (empty($documentos[$slug]) || $documentos[$slug]['estado'] !== 'aprobado') {
-                return redirect()->route('participante.preregistro.index')
-                    ->withErrors(['documentos' => 'El pre-registro solo puede finalizar cuando todos los documentos estén aprobados.']);
-            }
-        }
-
-        $estado = $this->estado($request);
-        $estado['fase'] = 'completado';
-        $request->session()->put('suif.preregistro', $estado);
-        $request->session()->put('suif.participante.estado.preregistro_completo', true);
-
-        return redirect()->route('participante.preregistro.completado');
-    }
-
-        public function completado(Request $request)
-    {
-        $estado = $this->estado($request);
-
-        if ($estado['fase'] !== 'completado') {
-            return redirect()->route('participante.preregistro.index');
-        }
-
-        $estado['documentos'] = $this->documentosGuardados($this->solicitudActual());
-
-        return view('participante.preregistro', [
-            'estado' => $estado,
-            'documentos' => $this->documentos,
-            'formatos' => $this->formatos,
-            'verFormatos' => false,
-            'entidades' => $this->entidades(),
-            'grados' => $this->grados(),
-        ]);
     }
 
        public function demo(Request $request, $estadoDemo)
@@ -507,7 +618,7 @@ class PreRegistroController extends Controller
 
         foreach (array_keys($this->documentos) as $slug) {
             if (empty($documentos[$slug])) {
-                return redirect()->route('participante.preregistro.index')
+                return redirect()->route('participante.documentos.index')
                     ->withErrors(['documentos' => 'Carga todos los documentos antes de simular estados.']);
             }
         }
@@ -532,7 +643,7 @@ class PreRegistroController extends Controller
             }
         });
 
-        return redirect()->route('participante.preregistro.index');
+        return redirect()->route('participante.documentos.index');
     }
 
     public function reiniciar(Request $request)
@@ -612,6 +723,34 @@ class PreRegistroController extends Controller
             ->where('p.pers_id_usuario', $usuario->usua_id_usuario)
             ->orderByDesc('s.soli_id_solicitud')
             ->value('s.soli_id_solicitud');
+    }
+        /**
+     * Id de la persona del participante que inició sesión.
+     */
+    private function personaActual()
+    {
+        $usuario = Auth::user();
+
+        if (!$usuario) {
+            return null;
+        }
+
+        return DB::table('persona')
+            ->where('pers_id_usuario', $usuario->usua_id_usuario)
+            ->value('pers_id_persona');
+    }
+
+    /**
+     * Los datos personales solo se pueden modificar mientras la
+     * documentación no haya entrado a revisión.
+     */
+    private function puedeEditar()
+    {
+        $fase = $this->faseSegunDocumentos(
+            $this->documentosGuardados($this->solicitudActual())
+        );
+
+        return !in_array($fase, ['revision', 'aprobado'], true);
     }
 
     /**

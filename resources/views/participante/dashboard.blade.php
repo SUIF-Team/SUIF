@@ -30,17 +30,12 @@
                     <p>{{ $paso['descripcion'] }}</p>
                 </div>
                 <div class="process-card__actions">
+                                    <div class="process-card__actions">
                     <span class="process-badge process-badge--{{ $paso['estado'] }}">{{ $paso['etiqueta'] }}</span>
-                    @if ($paso['mostrarBoton'])
-                        @if ($modoDemo)
-                            <span class="process-button process-button--demo" aria-disabled="true">
-                                Continuar
-                            </span>
-                        @else
-                            <a class="process-button" href="{{ route($paso['ruta']) }}">
-                                Continuar
-                            </a>
-                        @endif
+                        @if ($paso['mostrarBoton'])
+                        <a class="process-button{{ $paso['estado'] === 'completed' ? ' process-button--ver' : '' }}" href="{{ route($paso['ruta']) }}">
+                            {{ $paso['textoBoton'] }}
+                        </a>
                     @endif
                 </div>
             </article>

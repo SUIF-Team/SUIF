@@ -1,29 +1,44 @@
 {{--
     partials/sidebar-progreso.blade.php
     Barra de avance del participante.
+    Recibe $avance desde el view composer de AppServiceProvider.
     Un paso solo es navegable si todos los anteriores están completos.
 --}}
 <?php
-    $estado = (array) session('suif.participante.estado', []);
-    $pre = !empty($estado['preregistro_completo']);
-    $ref = !empty($estado['referencia_generada']);
-    $pagoEstado = isset($estado['pago_estado']) ? $estado['pago_estado'] : 'sin_cargar';
-    $sede = !empty($estado['sede_seleccionada']);
+    /* Pre-registro y documentación salen de la base. El resto todavía vive
+       en sesión y se irá migrando conforme existan sus tablas pobladas. */
+    $sesion = (array) session('suif.participante.estado', []);
+    $ref = !empty($sesion['referencia_generada']);
+    $pagoEstado = isset($sesion['pago_estado']) ? $sesion['pago_estado'] : 'sin_cargar';
+    $sede = !empty($sesion['sede_seleccionada']);
+    $aprobada = $avance->solicitudAprobada();
 
     $pasos = [
         [
             'titulo' => 'Pre-registro',
-            'subtitulo' => 'Captura de datos y documentación',
+            'subtitulo' => 'Captura de datos',
             'ruta' => 'participante.preregistro.index',
             'activo' => request()->routeIs('participante.preregistro.*'),
-            'completo' => $pre,
+            'completo' => $avance->tieneSolicitud(),
+            'requisito' => true,
+        ],
+                [
+            'titulo' => 'Documentación',
+            'subtitulo' => 'Adjuntar documentos',
+            'ruta' => 'participante.documentos.index',
+            'activo' => request()->routeIs('participante.documentos.*'),
+            'completo' => $avance->documentacionEstado() === 'aprobado',
+            'requisito' => true,
         ],
         [
             'titulo' => 'Obtener referencia',
             'subtitulo' => '$'.number_format((float) config('suif.cuota_recuperacion', 7000), 2).' '.config('suif.moneda', 'MXN'),
             'ruta' => 'participante.referencia.index',
             'activo' => request()->routeIs('participante.referencia.*'),
-            'completo' => $ref,
+            'completo' => $aprobada && $ref,
+            /* No basta con tener los documentos aprobados: el administrador
+               tiene que aprobar la solicitud completa. */
+            'requisito' => $aprobada,
         ],
         [
             'titulo' => 'Pago',
@@ -31,6 +46,7 @@
             'ruta' => 'participante.pago.index',
             'activo' => request()->routeIs('participante.pago.*'),
             'completo' => $pagoEstado === 'validado',
+            'requisito' => true,
         ],
         [
             'titulo' => 'Elegir sede',
@@ -38,14 +54,15 @@
             'ruta' => 'participante.sede.index',
             'activo' => request()->routeIs('participante.sede.*'),
             'completo' => $sede,
+            'requisito' => true,
         ],
     ];
 
-    /* Se recorre en orden: en cuanto aparece un paso sin completar,
-       ese es el último disponible y todos los siguientes quedan bloqueados. */
+    /* Un paso se abre si todos los anteriores están completos Y se cumple
+       su propio requisito. */
     $desbloqueado = true;
     foreach ($pasos as $indice => $paso) {
-        $pasos[$indice]['disponible'] = $desbloqueado;
+        $pasos[$indice]['disponible'] = $desbloqueado && $paso['requisito'];
         if (!$paso['completo']) {
             $desbloqueado = false;
         }
