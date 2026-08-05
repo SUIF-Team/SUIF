@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Participante;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 /**
  * DocumentacionController

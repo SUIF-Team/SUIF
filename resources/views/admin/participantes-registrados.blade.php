@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'SUIF — Bandeja de pre-registros')
+@section('title', 'SUIF — Participantes registrados')
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('assets/css/pages/admin-preregistro.css') }}">
@@ -9,32 +9,32 @@
 
 @section('content')
 <section
-    id="bandeja-preregistros-app"
+    id="bandeja-participantes-registrados-app"
     class="admin-bandeja-preregistros"
-    data-bandeja-administrativa="preregistros"
-    data-campo-estado="estado_bandeja"
+    data-bandeja-administrativa="participantes-registrados"
+    data-campo-estado="estado"
     data-campo-fecha="fecha_registro"
     data-vista='@json($datos_vista)'
-    aria-labelledby="bandeja-preregistros-titulo"
+    aria-labelledby="bandeja-participantes-registrados-titulo"
     v-cloak>
     <div class="admin-bandeja-preregistros-contenedor">
         <header class="admin-bandeja-preregistros-encabezado">
-            <h1 id="bandeja-preregistros-titulo">Bandeja de pre-registros</h1>
-            <p>Acepta o rechaza las solicitudes de nuevos participantes.</p>
+            <h1 id="bandeja-participantes-registrados-titulo">Participantes registrados</h1>
+            <p>Consulta a los participantes registrados y revisa su expediente.</p>
         </header>
 
         @include('admin.partials.bandeja-filtros', [
-            'prefijo_filtros' => 'bandeja-preregistros',
-            'estados_filtro' => ['Todos', 'En revisión', 'Aceptado', 'Rechazado'],
+            'prefijo_filtros' => 'bandeja-participantes-registrados',
+            'estados_filtro' => ['Todos', 'Correcto', 'Pendiente de validación', 'En proceso', 'Con incidencia'],
         ])
 
-        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="solicitudes-titulo">
-            <h2 id="solicitudes-titulo">Solicitudes</h2>
+        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="participantes-registrados-listado-titulo">
+            <h2 id="participantes-registrados-listado-titulo">Participantes</h2>
 
             <div class="admin-bandeja-preregistros-lista" aria-live="polite">
                 <div class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-encabezados" aria-hidden="true">
                     <span>Participante</span>
-                    <span>Estado</span>
+                    <span>Etapa</span>
                     <span>Acción</span>
                 </div>
 
@@ -47,7 +47,7 @@
                         </div>
                     </div>
                     <div class="admin-bandeja-preregistros-estado-contenedor">
-                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(participante)">@{{ participante.estado_bandeja }}</span>
+                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(participante)">@{{ participante.etapa }}</span>
                     </div>
                     <div class="admin-bandeja-preregistros-accion">
                         <a class="admin-bandeja-preregistros-expediente" :href="participante.ruta_expediente">Ver expediente</a>
@@ -55,7 +55,7 @@
                 </article>
 
                 <p v-if="!participantesFiltrados.length" class="admin-bandeja-preregistros-vacio" role="status">
-                    No se encontraron solicitudes con los filtros seleccionados.
+                    No se encontraron participantes con los filtros seleccionados.
                 </p>
             </div>
         </section>

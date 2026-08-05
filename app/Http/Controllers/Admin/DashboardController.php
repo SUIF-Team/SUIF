@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\ParticipanteRegistradoDatosPrueba;
 
 /**
  * Admin\DashboardController
@@ -20,10 +21,10 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(ParticipanteRegistradoDatosPrueba $datos_prueba)
     {
         $resumen = [
-            'participantes_registrados' => 0,
+            'participantes_registrados' => count($datos_prueba->participantes()),
             'preregistros_pendientes' => 0,
             'pagos_pendientes' => 0,
             'certificados_pendientes' => 0,
@@ -36,10 +37,12 @@ class DashboardController extends Controller
         $acciones = [
             [
                 'titulo' => 'Pre-registro',
+                'ruta' => 'admin.participantes.index',
                 'descripcion' => 'Valida los pre-registros y documentación existentes.',
             ],
             [
                 'titulo' => 'Pagos',
+                'ruta' => 'admin.pagos.index',
                 'descripcion' => 'Gestiona los pagos realizados.',
             ],
             [
@@ -52,6 +55,7 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Participantes registrados',
+                'ruta' => 'admin.participantes.registrados.index',
                 'descripcion' => 'Consulta los participantes registrados.',
             ],
             [
