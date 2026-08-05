@@ -178,3 +178,61 @@
 .progreso-paso--pendiente {
     opacity: 0.6;
 }
+
+/* ─── Barra superior del área de contenido ───────────────────────────── */
+
+.participante-barra {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 2rem 0;
+}
+
+.participante-barra__salir {
+    margin-left: auto;
+}
+
+.participante-barra__volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid #c7d0da;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #112f4b;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.participante-barra__volver:hover,
+.participante-barra__volver:focus-visible {
+    background: #eef2f7;
+    border-color: #112f4b;
+}
+
+/* ─── Shell sin barra lateral (dashboard) ────────────────────────────── */
+
+.participante-shell--sin-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ─── Pasos bloqueados de la barra de avance ─────────────────────────── */
+
+.progreso-paso--bloqueado {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.progreso-paso--bloqueado:hover,
+.progreso-paso--bloqueado:focus-visible {
+    background: #1f2937;
+}
+
+.progreso-paso--bloqueado .progreso-paso__numero {
+    background: #2b3444;
+    color: #8b95a5;
+    font-size: 11px;
+}

@@ -12,48 +12,46 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/partials/navbar-sistema.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/partials/salida-sistema.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/partials/sidebar-participante.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/partials/footer.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/navbar-sistema.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/salida-sistema.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/sidebar-participante.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/footer.css') }}">
     @yield('styles')
     @stack('styles')
 </head>
 <body class="pagina-sistema participante-layout d-flex min-vh-100 flex-column">
     @include('partials.navbar-sistema')
 
-    <div class="participante-shell flex-grow-1">
-        <aside class="participante-sidebar" aria-label="Opciones de la cuenta">
-            @include('partials.sidebar-progreso')
-            <div class="participante-sidebar__bottom">
-                @if (auth()->check())
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="sistema-salir">
-                            <span class="sistema-salir-icono" aria-hidden="true">
-                                <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                            </span>
-                            <span>Salir</span>
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('home') }}" class="sistema-salir">
-                        <span class="sistema-salir-icono" aria-hidden="true">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        </span>
-                        <span>Salir</span>
-                    </a>
-                @endif
+    <?php
+        /* El dashboard no necesita la barra de avance: la pantalla entera ES el avance. */
+        $sinSidebar = request()->routeIs('participante.dashboard');
+    ?>
 
-                <div class="participante-soporte">
-                    <strong>Soporte</strong>
-                    <a href="mailto:{{ config('suif.soporte_correo') }}">{{ config('suif.soporte_correo') }}</a>
+    <div class="participante-shell flex-grow-1 @if($sinSidebar) participante-shell--sin-sidebar @endif">
+        @unless($sinSidebar)
+            <aside class="participante-sidebar" aria-label="Avance del trámite">
+                @include('partials.sidebar-progreso')
+
+                <div class="participante-sidebar__bottom">
+                    <div class="participante-soporte">
+                        <strong>Soporte</strong>
+                        <a href="mailto:{{ config('suif.soporte_correo') }}">{{ config('suif.soporte_correo') }}</a>
+                    </div>
                 </div>
-            </div>
-        </aside>
+            </aside>
+        @endunless
 
         <main id="contenido-principal" class="participante-main">
+            @unless($sinSidebar)
+                <div class="participante-barra">
+                    <a href="{{ route('participante.dashboard') }}" class="participante-barra__volver">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        <span>Volver a mi proceso</span>
+                    </a>
+                </div>
+            @endunless
+
             {{-- @include('partials.alertas') --}}
             @yield('content')
         </main>

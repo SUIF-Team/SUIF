@@ -159,3 +159,52 @@
         width: min(96px, 27vw);
     }
 }
+
+/* ─── Acciones de la derecha: logo UIF y salida del sistema ──────────── */
+
+.navbar-sistema-acciones {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: clamp(1rem, 2vw, 2rem);
+}
+
+.navbar-sistema-acciones form {
+    margin: 0;
+}
+
+.navbar-sistema-salir {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 8px;
+    background: transparent;
+    color: #ffffff;
+    font-family: var(--font-nav);
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.navbar-sistema-salir:hover,
+.navbar-sistema-salir:focus-visible {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+@media (max-width: 767.98px) {
+    /* En pantallas chicas se queda solo el ícono. */
+    .navbar-sistema-salir span {
+        display: none;
+    }
+
+    .navbar-sistema-salir {
+        padding: 0.5rem 0.7rem;
+    }
+}
