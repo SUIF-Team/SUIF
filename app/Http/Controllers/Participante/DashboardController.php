@@ -3,143 +3,164 @@
 namespace App\Http\Controllers\Participante;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\AvanceParticipante;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * DashboardController
+ *
+ * Responsabilidad: mostrar el avance del trámite del participante.
+ * El pre-registro y la documentación salen de la base de datos; el pago,
+ * la sede, los resultados y el certificado todavía vienen de la sesión.
+ */
 class DashboardController extends Controller
 {
-       public function index(Request $request)
+    public function index(Request $request)
     {
         $usuario = Auth::user();
         $persona = $usuario ? $usuario->persona : null;
+        $avance = new AvanceParticipante($usuario ? $usuario->usua_id_usuario : null);
 
         $participante = [
             'nombre' => $persona ? $persona->nombreCompleto() : 'Participante',
             'identificador' => $persona ? 'CURP '.$persona->pers_curp : '',
         ];
 
-        /* Sustituir el estado de sesión por modelos cuando exista la SOLICITUD. */
-        $estado = $this->normalizarEstado(
+        $sesion = $this->normalizarEstado(
             (array) $request->session()->get('suif.participante.estado', [])
         );
 
-        return $this->mostrarDashboard($participante, $estado);
-    }
-
-    /**
-     * Permite revisar los estados visuales sin autenticación únicamente en local.
-     */
-    public function demo($escenario = 'inicio')
-    {
-        if (!app()->environment('local')) {
-            abort(404);
+        /* Nada del trámite avanza mientras el administrador no apruebe. */
+        if (!$avance->solicitudAprobada()) {
+            $sesion = $this->normalizarEstado([]);
         }
 
-        $escenarios = $this->escenariosDemo();
+        $pasos = $this->construirPasos($avance, $sesion);
+        $tramite = $this->estadoGeneral($avance, $sesion);
 
-        if (!array_key_exists($escenario, $escenarios)) {
-            abort(404);
-        }
-
-            $participante = [
-            'nombre' => 'Juana García Martínez',
-            'identificador' => 'CURP GAMJ900101MDFRRN01',
-        ];
-
-        return $this->mostrarDashboard(
-            $participante,
-            $this->normalizarEstado($escenarios[$escenario]),
-            true
-        );
+        return view('participante.dashboard', compact('participante', 'pasos', 'tramite'));
     }
 
-    private function mostrarDashboard(array $participante, array $estado, $modoDemo = false)
+    private function construirPasos(AvanceParticipante $avance, array $sesion)
     {
-        $pasos = $this->construirPasos($estado);
-        $tramite = $this->estadoGeneral($estado);
-
-        return view('participante.dashboard', compact(
-            'participante',
-            'estado',
-            'pasos',
-            'tramite',
-            'modoDemo'
-        ));
-    }
-
-    private function construirPasos(array $estado)
-    {
-        $pre = !empty($estado['preregistro_completo']);
-        $ref = !empty($estado['referencia_generada']);
-        $pago = isset($estado['pago_estado']) ? $estado['pago_estado'] : 'sin_cargar';
-        $pagoValidado = $pago === 'validado';
-        $sede = !empty($estado['sede_seleccionada']);
-        $resultado = !empty($estado['resultado_publicado']);
-        $certificado = !empty($estado['certificado_disponible']);
         $cuota = number_format((float) config('suif.cuota_recuperacion', 7000), 2, '.', ',');
+        $moneda = config('suif.moneda', 'MXN');
+
+        $capturado = $avance->tieneSolicitud();
+        $documentacion = $avance->documentacionEstado();
+        $aprobada = $avance->solicitudAprobada();
+        $rechazada = $avance->estadoSolicitud() === 'Rechazada';
 
         $pasos = [];
+
         $pasos[] = $this->paso(1, 'Pre-registro',
-            $pre
-                ? 'Completaste tus datos personales y documentos requeridos.'
-                : 'Completa tus datos personales y sube los documentos requeridos.',
-            $pre ? 'completed' : 'in-progress',
+            $capturado
+                ? 'Tus datos personales quedaron registrados.'
+                : 'Captura tus datos personales para iniciar tu trámite.',
+            $capturado ? 'completed' : 'in-progress',
             'participante.preregistro.index');
 
-        $pasos[] = $this->paso(2, 'Obtener referencia',
-            $ref
-                ? 'Referencia de pago generada ($'.$cuota.' '.config('suif.moneda', 'MXN').').'
-                : 'Genera tu referencia de pago por la cantidad de $'.$cuota.' '.config('suif.moneda', 'MXN').'.',
-            !$pre ? 'pending' : ($ref ? 'completed' : 'in-progress'),
-            'participante.referencia.index');
+        $pasos[] = $this->pasoDocumentacion($capturado, $documentacion);
 
-        $pasos[] = $this->pasoPago($ref, $pago);
+        $pasos[] = $this->pasoReferencia($aprobada, $rechazada, !empty($sesion['referencia_generada']), $cuota, $moneda);
 
-        $pasos[] = $this->pasoSede($pago, $pagoValidado, $sede);
+        $pasos[] = $this->pasoPago(!empty($sesion['referencia_generada']), $sesion['pago_estado']);
 
-        /* SUIF no administra ni aplica exámenes; solo consulta resultados publicados. */
-        $pasos[] = $this->pasoResultados($sede, $resultado);
+        $pasos[] = $this->pasoSede($sesion['pago_estado'], !empty($sesion['sede_seleccionada']));
 
-        $pasos[] = $this->paso(6, 'Certificado',
-            $certificado ? 'Tu certificado está disponible para consulta y descarga.' : 'Disponible cuando el administrador emita tu certificado.',
-            $certificado ? 'completed' : 'pending',
+        /* SUIF no aplica exámenes; solo consulta resultados publicados. */
+        $pasos[] = $this->pasoResultados(!empty($sesion['sede_seleccionada']), !empty($sesion['resultado_publicado']));
+
+        $pasos[] = $this->paso(7, 'Certificado',
+            !empty($sesion['certificado_disponible'])
+                ? 'Tu certificado está disponible para consulta y descarga.'
+                : 'Disponible cuando el administrador emita tu certificado.',
+            !empty($sesion['certificado_disponible']) ? 'completed' : 'pending',
             'participante.certificado');
 
         return $pasos;
     }
 
+       private function pasoDocumentacion($capturado, $documentacion)
+    {
+        if (!$capturado) {
+            return $this->paso(2, 'Documentación',
+                'Disponible después de capturar tus datos personales.',
+                'pending', 'participante.documentos.index');
+        }
+
+        $mensajes = [
+            'pendiente' => ['Descarga los formatos, llénalos a mano y adjúntalos.', 'in-progress'],
+            'en_proceso' => ['Te faltan documentos por adjuntar.', 'in-progress'],
+            'revision' => ['Tus documentos están siendo revisados por el equipo administrativo.', 'pending'],
+            'rechazado' => ['Uno o más documentos tienen observaciones. Corrígelos y vuelve a enviarlos.', 'rejected'],
+            'aprobado' => ['Todos tus documentos fueron aprobados.', 'completed'],
+        ];
+
+        $info = isset($mensajes[$documentacion]) ? $mensajes[$documentacion] : $mensajes['pendiente'];
+
+        return $this->paso(2, 'Documentación', $info[0], $info[1], 'participante.documentos.index');
+    }
+
+    private function pasoReferencia($aprobada, $rechazada, $referenciaGenerada, $cuota, $moneda)
+    {
+        if ($rechazada) {
+            return $this->paso(3, 'Obtener referencia',
+                'Tu solicitud fue rechazada. Revisa el motivo en la etapa de documentación.',
+                'rejected', 'participante.referencia.index');
+        }
+
+        if (!$aprobada) {
+            return $this->paso(3, 'Obtener referencia',
+                'Disponible cuando el equipo administrativo apruebe tu solicitud.',
+                'pending', 'participante.referencia.index');
+        }
+
+        return $this->paso(3, 'Obtener referencia',
+            $referenciaGenerada
+                ? 'Referencia de pago generada ($'.$cuota.' '.$moneda.').'
+                : 'Genera tu referencia de pago por la cantidad de $'.$cuota.' '.$moneda.'.',
+            $referenciaGenerada ? 'completed' : 'in-progress',
+            'participante.referencia.index');
+    }
+
     private function pasoPago($referenciaGenerada, $pago)
     {
         if (!$referenciaGenerada) {
-            return $this->paso(3, 'Pago', 'Disponible después de generar tu referencia.', 'pending', 'participante.pago.index');
+            return $this->paso(4, 'Pago', 'Disponible después de generar tu referencia.', 'pending', 'participante.pago.index');
         }
+
         if ($pago === 'validado') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'participante.pago.index');
+            return $this->paso(4, 'Pago', 'Tu comprobante fue validado por el equipo administrativo.', 'completed', 'participante.pago.index');
         }
+
         if ($pago === 'revision') {
-            return $this->paso(3, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'participante.pago.index');
+            return $this->paso(4, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'participante.pago.index');
         }
+
         if ($pago === 'rechazado') {
-            return $this->paso(3, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'rejected', 'participante.pago.index');
+            return $this->paso(4, 'Pago', 'El comprobante tiene observaciones. Corrígelo y vuelve a cargarlo.', 'rejected', 'participante.pago.index');
         }
-        return $this->paso(3, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'in-progress', 'participante.pago.index');
+
+        return $this->paso(4, 'Pago', 'Carga tu comprobante para que el equipo administrativo valide el pago.', 'in-progress', 'participante.pago.index');
     }
 
-    private function pasoSede($pago, $pagoValidado, $sede)
+    private function pasoSede($pago, $sede)
     {
         if ($pago === 'revision') {
-            return $this->paso(4, 'Selección de sede y horario',
+            return $this->paso(5, 'Selección de sede y horario',
                 'Se habilitará cuando termine la validación de tu pago.',
                 'pending', 'participante.sede.index');
         }
 
-        if (!$pagoValidado) {
-            return $this->paso(4, 'Selección de sede y horario',
+        if ($pago !== 'validado') {
+            return $this->paso(5, 'Selección de sede y horario',
                 'Disponible cuando el equipo administrativo valide tu pago.',
                 'pending', 'participante.sede.index');
         }
 
-        return $this->paso(4, 'Selección de sede y horario',
+        return $this->paso(5, 'Selección de sede y horario',
             $sede ? 'Tu sede y horario quedaron registrados.' : 'Selecciona una sede y un horario disponible.',
             $sede ? 'completed' : 'in-progress',
             'participante.sede.index');
@@ -148,50 +169,50 @@ class DashboardController extends Controller
     private function pasoResultados($sede, $resultado)
     {
         if (!$sede) {
-            return $this->paso(5, 'Resultados',
-                'Disponible después de seleccionar tu sede y horario.',
+            return $this->paso(6, 'Resultados',
+                'Disponible después de realizar tu evaluación en la sede seleccionada.',
                 'pending', 'participante.resultados');
         }
 
         if (!$resultado) {
-            return $this->paso(5, 'Resultados',
-                'Tu selección quedó registrada. Espera la publicación de tu resultado.',
+            return $this->paso(6, 'Resultados',
+                'Espera la publicación de tu resultado.',
                 'pending', 'participante.resultados');
         }
 
-        return $this->paso(5, 'Resultados',
+        return $this->paso(6, 'Resultados',
             'Tu resultado ya fue publicado y está disponible para consulta.',
-            'completed',
-            'participante.resultados');
+            'completed', 'participante.resultados');
     }
 
-    private function paso($numero, $titulo, $descripcion, $estado, $ruta)
+        private function paso($numero, $titulo, $descripcion, $estado, $ruta)
     {
         $etiqueta = $this->etiquetaEstado($estado);
-        $mostrarBoton = in_array($estado, ['in-progress', 'rejected'], true);
 
-        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton');
+        /* Las etapas completadas se pueden consultar; las accionables se continúan. */
+        $mostrarBoton = in_array($estado, ['completed', 'in-progress', 'rejected'], true);
+        $textoBoton = $estado === 'completed' ? 'Ver' : 'Continuar';
+
+        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
     }
 
-    private function estadoGeneral(array $estado)
+    private function estadoGeneral(AvanceParticipante $avance, array $sesion)
     {
-        if (!empty($estado['certificado_disponible'])) {
-            return $this->presentacionEstado('completed');
-        }
-
-        if ($estado['pago_estado'] === 'rechazado') {
+        if ($avance->estadoSolicitud() === 'Rechazada') {
             return $this->presentacionEstado('rejected');
         }
 
-        if (!empty($estado['resultado_publicado'])) {
-            return $this->presentacionEstado('pending');
+        if (!empty($sesion['certificado_disponible'])) {
+            return $this->presentacionEstado('completed');
         }
 
-        if (!empty($estado['sede_seleccionada'])) {
-            return $this->presentacionEstado('pending');
+        if ($avance->documentacionEstado() === 'rechazado' || $sesion['pago_estado'] === 'rechazado') {
+            return $this->presentacionEstado('rejected');
         }
 
-        if ($estado['pago_estado'] === 'revision') {
+        if ($avance->documentacionEstado() === 'revision'
+            || $sesion['pago_estado'] === 'revision'
+            || !empty($sesion['sede_seleccionada'])) {
             return $this->presentacionEstado('pending');
         }
 
@@ -220,10 +241,16 @@ class DashboardController extends Controller
 
     private function normalizarEstado(array $estado)
     {
-        $estado = array_merge($this->estadoBase(), $estado);
+        $estado = array_merge([
+            'referencia_generada' => false,
+            'pago_estado' => 'sin_cargar',
+            'sede_seleccionada' => false,
+            'resultado_publicado' => false,
+            'certificado_disponible' => false,
+        ], $estado);
+
         $pagosPermitidos = ['sin_cargar', 'revision', 'rechazado', 'validado'];
 
-        $estado['preregistro_completo'] = !empty($estado['preregistro_completo']);
         $estado['referencia_generada'] = !empty($estado['referencia_generada']);
         $estado['sede_seleccionada'] = !empty($estado['sede_seleccionada']);
         $estado['resultado_publicado'] = !empty($estado['resultado_publicado']);
@@ -231,10 +258,6 @@ class DashboardController extends Controller
 
         if (!in_array($estado['pago_estado'], $pagosPermitidos, true)) {
             $estado['pago_estado'] = 'sin_cargar';
-        }
-
-        if (!$estado['preregistro_completo']) {
-            $estado['referencia_generada'] = false;
         }
 
         if (!$estado['referencia_generada']) {
@@ -254,67 +277,5 @@ class DashboardController extends Controller
         }
 
         return $estado;
-    }
-
-    private function estadoBase()
-    {
-        return [
-            'preregistro_completo' => false,
-            'referencia_generada' => false,
-            'pago_estado' => 'sin_cargar',
-            'sede_seleccionada' => false,
-            'resultado_publicado' => false,
-            'certificado_disponible' => false,
-        ];
-    }
-
-    private function escenariosDemo()
-    {
-        return [
-            'inicio' => [],
-            'preregistro-completo' => [
-                'preregistro_completo' => true,
-            ],
-            'referencia-generada' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-            ],
-            'validando-pago' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-                'pago_estado' => 'revision',
-            ],
-            'pago-validado' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-                'pago_estado' => 'validado',
-            ],
-            'sede-seleccionada' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-                'pago_estado' => 'validado',
-                'sede_seleccionada' => true,
-            ],
-            'resultado-publicado' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-                'pago_estado' => 'validado',
-                'sede_seleccionada' => true,
-                'resultado_publicado' => true,
-            ],
-            'certificado-disponible' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-                'pago_estado' => 'validado',
-                'sede_seleccionada' => true,
-                'resultado_publicado' => true,
-                'certificado_disponible' => true,
-            ],
-            'pago-rechazado' => [
-                'preregistro_completo' => true,
-                'referencia_generada' => true,
-                'pago_estado' => 'rechazado',
-            ],
-        ];
     }
 }

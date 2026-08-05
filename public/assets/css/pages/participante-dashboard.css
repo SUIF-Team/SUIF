@@ -271,3 +271,16 @@
         font-size: 0.72rem;
     }
 }
+
+/* El botón de consulta pesa menos que el de la etapa activa. */
+.process-button--ver {
+    background: transparent;
+    border: 1px solid #112f4b;
+    color: #112f4b;
+}
+
+.process-button--ver:hover,
+.process-button--ver:focus-visible {
+    background: #eef2f7;
+    color: #112f4b;
+}
