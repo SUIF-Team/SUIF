@@ -24,13 +24,11 @@
                 participante: datos_vista.participante,
                 estados: datos_vista.estados,
                 enviando: false,
-                estados_documentos: {},
+                estados_documentos: datos_vista.decisiones || {},
+                motivoRechazo: datos_vista.motivo_rechazo || '',
+                interrumpiendo: false,
                 documentoPrevisualizado: null,
-                observaciones: {
-                    motivo: '',
-                    fecha_limite: '',
-                    hora_limite: ''
-                }
+                activadorDocumento: null
             };
         },
         computed: {
@@ -85,9 +83,10 @@
             todosDocumentosResueltos: function () {
                 var estados_documentos = this.estados_documentos;
 
-                return this.participante.documentos.every(function (documento) {
-                    return ['aprobado', 'rechazado'].includes(estados_documentos[documento.id]);
-                });
+                return this.participante.documentos.length > 0
+                    && this.participante.documentos.every(function (documento) {
+                        return ['aprobado', 'rechazado'].includes(estados_documentos[documento.id]);
+                    });
             }
         },
         methods: {
@@ -114,6 +113,26 @@
             actualizarDocumento: function (id, estado) {
                 this.estados_documentos = Object.assign({}, this.estados_documentos, {
                     [id]: this.estadoDocumento(id) === estado ? null : estado
+                });
+            },
+            abrirDocumento: function (documento, evento) {
+                this.activadorDocumento = evento.currentTarget;
+                this.documentoPrevisualizado = documento;
+
+                this.$nextTick(function () {
+                    this.$refs.botonCerrarVisor.focus();
+                });
+            },
+            cerrarDocumento: function () {
+                var activador = this.activadorDocumento;
+
+                this.documentoPrevisualizado = null;
+                this.activadorDocumento = null;
+
+                this.$nextTick(function () {
+                    if (activador) {
+                        activador.focus();
+                    }
                 });
             }
         }

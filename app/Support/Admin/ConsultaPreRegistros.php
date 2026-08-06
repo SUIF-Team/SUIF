@@ -63,9 +63,34 @@ class ConsultaPreRegistros
                 'responsable_cumplimiento' => $trabajo
                     ? ($this->esVerdadero($trabajo->trab_responsable) ? 'Sí' : 'No')
                     : 'No registrado',
-                'documentos' => [],
+                'documentos' => $this->documentos((int) $solicitud->soli_id_solicitud),
             ],
             'estados' => $this->normalizarEstados((string) $solicitud->estado_solicitud),
+        ];
+    }
+
+    /**
+     * Localiza un documento de un expediente visible en la bandeja.
+     * La ruta privada sólo se devuelve a quien servirá el archivo, nunca a la vista.
+     */
+    public function documento(int $id_solicitud, int $id_documento): ?array
+    {
+        $documento = DB::table('documento as d')
+            ->joinSub($this->consultaBase(), 'solicitud_visible', function ($join): void {
+                $join->on('solicitud_visible.soli_id_solicitud', '=', 'd.soli_id_solicitud');
+            })
+            ->where('d.soli_id_solicitud', $id_solicitud)
+            ->where('d.docu_id_documento', $id_documento)
+            ->select('d.docu_nombre', 'd.docu_path')
+            ->first();
+
+        if (!$documento) {
+            return null;
+        }
+
+        return [
+            'nombre' => (string) $documento->docu_nombre,
+            'ruta_archivo' => (string) $documento->docu_path,
         ];
     }
 
@@ -103,6 +128,47 @@ class ConsultaPreRegistros
         return DB::table('estado_solicitud')
             ->selectRaw('esso_id_solicitud, MAX(esso_id_estado_solicitud) as id_estado')
             ->groupBy('esso_id_solicitud');
+    }
+
+    private function documentos(int $id_solicitud): array
+    {
+        return DB::table('documento as d')
+            ->join('tipo_documento as td', 'td.tido_id_tipo_documento', '=', 'd.tido_id_tipo_documento')
+            ->leftJoinSub($this->ultimosEstadosDocumentos(), 'ultimo_estado_documento', function ($join): void {
+                $join->on('ultimo_estado_documento.esdo_id_documento', '=', 'd.docu_id_documento');
+            })
+            ->leftJoin('estado_documento as ed', 'ed.esdo_id_estado_documento', '=', 'ultimo_estado_documento.id_estado')
+            ->leftJoin('c_estado_documento as ced', 'ced.esdo_id_c_estado_documento', '=', 'ed.esdo_id_c_estado_documento')
+            ->where('d.soli_id_solicitud', $id_solicitud)
+            ->orderBy('td.tido_id_tipo_documento')
+            ->orderBy('d.docu_id_documento')
+            ->select([
+                'd.docu_id_documento',
+                'd.docu_nombre',
+                'd.docu_fecha_carga',
+                'd.docu_hora_carga',
+                'td.tido_tipo_documento',
+                'ced.esdo_estado_documento',
+            ])
+            ->get()
+            ->map(fn (object $documento): array => [
+                'id' => (string) $documento->docu_id_documento,
+                'titulo' => (string) $documento->tido_tipo_documento,
+                'nombre' => (string) $documento->docu_nombre,
+                'fecha_carga' => trim(implode(' ', array_filter([
+                    $documento->docu_fecha_carga,
+                    $documento->docu_hora_carga,
+                ]))),
+                'estado' => $documento->esdo_estado_documento ?: 'Cargado',
+            ])
+            ->all();
+    }
+
+    private function ultimosEstadosDocumentos(): Builder
+    {
+        return DB::table('estado_documento')
+            ->selectRaw('esdo_id_documento, MAX(esdo_id_estado_documento) as id_estado')
+            ->groupBy('esdo_id_documento');
     }
 
     private function normalizarBandeja(object $solicitud): array

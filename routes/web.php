@@ -66,11 +66,12 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () 
 });
 
 // Acceso temporal sin autenticación para desarrollar los módulos administrativos.
-// Restaurar el middleware 'auth' antes de desplegar el proyecto.
+// Restaurar autenticación y autorización por rol antes de desplegar el proyecto.
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/participantes', [AdminParticipanteController::class, 'index'])->name('participantes.index');
     Route::get('/participantes-registrados', [AdminParticipanteController::class, 'registrados'])->name('participantes.registrados.index');
+    Route::get('/participantes/{solicitud}/documentos/{documento}', [AdminDocumentoController::class, 'ver'])->name('participantes.documentos.ver');
     Route::get('/participantes/{id}', [AdminParticipanteController::class, 'show'])->name('participantes.show');
     Route::post('/participantes/{id}/aceptar-preregistro', [AdminParticipanteController::class, 'aceptarPreRegistro'])->name('participantes.preregistro.aceptar');
     Route::post('/participantes/{id}/rechazar-preregistro', [AdminParticipanteController::class, 'rechazarPreRegistro'])->name('participantes.preregistro.rechazar');

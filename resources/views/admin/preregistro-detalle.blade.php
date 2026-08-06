@@ -43,9 +43,11 @@
         </dl>
 
         @if ($modo_solo_lectura ?? false)
-            <p class="admin-preregistro-solo-lectura" role="status">
-                La consulta está disponible; las acciones de revisión se habilitarán en una entrega posterior.
-            </p>
+            <div class="admin-preregistro-acciones">
+                <a class="admin-preregistro-boton admin-preregistro-boton--aceptar" href="{{ $ruta_documentacion }}">
+                    {{ $estados['general'] === 'En revisión' ? 'Revisar documentación' : 'Consultar resolución' }}
+                </a>
+            </div>
         @else
         <div class="admin-preregistro-acciones">
             <form method="POST" action="{{ route('admin.participantes.preregistro.aceptar', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}" v-on:submit="enviando = true">

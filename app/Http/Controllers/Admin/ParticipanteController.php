@@ -81,11 +81,17 @@ class ParticipanteController extends Controller
 
             abort_unless($expediente, 404);
 
+            $expediente['participante']['documentos'] = [];
+
             return view('admin.preregistro-detalle', [
                 'participante' => $expediente['participante'],
                 'estados' => $expediente['estados'],
                 'contexto_bandeja' => $contexto_bandeja,
                 'modo_solo_lectura' => true,
+                'ruta_documentacion' => route('admin.documentos.show', [
+                    'id' => $id,
+                    'origen' => $contexto_bandeja['origen'],
+                ]),
             ]);
         }
 
