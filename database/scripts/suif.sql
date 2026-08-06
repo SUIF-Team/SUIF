@@ -1032,7 +1032,7 @@ TRPE_ID_PERSONA
 create table USUARIO (
    USUA_ID_USUARIO      SERIAL               not null,
    USUA_ID_ROL          INT4                 not null,
-   USUA_CLAVE_ACCESO    VARCHAR(20)          not null,
+   USUA_CLAVE_ACCESO    VARCHAR(255)          not null,
    constraint PK_USUARIO primary key (USUA_ID_USUARIO)
 );
 
@@ -1207,4 +1207,3 @@ alter table USUARIO
    add constraint FK_USUARIO_REFERENCE_ROL foreign key (USUA_ID_ROL)
       references ROL (ROL_ID_ROL)
       on delete restrict on update restrict;
-
