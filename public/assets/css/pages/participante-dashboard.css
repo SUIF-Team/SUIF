@@ -284,3 +284,14 @@
     background: #eef2f7;
     color: #112f4b;
 }
+
+/* Etapa entregada, en manos del equipo administrativo. */
+.process-card--review {
+    background: #fffbeb;
+    border-color: #b38612;
+}
+
+.process-badge--review {
+    background: #fef3c7;
+    color: #92400e;
+}
