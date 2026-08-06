@@ -44,7 +44,6 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
         Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
         Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
-        Route::get('/preregistro/demo/{estado}', [PreRegistroController::class, 'demo'])->name('preregistro.demo');
         Route::get('/preregistro/reiniciar', [PreRegistroController::class, 'reiniciar'])->name('preregistro.reiniciar');
         Route::get('/preregistro/editar', [PreRegistroController::class, 'editar'])->name('preregistro.editar');
         Route::post('/preregistro/editar', [PreRegistroController::class, 'actualizarDatos'])->name('preregistro.editar.store');

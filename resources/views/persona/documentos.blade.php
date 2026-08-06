@@ -129,8 +129,6 @@
                 @elseif(!in_array($estado['fase'], ['revision','rechazado']))
                     <form method="POST" action="{{ route('persona.preregistro.documentos.enviar') }}" class="pr-actions">@csrf<button class="pr-btn">Enviar a revisión</button></form>
                 @endif
-
-                @if(config('app.debug'))<div class="pr-demo">Simular: <a href="{{ route('persona.preregistro.demo','revision') }}">En revisión</a><a href="{{ route('persona.preregistro.demo','rechazado') }}">Rechazado</a><a href="{{ route('persona.preregistro.demo','aprobado') }}">Aprobado</a></div>@endif
             @endif
         </main>
     </div>
