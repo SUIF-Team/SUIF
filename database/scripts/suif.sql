@@ -532,7 +532,7 @@ ESDO_ID_DOCUMENTO
 /*==============================================================*/
 create table ESTADO_PAGO (
    ESPA_ID_ESTADO_PAGO  SERIAL               not null,
-   ESPA_ID_DATO_FISCAL  INT4                 not null,
+   ESPA_ID_PAGO  INT4                 not null,
    ESPA_ID_C_ESTADO_PAGO INT4                 not null,
    ESPA_FECHA           DATE                 null,
    ESPA_HORA            TIME                 not null,
@@ -550,7 +550,7 @@ ESPA_ID_ESTADO_PAGO
 /* Index: ESTADO_PAGO_FK                                        */
 /*==============================================================*/
 create  index ESTADO_PAGO_FK on ESTADO_PAGO (
-ESPA_ID_DATO_FISCAL
+ESPA_ID_PAGO
 );
 
 /*==============================================================*/
@@ -1094,7 +1094,7 @@ alter table ESTADO_DOCUMENTO
       on delete restrict on update restrict;
 
 alter table ESTADO_PAGO
-   add constraint FK_ESTADO_P_ESTADO_PA_PAGO foreign key (ESPA_ID_DATO_FISCAL)
+   add constraint FK_ESTADO_P_ESTADO_PA_PAGO foreign key (ESPA_ID_PAGO)
       references PAGO (PAGO_ID_PAGO)
       on delete restrict on update restrict;
 
