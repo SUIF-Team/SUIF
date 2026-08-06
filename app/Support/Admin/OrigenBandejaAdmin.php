@@ -6,29 +6,14 @@ class OrigenBandejaAdmin
 {
     public const PREREGISTROS = 'preregistros';
 
-    public const PARTICIPANTES_REGISTRADOS = 'participantes_registrados';
-
     /**
      * Devuelve un origen permitido y su destino administrativo asociado.
      */
     public function contexto(?string $origen): array
     {
-        $origen_normalizado = $origen === self::PARTICIPANTES_REGISTRADOS
-            ? self::PARTICIPANTES_REGISTRADOS
-            : self::PREREGISTROS;
-
-        if ($origen_normalizado === self::PARTICIPANTES_REGISTRADOS) {
-            return [
-                'origen' => $origen_normalizado,
-                'ruta' => route('admin.participantes.registrados.index'),
-                'etiqueta' => 'Atrás',
-                'etiqueta_accesible' => 'Atrás',
-            ];
-        }
-
         return [
-            'origen' => $origen_normalizado,
-            'ruta' => route('admin.participantes.index'),
+            'origen' => self::PREREGISTROS,
+            'ruta' => route('admin.personas.index'),
             'etiqueta' => 'Atrás',
             'etiqueta_accesible' => 'Atrás',
         ];

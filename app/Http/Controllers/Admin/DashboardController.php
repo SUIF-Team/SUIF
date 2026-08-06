@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Support\Admin\ParticipanteRegistradoDatosPrueba;
+use App\Support\Admin\ConsultaPersonasRegistradas;
 
 /**
  * Admin\DashboardController
@@ -13,22 +13,9 @@ use App\Support\Admin\ParticipanteRegistradoDatosPrueba;
  */
 class DashboardController extends Controller
 {
-    /**
-     * Muestra el resumen provisional del panel administrativo.
-     *
-     * Los indicadores se sustituirán por datos persistidos cuando se apruebe
-     * e implemente la base de datos del sistema.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function index(ParticipanteRegistradoDatosPrueba $datos_prueba)
+    public function index(ConsultaPersonasRegistradas $consulta_personas)
     {
-        $resumen = [
-            'participantes_registrados' => count($datos_prueba->participantes()),
-            'preregistros_pendientes' => 0,
-            'pagos_pendientes' => 0,
-            'certificados_pendientes' => 0,
-        ];
+        $resumen = $consulta_personas->resumenDashboard();
 
         /*
          * Se conservan los accesos del diseño aprobado. Ninguno se habilita
@@ -37,13 +24,12 @@ class DashboardController extends Controller
         $acciones = [
             [
                 'titulo' => 'Pre-registro',
-                'ruta' => 'admin.participantes.index',
+                'ruta' => 'admin.personas.index',
                 'descripcion' => 'Valida los pre-registros y documentación existentes.',
             ],
             [
                 'titulo' => 'Pagos',
-                'ruta' => 'admin.pagos.index',
-                'descripcion' => 'Gestiona los pagos realizados.',
+                'descripcion' => 'Disponible cuando el flujo de pagos persista datos reales.',
             ],
             [
                 'titulo' => 'Referencias bancarias',
@@ -54,9 +40,9 @@ class DashboardController extends Controller
                 'descripcion' => 'Administra la emisión de certificados.',
             ],
             [
-                'titulo' => 'Participantes registrados',
-                'ruta' => 'admin.participantes.registrados.index',
-                'descripcion' => 'Consulta los participantes registrados.',
+                'titulo' => 'Personas registradas',
+                'ruta' => 'admin.personas.registradas.index',
+                'descripcion' => 'Consulta las personas registradas.',
             ],
             [
                 'titulo' => 'Subir referencias bancarias',

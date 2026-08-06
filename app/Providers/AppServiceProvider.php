@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Servicios\AvanceParticipante;
+use App\Servicios\AvancePersona;
 use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,9 +15,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-            /* La barra de avance recibe siempre el avance real del participante. */
+            /* La barra de avance recibe siempre el avance real de la persona. */
         View::composer('partials.sidebar-progreso', function ($view) {
-            $view->with('avance', new AvanceParticipante(auth()->id()));
+            $view->with('avance', new AvancePersona(auth()->id()));
         });
     }
 

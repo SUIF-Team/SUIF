@@ -20,7 +20,7 @@
     <div class="admin-bandeja-preregistros-contenedor">
         <header class="admin-bandeja-preregistros-encabezado">
             <h1 id="bandeja-pagos-titulo">Bandeja de pagos</h1>
-            <p>Consulta y revisa los comprobantes de pago enviados por los participantes.</p>
+            <p>Consulta y revisa los comprobantes de pago enviados por las personas.</p>
         </header>
 
         @include('admin.partials.bandeja-filtros', [
@@ -33,13 +33,13 @@
 
             <div class="admin-bandeja-preregistros-lista" aria-live="polite">
                 <div class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-encabezados" aria-hidden="true">
-                    <span>Participante</span>
+                    <span>Persona</span>
                     <span>Estatus</span>
                     <span>Acción</span>
                 </div>
 
-                <article v-for="pago in participantesFiltrados" :key="pago.id" class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-solicitud">
-                    <div class="admin-bandeja-preregistros-participante">
+                <article v-for="pago in personasFiltradas" :key="pago.id" class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-solicitud">
+                    <div class="admin-bandeja-preregistros-persona">
                         <span class="admin-bandeja-preregistros-avatar" aria-hidden="true">@{{ iniciales(pago) }}</span>
                         <div>
                             <h3>@{{ pago.nombre_completo }}</h3>
@@ -55,7 +55,7 @@
                     </div>
                 </article>
 
-                <p v-if="!participantesFiltrados.length" class="admin-bandeja-preregistros-vacio" role="status">
+                <p v-if="!personasFiltradas.length" class="admin-bandeja-preregistros-vacio" role="status">
                     No se encontraron pagos con los filtros seleccionados.
                 </p>
             </div>

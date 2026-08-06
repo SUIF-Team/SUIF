@@ -16,9 +16,14 @@ class RevisionDocumentos
     /**
      * Registra una resolución histórica para cada documento de la solicitud.
      */
-    public function resolver(int $id_solicitud, array $decisiones, ?string $motivo_rechazo): string
+    public function resolver(
+        int $id_solicitud,
+        array $decisiones,
+        ?string $motivo_rechazo,
+        ?string $fecha_limite = null
+    ): string
     {
-        return DB::transaction(function () use ($id_solicitud, $decisiones, $motivo_rechazo): string {
+        return DB::transaction(function () use ($id_solicitud, $decisiones, $motivo_rechazo, $fecha_limite): string {
             $this->bloquearSolicitudEnRevision($id_solicitud);
 
             $documentos = DB::table('documento')
@@ -52,6 +57,14 @@ class RevisionDocumentos
                 throw new DomainException('Escribe el motivo del rechazo.');
             }
 
+            if ($hay_rechazos && !$this->fechaLimiteValida($fecha_limite)) {
+                throw new DomainException('Indica una fecha límite válida.');
+            }
+
+            $comentario_rechazo = $hay_rechazos
+                ? sprintf("%s\nFecha límite: %s", $motivo_rechazo, $fecha_limite)
+                : null;
+
             $catalogo = DB::table('c_estado_documento')
                 ->whereIn('esdo_estado_documento', ['Aprobado', 'Rechazado'])
                 ->pluck('esdo_id_c_estado_documento', 'esdo_estado_documento');
@@ -70,7 +83,7 @@ class RevisionDocumentos
                 $historial[] = [
                     'esdo_id_c_estado_documento' => $catalogo[$estado],
                     'esdo_id_documento' => (int) $id_documento,
-                    'esdo_comentarios' => $es_rechazado ? $motivo_rechazo : null,
+                    'esdo_comentarios' => $es_rechazado ? $comentario_rechazo : null,
                     'esdo_fecha' => $ahora->toDateString(),
                     'esdo_hora' => $ahora->toTimeString(),
                 ];
@@ -91,21 +104,31 @@ class RevisionDocumentos
     /**
      * Cierra la solicitud sin alterar el historial documental ya existente.
      */
-    public function interrumpir(int $id_solicitud, string $motivo_rechazo): string
+    public function interrumpir(int $id_solicitud, ?string $motivo_rechazo = null): string
     {
         return DB::transaction(function () use ($id_solicitud, $motivo_rechazo): string {
             $this->bloquearSolicitudEnRevision($id_solicitud);
 
-            $motivo_rechazo = trim($motivo_rechazo);
-
-            if ($motivo_rechazo === '') {
-                throw new DomainException('Escribe el motivo de la interrupción.');
-            }
+            $motivo_rechazo = trim((string) $motivo_rechazo) ?: null;
 
             $this->registrarEstadoSolicitud($id_solicitud, 'Rechazada', $motivo_rechazo);
 
             return self::RECHAZADO;
         });
+    }
+
+    private function fechaLimiteValida(?string $fecha_limite): bool
+    {
+        if (!is_string($fecha_limite)) {
+            return false;
+        }
+
+        $fecha = \DateTimeImmutable::createFromFormat('!Y-m-d', $fecha_limite);
+        $errores = \DateTimeImmutable::getLastErrors();
+
+        return $fecha
+            && $fecha->format('Y-m-d') === $fecha_limite
+            && ($errores === false || ($errores['warning_count'] === 0 && $errores['error_count'] === 0));
     }
 
     private function bloquearSolicitudEnRevision(int $id_solicitud): void

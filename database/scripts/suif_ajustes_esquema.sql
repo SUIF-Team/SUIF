@@ -10,7 +10,7 @@ ALTER TABLE usuario ALTER COLUMN usua_clave_acceso TYPE VARCHAR(255);
 /* "Autorización de la publicación" son 30 caracteres. */
 ALTER TABLE tipo_documento ALTER COLUMN tido_tipo_documento TYPE VARCHAR(60);
 
-/* Nombre original del archivo que sube el participante. */
+/* Nombre original del archivo que sube la persona. */
 ALTER TABLE documento ALTER COLUMN docu_nombre TYPE VARCHAR(150);
 
 /* En 35 caracteres no cabe una explicación de rechazo útil. */

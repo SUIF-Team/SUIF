@@ -9,7 +9,7 @@
 @section('content')
 @php
     $datos_vista = [
-        'participante' => $participante,
+        'persona' => $persona,
         'estados' => [],
     ];
 @endphp
@@ -23,10 +23,10 @@
     v-cloak>
     <header class="admin-preregistro-tarjeta admin-preregistro-perfil">
         <div class="admin-preregistro-usuario">
-            <span class="admin-preregistro-avatar" aria-hidden="true">{{ $participante['iniciales'] }}</span>
+            <span class="admin-preregistro-avatar" aria-hidden="true">{{ $persona['iniciales'] }}</span>
             <div>
-                <h1 id="resultado-notificacion-titulo">{{ $participante['nombre_completo'] }}</h1>
-                <p>CURP: {{ $participante['curp'] }} · Folio {{ $participante['folio'] }} · {{ $participante['entidad_federativa'] }}</p>
+                <h1 id="resultado-notificacion-titulo">{{ $persona['nombre_completo'] }}</h1>
+                <p>CURP: {{ $persona['curp'] }} · {{ $persona['entidad_federativa'] }}</p>
             </div>
         </div>
         <span class="admin-preregistro-estado {{ $notificacion['clase_estado'] }}" role="status">

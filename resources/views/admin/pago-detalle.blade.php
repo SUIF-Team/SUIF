@@ -18,7 +18,7 @@
             <span class="admin-preregistro-avatar" aria-hidden="true">{{ $pago['iniciales'] }}</span>
             <div>
                 <h1 id="detalle-pago-titulo">{{ $pago['nombre_completo'] }}</h1>
-                <p>CURP: {{ $pago['curp'] }} · Folio {{ $pago['folio'] }} · {{ $pago['entidad_federativa'] }}</p>
+                <p>CURP: {{ $pago['curp'] }} · {{ $pago['entidad_federativa'] }}</p>
             </div>
         </div>
         <span class="admin-preregistro-estado admin-preregistro-estado--revision" role="status">
@@ -47,7 +47,7 @@
         <section class="admin-pago-comprobante" aria-labelledby="comprobante-titulo">
             <div>
                 <h3 id="comprobante-titulo">{{ $pago['comprobante']['nombre'] }}</h3>
-                <p>Comprobante enviado por el participante.</p>
+                <p>Comprobante enviado por la persona.</p>
             </div>
             <a
                 class="admin-preregistro-previsualizar admin-pago-enlace-comprobante"

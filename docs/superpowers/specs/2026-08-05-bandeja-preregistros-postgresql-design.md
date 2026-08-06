@@ -6,12 +6,12 @@ Propuesta para revisión. No está aprobada ni implementada.
 
 ## Objetivo
 
-Reemplazar los participantes ficticios de `admin.participantes.index` por las
-solicitudes y personas que el flujo de participante ya registra en PostgreSQL.
+Reemplazar las personas ficticias de `admin.personas.index` por las
+solicitudes y personas que el flujo de persona ya registra en PostgreSQL.
 La pantalla conservará la vista, los filtros en cliente, las rutas nombradas y
 las clases CSS existentes.
 
-La unidad de navegación pasa a ser `soli_id_solicitud`: un participante puede
+La unidad de navegación pasa a ser `soli_id_solicitud`: una persona puede
 tener más de una solicitud y la revisión administrativa corresponde a una
 solicitud concreta, no únicamente a una persona.
 
@@ -38,9 +38,9 @@ personales reales.
 
 ## Contrato de datos existente
 
-El flujo de participante ya crea `usuario`, `persona`, `comunicacion`,
+El flujo de persona ya crea `usuario`, `persona`, `comunicacion`,
 `trabajo`, `grado_persona`, `solicitud`, `documento`, `estado_documento` y
-`estado_solicitud`. Cuando el participante envía todos sus documentos a
+`estado_solicitud`. Cuando la persona envía todos sus documentos a
 revisión, agrega un historial `En revisión` para cada documento y para la
 solicitud.
 
@@ -63,7 +63,7 @@ La consulta parte de `solicitud` y une:
 - una subconsulta del último `estado_solicitud` y su catálogo;
 - `comunicacion` agregada por tipo sólo cuando sea necesaria para detalle.
 
-La bandeja no realizará una consulta por participante. El servicio devolverá
+La bandeja no realizará una consulta por persona. El servicio devolverá
 el contrato que hoy consume Vue:
 
 | Campo de la vista | Origen |
@@ -75,7 +75,7 @@ el contrato que hoy consume Vue:
 | `fecha_registro` | `pers_fecha_registro` |
 | `estado_bandeja` | mapeo del último estado de solicitud |
 | `clase_estado` | mapeo explícito en PHP |
-| `ruta_expediente` | `route('admin.participantes.show', ...)` |
+| `ruta_expediente` | `route('admin.personas.show', ...)` |
 
 El mapeo visual propuesto conserva los textos de la interfaz:
 
@@ -94,10 +94,10 @@ catálogo de la base de datos.
 
 ### B. Ficha de sólo lectura (recomendada junto con A)
 
-Las filas de la bandeja actual enlazan a `admin.participantes.show`. Si se
+Las filas de la bandeja actual enlazan a `admin.personas.show`. Si se
 conecta sólo A, ese enlace seguiría buscando un ID ficticio y terminaría en
 404. Para una entrega consistente se recomienda que el mismo servicio exponga
-`solicitud(int $id): ?array` y que `ParticipanteController@show` use el ID de
+`solicitud(int $id): ?array` y que `PersonaController@show` use el ID de
 la solicitud real.
 
 La ficha mapeará también los correos y teléfono desde `comunicacion`, el nivel
@@ -106,15 +106,14 @@ desde `grado_persona`/`nivel_profesional` y los indicadores laborales desde
 mostrarán como no disponibles hasta que se apruebe el diseño de persistencia.
 Así no aparentarán modificar datos reales mientras aún usan sesión.
 
-El folio no existe en el esquema ni se genera en el flujo actual. En esta
-entrega la ficha debe mostrar `Sin folio asignado`, sin inventar uno. La
-bandeja no muestra ese dato.
+No se agregará un identificador de negocio que no exista en el esquema. La
+interfaz no debe deducir identificadores de CURP, solicitud ni convocatoria.
 
 ## Consulta y consistencia
 
 El servicio usará Query Builder de Laravel y una subconsulta o `joinSub` para
 el último estado por solicitud. Se emplea el identificador serial de
-`estado_solicitud` como orden de historia, igual que el flujo de participante
+`estado_solicitud` como orden de historia, igual que el flujo de persona
 usa el último `estado_documento`.
 
 La consulta se limitará a convocatorias vigentes. Una convocatoria se considera
@@ -133,7 +132,7 @@ la de mayor `comu_id_comunicacion` y no duplicará la solicitud en la respuesta.
 | Archivo | Cambio propuesto |
 | --- | --- |
 | `app/Support/Admin/ConsultaPreRegistros.php` | Nuevo servicio de lectura y normalización. |
-| `app/Http/Controllers/Admin/ParticipanteController.php` | `index()` y, si se aprueba B, `show()` consumen el servicio en lugar del mock. |
+| `app/Http/Controllers/Admin/PersonaController.php` | `index()` y, si se aprueba B, `show()` consumen el servicio en lugar del mock. |
 | `resources/views/admin/preregistro-detalle.blade.php` | Sólo con B: estado de sólo lectura y acciones no disponibles. |
 | `tests/Feature/...` | Cobertura de acceso, consultas y contrato de respuesta cuando exista una base temporal preparada. |
 
@@ -187,5 +186,5 @@ pospone porque la autenticación queda fuera del alcance actual.
 - Aprobar, rechazar o interrumpir solicitudes.
 - Revisar, previsualizar o servir documentos.
 - Guardar observaciones, plazos o notificaciones.
-- Pagos, sedes, resultados, certificados y participantes registrados.
+- Pagos, sedes, resultados, certificados y personas registradas.
 - Cambios de esquema, scripts SQL, migraciones o datos de producción.

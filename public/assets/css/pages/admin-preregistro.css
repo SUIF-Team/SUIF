@@ -63,7 +63,7 @@
     display: grid;
 }
 
-.admin-preregistro-participante {
+.admin-preregistro-persona {
     padding: 1.25rem;
     display: flex;
     align-items: center;
@@ -72,36 +72,36 @@
     border-bottom: 1px solid var(--border-light);
 }
 
-.admin-preregistro-participante:last-child {
+.admin-preregistro-persona:last-child {
     border-bottom: 0;
 }
 
-.admin-preregistro-participante-datos,
-.admin-preregistro-participante-acciones,
+.admin-preregistro-persona-datos,
+.admin-preregistro-persona-acciones,
 .admin-preregistro-usuario,
 .admin-preregistro-documento-acciones {
     display: flex;
     align-items: center;
 }
 
-.admin-preregistro-participante-datos,
+.admin-preregistro-persona-datos,
 .admin-preregistro-usuario {
     gap: 1rem;
 }
 
-.admin-preregistro-participante-acciones,
+.admin-preregistro-persona-acciones,
 .admin-preregistro-documento-acciones {
     gap: 0.5rem;
 }
 
-.admin-preregistro-participante h2 {
+.admin-preregistro-persona h2 {
     margin: 0 0 0.15rem;
     color: var(--text-dark);
     font-size: 0.95rem;
     font-weight: 700;
 }
 
-.admin-preregistro-participante p {
+.admin-preregistro-persona p {
     margin: 0;
     color: var(--text-muted);
     font-size: 0.78rem;
@@ -394,16 +394,10 @@
 }
 
 .admin-preregistro-documento-meta,
-.admin-preregistro-documento-estado,
 .admin-preregistro-documentos-vacio {
     margin: 0.25rem 0 0;
     color: var(--text-muted);
     font-size: 0.8125rem;
-}
-
-.admin-preregistro-documento-estado {
-    color: var(--text-dark);
-    font-weight: 600;
 }
 
 .admin-preregistro-icono {
@@ -699,14 +693,14 @@
 }
 
 @media (max-width: 767.98px) {
-    .admin-preregistro-participante,
+    .admin-preregistro-persona,
     .admin-preregistro-perfil,
     .admin-preregistro-documento {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .admin-preregistro-participante-acciones {
+    .admin-preregistro-persona-acciones {
         width: 100%;
         justify-content: space-between;
     }

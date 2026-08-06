@@ -44,7 +44,7 @@ class ConsultaPreRegistros
         $trabajo = $this->trabajo((int) $solicitud->pers_id_persona);
 
         return [
-            'participante' => [
+            'persona' => [
                 'id' => (string) $solicitud->soli_id_solicitud,
                 'nombre' => (string) $solicitud->pers_nombre,
                 'primer_apellido' => (string) ($solicitud->pers_apellido_paterno ?? ''),
@@ -54,7 +54,6 @@ class ConsultaPreRegistros
                 'correo_alterno' => $contactos['Correo alterno'] ?? 'No registrado',
                 'telefono' => $contactos['Teléfono celular'] ?? 'No registrado',
                 'entidad_federativa' => $solicitud->enfe_entidad_federativa ?? 'No registrada',
-                'folio' => 'Sin folio asignado',
                 'ultimo_grado_estudios' => $this->ultimoGrado((int) $solicitud->pers_id_persona)
                     ?? 'No registrado',
                 'actividad_vulnerable' => $trabajo
@@ -149,6 +148,7 @@ class ConsultaPreRegistros
                 'd.docu_hora_carga',
                 'td.tido_tipo_documento',
                 'ced.esdo_estado_documento',
+                'ed.esdo_comentarios',
             ])
             ->get()
             ->map(fn (object $documento): array => [
@@ -160,6 +160,9 @@ class ConsultaPreRegistros
                     $documento->docu_hora_carga,
                 ]))),
                 'estado' => $documento->esdo_estado_documento ?: 'Cargado',
+                'comentario' => $documento->esdo_comentarios
+                    ? (string) $documento->esdo_comentarios
+                    : null,
             ])
             ->all();
     }

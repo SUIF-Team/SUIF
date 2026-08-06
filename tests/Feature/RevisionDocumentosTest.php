@@ -42,13 +42,13 @@ class RevisionDocumentosTest extends TestCase
         $resultado = app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::RECHAZADO,
-        ], 'El archivo no es legible.');
+        ], 'El archivo no es legible.', '2026-08-20');
 
         $this->assertSame(RevisionDocumentos::REVISION, $resultado);
         $this->assertDatabaseHas('estado_documento', [
             'esdo_id_documento' => 11,
             'esdo_id_c_estado_documento' => 5,
-            'esdo_comentarios' => 'El archivo no es legible.',
+            'esdo_comentarios' => "El archivo no es legible.\nFecha límite: 2026-08-20",
         ]);
         $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
     }
@@ -67,6 +67,31 @@ class RevisionDocumentosTest extends TestCase
         $this->assertDatabaseHas('estado_solicitud', [
             'esso_id_solicitud' => 1,
             'esso_motivo_rechazo' => 'La documentación presentada no corresponde a la persona solicitante.',
+        ]);
+    }
+
+    public function test_rechazar_documento_requiere_fecha_limite(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Indica una fecha límite válida.');
+
+        app(RevisionDocumentos::class)->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], 'El archivo no es legible.');
+    }
+
+    public function test_interrumpir_no_requiere_un_motivo_documental(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        app(RevisionDocumentos::class)->interrumpir(1);
+
+        $this->assertDatabaseHas('estado_solicitud', [
+            'esso_id_solicitud' => 1,
+            'esso_motivo_rechazo' => null,
         ]);
     }
 

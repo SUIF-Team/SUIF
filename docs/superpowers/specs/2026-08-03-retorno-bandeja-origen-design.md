@@ -6,15 +6,15 @@ Conservar la bandeja administrativa desde la que se abre un expediente, para que
 
 ## Alcance
 
-- Introducir un origen administrativo validado con dos valores permitidos: `preregistros` y `participantes_registrados`.
+- Introducir un origen administrativo validado con dos valores permitidos: `preregistros` y `personas_registradas`.
 - Generar los enlaces “Ver expediente” de cada bandeja con el origen correspondiente.
 - Propagar ese origen en redirecciones, formularios y enlaces de los flujos de pre-registro y documentación.
-- Calcular en un único soporte la normalización y el contexto completo de regreso: `origen`, ruta, etiqueta y etiqueta accesible para `admin.participantes.index` o `admin.participantes.registrados.index`.
+- Calcular en un único soporte la normalización y el contexto completo de regreso: `origen`, ruta, etiqueta y etiqueta accesible para `admin.personas.index` o `admin.personas.registradas.index`.
 - Mantener el flujo de pagos sin cambios funcionales, ya que su detalle ya vuelve a `admin.pagos.index`.
 
 ## Flujo
 
-1. La bandeja de pre-registros abre el expediente con `origen=preregistros`; la de participantes registrados con `origen=participantes_registrados`.
+1. La bandeja de pre-registros abre el expediente con `origen=preregistros`; la de personas registradas con `origen=personas_registradas`.
 2. Cada endpoint GET o POST del flujo normaliza el valor mediante el mismo soporte antes de mostrar una vista o redirigir. Cualquier valor ausente o no permitido se convierte a `preregistros`; nunca se usa como URL o nombre de ruta directo.
 3. El detalle de pre-registro recibe el origen y arma su barra de regreso desde el soporte centralizado.
 4. Aceptar, rechazar, abrir documentación, validar, interrumpir y mostrar resultados preservan únicamente el origen normalizado mediante parámetros o campos ocultos protegidos por CSRF.

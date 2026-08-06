@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Unificar las notificaciones de aprobación, revisión y rechazo de los flujos administrativos de pre-registro, documentación y pago. La interfaz reutilizará el layout administrativo, la información dinámica del participante, las step cards, el componente de regreso y la hoja de estilos existente, sin duplicar pantallas por resultado o contexto.
+Unificar las notificaciones de aprobación, revisión y rechazo de los flujos administrativos de pre-registro, documentación y pago. La interfaz reutilizará el layout administrativo, la información dinámica de la persona, las step cards, el componente de regreso y la hoja de estilos existente, sin duplicar pantallas por resultado o contexto.
 
 ## Alcance
 
@@ -14,7 +14,7 @@ Unificar las notificaciones de aprobación, revisión y rechazo de los flujos ad
 
 ## Contrato de la vista
 
-La vista recibirá `participante` y `notificacion`. `participante` se normalizará en cada controlador a `{ iniciales, nombre_completo, curp, folio, entidad_federativa }`, incluso para pago, cuyo origen hoy conserva sólo `nombre_completo` e `iniciales`. `notificacion` contendrá:
+La vista recibirá `persona` y `notificacion`. `persona` se normalizará en cada controlador a `{ iniciales, nombre_completo, curp, entidad_federativa }`, incluso para pago, cuyo origen hoy conserva sólo `nombre_completo` e `iniciales`. `notificacion` contendrá:
 
 - `titulo`: `SOLICITUD APROBADA`, `SOLICITUD EN REVISIÓN`, `SOLICITUD RECHAZADA` o `PAGO RECHAZADO`.
 - `estado_general`: texto de la insignia de perfil.
@@ -35,7 +35,7 @@ La plantilla sólo renderiza esta configuración. No calcula resultados ni deter
 | Documentación interrumpida | `SOLICITUD RECHAZADA` | Pre-registro: Completado (verde); Documentación: Rechazado (rojo). |
 | Pago rechazado | `PAGO RECHAZADO` | Pre-registro y Documentación: Completado (verde); Pago: Rechazado (rojo). |
 
-Todos los rechazos presentan el estado general `Rechazado`. Las notificaciones de pre-registro y documentación vuelven a `admin.participantes.index`; la de pago vuelve a `admin.pagos.index`.
+Todos los rechazos presentan el estado general `Rechazado`. Las notificaciones de pre-registro y documentación vuelven a `admin.personas.index`; la de pago vuelve a `admin.pagos.index`.
 
 ## Flujo y rutas
 

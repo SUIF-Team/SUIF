@@ -4,7 +4,7 @@ namespace App\Support\Admin;
 
 class NotificacionResultado
 {
-    public function paraPreRegistro(array $participante, array $estados): array
+    public function paraPreRegistro(array $persona, array $estados): array
     {
         $resultado = $estados['resultado'] ?? null;
         $es_rechazo_preregistro = $resultado === 'rechazado'
@@ -13,7 +13,7 @@ class NotificacionResultado
         $es_aprobado = $resultado === 'aprobado';
 
         return [
-            'participante' => $this->participante($participante),
+            'persona' => $this->persona($persona),
             'titulo_pagina' => $es_rechazo
                 ? 'SUIF — Solicitud rechazada'
                 : ($es_aprobado ? 'SUIF — Solicitud aprobada' : 'SUIF — Solicitud en revisión'),
@@ -48,7 +48,7 @@ class NotificacionResultado
                 ),
             ],
             'clase_progreso' => 'admin-preregistro-progreso--dos-pasos',
-            'ruta_regreso' => route('admin.participantes.index'),
+            'ruta_regreso' => route('admin.personas.index'),
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => $es_rechazo_preregistro ? 'preregistro' : 'documentacion',
@@ -58,11 +58,10 @@ class NotificacionResultado
     public function paraPago(array $pago): array
     {
         return [
-            'participante' => [
+            'persona' => [
                 'iniciales' => $pago['iniciales'],
                 'nombre_completo' => $pago['nombre_completo'],
                 'curp' => $pago['curp'],
-                'folio' => $pago['folio'],
                 'entidad_federativa' => $pago['entidad_federativa'],
             ],
             'titulo_pagina' => 'SUIF — Pago rechazado',
@@ -83,17 +82,16 @@ class NotificacionResultado
         ];
     }
 
-    private function participante(array $participante): array
+    private function persona(array $persona): array
     {
         return [
             'iniciales' => mb_strtoupper(
-                mb_substr($participante['nombre'], 0, 1)
-                .mb_substr($participante['primer_apellido'], 0, 1)
+                mb_substr($persona['nombre'], 0, 1)
+                .mb_substr($persona['primer_apellido'], 0, 1)
             ),
-            'nombre_completo' => $participante['nombre_completo'],
-            'curp' => $participante['curp'],
-            'folio' => $participante['folio'],
-            'entidad_federativa' => $participante['entidad_federativa'],
+            'nombre_completo' => $persona['nombre_completo'],
+            'curp' => $persona['curp'],
+            'entidad_federativa' => $persona['entidad_federativa'],
         ];
     }
 

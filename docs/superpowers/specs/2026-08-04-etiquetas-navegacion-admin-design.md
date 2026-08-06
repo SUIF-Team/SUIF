@@ -21,4 +21,4 @@ Uniformar las etiquetas del componente de navegación administrativa para que co
 
 ## Verificación
 
-Se comprobarán todas las instancias de `BackNavigation`: pre-registros, participantes registrados, pagos, detalle de pre-registro, documentación, detalle de pago y notificaciones de resultado. La revisión confirmará que no permanezcan etiquetas que indiquen el nombre de una bandeja.
+Se comprobarán todas las instancias de `BackNavigation`: pre-registros, personas registradas, pagos, detalle de pre-registro, documentación, detalle de pago y notificaciones de resultado. La revisión confirmará que no permanezcan etiquetas que indiquen el nombre de una bandeja.

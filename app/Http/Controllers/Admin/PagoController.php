@@ -131,7 +131,7 @@ class PagoController extends Controller
         $notificacion = $notificacion_resultado->paraPago($pago);
 
         return view('admin.notificacion-resultado', [
-            'participante' => $notificacion['participante'],
+            'persona' => $notificacion['persona'],
             'notificacion' => $notificacion,
         ]);
     }

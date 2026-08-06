@@ -8,7 +8,7 @@
 
 @section('content')
 @php
-    $datos_vista = ['participante' => $participante, 'estados' => $estados];
+    $datos_vista = ['persona' => $persona, 'estados' => $estados];
 @endphp
 <section id="preregistro-admin-app" class="admin-preregistro-flujo" data-preregistro-admin data-vista='@json($datos_vista)' aria-labelledby="detalle-preregistro-titulo" v-cloak>
     <header class="admin-preregistro-tarjeta admin-preregistro-perfil">
@@ -16,7 +16,7 @@
             <span class="admin-preregistro-avatar" aria-hidden="true">@{{ iniciales }}</span>
             <div>
                 <h1 id="detalle-preregistro-titulo">@{{ nombreCompleto }}</h1>
-                <p>CURP: @{{ participante.curp }} · Folio @{{ participante.folio }} · @{{ participante.entidad_federativa }}</p>
+                <p>CURP: @{{ persona.curp }} · @{{ persona.entidad_federativa }}</p>
             </div>
         </div>
         <span class="admin-preregistro-estado" :class="claseEstadoGeneral" role="status">@{{ estados.general }}</span>
@@ -33,10 +33,10 @@
         </div>
     </nav>
 
-    <section class="admin-preregistro-tarjeta admin-preregistro-detalle" aria-labelledby="datos-participante-titulo">
-        <h2 id="datos-participante-titulo">Datos del participante</h2>
+    <section class="admin-preregistro-tarjeta admin-preregistro-detalle" aria-labelledby="datos-persona-titulo">
+        <h2 id="datos-persona-titulo">Datos de la persona</h2>
         <dl class="admin-preregistro-datos">
-            <div v-for="campo in camposParticipante" :key="campo.etiqueta" class="admin-preregistro-dato">
+            <div v-for="campo in camposPersona" :key="campo.etiqueta" class="admin-preregistro-dato">
                 <dt>@{{ campo.etiqueta }}</dt>
                 <dd>@{{ campo.valor }}</dd>
             </div>
@@ -48,23 +48,6 @@
                     {{ $estados['general'] === 'En revisión' ? 'Revisar documentación' : 'Consultar resolución' }}
                 </a>
             </div>
-        @else
-        <div class="admin-preregistro-acciones">
-            <form method="POST" action="{{ route('admin.participantes.preregistro.aceptar', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}" v-on:submit="enviando = true">
-                @csrf
-                <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
-                <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando">
-                    @{{ enviando ? 'Procesando…' : 'Aceptar solicitud' }}
-                </button>
-            </form>
-            <form method="POST" action="{{ route('admin.participantes.preregistro.rechazar', ['id' => $participante['id'], 'origen' => $contexto_bandeja['origen']]) }}" v-on:submit="enviando = true">
-                @csrf
-                <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
-                <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="submit" :disabled="enviando">
-                    @{{ enviando ? 'Procesando…' : 'Rechazar solicitud' }}
-                </button>
-            </form>
-        </div>
         @endif
     </section>
 

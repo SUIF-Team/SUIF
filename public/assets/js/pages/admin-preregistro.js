@@ -21,40 +21,41 @@
         },
         data: function () {
             return {
-                participante: datos_vista.participante,
+                persona: datos_vista.persona,
                 estados: datos_vista.estados,
                 enviando: false,
                 estados_documentos: datos_vista.decisiones || {},
                 motivoRechazo: datos_vista.motivo_rechazo || '',
-                interrumpiendo: false,
+                fechaLimite: datos_vista.fecha_limite || '',
+                modoSoloLectura: datos_vista.modo_solo_lectura || false,
                 documentoPrevisualizado: null,
                 activadorDocumento: null
             };
         },
         computed: {
             iniciales: function () {
-                return this.participante.nombre.charAt(0) + this.participante.primer_apellido.charAt(0);
+                return this.persona.nombre.charAt(0) + this.persona.primer_apellido.charAt(0);
             },
             nombreCompleto: function () {
                 return [
-                    this.participante.nombre,
-                    this.participante.primer_apellido,
-                    this.participante.segundo_apellido
+                    this.persona.nombre,
+                    this.persona.primer_apellido,
+                    this.persona.segundo_apellido
                 ].join(' ');
             },
-            camposParticipante: function () {
+            camposPersona: function () {
                 return [
-                    { etiqueta: 'Nombre(s)', valor: this.participante.nombre },
-                    { etiqueta: 'Primer Apellido', valor: this.participante.primer_apellido },
-                    { etiqueta: 'Segundo Apellido', valor: this.participante.segundo_apellido },
-                    { etiqueta: 'CURP', valor: this.participante.curp },
-                    { etiqueta: 'Correo principal', valor: this.participante.correo_principal },
-                    { etiqueta: 'Correo alterno', valor: this.participante.correo_alterno },
-                    { etiqueta: 'Teléfono (celular)', valor: this.participante.telefono },
-                    { etiqueta: 'Entidad federativa', valor: this.participante.entidad_federativa },
-                    { etiqueta: 'Último grado de estudios', valor: this.participante.ultimo_grado_estudios },
-                    { etiqueta: 'Actividad vulnerable', valor: this.participante.actividad_vulnerable },
-                    { etiqueta: 'Persona responsable de su cumplimiento', valor: this.participante.responsable_cumplimiento }
+                    { etiqueta: 'Nombre(s)', valor: this.persona.nombre },
+                    { etiqueta: 'Primer Apellido', valor: this.persona.primer_apellido },
+                    { etiqueta: 'Segundo Apellido', valor: this.persona.segundo_apellido },
+                    { etiqueta: 'CURP', valor: this.persona.curp },
+                    { etiqueta: 'Correo principal', valor: this.persona.correo_principal },
+                    { etiqueta: 'Correo alterno', valor: this.persona.correo_alterno },
+                    { etiqueta: 'Teléfono (celular)', valor: this.persona.telefono },
+                    { etiqueta: 'Entidad federativa', valor: this.persona.entidad_federativa },
+                    { etiqueta: 'Último grado de estudios', valor: this.persona.ultimo_grado_estudios },
+                    { etiqueta: 'Actividad vulnerable', valor: this.persona.actividad_vulnerable },
+                    { etiqueta: 'Persona responsable de su cumplimiento', valor: this.persona.responsable_cumplimiento }
                 ];
             },
             claseEstadoGeneral: function () {
@@ -83,8 +84,8 @@
             todosDocumentosResueltos: function () {
                 var estados_documentos = this.estados_documentos;
 
-                return this.participante.documentos.length > 0
-                    && this.participante.documentos.every(function (documento) {
+                return this.persona.documentos.length > 0
+                    && this.persona.documentos.every(function (documento) {
                         return ['aprobado', 'rechazado'].includes(estados_documentos[documento.id]);
                     });
             }
@@ -111,6 +112,10 @@
                 return this.estados_documentos[id] || null;
             },
             actualizarDocumento: function (id, estado) {
+                if (this.modoSoloLectura) {
+                    return;
+                }
+
                 this.estados_documentos = Object.assign({}, this.estados_documentos, {
                     [id]: this.estadoDocumento(id) === estado ? null : estado
                 });

@@ -32,7 +32,7 @@ class AuthController extends Controller
     }
 
         /**
-     * Valida la CURP y la clave de acceso, y abre la sesión del participante.
+     * Valida la CURP y la clave de acceso, y abre la sesión de la persona.
      */
     public function login(Request $request)
     {
@@ -58,7 +58,7 @@ class AuthController extends Controller
         Auth::login($persona->usuario);
         $request->session()->regenerate();
 
-        return redirect()->route('participante.dashboard');
+        return redirect()->route('persona.dashboard');
     }
 
     /**

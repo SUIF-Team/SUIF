@@ -9,12 +9,12 @@ Implementar el expediente de revisión individual para un pago seleccionado desd
 - Adaptar el prototipo de expediente al layout y patrones visuales existentes de SUIF.
 - Reutilizar `layouts.admin`, el navbar, footer, fondo institucional, `BackNavigation` y las clases de `admin-preregistro.css`.
 - Agregar datos temporales del expediente sólo en `App\Support\Admin\PagoDatosPrueba`.
-- Renderizar perfil del participante, tres step cards, comprobante, datos bancarios y acciones temporales.
+- Renderizar perfil de la persona, tres step cards, comprobante, datos bancarios y acciones temporales.
 - Añadir rutas controladas para el comprobante y los enlaces temporales de validación o rechazo, sin persistir ni modificar estados.
 
 ## Flujo y rutas
 
-1. La bandeja genera `admin.pagos.show` con `id`, nunca con CURP, folio ni datos visibles.
+1. La bandeja genera `admin.pagos.show` con `id`, nunca con CURP ni datos visibles.
 2. `PagoController@show` obtiene el pago desde `PagoDatosPrueba` y valida, antes de renderizar, que:
    - el pre-registro esté completado;
    - la documentación esté completada o aprobada;
@@ -27,13 +27,13 @@ Implementar el expediente de revisión individual para un pago seleccionado desd
 
 ## Datos temporales
 
-`PagoDatosPrueba` seguirá siendo la única fuente mock. Cada pago incluirá los datos del participante necesarios para el perfil, los estados de pre-registro y documentación, disponibilidad de revisión y los datos de comprobante, monto, referencia bancaria, banco y fecha de pago. Los escenarios no elegibles quedan en esta misma fuente para comprobar las redirecciones de protección.
+`PagoDatosPrueba` seguirá siendo la única fuente mock. Cada pago incluirá los datos de la persona necesarios para el perfil, los estados de pre-registro y documentación, disponibilidad de revisión y los datos de comprobante, monto, referencia bancaria, banco y fecha de pago. Los escenarios no elegibles quedan en esta misma fuente para comprobar las redirecciones de protección.
 
 ## Interfaz
 
 La vista reutilizará las tarjetas de perfil, progreso, estado y acciones de `admin-preregistro.css`:
 
-- Perfil: iniciales, nombre completo, CURP, folio, ubicación si existe y estado del pago.
+- Perfil: iniciales, nombre completo, CURP, ubicación si existe y estado del pago.
 - Progreso: Pre-registro y Documentación completados en verde; Pago como paso actual amarillo con `aria-current="step"`.
 - Tarjeta “Pago / Referencia bancaria”: nombre del comprobante ajustable, enlace “Abrir comprobante” con `target="_blank"` y `rel="noopener noreferrer"`, monto, referencia, banco y fecha.
 - Acciones: enlaces “Validar pago” y “Rechazar pago” con variantes visuales ya existentes, sin cambio de estado.

@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
  * Admin\DocumentacionController
  *
  * Migrado desde: app/controllers/admin/DocumentacionController.php
- * Responsabilidad: revisión y validación de documentación de participantes por el administrador.
+ * Responsabilidad: revisión y validación de documentación de personas por el administrador.
  */
 class DocumentoController extends Controller
 {
@@ -57,18 +57,33 @@ class DocumentoController extends Controller
     {
         $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
+        $resultado = $this->resultadoReal($expediente);
 
-        if ($this->resultadoReal($expediente)) {
+        if (in_array($resultado, [RevisionDocumentos::APROBADO, RevisionDocumentos::RECHAZADO], true)) {
             return redirect()->route('admin.documentos.resultado', [
                 'id' => $id,
                 'origen' => $contexto_bandeja['origen'],
             ]);
         }
 
-        $participante = $this->agregarRutasVisor($expediente['participante'], $id);
+        $persona = $this->agregarRutasVisor($expediente['persona'], $id);
         $estados = $expediente['estados'];
+        $modo_solo_lectura = $resultado === RevisionDocumentos::REVISION;
+        $decisiones_documentos = $modo_solo_lectura
+            ? $this->decisionesDocumentos($persona['documentos'])
+            : [];
+        $observaciones_rechazo = $modo_solo_lectura
+            ? $this->observacionesRechazo($persona['documentos'])
+            : ['motivo_rechazo' => '', 'fecha_limite' => ''];
 
-        return view('admin.preregistro-documentacion', compact('participante', 'estados', 'contexto_bandeja'));
+        return view('admin.preregistro-documentacion', compact(
+            'persona',
+            'estados',
+            'contexto_bandeja',
+            'modo_solo_lectura',
+            'decisiones_documentos',
+            'observaciones_rechazo'
+        ));
     }
 
     public function validar(
@@ -90,13 +105,14 @@ class DocumentoController extends Controller
         $documentos = $request->input('documentos', []);
         $documentos_requeridos = array_map(
             'strval',
-            array_column($expediente['participante']['documentos'], 'id')
+            array_column($expediente['persona']['documentos'], 'id')
         );
 
         $validador = Validator::make($request->all(), [
             'documentos' => ['required', 'array'],
             'documentos.*' => ['required', 'in:aprobado,rechazado'],
             'motivo_rechazo' => ['nullable', 'string', 'max:255'],
+            'fecha_limite' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
         $validador->after(function ($validador) use ($documentos, $documentos_requeridos, $request): void {
@@ -119,6 +135,11 @@ class DocumentoController extends Controller
                 && trim((string) $request->input('motivo_rechazo')) === '') {
                 $validador->errors()->add('motivo_rechazo', 'Escribe el motivo del rechazo.');
             }
+
+            if (in_array(RevisionDocumentos::RECHAZADO, $documentos, true)
+                && trim((string) $request->input('fecha_limite')) === '') {
+                $validador->errors()->add('fecha_limite', 'Indica la fecha límite.');
+            }
         });
 
         if ($validador->fails()) {
@@ -131,7 +152,8 @@ class DocumentoController extends Controller
             $revision_documentos->resolver(
                 (int) $id,
                 $documentos,
-                $request->input('motivo_rechazo')
+                $request->input('motivo_rechazo'),
+                $request->input('fecha_limite')
             );
         } catch (DomainException $exception) {
             return $this->redirigirRevision($id, $contexto_bandeja)
@@ -159,13 +181,11 @@ class DocumentoController extends Controller
         }
 
         $datos = $request->validate([
-            'motivo_rechazo' => ['required', 'string', 'max:255'],
-        ], [
-            'motivo_rechazo.required' => 'Escribe el motivo de la interrupción.',
+            'motivo_rechazo' => ['nullable', 'string', 'max:255'],
         ]);
 
         try {
-            $revision_documentos->interrumpir((int) $id, $datos['motivo_rechazo']);
+            $revision_documentos->interrumpir((int) $id, $datos['motivo_rechazo'] ?? null);
         } catch (DomainException $exception) {
             return $this->redirigirRevision($id, $contexto_bandeja)
                 ->with('warning', $exception->getMessage());
@@ -205,7 +225,7 @@ class DocumentoController extends Controller
             $estados['documentacion'] = 'En revisión';
         }
 
-        $notificacion = $notificacion_resultado->paraPreRegistro($expediente['participante'], $estados);
+        $notificacion = $notificacion_resultado->paraPreRegistro($expediente['persona'], $estados);
         $notificacion = array_merge($notificacion, [
             'ruta_regreso' => $contexto_bandeja['ruta'],
             'etiqueta_regreso' => 'Volver a la bandeja',
@@ -213,7 +233,7 @@ class DocumentoController extends Controller
         ]);
 
         return view('admin.notificacion-resultado', [
-            'participante' => $notificacion['participante'],
+            'persona' => $notificacion['persona'],
             'notificacion' => $notificacion,
         ]);
     }
@@ -229,11 +249,11 @@ class DocumentoController extends Controller
         return $expediente;
     }
 
-    private function agregarRutasVisor(array $participante, string $id_solicitud): array
+    private function agregarRutasVisor(array $persona, string $id_solicitud): array
     {
-        $participante['documentos'] = collect($participante['documentos'])
+        $persona['documentos'] = collect($persona['documentos'])
             ->map(function (array $documento) use ($id_solicitud): array {
-                $documento['ruta_visor'] = route('admin.participantes.documentos.ver', [
+                $documento['ruta_visor'] = route('admin.personas.documentos.ver', [
                     'solicitud' => $id_solicitud,
                     'documento' => $documento['id'],
                 ]);
@@ -242,7 +262,7 @@ class DocumentoController extends Controller
             })
             ->all();
 
-        return $participante;
+        return $persona;
     }
 
     private function resultadoReal(array $expediente): ?string
@@ -250,11 +270,42 @@ class DocumentoController extends Controller
         return match ($expediente['estados']['general']) {
             'Aprobada' => RevisionDocumentos::APROBADO,
             'Rechazada' => RevisionDocumentos::RECHAZADO,
-            default => collect($expediente['participante']['documentos'])
+            default => collect($expediente['persona']['documentos'])
                 ->contains(fn (array $documento): bool => $documento['estado'] === 'Rechazado')
                     ? RevisionDocumentos::REVISION
                     : null,
         };
+    }
+
+    private function decisionesDocumentos(array $documentos): array
+    {
+        return collect($documentos)
+            ->mapWithKeys(function (array $documento): array {
+                $decision = match ($documento['estado']) {
+                    'Aprobado' => RevisionDocumentos::APROBADO,
+                    'Rechazado' => RevisionDocumentos::RECHAZADO,
+                    default => null,
+                };
+
+                return $decision ? [$documento['id'] => $decision] : [];
+            })
+            ->all();
+    }
+
+    private function observacionesRechazo(array $documentos): array
+    {
+        $documento_rechazado = collect($documentos)
+            ->first(fn (array $documento): bool => $documento['estado'] === 'Rechazado');
+        $comentario = (string) ($documento_rechazado['comentario'] ?? '');
+
+        if (preg_match('/\\RFecha límite: (\\d{4}-\\d{2}-\\d{2})$/u', $comentario, $coincidencias)) {
+            return [
+                'motivo_rechazo' => rtrim(substr($comentario, 0, -strlen($coincidencias[0]))),
+                'fecha_limite' => $coincidencias[1],
+            ];
+        }
+
+        return ['motivo_rechazo' => $comentario, 'fecha_limite' => ''];
     }
 
     private function redirigirRevision(string $id, array $contexto_bandeja)

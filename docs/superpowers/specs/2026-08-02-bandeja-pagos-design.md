@@ -3,7 +3,7 @@
 ## Objetivo
 
 Incorporar la bandeja administrativa para consultar los comprobantes de pago
-enviados por participantes, disponible desde el dashboard en `GET /admin/pagos`
+enviados por personas, disponible desde el dashboard en `GET /admin/pagos`
 con la ruta nombrada `admin.pagos.index`.
 
 ## Arquitectura
@@ -19,14 +19,14 @@ con la ruta nombrada `admin.pagos.index`.
 ## Interfaz y datos
 
 - Mostrar el título `Bandeja de pagos`, la descripción `Consulta y revisa los
-  comprobantes de pago enviados por los participantes.`, el buscador
-  etiquetado `Buscar participante`, los botones `Filtrar` y `Limpiar`, y el
-  listado `Pagos recibidos`. Sus columnas serán `Participante`, `Estatus` y
+  comprobantes de pago enviados por las personas.`, el buscador
+  etiquetado `Buscar persona`, los botones `Filtrar` y `Limpiar`, y el
+  listado `Pagos recibidos`. Sus columnas serán `Persona`, `Estatus` y
   `Acción`; cada enlace dirá `Revisar pago`. No se conservarán textos visibles
   como `Solicitudes` ni `Ver expediente`.
 - Cada pago temporal contendrá identificador, nombre completo, iniciales, CURP,
-  folio, estatus y fecha de envío del comprobante.
-- La fuente temporal tendrá al menos cinco participantes representativos —por
+  estatus y fecha de envío del comprobante.
+- La fuente temporal tendrá al menos cinco personas representativos —por
   ejemplo Jordan Carrillo Guevara, María Fernanda López Castillo, Luis Alberto
   Reyes Mendoza, Claudia Hernández Ruiz y Diego Morales Cruz— distribuidos en
   los tres estatus y con fechas distintas para comprobar el orden descendente.
@@ -38,7 +38,7 @@ con la ruta nombrada `admin.pagos.index`.
 ## Filtros y navegación
 
 - El filtro en cliente comparará sin distinguir mayúsculas/minúsculas nombre,
-  CURP, folio y estatus. `Filtrar` aplicará el término y `Limpiar` restaurará
+  CURP y estatus. `Filtrar` aplicará el término y `Limpiar` restaurará
   el arreglo ordenado original.
 - El botón del dashboard usará `route('admin.pagos.index')`.
 - `Revisar pago` apuntará a `admin.pagos.show`. Mientras no exista el detalle,

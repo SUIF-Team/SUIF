@@ -5,18 +5,18 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DocumentoController as AdminDocumentoController;
 use App\Http\Controllers\Admin\PagoController as AdminPagoController;
-use App\Http\Controllers\Admin\ParticipanteController as AdminParticipanteController;
+use App\Http\Controllers\Admin\PersonaController as AdminPersonaController;
 use App\Http\Controllers\Admin\ReferenciaController as AdminReferenciaController;
 use App\Http\Controllers\Admin\ResultadoController as AdminResultadoController;
 use App\Http\Controllers\Admin\SedeController as AdminSedeController;
-use App\Http\Controllers\Participante\CertificadoController;
-use App\Http\Controllers\Participante\DashboardController as ParticipanteDashboardController;
-use App\Http\Controllers\Participante\FacturacionController;
-use App\Http\Controllers\Participante\PagoController as ParticipantePagoController;
-use App\Http\Controllers\Participante\PreRegistroController;
-use App\Http\Controllers\Participante\ReferenciaController as ParticipanteReferenciaController;
-use App\Http\Controllers\Participante\ResultadoController as ParticipanteResultadoController;
-use App\Http\Controllers\Participante\SedeController as ParticipanteSedeController;
+use App\Http\Controllers\Persona\CertificadoController;
+use App\Http\Controllers\Persona\DashboardController as PersonaDashboardController;
+use App\Http\Controllers\Persona\FacturacionController;
+use App\Http\Controllers\Persona\PagoController as PersonaPagoController;
+use App\Http\Controllers\Persona\PreRegistroController;
+use App\Http\Controllers\Persona\ReferenciaController as PersonaReferenciaController;
+use App\Http\Controllers\Persona\ResultadoController as PersonaResultadoController;
+use App\Http\Controllers\Persona\SedeController as PersonaSedeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -27,14 +27,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Ajuste temporal: se eliminó 'middleware' => 'auth' (va al inicio de route::group)
 
-Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () {
-    /* Públicas: el participante todavía no tiene cuenta cuando entra aquí. */
+Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
+    /* Públicas: la persona todavía no tiene cuenta cuando entra aquí. */
     Route::get('/preregistro', [PreRegistroController::class, 'index'])->name('preregistro.index');
     Route::post('/preregistro/datos', [PreRegistroController::class, 'guardarDatos'])->name('preregistro.datos.store');
 
     /* A partir de aquí ya existe la cuenta: se exige sesión iniciada. */
     Route::middleware('auth')->group(function () {
-        Route::get('/dashboard', [ParticipanteDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [PersonaDashboardController::class, 'index'])->name('dashboard');
 
         Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');
         Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'formato'])->name('preregistro.formatos.ver');
@@ -49,16 +49,16 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () 
         Route::get('/preregistro/editar', [PreRegistroController::class, 'editar'])->name('preregistro.editar');
         Route::post('/preregistro/editar', [PreRegistroController::class, 'actualizarDatos'])->name('preregistro.editar.store');
 
-        Route::get('/pago', [ParticipantePagoController::class, 'index'])->name('pago.index');
-        Route::post('/pago/comprobante', [ParticipantePagoController::class, 'subirComprobante'])->name('pago.comprobante');
-        Route::get('/pago/demo/{estado}', [ParticipantePagoController::class, 'demo'])->name('pago.demo');
-        Route::get('/referencia', [ParticipanteReferenciaController::class, 'index'])->name('referencia.index');
+        Route::get('/pago', [PersonaPagoController::class, 'index'])->name('pago.index');
+        Route::post('/pago/comprobante', [PersonaPagoController::class, 'subirComprobante'])->name('pago.comprobante');
+        Route::get('/pago/demo/{estado}', [PersonaPagoController::class, 'demo'])->name('pago.demo');
+        Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
-        Route::get('/sede', [ParticipanteSedeController::class, 'index'])->name('sede.index');
-        Route::post('/sede', [ParticipanteSedeController::class, 'seleccionar'])->name('sede.seleccionar');
-        Route::get('/sede/reiniciar', [ParticipanteSedeController::class, 'reiniciar'])->name('sede.reiniciar');
-        Route::get('/resultados', [ParticipanteResultadoController::class, 'resultados'])->name('resultados');
-        Route::get('/resultados/demo/{estado}', [ParticipanteResultadoController::class, 'demo'])->name('resultados.demo');
+        Route::get('/sede', [PersonaSedeController::class, 'index'])->name('sede.index');
+        Route::post('/sede', [PersonaSedeController::class, 'seleccionar'])->name('sede.seleccionar');
+        Route::get('/sede/reiniciar', [PersonaSedeController::class, 'reiniciar'])->name('sede.reiniciar');
+        Route::get('/resultados', [PersonaResultadoController::class, 'resultados'])->name('resultados');
+        Route::get('/resultados/demo/{estado}', [PersonaResultadoController::class, 'demo'])->name('resultados.demo');
         Route::get('/certificado', [CertificadoController::class, 'index'])->name('certificado');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
@@ -69,13 +69,10 @@ Route::group(['prefix' => 'participante', 'as' => 'participante.'], function () 
 // Restaurar autenticación y autorización por rol antes de desplegar el proyecto.
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/participantes', [AdminParticipanteController::class, 'index'])->name('participantes.index');
-    Route::get('/participantes-registrados', [AdminParticipanteController::class, 'registrados'])->name('participantes.registrados.index');
-    Route::get('/participantes/{solicitud}/documentos/{documento}', [AdminDocumentoController::class, 'ver'])->name('participantes.documentos.ver');
-    Route::get('/participantes/{id}', [AdminParticipanteController::class, 'show'])->name('participantes.show');
-    Route::post('/participantes/{id}/aceptar-preregistro', [AdminParticipanteController::class, 'aceptarPreRegistro'])->name('participantes.preregistro.aceptar');
-    Route::post('/participantes/{id}/rechazar-preregistro', [AdminParticipanteController::class, 'rechazarPreRegistro'])->name('participantes.preregistro.rechazar');
-    Route::get('/participantes/{id}/resultado', [AdminParticipanteController::class, 'resultado'])->name('participantes.resultado');
+    Route::get('/personas', [AdminPersonaController::class, 'index'])->name('personas.index');
+    Route::get('/personas-registradas', [AdminPersonaController::class, 'registradas'])->name('personas.registradas.index');
+    Route::get('/personas/{solicitud}/documentos/{documento}', [AdminDocumentoController::class, 'ver'])->name('personas.documentos.ver');
+    Route::get('/personas/{id}', [AdminPersonaController::class, 'show'])->name('personas.show');
     Route::get('/pagos', [AdminPagoController::class, 'index'])->name('pagos.index');
     Route::get('/pagos/{id}/comprobante', [AdminPagoController::class, 'comprobante'])->name('pagos.comprobante');
     Route::match(['get', 'post'], '/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');

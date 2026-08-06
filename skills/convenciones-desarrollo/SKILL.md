@@ -9,13 +9,13 @@ description: "Aplica las convenciones de SUIF al crear, modificar o revisar cód
 
 - Mantén el stack fijado a Laravel `^13.8` y PHP 8.4.23 (ver README). No cambies estas versiones sin acordarlo con el equipo, y usa `bootstrap/app.php` (no `Kernel.php`) para configurar middleware, rutas y excepciones.
 - Trabaja con PostgreSQL y la configuración existente. No sustituyas el framework por PHP plano, `include()`/`require()`, sesiones manuales ni consultas sin Eloquent o el query builder de Laravel.
-- Conserva el alcance del sistema: certificaciones, resultados, documentos, pagos, sedes, referencias y paneles de participante y administración. No implementes una aplicación de exámenes.
+- Conserva el alcance del sistema: certificaciones, resultados, documentos, pagos, sedes, referencias y paneles de persona y administración. No implementes una aplicación de exámenes.
 - Ejecuta el entorno Docker en `http://localhost:8088` cuando sea necesario. Mantén Apache sirviendo `public/`; no expongas `resources/views` ni agregues `/public` a las URLs.
 
 ## Ubicar cada responsabilidad
 
 - Declara rutas web en `routes/web.php`; usa grupos, prefijos, namespaces, nombres de ruta y middleware de Laravel cuando corresponda.
-- Implementa la lógica HTTP en `app/Http/Controllers/`, agrupando los controladores de cada panel en `Admin/` y `Participante/`.
+- Implementa la lógica HTTP en `app/Http/Controllers/`, agrupando los controladores de cada panel en `Admin/` y `Persona/`.
 - Renderiza vistas Blade desde `resources/views/`. Reutiliza `layouts/` y `partials/`; no dupliques cabeceras, navegación, pie de página o scripts entre vistas.
 - Usa `route()` y `asset()` en Blade para URLs internas y assets. Evita URLs relativas frágiles.
 - Usa convenciones de Laravel para clases y métodos PHP: clases en `PascalCase`, métodos y variables en `camelCase`, namespaces y PSR-4 existentes. Conserva los nombres de rutas, tablas y columnas ya establecidos.
