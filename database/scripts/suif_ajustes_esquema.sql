@@ -108,3 +108,10 @@ BEGIN
             UNIQUE (soli_id_solicitud, tido_id_tipo_documento);
     END IF;
 END $$;
+
+/* El rol 1 se llamaba "Participante" antes del refactor a "Persona".
+   El INSERT de suif_catalogos.sql no lo corrige porque lleva
+   ON CONFLICT DO NOTHING, así que las bases existentes se quedan con el
+   nombre viejo y el pre-registro no encuentra el rol al dar de alta. */
+UPDATE rol SET rol_tipo_rol = 'Persona'
+ WHERE rol_id_rol = 1 AND rol_tipo_rol = 'Participante';
