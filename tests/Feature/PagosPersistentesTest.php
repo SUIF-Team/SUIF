@@ -182,6 +182,7 @@ class PagosPersistentesTest extends TestCase
             $table->integer('soli_id_solicitud')->primary();
             $table->integer('soli_id_persona')->nullable();
             $table->integer('soli_id_pago')->nullable();
+            $table->integer('soli_id_evaluacion')->nullable();
         });
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {

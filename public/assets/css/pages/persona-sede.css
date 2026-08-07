@@ -59,13 +59,19 @@
 }
 
 .sede-filtro select,
-.sede-filtro input[type="text"] {
+.sede-filtro input[type="text"],
+.sede-filtro input[type="search"] {
     padding: 10px 14px;
     border: 1px solid #e2e2da;
     border-radius: 8px;
     font-size: 0.8rem;
     color: #6b6b66;
     background: #fff;
+}
+
+.sede-filtro input[type="search"] {
+    min-width: min(100%, 22rem);
+    flex: 1 1 18rem;
 }
 
 .sede-contador {
@@ -272,5 +278,14 @@
 
     .sede-resumen__datos dd {
         text-align: left;
+    }
+
+    .sede-tarjeta > form,
+    .sede-tarjeta > form .sede-boton {
+        width: 100%;
+    }
+
+    .sede-tarjeta__cupo {
+        align-items: flex-start;
     }
 }

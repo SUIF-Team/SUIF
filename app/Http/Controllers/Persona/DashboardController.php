@@ -38,6 +38,9 @@ class DashboardController extends Controller
             $sesion = $this->normalizarEstado($sesion);
         }
 
+        /* La sede ya es persistente y no depende del estado de la sesión. */
+        $sesion['sede_seleccionada'] = $avance->tieneSedeSeleccionada();
+
         $pasos = $this->construirPasos($avance, $sesion);
         $tramite = $this->estadoGeneral($avance, $sesion);
 

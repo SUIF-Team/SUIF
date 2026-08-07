@@ -54,8 +54,8 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
         Route::get('/sede', [PersonaSedeController::class, 'index'])->name('sede.index');
+        Route::get('/sede/disponibilidad', [PersonaSedeController::class, 'disponibilidad'])->name('sede.disponibilidad');
         Route::post('/sede', [PersonaSedeController::class, 'seleccionar'])->name('sede.seleccionar');
-        Route::get('/sede/reiniciar', [PersonaSedeController::class, 'reiniciar'])->name('sede.reiniciar');
         Route::get('/resultados', [PersonaResultadoController::class, 'resultados'])->name('resultados');
         Route::get('/resultados/demo/{estado}', [PersonaResultadoController::class, 'demo'])->name('resultados.demo');
         Route::get('/certificado', [CertificadoController::class, 'index'])->name('certificado');
@@ -86,9 +86,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/documentos/{id}', [AdminDocumentoController::class, 'show'])->name('documentos.show');
     Route::post('/documentos/{id}/validar', [AdminDocumentoController::class, 'validar'])->name('documentos.validar');
     Route::post('/documentos/{id}/interrumpir', [AdminDocumentoController::class, 'interrumpir'])->name('documentos.interrumpir');
-    Route::get('/sedes', [AdminSedeController::class, 'index'])->name('sedes.index');
-    Route::post('/sedes', [AdminSedeController::class, 'store'])->name('sedes.store');
-    Route::put('/sedes/{id}', [AdminSedeController::class, 'update'])->name('sedes.update');
-    Route::delete('/sedes/{id}', [AdminSedeController::class, 'destroy'])->name('sedes.destroy');
+    Route::middleware(['auth', 'can:gestionar-sedes'])->group(function () {
+        Route::get('/sedes', [AdminSedeController::class, 'index'])->name('sedes.index');
+        Route::get('/sedes/crear', [AdminSedeController::class, 'create'])->name('sedes.create');
+        Route::post('/sedes', [AdminSedeController::class, 'store'])->name('sedes.store');
+        Route::get('/sedes/{id}/editar', [AdminSedeController::class, 'edit'])->name('sedes.edit');
+        Route::put('/sedes/{id}', [AdminSedeController::class, 'update'])->name('sedes.update');
+        Route::delete('/sedes/{id}', [AdminSedeController::class, 'destroy'])->name('sedes.destroy');
+    });
     Route::get('/resultados', [AdminResultadoController::class, 'index'])->name('resultados.index');
 });

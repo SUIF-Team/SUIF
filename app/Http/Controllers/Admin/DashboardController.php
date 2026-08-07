@@ -51,6 +51,7 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Sedes',
+                'ruta' => 'admin.sedes.index',
                 'descripcion' => 'Gestiona las sedes activas.',
             ],
         ];

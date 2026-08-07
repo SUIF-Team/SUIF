@@ -3,97 +3,71 @@
 namespace App\Http\Controllers\Persona;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\GestionSedes;
+use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
-/**
- * SedeController
- *
- * Migrado desde: app/controllers/SedeController.php
- * Responsabilidad: consulta y selección de sedes y horarios de certificación.
- */
 class SedeController extends Controller
 {
-    private $sedes = [
-        ['id' => 1, 'nombre' => 'Sede Centro – FCA UNAM', 'direccion' => 'Av. Insurgentes Norte 425, Cuauhtémoc', 'entidad' => 'Ciudad de México', 'fecha' => '01 de junio de 2026', 'hora' => '10:00 hrs', 'cupo_usado' => 32, 'cupo_total' => 80],
-        ['id' => 2, 'nombre' => 'Sede Sur – Ciudad Universitaria', 'direccion' => 'Circuito Escolar s/n, Coyoacán', 'entidad' => 'Ciudad de México', 'fecha' => '01 de junio de 2026', 'hora' => '13:00 hrs', 'cupo_usado' => 12, 'cupo_total' => 80],
-        ['id' => 3, 'nombre' => 'Sede Guadalajara – CUCEA', 'direccion' => 'Perif. Nte. 799, Zapopan', 'entidad' => 'Jalisco', 'fecha' => '03 de junio de 2026', 'hora' => '10:00 hrs', 'cupo_usado' => 45, 'cupo_total' => 80],
-        ['id' => 4, 'nombre' => 'Sede Mérida – Campus UADY', 'direccion' => 'Calle 60 491A, Centro, Mérida', 'entidad' => 'Yucatán', 'fecha' => '04 de junio de 2026', 'hora' => '10:00 hrs', 'cupo_usado' => 80, 'cupo_total' => 80],
-        ['id' => 5, 'nombre' => 'Sede Veracruz – USBI', 'direccion' => 'Blvd. Ávila Camacho s/n, Boca del Río', 'entidad' => 'Veracruz', 'fecha' => '05 de junio de 2026', 'hora' => '11:00 hrs', 'cupo_usado' => 58, 'cupo_total' => 80],
-        ['id' => 6, 'nombre' => 'Sede Monterrey – FACPYA UANL', 'direccion' => 'Av. Universidad s/n, San Nicolás', 'entidad' => 'Nuevo León', 'fecha' => '06 de junio de 2026', 'hora' => '10:00 hrs', 'cupo_usado' => 7, 'cupo_total' => 80],
-    ];
-
-    public function index(Request $request)
+    public function index(Request $request, GestionSedes $gestion)
     {
-        $estado = (array) $request->session()->get('suif.persona.estado', []);
+        $idUsuario = (int) Auth::id();
+        $seleccionada = $gestion->sedeSeleccionadaPorUsuario($idUsuario);
 
-        if (!empty($estado['sede_seleccionada'])) {
+        if ($seleccionada) {
+            $fechaInicio = Carbon::parse($seleccionada['fecha_inicio'])->locale('es');
+            $fechaFin = Carbon::parse($seleccionada['fecha_fin'])->locale('es');
+            $seleccionada['fecha'] = $fechaInicio
+                ->locale('es')
+                ->translatedFormat('d \d\e F \d\e Y');
+            if (!$fechaInicio->isSameDay($fechaFin)) {
+                $seleccionada['fecha'] .= '–'.$fechaFin->translatedFormat('d \d\e F \d\e Y');
+            }
+            $seleccionada['horario'] = $seleccionada['hora_inicio'].'–'.$seleccionada['hora_fin'].' h';
+
             return view('persona.sede', [
                 'confirmada' => true,
-                'sede' => (array) $request->session()->get('suif.persona.sede', []),
+                'sede' => $seleccionada,
             ]);
         }
 
-        $entidad = $request->query('entidad');
         $buscar = trim((string) $request->query('buscar'));
-
-        $sedes = array_map(function ($sede) {
-            $sede['cupo_disponible'] = $sede['cupo_total'] - $sede['cupo_usado'];
-            $sede['sin_cupo'] = $sede['cupo_disponible'] <= 0;
-            return $sede;
-        }, $this->sedes);
-
-        if ($entidad) {
-            $sedes = array_filter($sedes, function ($sede) use ($entidad) {
-                return $sede['entidad'] === $entidad;
-            });
-        }
-
-        if ($buscar !== '') {
-            $sedes = array_filter($sedes, function ($sede) use ($buscar) {
-                return stripos($sede['nombre'], $buscar) !== false;
-            });
-        }
 
         return view('persona.sede', [
             'confirmada' => false,
-            'sedes' => $sedes,
-            'entidades' => array_unique(array_column($this->sedes, 'entidad')),
-            'entidadActual' => $entidad,
+            'sedes' => $gestion->catalogoParticipante($buscar),
             'buscarActual' => $buscar,
         ]);
     }
 
-    public function seleccionar(Request $request)
+    public function seleccionar(Request $request, GestionSedes $gestion)
     {
-        $id = (int) $request->input('sede_id');
-        $sede = null;
-        foreach ($this->sedes as $candidata) {
-            if ($candidata['id'] === $id) {
-                $sede = $candidata;
-                break;
-            }
+        $datos = $request->validate([
+            'evaluacion_id' => ['required', 'integer', 'min:1'],
+        ], [
+            'evaluacion_id.required' => 'Selecciona una sede válida.',
+        ]);
+
+        try {
+            $gestion->seleccionarParaUsuario((int) Auth::id(), (int) $datos['evaluacion_id']);
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('persona.sede.index')
+                ->withErrors(['sede' => $exception->getMessage()]);
         }
 
-        if (!$sede) {
-            return redirect()->route('persona.sede.index')
-                ->withErrors(['sede' => 'Selecciona una sede válida.']);
-        }
-
-        $request->session()->put('suif.persona.sede', $sede);
-        $request->session()->put('suif.persona.estado.sede_seleccionada', true);
-
-        return redirect()->route('persona.sede.index');
+        return redirect()
+            ->route('persona.sede.index')
+            ->with('success', 'Tu sede quedó confirmada.');
     }
 
-    public function reiniciar(Request $request)
+    public function disponibilidad(GestionSedes $gestion): JsonResponse
     {
-        if (!config('app.debug')) {
-            abort(404);
-        }
-
-        $request->session()->forget('suif.persona.sede');
-        $request->session()->put('suif.persona.estado.sede_seleccionada', false);
-
-        return redirect()->route('persona.sede.index');
+        return response()->json([
+            'sedes' => $gestion->disponibilidadParticipante(),
+        ]);
     }
 }

@@ -21,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
             return $usuario->tienePrivilegio('Gestionar Pagos');
         });
 
+        Gate::define('gestionar-sedes', function (Usuario $usuario): bool {
+            return $usuario->rol?->rol_tipo_rol === 'Administrador';
+        });
+
             /* La barra de avance recibe siempre el avance real de la persona. */
         View::composer('partials.sidebar-progreso', function ($view) {
             $view->with('avance', new AvancePersona(auth()->id()));

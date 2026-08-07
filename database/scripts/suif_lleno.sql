@@ -66,12 +66,12 @@ INSERT INTO CODIGO_POSTAL (COPO_ID_CODIGO_POSTAL) VALUES
 ('01000'), ('57000'), ('64000'), ('44100'), ('72000'), ('97000'), ('22000'), ('11560');
 
 -- Sedes
-INSERT INTO SEDE (SEDE_ID_SEDE, SEDE_DIRECCION, SEDE_CUPO, SEDE_ESTADO) VALUES 
-(1, 'Sede Central CDMX', 50, true),
-(2, 'Sede Norte Monterrey', 30, true),
-(3, 'Sede Occidente GDL', 40, true),
-(4, 'Sede Sur Mérida', 25, true),
-(5, 'Sede Inactiva', 10, false);
+INSERT INTO SEDE (SEDE_ID_SEDE, SEDE_NOMBRE, SEDE_DIRECCION, SEDE_CUPO, SEDE_ESTADO) VALUES
+(1, 'Sede Central CDMX', 'Sede Central CDMX', 50, true),
+(2, 'Sede Norte Monterrey', 'Sede Norte Monterrey', 30, true),
+(3, 'Sede Occidente GDL', 'Sede Occidente GDL', 40, true),
+(4, 'Sede Sur Mérida', 'Sede Sur Mérida', 25, false),
+(5, 'Sede Inactiva', 'Sede Inactiva', 10, false);
 
 
 /* ========================================================================= */
@@ -317,7 +317,46 @@ INSERT INTO TRABAJO (TRAB_ID_TRABAJO, TRAB_ACTIVIDAD_VULNERABLE, TRAB_RESPONSABL
 INSERT INTO TRABAJO_PERSONA (TRPE_ID_TRABAJO, TRPE_ID_PERSONA) VALUES 
 (1, 1), (2, 2), (3, 3), (1, 4), (2, 5), (3, 6);
 
-INSERT INTO COMUNICACION (COMU_ID_PERSONA, COMU_ID_TIPO_COMUNICACION, COMU_DESCRIPCION) VALUES 
+INSERT INTO COMUNICACION (COMU_ID_PERSONA, COMU_ID_TIPO_COMUNICACION, COMU_DESCRIPCION) VALUES
 (1, 1, 'carlos.garcia@mail.com'), (1, 2, '5551234567'),
 (2, 1, 'maria.perez@mail.com'), (2, 3, '5559876543'),
 (3, 1, 'juan.martinez@mail.com');
+
+/* Los INSERT anteriores asignan identificadores explícitos. Se sincronizan
+   todas las secuencias SERIAL para que las altas posteriores no reutilicen IDs. */
+DO $$
+DECLARE
+    columna RECORD;
+    maximo BIGINT;
+BEGIN
+    FOR columna IN
+        SELECT
+            table_schema,
+            table_name,
+            column_name,
+            pg_get_serial_sequence(
+                format('%I.%I', table_schema, table_name),
+                column_name
+            ) AS secuencia
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND column_default LIKE 'nextval(%'
+    LOOP
+        IF columna.secuencia IS NULL THEN
+            CONTINUE;
+        END IF;
+
+        EXECUTE format(
+            'SELECT COALESCE(MAX(%I), 0) FROM %I.%I',
+            columna.column_name,
+            columna.table_schema,
+            columna.table_name
+        ) INTO maximo;
+
+        IF maximo > 0 THEN
+            PERFORM setval(columna.secuencia, maximo, true);
+        ELSE
+            PERFORM setval(columna.secuencia, 1, false);
+        END IF;
+    END LOOP;
+END $$;

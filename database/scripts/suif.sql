@@ -604,8 +604,9 @@ create table EVALUACION (
    EVAL_HORA_INICIO     TIME                 not null,
    EVAL_FECHA_FIN       DATE                 not null,
    EVAL_HORA_FIN        TIME                 not null,
-   EVAL_RESULTADO       INT4                 not null,
-   constraint PK_EVALUACION primary key (EVAL_ID_EVALUACION)
+   EVAL_RESULTADO       INT4                 null,
+   constraint PK_EVALUACION primary key (EVAL_ID_EVALUACION),
+   constraint UQ_EVALUACION_SEDE unique (EVAL_ID_SEDE)
 );
 
 /*==============================================================*/
@@ -870,6 +871,7 @@ ROL_ID_ROL
 /*==============================================================*/
 create table SEDE (
    SEDE_ID_SEDE         SERIAL               not null,
+   SEDE_NOMBRE          VARCHAR(150)         not null,
    SEDE_DIRECCION       TEXT                 not null,
    SEDE_CUPO            INT4                 not null,
    SEDE_ESTADO          BOOL                 not null,

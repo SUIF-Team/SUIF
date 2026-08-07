@@ -1,40 +1,41 @@
-{{--
-    persona/sede.blade.php
-    Migrado desde: app/views/persona/sede.php
-    Vista para seleccionar sede y horario del proceso de certificación.
---}}
 @extends('layouts.persona')
 
-@section('title', 'SUIF — Selección de Sede')
+@section('title', 'SUIF — Selección de sede')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/persona-sede.css') }}">
 @endpush
 
 @section('content')
-<section class="sede-shell">
-
+<section
+    class="sede-shell"
+    @if(!$confirmada)
+        data-sedes-participante
+        data-disponibilidad-url="{{ route('persona.sede.disponibilidad') }}"
+    @endif>
     @if($errors->any())
-        <div class="sede-alerta sede-alerta--error">
-            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        <div class="sede-alerta sede-alerta--error" role="alert">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
     @if($confirmada)
-
         <div class="sede-confirmada">
-            <span class="sede-confirmada__icono">✓</span>
+            <span class="sede-confirmada__icono" aria-hidden="true">✓</span>
             <h1>¡Sede confirmada!</h1>
-            <p class="sede-muted">Tu lugar quedó apartado. Por favor genere su comprobante.</p>
+            <p class="sede-muted">Tu lugar quedó apartado para la evaluación.</p>
 
             <div class="sede-resumen">
                 <p class="sede-resumen__etiqueta">Sede seleccionada</p>
                 <p class="sede-resumen__nombre">{{ $sede['nombre'] }}</p>
                 <dl class="sede-resumen__datos">
                     <dt>Dirección</dt><dd>{{ $sede['direccion'] }}</dd>
-                    <dt>Entidad federativa</dt><dd>{{ $sede['entidad'] }}</dd>
                     <dt>Fecha</dt><dd>{{ $sede['fecha'] }}</dd>
-                    <dt>Hora</dt><dd>{{ $sede['hora'] }}</dd>
+                    <dt>Horario</dt><dd>{{ $sede['horario'] }}</dd>
                 </dl>
             </div>
 
@@ -42,63 +43,67 @@
                 <button type="button" class="sede-boton sede-boton--secundario">Generar comprobante</button>
                 <a href="{{ route('persona.dashboard') }}" class="sede-boton">Continuar</a>
             </div>
-
-            @if(config('app.debug'))
-                <p class="sede-demo"><a href="{{ route('persona.sede.reiniciar') }}">Elegir otra sede (demo)</a></p>
-            @endif
         </div>
-
     @else
-
         <h1>Elige tu sede de evaluación</h1>
-        <p class="sede-muted">Selecciona la sede donde presentarás tu examen de certificación. Revisa los cupos disponibles antes de elegir.</p>
+        <p class="sede-muted">Selecciona dónde presentarás tu evaluación. Los lugares se actualizan automáticamente.</p>
 
         <form method="GET" action="{{ route('persona.sede.index') }}" class="sede-filtro">
-            <select name="entidad">
-                <option value="">Todas las entidades</option>
-                @foreach($entidades as $entidad)
-                    <option value="{{ $entidad }}" {{ $entidadActual === $entidad ? 'selected' : '' }}>{{ $entidad }}</option>
-                @endforeach
-            </select>
-            <input type="text" name="buscar" placeholder="Buscar sede…" value="{{ $buscarActual }}">
+            <input type="search" name="buscar" placeholder="Buscar por nombre o dirección…" value="{{ $buscarActual }}">
             <button type="submit" class="sede-boton sede-boton--filtrar">Filtrar</button>
+            @if($buscarActual !== '')
+                <a href="{{ route('persona.sede.index') }}" class="sede-boton sede-boton--secundario">Limpiar</a>
+            @endif
         </form>
 
-        <p class="sede-contador">Sedes disponibles · {{ count($sedes) }}</p>
+        <p class="sede-contador">Sedes programadas · {{ count($sedes) }}</p>
 
-        <div class="sede-lista">
+        <div class="sede-lista" aria-live="polite">
             @forelse($sedes as $sede)
-                <div class="sede-tarjeta">
+                <article class="sede-tarjeta" data-evaluacion-id="{{ $sede['evaluacion_id'] }}">
                     <div class="sede-tarjeta__info">
-                        <p class="sede-tarjeta__nombre">{{ $sede['nombre'] }}</p>
+                        <h2 class="sede-tarjeta__nombre">{{ $sede['nombre'] }}</h2>
                         <p class="sede-tarjeta__direccion">{{ $sede['direccion'] }}</p>
                         <div class="sede-tarjeta__meta">
-                            <span class="sede-chip">{{ $sede['entidad'] }}</span>
-                            <span class="sede-fecha">{{ $sede['fecha'] }} · {{ $sede['hora'] }}</span>
+                            <span class="sede-chip">
+                                {{ \Illuminate\Support\Carbon::parse($sede['fecha_inicio'])->format('d/m/Y') }}
+                                @if($sede['fecha_inicio'] !== $sede['fecha_fin'])
+                                    –{{ \Illuminate\Support\Carbon::parse($sede['fecha_fin'])->format('d/m/Y') }}
+                                @endif
+                            </span>
+                            <span class="sede-fecha">{{ $sede['hora_inicio'] }}–{{ $sede['hora_fin'] }} h</span>
                         </div>
                     </div>
                     <div class="sede-tarjeta__cupo">
-                        <span class="sede-cupo sede-cupo--{{ $sede['sin_cupo'] ? 'lleno' : ($sede['cupo_disponible'] <= 15 ? 'bajo' : 'libre') }}">
-                            {{ $sede['sin_cupo'] ? 'Sin cupo' : $sede['cupo_usado'].' / '.$sede['cupo_total'].' lugares' }}
+                        <span
+                            class="sede-cupo sede-cupo--{{ !$sede['con_cupo'] ? 'lleno' : ($sede['disponibles'] <= 15 ? 'bajo' : 'libre') }}"
+                            data-cupo-estado>
+                            <span data-cupo-disponible>{{ $sede['disponibles'] }}</span> de {{ $sede['cupo'] }} disponibles
                         </span>
-                        <small>Cupos disponibles</small>
+                        <small data-cupo-etiqueta>{{ $sede['con_cupo'] ? 'Lugares disponibles' : 'Sin cupo' }}</small>
                     </div>
-                    @if($sede['sin_cupo'])
-                        <span class="sede-boton sede-boton--deshabilitado">Sin cupo</span>
-                    @else
-                        <form method="POST" action="{{ route('persona.sede.seleccionar') }}">
-                            @csrf
-                            <input type="hidden" name="sede_id" value="{{ $sede['id'] }}">
-                            <button type="submit" class="sede-boton">Seleccionar</button>
-                        </form>
-                    @endif
-                </div>
+                    <form method="POST" action="{{ route('persona.sede.seleccionar') }}">
+                        @csrf
+                        <input type="hidden" name="evaluacion_id" value="{{ $sede['evaluacion_id'] }}">
+                        <button
+                            type="submit"
+                            class="sede-boton {{ $sede['con_cupo'] ? '' : 'sede-boton--deshabilitado' }}"
+                            data-seleccionar-sede
+                            @disabled(!$sede['con_cupo'])>
+                            {{ $sede['con_cupo'] ? 'Seleccionar' : 'Sin cupo' }}
+                        </button>
+                    </form>
+                </article>
             @empty
-                <p class="sede-muted">No hay sedes que coincidan con tu búsqueda.</p>
+                <p class="sede-muted">No hay sedes programadas que coincidan con tu búsqueda.</p>
             @endforelse
         </div>
-
     @endif
-
 </section>
 @endsection
+
+@if(!$confirmada)
+    @push('scripts')
+    <script src="{{ asset_versionado('assets/js/pages/persona-sede.js') }}"></script>
+    @endpush
+@endif

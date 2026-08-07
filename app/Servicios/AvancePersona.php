@@ -15,6 +15,7 @@ class AvancePersona
 {
     private $idSolicitud = null;
     private $idPago = null;
+    private $idEvaluacion = null;
     private $estadoSolicitud = null;
     private $documentos = [];
     private $pago = null;
@@ -29,11 +30,12 @@ class AvancePersona
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->where('p.pers_id_usuario', $idUsuario)
             ->orderByDesc('s.soli_id_solicitud')
-            ->select('s.soli_id_solicitud', 's.soli_id_pago')
+            ->select('s.soli_id_solicitud', 's.soli_id_pago', 's.soli_id_evaluacion')
             ->first();
 
         $this->idSolicitud = $solicitud ? $solicitud->soli_id_solicitud : null;
         $this->idPago = $solicitud ? $solicitud->soli_id_pago : null;
+        $this->idEvaluacion = $solicitud ? $solicitud->soli_id_evaluacion : null;
 
         if (!$this->idSolicitud) {
             return;
@@ -68,6 +70,11 @@ class AvancePersona
     public function tienePago()
     {
         return $this->pago !== null;
+    }
+
+    public function tieneSedeSeleccionada()
+    {
+        return $this->idEvaluacion !== null;
     }
 
     public function tieneComprobantePago()

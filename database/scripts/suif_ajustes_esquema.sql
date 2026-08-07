@@ -22,6 +22,42 @@ ALTER TABLE estado_documento ALTER COLUMN esdo_comentarios DROP NOT NULL;
 /* "Documentación en revisión" no cabe en 15 caracteres. */
 ALTER TABLE c_estado_solicitud ALTER COLUMN esso_estatus_solicitud TYPE VARCHAR(40);
 
+/* Nombre visible de la sede. El backfill sólo cubre filas preexistentes. */
+ALTER TABLE sede ADD COLUMN IF NOT EXISTS sede_nombre VARCHAR(150);
+
+UPDATE sede
+SET sede_nombre = LEFT(sede_direccion, 150)
+WHERE sede_nombre IS NULL;
+
+ALTER TABLE sede ALTER COLUMN sede_nombre SET NOT NULL;
+
+/* El resultado se captura después de programar la evaluación. */
+ALTER TABLE evaluacion ALTER COLUMN eval_resultado DROP NOT NULL;
+
+/* La primera versión administra una sola programación por sede. */
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uq_evaluacion_sede'
+    ) THEN
+        ALTER TABLE evaluacion
+            ADD CONSTRAINT uq_evaluacion_sede UNIQUE (eval_id_sede);
+    END IF;
+END $$;
+
+/* Estado inicial consistente: las sedes sin programación o llenas no ofrecen cupo. */
+UPDATE sede AS s
+SET sede_estado = EXISTS (
+    SELECT 1
+    FROM evaluacion AS e
+    WHERE e.eval_id_sede = s.sede_id_sede
+      AND s.sede_cupo > (
+          SELECT COUNT(*)
+          FROM solicitud AS so
+          WHERE so.soli_id_evaluacion = e.eval_id_evaluacion
+      )
+);
+
 /* Un solo documento por tipo en cada solicitud. */
 DO $$
 BEGIN

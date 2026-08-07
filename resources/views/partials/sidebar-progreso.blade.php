@@ -5,11 +5,10 @@
     Un paso solo es navegable si todos los anteriores están completos.
 --}}
 <?php
-    /* Pre-registro, documentación y pago salen de la base. */
-    $sesion = (array) session('suif.persona.estado', []);
+    /* Pre-registro, documentación, pago y sede salen de la base. */
     $ref = $avance->tienePago();
     $pagoEstado = $avance->estadoPagoVista();
-    $sede = !empty($sesion['sede_seleccionada']);
+    $sede = $avance->tieneSedeSeleccionada();
     $aprobada = $avance->solicitudAprobada();
 
     $pasos = [
