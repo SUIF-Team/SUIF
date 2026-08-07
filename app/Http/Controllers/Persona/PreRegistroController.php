@@ -608,44 +608,6 @@ class PreRegistroController extends Controller
             ->with('success', 'Tus documentos fueron enviados a revisión.');
     }
 
-       public function demo(Request $request, $estadoDemo)
-    {
-        if (!config('app.debug')) {
-            abort(404);
-        }
-
-        $documentos = $this->documentosGuardados($this->solicitudActual());
-
-        foreach (array_keys($this->documentos) as $slug) {
-            if (empty($documentos[$slug])) {
-                return redirect()->route('persona.documentos.index')
-                    ->withErrors(['documentos' => 'Carga todos los documentos antes de simular estados.']);
-            }
-        }
-
-        DB::transaction(function () use ($documentos, $estadoDemo) {
-            $primero = true;
-
-            foreach ($documentos as $doc) {
-                if ($estadoDemo === 'rechazado' && $primero) {
-                    $this->registrarEstadoDocumento(
-                        $doc['id'],
-                        'Rechazado',
-                        'El documento se ve borroso. Sustituye el archivo por una copia legible.'
-                    );
-                } elseif ($estadoDemo === 'aprobado') {
-                    $this->registrarEstadoDocumento($doc['id'], 'Aprobado');
-                } else {
-                    $this->registrarEstadoDocumento($doc['id'], 'En revisión');
-                }
-
-                $primero = false;
-            }
-        });
-
-        return redirect()->route('persona.documentos.index');
-    }
-
     public function reiniciar(Request $request)
     {
         if (!config('app.debug')) {

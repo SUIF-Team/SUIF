@@ -87,7 +87,7 @@ class DashboardController extends Controller
         return $pasos;
     }
 
-       private function pasoDocumentacion($capturado, $documentacion)
+    private function pasoDocumentacion($capturado, $documentacion)
     {
         if (!$capturado) {
             return $this->paso(2, 'Documentación',
@@ -98,7 +98,7 @@ class DashboardController extends Controller
         $mensajes = [
             'pendiente' => ['Descarga los formatos, llénalos a mano y adjúntalos.', 'in-progress'],
             'en_proceso' => ['Te faltan documentos por adjuntar.', 'in-progress'],
-            'revision' => ['Tus documentos están siendo revisados por el equipo administrativo.', 'pending'],
+            'revision' => ['Tus documentos están siendo revisados por el equipo administrativo.', 'review'],
             'rechazado' => ['Uno o más documentos tienen observaciones. Corrígelos y vuelve a enviarlos.', 'rejected'],
             'aprobado' => ['Todos tus documentos fueron aprobados.', 'completed'],
         ];
@@ -141,7 +141,7 @@ class DashboardController extends Controller
         }
 
         if ($pago === 'revision') {
-            return $this->paso(4, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'completed', 'persona.pago.index');
+            return $this->paso(4, 'Pago', 'Tu comprobante fue enviado y está siendo validado.', 'review', 'persona.pago.index');
         }
 
         if ($pago === 'rechazado') {
@@ -190,14 +190,13 @@ class DashboardController extends Controller
             'completed', 'persona.resultados');
     }
 
-        private function paso($numero, $titulo, $descripcion, $estado, $ruta)
+    private function paso($numero, $titulo, $descripcion, $estado, $ruta)
     {
         $etiqueta = $this->etiquetaEstado($estado);
 
-        /* Las etapas completadas se pueden consultar; las accionables se continúan. */
-        $mostrarBoton = in_array($estado, ['completed', 'in-progress', 'rejected'], true);
-        $textoBoton = $estado === 'completed' ? 'Ver' : 'Continuar';
-
+        /* Las etapas cerradas o en revisión se consultan; las accionables se continúan. */
+        $mostrarBoton = in_array($estado, ['completed', 'review', 'in-progress', 'rejected'], true);
+        $textoBoton = in_array($estado, ['completed', 'review'], true) ? 'Ver' : 'Continuar';
         return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
     }
 
@@ -216,8 +215,11 @@ class DashboardController extends Controller
         }
 
         if ($avance->documentacionEstado() === 'revision'
-            || $sesion['pago_estado'] === 'revision'
-            || !empty($sesion['sede_seleccionada'])) {
+            || $sesion['pago_estado'] === 'revision') {
+            return $this->presentacionEstado('review');
+        }
+
+        if (!empty($sesion['sede_seleccionada'])) {
             return $this->presentacionEstado('pending');
         }
 
@@ -237,6 +239,7 @@ class DashboardController extends Controller
         $etiquetas = [
             'completed' => 'Completado',
             'pending' => 'Pendiente',
+            'review' => 'En revisión',
             'in-progress' => 'En proceso',
             'rejected' => 'Rechazado',
         ];

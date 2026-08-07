@@ -1,7 +1,6 @@
 {{--
     partials/preregistro-formatos.blade.php
     Lista de formatos requeridos del pre-registro.
-    $soloConsulta = true cuando se abre desde la carga de documentos.
 --}}
 <h1>Formatos requeridos</h1>
 
@@ -28,13 +27,6 @@
     @endforeach
 </div>
 
-@if($soloConsulta)
-    <div class="pr-actions">
-        <a class="pr-btn" href="{{ route('persona.preregistro.index') }}">Volver a mis documentos</a>
-    </div>
-@else
-    <form method="POST" action="{{ route('persona.preregistro.avanzar') }}" class="pr-actions">
-        @csrf
-        <button class="pr-btn">Continuar</button>
-    </form>
-@endif
+<div class="pr-actions">
+    <a class="pr-btn" href="{{ route('persona.documentos.index') }}">Volver a mis documentos</a>
+</div>
