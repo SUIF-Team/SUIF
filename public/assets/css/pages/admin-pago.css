@@ -53,6 +53,89 @@
     overflow-wrap: anywhere;
 }
 
+.admin-pago-archivo-no-disponible,
+.admin-pago-motivo,
+.admin-pago-rechazo {
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: #fcfbf9;
+}
+
+.admin-pago-archivo-no-disponible {
+    padding: 0.5rem 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.admin-pago-motivo {
+    margin-top: 1.5rem;
+    padding: 1rem;
+}
+
+.admin-pago-motivo h3,
+.admin-pago-motivo p {
+    margin: 0;
+}
+
+.admin-pago-motivo h3 {
+    color: #a53630;
+    font-size: 0.875rem;
+}
+
+.admin-pago-motivo p {
+    margin-top: 0.4rem;
+    color: var(--text-dark);
+    overflow-wrap: anywhere;
+}
+
+.admin-pago-resolucion {
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+}
+
+.admin-pago-rechazo {
+    padding: 1rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.admin-pago-rechazo label {
+    color: #a53630;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.admin-pago-rechazo textarea {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: var(--surface-white);
+    color: var(--text-dark);
+    font: inherit;
+    resize: vertical;
+}
+
+.admin-pago-rechazo textarea:focus {
+    border-color: #a53630;
+    outline: 3px solid rgba(165, 54, 48, 0.16);
+    outline-offset: 0;
+}
+
+.admin-pago-rechazo p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.admin-pago-rechazo .admin-preregistro-boton {
+    justify-self: start;
+}
+
 @media (max-width: 767.98px) {
     .admin-pago-progreso {
         display: grid;
@@ -70,5 +153,9 @@
 
     .admin-pago-enlace-comprobante {
         width: 100%;
+    }
+
+    .admin-pago-resolucion {
+        grid-template-columns: 1fr;
     }
 }

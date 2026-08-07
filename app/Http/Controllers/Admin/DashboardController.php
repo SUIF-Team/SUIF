@@ -29,7 +29,8 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Pagos',
-                'descripcion' => 'Disponible cuando el flujo de pagos persista datos reales.',
+                'ruta' => 'admin.pagos.index',
+                'descripcion' => 'Consulta y resuelve los comprobantes de pago enviados.',
             ],
             [
                 'titulo' => 'Referencias bancarias',

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 /**
  * Admin\ReferenciaController
@@ -13,5 +12,11 @@ use Illuminate\Http\Request;
  */
 class ReferenciaController extends Controller
 {
-    //
+    /**
+     * Muestra la pantalla base del módulo de referencias.
+     */
+    public function index()
+    {
+        return view('admin.referencias');
+    }
 }

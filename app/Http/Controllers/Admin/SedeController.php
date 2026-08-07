@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 /**
  * Admin\SedeController
@@ -13,5 +12,11 @@ use Illuminate\Http\Request;
  */
 class SedeController extends Controller
 {
-    //
+    /**
+     * Muestra la pantalla base del módulo de sedes.
+     */
+    public function index()
+    {
+        return view('admin.sedes');
+    }
 }

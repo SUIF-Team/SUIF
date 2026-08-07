@@ -22,6 +22,14 @@ use Illuminate\Support\Str;
 class DocumentoController extends Controller
 {
     /**
+     * Muestra la pantalla base del módulo de documentos.
+     */
+    public function index()
+    {
+        return view('admin.documentos');
+    }
+
+    /**
      * Sirve un PDF cargado para un expediente visible en la bandeja.
      */
     public function ver(string $solicitud, string $documento, ConsultaPreRegistros $consulta_pre_registros)

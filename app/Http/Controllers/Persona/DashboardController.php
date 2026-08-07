@@ -27,13 +27,15 @@ class DashboardController extends Controller
             'identificador' => $persona_modelo ? 'CURP '.$persona_modelo->pers_curp : '',
         ];
 
-        $sesion = $this->normalizarEstado(
-            (array) $request->session()->get('suif.persona.estado', [])
-        );
+        $sesion = (array) $request->session()->get('suif.persona.estado', []);
 
         /* Nada del trámite avanza mientras el administrador no apruebe. */
         if (!$avance->solicitudAprobada()) {
             $sesion = $this->normalizarEstado([]);
+        } else {
+            $sesion['referencia_generada'] = $avance->tienePago();
+            $sesion['pago_estado'] = $avance->estadoPagoVista();
+            $sesion = $this->normalizarEstado($sesion);
         }
 
         $pasos = $this->construirPasos($avance, $sesion);

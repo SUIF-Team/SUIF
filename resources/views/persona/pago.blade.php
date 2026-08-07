@@ -25,29 +25,23 @@
         </div>
     @endif
 
-    @if(config('app.debug'))
-    <div class="pago-demo">
-        Simular:
-        <a href="{{ route('persona.pago.demo', 'sin_cargar') }}">Sin cargar</a>
-        <a href="{{ route('persona.pago.demo', 'revision') }}">Pendiente</a>
-        <a href="{{ route('persona.pago.demo', 'validado') }}">Aprobado</a>
-        <a href="{{ route('persona.pago.demo', 'rechazado') }}">Rechazado</a>
-    </div>
-    @endif
-
     @if($pagoEstado === 'sin_cargar')
 
         <div class="pago-tarjeta pago-tarjeta--sola">
             <h1>Sube tu comprobante de pago</h1>
             <p class="pago-muted">Adjunta el comprobante de tu pago por ${{ $cuota }} {{ $moneda }}. Solo se acepta un archivo PDF de máximo 1 MB.</p>
-            <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
-                @csrf
-                <label class="pago-archivo">
-                    Seleccionar PDF
-                    <input type="file" name="comprobante" accept="application/pdf" required>
-                </label>
-                <button type="submit" class="pago-boton">Enviar comprobante</button>
-            </form>
+            @if($puedeCargar)
+                <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
+                    @csrf
+                    <label class="pago-archivo">
+                        Seleccionar PDF
+                        <input type="file" name="comprobante" accept="application/pdf" required>
+                    </label>
+                    <button type="submit" class="pago-boton">Enviar comprobante</button>
+                </form>
+            @elseif($mensajeBloqueo)
+                <p class="pago-muted">{{ $mensajeBloqueo }}</p>
+            @endif
         </div>
 
     @else
@@ -73,15 +67,20 @@
                     <p>Tu comprobante fue aprobado por el equipo administrativo. Ya puedes continuar con la selección de sede.</p>
                 @elseif($pagoEstado === 'rechazado')
                     <h2 class="pago-tarjeta__titulo pago-tarjeta__titulo--error">Comentarios</h2>
-                    <p>Su comprobante de pago fue rechazado porque no cumple con los requisitos necesarios. Para subsanar esta situación, le solicitamos cargar nuevamente el comprobante correcto y legible.</p>
-                    <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
-                        @csrf
-                        <label class="pago-archivo">
-                            Seleccionar PDF
-                            <input type="file" name="comprobante" accept="application/pdf" required>
-                        </label>
-                        <button type="submit" class="pago-boton">Subsanar</button>
-                    </form>
+                    <p>{{ $motivoRechazo ?: 'Tu comprobante fue rechazado porque no cumple con los requisitos necesarios.' }}</p>
+                    <p>Para subsanar esta situación, carga nuevamente un comprobante correcto y legible.</p>
+                    @if($puedeCargar)
+                        <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
+                            @csrf
+                            <label class="pago-archivo">
+                                Seleccionar PDF
+                                <input type="file" name="comprobante" accept="application/pdf" required>
+                            </label>
+                            <button type="submit" class="pago-boton">Subsanar</button>
+                        </form>
+                    @elseif($mensajeBloqueo)
+                        <p class="pago-muted">{{ $mensajeBloqueo }}</p>
+                    @endif
                 @endif
             </div>
         </div>

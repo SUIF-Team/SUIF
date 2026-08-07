@@ -3,38 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\NotificacionResultado;
-use App\Support\Admin\PagoDatosPrueba;
+use App\Support\Admin\RevisionPagos;
+use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
-/**
- * Admin\PagoController
- *
- * Migrado desde: app/controllers/admin/PagoController.php
- * Responsabilidad: validación y gestión de comprobantes de pago por el administrador.
- */
 class PagoController extends Controller
 {
-    public function index(Request $request, PagoDatosPrueba $datos_prueba)
+    public function index(ConsultaPagos $consulta_pagos)
     {
-        $pagos = collect($datos_prueba->pagos())
-            ->sortByDesc('fecha_envio_comprobante')
-            ->map(function (array $pago) use ($request, $datos_prueba): array {
-                $estado = (array) $request->session()->get($this->claveEstado($pago['id']), []);
-
-                if (($estado['resultado'] ?? null) === 'rechazado') {
-                    $pago['estatus'] = 'Rechazado';
-                }
-
-                $pago['clase_estado'] = $this->claseEstado($pago['estatus']);
+        $pagos = collect($consulta_pagos->bandeja())
+            ->map(function (array $pago): array {
                 $pago['ruta_detalle'] = route('admin.pagos.show', ['id' => $pago['id']]);
-                $pago['puede_revisarse'] = ($estado['resultado'] ?? null) !== 'rechazado'
-                    && $datos_prueba->mensajeNoDisponibleParaRevision($pago) === null;
 
                 return $pago;
             })
-            ->values()
             ->all();
 
         return view('admin.pagos', [
@@ -42,90 +28,112 @@ class PagoController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $id, PagoDatosPrueba $datos_prueba)
+    public function show(string $id, ConsultaPagos $consulta_pagos)
     {
-        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
+        $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
             return $pago;
-        }
-
-        $estado = (array) $request->session()->get($this->claveEstado($id), []);
-
-        if (($estado['resultado'] ?? null) === 'rechazado') {
-            return redirect()->route('admin.pagos.resultado', ['id' => $id]);
         }
 
         return view('admin.pago-detalle', compact('pago'));
     }
 
     /**
-     * Mantiene una ruta controlada para el comprobante mientras se implementa
-     * el almacenamiento y la autorización de archivos.
+     * Sirve el comprobante privado sólo si corresponde al pago visible.
      */
-    public function comprobante(string $id, PagoDatosPrueba $datos_prueba): RedirectResponse
+    public function comprobante(string $id, ConsultaPagos $consulta_pagos)
     {
-        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
+        $pago = $this->obtenerPago($id, $consulta_pagos);
+
+        if ($pago instanceof RedirectResponse) {
+            abort(404);
+        }
+
+        $ruta = $this->rutaComprobante($id, $consulta_pagos);
+
+        abort_unless($ruta, 404);
+
+        $nombre = str_replace(["\r", "\n", '"'], '', basename($ruta));
+
+        $respuesta = response()->file(Storage::disk('comprobantes')->path($ruta), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$nombre.'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+
+        $respuesta->setPrivate();
+        $respuesta->headers->addCacheControlDirective('no-store');
+
+        return $respuesta;
+    }
+
+    public function validar(
+        string $id,
+        ConsultaPagos $consulta_pagos,
+        RevisionPagos $revision_pagos
+    ): RedirectResponse {
+        $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
             return $pago;
         }
 
-        return redirect()
-            ->route('admin.pagos.show', ['id' => $pago['id']])
-            ->with('warning', 'La visualización del comprobante estará disponible próximamente.');
-    }
+        try {
+            $revision_pagos->aprobar((int) $pago['id']);
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('admin.pagos.show', ['id' => $pago['id']])
+                ->with('warning', $exception->getMessage());
+        }
 
-    /**
-     * La ruta acepta enlaces temporales sin efectuar cambios de estado.
-     */
-    public function validar(string $id, PagoDatosPrueba $datos_prueba): RedirectResponse
-    {
-        return $this->redireccionAccionPendiente($id, $datos_prueba, 'La validación del pago estará disponible próximamente.');
+        return redirect()->route('admin.pagos.resultado', ['id' => $pago['id']]);
     }
 
     public function rechazar(
         Request $request,
         string $id,
-        PagoDatosPrueba $datos_prueba
+        ConsultaPagos $consulta_pagos,
+        RevisionPagos $revision_pagos
     ): RedirectResponse {
-        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
+        $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
             return $pago;
         }
 
-        $estado = (array) $request->session()->get($this->claveEstado($id), []);
-
-        if (($estado['resultado'] ?? null) === 'rechazado') {
-            return redirect()
-                ->route('admin.pagos.resultado', ['id' => $id])
-                ->with('warning', 'El pago ya fue rechazado.');
-        }
-
-        $request->session()->put($this->claveEstado($id), [
-            'resultado' => 'rechazado',
+        $datos = $request->validate([
+            'motivo_rechazo' => ['required', 'string', 'max:2000'],
+        ], [
+            'motivo_rechazo.required' => 'Escribe el motivo del rechazo.',
+            'motivo_rechazo.max' => 'El motivo del rechazo no debe exceder 2000 caracteres.',
         ]);
 
-        return redirect()->route('admin.pagos.resultado', ['id' => $id]);
+        try {
+            $revision_pagos->rechazar((int) $pago['id'], $datos['motivo_rechazo']);
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('admin.pagos.show', ['id' => $pago['id']])
+                ->withInput()
+                ->with('warning', $exception->getMessage());
+        }
+
+        return redirect()->route('admin.pagos.resultado', ['id' => $pago['id']]);
     }
 
     public function resultado(
-        Request $request,
         string $id,
-        PagoDatosPrueba $datos_prueba,
+        ConsultaPagos $consulta_pagos,
         NotificacionResultado $notificacion_resultado
     ) {
-        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
+        $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
             return $pago;
         }
 
-        $estado = (array) $request->session()->get($this->claveEstado($id), []);
-
-        if (($estado['resultado'] ?? null) !== 'rechazado') {
-            return redirect()->route('admin.pagos.show', ['id' => $id]);
+        if (!in_array($pago['estado_persistido'], [ConsultaPagos::COMPLETADO, ConsultaPagos::DECLINADO], true)) {
+            return redirect()->route('admin.pagos.show', ['id' => $pago['id']]);
         }
 
         $notificacion = $notificacion_resultado->paraPago($pago);
@@ -136,31 +144,15 @@ class PagoController extends Controller
         ]);
     }
 
-    private function redireccionAccionPendiente(
-        string $id,
-        PagoDatosPrueba $datos_prueba,
-        string $mensaje
-    ): RedirectResponse {
-        $pago = $this->obtenerPagoRevisable($id, $datos_prueba);
-
-        if ($pago instanceof RedirectResponse) {
-            return $pago;
+    private function obtenerPago(string $id, ConsultaPagos $consulta_pagos): array|RedirectResponse
+    {
+        if (!ctype_digit($id)) {
+            return redirect()
+                ->route('admin.pagos.index')
+                ->with('warning', 'El registro de pago solicitado no fue encontrado.');
         }
 
-        return redirect()
-            ->route('admin.pagos.show', ['id' => $pago['id']])
-            ->with('warning', $mensaje);
-    }
-
-    /**
-     * Valida los requisitos previos en el servidor antes de mostrar o enlazar
-     * cualquier acción del expediente de pago.
-     */
-    private function obtenerPagoRevisable(
-        string $id,
-        PagoDatosPrueba $datos_prueba
-    ): array|RedirectResponse {
-        $pago = $datos_prueba->pago($id);
+        $pago = $consulta_pagos->pago((int) $id);
 
         if (!$pago) {
             return redirect()
@@ -168,28 +160,27 @@ class PagoController extends Controller
                 ->with('warning', 'El registro de pago solicitado no fue encontrado.');
         }
 
-        $mensaje = $datos_prueba->mensajeNoDisponibleParaRevision($pago);
-
-        if ($mensaje) {
-            return redirect()
-                ->route('admin.pagos.index')
-                ->with('warning', $mensaje);
-        }
-
         return $pago;
     }
 
-    private function claveEstado(string $id): string
+    private function rutaComprobante(string $id, ConsultaPagos $consulta_pagos): ?string
     {
-        return 'suif.admin.pago.'.$id;
-    }
+        if (!ctype_digit($id)) {
+            return null;
+        }
 
-    private function claseEstado(string $estatus): string
-    {
-        return match ($estatus) {
-            'Aprobado' => 'admin-bandeja-preregistros-estado-aceptado',
-            'Rechazado' => 'admin-bandeja-preregistros-estado-rechazado',
-            default => 'admin-bandeja-preregistros-estado-revision',
-        };
+        $pago = $consulta_pagos->pago((int) $id);
+
+        if (!$pago || !$pago['comprobante_disponible']) {
+            return null;
+        }
+
+        $ruta = \Illuminate\Support\Facades\DB::table('pago')
+            ->where('pago_id_pago', (int) $id)
+            ->value('pago_comprobante_path');
+
+        return is_string($ruta) && $consulta_pagos->archivoDisponible($ruta)
+            ? $ruta
+            : null;
     }
 }

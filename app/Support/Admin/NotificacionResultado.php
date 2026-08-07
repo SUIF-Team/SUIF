@@ -57,6 +57,8 @@ class NotificacionResultado
 
     public function paraPago(array $pago): array
     {
+        $es_aprobado = $pago['estado_persistido'] === ConsultaPagos::COMPLETADO;
+
         return [
             'persona' => [
                 'iniciales' => $pago['iniciales'],
@@ -64,15 +66,24 @@ class NotificacionResultado
                 'curp' => $pago['curp'],
                 'entidad_federativa' => $pago['entidad_federativa'],
             ],
-            'titulo_pagina' => 'SUIF — Pago rechazado',
-            'titulo' => 'PAGO RECHAZADO',
-            'estado_general' => 'Rechazado',
-            'clase_estado' => 'admin-preregistro-estado--rechazado',
-            'clase_mensaje' => 'admin-preregistro-paso--rechazado',
+            'titulo_pagina' => $es_aprobado ? 'SUIF — Pago aprobado' : 'SUIF — Pago rechazado',
+            'titulo' => $es_aprobado ? 'PAGO APROBADO' : 'PAGO RECHAZADO',
+            'estado_general' => $es_aprobado ? 'Aprobado' : 'Rechazado',
+            'clase_estado' => $es_aprobado
+                ? 'admin-preregistro-estado--completado'
+                : 'admin-preregistro-estado--rechazado',
+            'clase_mensaje' => $es_aprobado
+                ? 'admin-preregistro-paso--completado'
+                : 'admin-preregistro-paso--rechazado',
             'pasos' => [
                 $this->paso('Pre-registro', 'Completado', 'admin-preregistro-paso--completado'),
                 $this->paso('Documentación', 'Completado', 'admin-preregistro-paso--completado'),
-                $this->paso('Pago', 'Rechazado', 'admin-preregistro-paso--rechazado', true),
+                $this->paso(
+                    'Pago',
+                    $es_aprobado ? 'Aprobado' : 'Rechazado',
+                    $es_aprobado ? 'admin-preregistro-paso--completado' : 'admin-preregistro-paso--rechazado',
+                    true
+                ),
             ],
             'clase_progreso' => 'admin-preregistro-progreso--tres-pasos',
             'ruta_regreso' => route('admin.pagos.index'),

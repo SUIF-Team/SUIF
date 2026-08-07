@@ -14,8 +14,10 @@ use Illuminate\Support\Facades\DB;
 class AvancePersona
 {
     private $idSolicitud = null;
+    private $idPago = null;
     private $estadoSolicitud = null;
     private $documentos = [];
+    private $pago = null;
 
     public function __construct($idUsuario)
     {
@@ -23,11 +25,15 @@ class AvancePersona
             return;
         }
 
-        $this->idSolicitud = DB::table('solicitud as s')
+        $solicitud = DB::table('solicitud as s')
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->where('p.pers_id_usuario', $idUsuario)
             ->orderByDesc('s.soli_id_solicitud')
-            ->value('s.soli_id_solicitud');
+            ->select('s.soli_id_solicitud', 's.soli_id_pago')
+            ->first();
+
+        $this->idSolicitud = $solicitud ? $solicitud->soli_id_solicitud : null;
+        $this->idPago = $solicitud ? $solicitud->soli_id_pago : null;
 
         if (!$this->idSolicitud) {
             return;
@@ -41,6 +47,7 @@ class AvancePersona
             ->value('c.esso_estatus_solicitud');
 
         $this->documentos = $this->cargarDocumentos();
+        $this->pago = $this->cargarPago();
     }
 
     public function tieneSolicitud()
@@ -56,6 +63,41 @@ class AvancePersona
     public function estadoSolicitud()
     {
         return $this->estadoSolicitud;
+    }
+
+    public function tienePago()
+    {
+        return $this->pago !== null;
+    }
+
+    public function tieneComprobantePago()
+    {
+        return $this->tienePago() && !empty($this->pago->pago_comprobante_path);
+    }
+
+    public function estadoPagoVista()
+    {
+        if (!$this->tieneComprobantePago()) {
+            return 'sin_cargar';
+        }
+
+        return match ($this->pago->esta_estado_pago) {
+            'Completado' => 'validado',
+            'Declinado' => 'rechazado',
+            default => 'revision',
+        };
+    }
+
+    public function motivoRechazoPago()
+    {
+        return $this->estadoPagoVista() === 'rechazado'
+            ? trim((string) $this->pago->espa_comentario)
+            : null;
+    }
+
+    public function montoPago()
+    {
+        return $this->tienePago() ? $this->pago->pago_monto_pagado : null;
     }
 
     /**
@@ -156,5 +198,32 @@ class AvancePersona
         }
 
         return $resultado;
+    }
+
+    private function cargarPago()
+    {
+        if (!$this->idPago) {
+            return null;
+        }
+
+        return DB::table('pago as p')
+            ->leftJoin('estado_pago as ep', function ($join): void {
+                $join->on('ep.espa_id_pago', '=', 'p.pago_id_pago')
+                    ->whereRaw('ep.espa_id_estado_pago = (
+                        SELECT MAX(ultimo.espa_id_estado_pago)
+                        FROM estado_pago AS ultimo
+                        WHERE ultimo.espa_id_pago = p.pago_id_pago
+                    )');
+            })
+            ->leftJoin('c_estado_pago as cep', 'cep.espa_id_c_estado_pago', '=', 'ep.espa_id_c_estado_pago')
+            ->where('p.pago_id_pago', $this->idPago)
+            ->select([
+                'p.pago_id_pago',
+                'p.pago_comprobante_path',
+                'p.pago_monto_pagado',
+                'cep.esta_estado_pago',
+                'ep.espa_comentario',
+            ])
+            ->first();
     }
 }

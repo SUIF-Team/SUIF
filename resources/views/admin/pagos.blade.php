@@ -50,8 +50,9 @@
                         <span class="admin-bandeja-preregistros-estado" :class="claseEstado(pago)">@{{ pago.estatus }}</span>
                     </div>
                     <div class="admin-bandeja-preregistros-accion">
-                        <a v-if="pago.puede_revisarse" class="admin-bandeja-preregistros-expediente" :href="pago.ruta_detalle">Revisar pago</a>
-                        <span v-else class="admin-bandeja-preregistros-accion-no-disponible">Revisión no disponible</span>
+                        <a class="admin-bandeja-preregistros-expediente" :href="pago.ruta_detalle">
+                            @{{ pago.puede_revisarse ? 'Revisar pago' : 'Ver pago' }}
+                        </a>
                     </div>
                 </article>
 

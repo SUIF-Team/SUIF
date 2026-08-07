@@ -58,6 +58,10 @@ class AuthController extends Controller
         Auth::login($persona->usuario);
         $request->session()->regenerate();
 
+        if ($persona->usuario->tienePrivilegio('Gestionar Pagos')) {
+            return redirect()->route('admin.pagos.index');
+        }
+
         return redirect()->route('persona.dashboard');
     }
 

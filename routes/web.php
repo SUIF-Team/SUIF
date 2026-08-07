@@ -51,7 +51,6 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
 
         Route::get('/pago', [PersonaPagoController::class, 'index'])->name('pago.index');
         Route::post('/pago/comprobante', [PersonaPagoController::class, 'subirComprobante'])->name('pago.comprobante');
-        Route::get('/pago/demo/{estado}', [PersonaPagoController::class, 'demo'])->name('pago.demo');
         Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
         Route::get('/sede', [PersonaSedeController::class, 'index'])->name('sede.index');
@@ -73,12 +72,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/personas-registradas', [AdminPersonaController::class, 'registradas'])->name('personas.registradas.index');
     Route::get('/personas/{solicitud}/documentos/{documento}', [AdminDocumentoController::class, 'ver'])->name('personas.documentos.ver');
     Route::get('/personas/{id}', [AdminPersonaController::class, 'show'])->name('personas.show');
-    Route::get('/pagos', [AdminPagoController::class, 'index'])->name('pagos.index');
-    Route::get('/pagos/{id}/comprobante', [AdminPagoController::class, 'comprobante'])->name('pagos.comprobante');
-    Route::match(['get', 'post'], '/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');
-    Route::post('/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
-    Route::get('/pagos/{id}/resultado', [AdminPagoController::class, 'resultado'])->name('pagos.resultado');
-    Route::get('/pagos/{id}', [AdminPagoController::class, 'show'])->name('pagos.show');
+    Route::middleware(['auth', 'can:gestionar-pagos'])->group(function () {
+        Route::get('/pagos', [AdminPagoController::class, 'index'])->name('pagos.index');
+        Route::get('/pagos/{id}/comprobante', [AdminPagoController::class, 'comprobante'])->name('pagos.comprobante');
+        Route::post('/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');
+        Route::post('/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
+        Route::get('/pagos/{id}/resultado', [AdminPagoController::class, 'resultado'])->name('pagos.resultado');
+        Route::get('/pagos/{id}', [AdminPagoController::class, 'show'])->name('pagos.show');
+    });
     Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
     Route::get('/documentos', [AdminDocumentoController::class, 'index'])->name('documentos.index');
     Route::get('/documentos/{id}/resultado', [AdminDocumentoController::class, 'resultado'])->name('documentos.resultado');

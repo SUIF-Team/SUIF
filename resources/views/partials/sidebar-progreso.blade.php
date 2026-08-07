@@ -5,11 +5,10 @@
     Un paso solo es navegable si todos los anteriores están completos.
 --}}
 <?php
-    /* Pre-registro y documentación salen de la base. El resto todavía vive
-       en sesión y se irá migrando conforme existan sus tablas pobladas. */
+    /* Pre-registro, documentación y pago salen de la base. */
     $sesion = (array) session('suif.persona.estado', []);
-    $ref = !empty($sesion['referencia_generada']);
-    $pagoEstado = isset($sesion['pago_estado']) ? $sesion['pago_estado'] : 'sin_cargar';
+    $ref = $avance->tienePago();
+    $pagoEstado = $avance->estadoPagoVista();
     $sede = !empty($sesion['sede_seleccionada']);
     $aprobada = $avance->solicitudAprobada();
 
