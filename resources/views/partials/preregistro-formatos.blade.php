@@ -18,8 +18,8 @@
         <div class="pr-format">
             <strong>{{ $nombre }}</strong>
             @if(in_array($slug, $formatos))
-                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('participante.preregistro.formatos.ver', $slug) }}">Previsualizar</a>
-                <a class="pr-btn" href="{{ route('participante.preregistro.formatos.descargar', $slug) }}">Descargar</a>
+                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('persona.preregistro.formatos.ver', $slug) }}">Previsualizar</a>
+                <a class="pr-btn" href="{{ route('persona.preregistro.formatos.descargar', $slug) }}">Descargar</a>
             @else
                 <span class="pr-format__nota">Documento personal · solo lo adjuntas</span>
             @endif
@@ -28,5 +28,5 @@
 </div>
 
 <div class="pr-actions">
-    <a class="pr-btn" href="{{ route('participante.documentos.index') }}">Volver a mis documentos</a>
+    <a class="pr-btn" href="{{ route('persona.documentos.index') }}">Volver a mis documentos</a>
 </div>

@@ -171,6 +171,6 @@
 @endsection
 
 @section('scripts')
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
     <script src="{{ asset_versionado('assets/js/pages/home.js') }}"></script>
 @endsection

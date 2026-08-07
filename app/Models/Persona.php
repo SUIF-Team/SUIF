@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Persona
  *
- * Responsabilidad: datos personales del participante (tabla PERSONA).
- * Aquí vive la CURP con la que el participante inicia sesión.
+ * Responsabilidad: datos personales de la persona (tabla PERSONA).
+ * Aquí vive la CURP con la que la persona inicia sesión.
  */
 class Persona extends Model
 {

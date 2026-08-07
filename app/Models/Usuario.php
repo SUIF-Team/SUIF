@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Usuario
@@ -44,5 +45,14 @@ class Usuario extends Authenticatable
     public function persona()
     {
         return $this->hasOne(Persona::class, 'pers_id_usuario', 'usua_id_usuario');
+    }
+
+    public function tienePrivilegio(string $privilegio): bool
+    {
+        return DB::table('privilegio_rol as pr')
+            ->join('privilegio as p', 'p.priv_id_privilegio', '=', 'pr.ropr_id_privilegio')
+            ->where('pr.ropr_id_rol', $this->usua_id_rol)
+            ->where('p.priv_privilegio', $privilegio)
+            ->exists();
     }
 }

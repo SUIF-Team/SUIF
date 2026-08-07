@@ -1,40 +1,38 @@
 {{--
     partials/sidebar-progreso.blade.php
-    Barra de avance del participante.
+    Barra de avance de la persona.
     Recibe $avance desde el view composer de AppServiceProvider.
     Un paso solo es navegable si todos los anteriores están completos.
 --}}
 <?php
-    /* Pre-registro y documentación salen de la base. El resto todavía vive
-       en sesión y se irá migrando conforme existan sus tablas pobladas. */
-    $sesion = (array) session('suif.participante.estado', []);
-    $ref = !empty($sesion['referencia_generada']);
-    $pagoEstado = isset($sesion['pago_estado']) ? $sesion['pago_estado'] : 'sin_cargar';
-    $sede = !empty($sesion['sede_seleccionada']);
+    /* Pre-registro, documentación, pago y sede salen de la base. */
+    $ref = $avance->tienePago();
+    $pagoEstado = $avance->estadoPagoVista();
+    $sede = $avance->tieneSedeSeleccionada();
     $aprobada = $avance->solicitudAprobada();
 
     $pasos = [
         [
             'titulo' => 'Pre-registro',
             'subtitulo' => 'Captura de datos',
-            'ruta' => 'participante.preregistro.index',
-            'activo' => request()->routeIs('participante.preregistro.*'),
+            'ruta' => 'persona.preregistro.index',
+            'activo' => request()->routeIs('persona.preregistro.*'),
             'completo' => $avance->tieneSolicitud(),
             'requisito' => true,
         ],
                 [
             'titulo' => 'Documentación',
             'subtitulo' => 'Adjuntar documentos',
-            'ruta' => 'participante.documentos.index',
-            'activo' => request()->routeIs('participante.documentos.*'),
+            'ruta' => 'persona.documentos.index',
+            'activo' => request()->routeIs('persona.documentos.*'),
             'completo' => $avance->documentacionEstado() === 'aprobado',
             'requisito' => true,
         ],
         [
             'titulo' => 'Obtener referencia',
             'subtitulo' => '$'.number_format((float) config('suif.cuota_recuperacion', 7000), 2).' '.config('suif.moneda', 'MXN'),
-            'ruta' => 'participante.referencia.index',
-            'activo' => request()->routeIs('participante.referencia.*'),
+            'ruta' => 'persona.referencia.index',
+            'activo' => request()->routeIs('persona.referencia.*'),
             'completo' => $aprobada && $ref,
             /* No basta con tener los documentos aprobados: el administrador
                tiene que aprobar la solicitud completa. */
@@ -43,16 +41,16 @@
         [
             'titulo' => 'Pago',
             'subtitulo' => 'Ticket o CFDI',
-            'ruta' => 'participante.pago.index',
-            'activo' => request()->routeIs('participante.pago.*'),
+            'ruta' => 'persona.pago.index',
+            'activo' => request()->routeIs('persona.pago.*'),
             'completo' => $pagoEstado === 'validado',
             'requisito' => true,
         ],
         [
             'titulo' => 'Elegir sede',
             'subtitulo' => 'Sede y horario',
-            'ruta' => 'participante.sede.index',
-            'activo' => request()->routeIs('participante.sede.*'),
+            'ruta' => 'persona.sede.index',
+            'activo' => request()->routeIs('persona.sede.*'),
             'completo' => $sede,
             'requisito' => true,
         ],

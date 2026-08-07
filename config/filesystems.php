@@ -42,10 +42,10 @@ return [
             'visibility' => 'public',
         ],
 
-        // Disco para comprobantes de pago subidos por participantes
+        // Disco para comprobantes de pago subidos por personas
         'comprobantes' => [
             'driver' => 'local',
-            'root'   => storage_path('app/comprobantes'),
+            'root'   => storage_path('app/private/comprobantes'),
         ],
 
         // Disco para documentación requerida (INE, título, cédula, foto)

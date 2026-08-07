@@ -49,8 +49,8 @@ body.pagina-sistema {
     margin: 0;
     padding-top: var(--navbar-height);
     background-color: var(--surface-cream);
-    background-image: var(--fondo-sistema);
-    background-position: center top;
+    background-image: linear-gradient(rgba(249, 248, 244, 0.89), rgba(249, 248, 244, 0.89)), var(--fondo-sistema);
+    background-position: center, center top;
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;

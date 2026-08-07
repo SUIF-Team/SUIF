@@ -1,0 +1,376 @@
+.admin-sedes {
+    width: min(100%, 1200px);
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
+}
+
+.admin-sedes-contenedor {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin-sedes-encabezado {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.admin-sedes-encabezado h1,
+.admin-sedes-encabezado p,
+.admin-sedes-tarjeta h2,
+.admin-sedes-tarjeta p {
+    margin-top: 0;
+}
+
+.admin-sedes-encabezado h1 {
+    margin-bottom: 0.4rem;
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 700;
+}
+
+.admin-sedes-encabezado p,
+.admin-sedes-mapa > p {
+    margin-bottom: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.admin-sedes-tarjeta {
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
+}
+
+.admin-sedes-estadisticas {
+    width: min(100%, 32rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.admin-sedes-estadistica {
+    padding: 1.25rem;
+}
+
+.admin-sedes-estadistica h2 {
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.admin-sedes-estadistica p {
+    margin-bottom: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.admin-sedes-estadistica--azul { color: var(--unam-blue); }
+.admin-sedes-estadistica--verde { color: #287a45; }
+
+.admin-sedes-filtros {
+    padding: 1.25rem 1.5rem;
+}
+
+.admin-sedes-filtros-formulario,
+.admin-sedes-filtros-acciones,
+.admin-sedes-formulario-acciones,
+.admin-sedes-modal-acciones {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.admin-sedes-filtros-formulario {
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.admin-sedes-campo {
+    min-width: 0;
+    display: flex;
+    flex: 1 1 11rem;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.admin-sedes-campo--completo {
+    flex-basis: 100%;
+}
+
+.admin-sedes-campo label {
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.admin-sedes-campo input,
+.admin-sedes-campo select,
+.admin-sedes-campo textarea {
+    width: 100%;
+    min-height: 2.7rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: var(--text-dark);
+    font: inherit;
+    font-size: 0.875rem;
+}
+
+.admin-sedes-campo textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+}
+
+.admin-sedes-campo input:focus,
+.admin-sedes-campo select:focus,
+.admin-sedes-campo textarea:focus {
+    border-color: var(--unam-gold);
+    outline: 3px solid rgba(181, 139, 42, 0.2);
+    outline-offset: 0;
+}
+
+.admin-sedes-boton {
+    min-height: 2.7rem;
+    padding: 0.6rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-sedes-boton--primario {
+    border-color: var(--unam-blue);
+    background: var(--unam-blue);
+    color: #fff;
+}
+
+.admin-sedes-boton--primario:hover,
+.admin-sedes-boton--primario:focus-visible {
+    border-color: var(--unam-blue-dark);
+    background: var(--unam-blue-dark);
+    color: #fff;
+}
+
+.admin-sedes-boton--filtrar {
+    border-color: #93c5fd;
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+.admin-sedes-boton--limpiar,
+.admin-sedes-boton--eliminar {
+    border-color: #fca5a5;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.admin-sedes-boton--secundario {
+    border-color: var(--unam-blue);
+    background: #fff;
+    color: var(--unam-blue);
+}
+
+.admin-sedes-tabla-contenedor {
+    overflow: hidden;
+}
+
+.admin-sedes-tabla-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.admin-sedes-tabla {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+}
+
+.admin-sedes-tabla th,
+.admin-sedes-tabla td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.82rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.admin-sedes-tabla th {
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.admin-sedes-tabla tbody tr:last-child td { border-bottom: 0; }
+.admin-sedes-tabla tbody tr:hover { background: #f8fafc; }
+.admin-sedes-tabla-nombre { color: var(--text-dark); font-weight: 700; }
+
+.admin-sedes-tabla td small {
+    margin-top: 0.2rem;
+    display: block;
+    color: var(--text-muted);
+}
+
+.admin-sedes-estado {
+    display: inline-flex;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.admin-sedes-estado--con-cupo { background: #dcfce7; color: #166534; }
+.admin-sedes-estado--sin-cupo { background: #fee2e2; color: #991b1b; }
+.admin-sedes-estado--pendiente { background: #fef3c7; color: #92400e; }
+.admin-sedes-texto-atenuado { color: var(--text-muted); }
+
+.admin-sedes-editar {
+    color: var(--unam-blue);
+    font-weight: 700;
+}
+
+.admin-sedes-vacio {
+    padding: 2rem !important;
+    color: var(--text-muted);
+    text-align: center !important;
+}
+
+.admin-sedes-alerta {
+    padding: 1rem 1.25rem;
+    border: 1px solid #fecaca;
+    border-radius: 0.65rem;
+    background: #fff1f2;
+    color: #991b1b;
+}
+
+.admin-sedes-alerta p { margin: 0 0 0.5rem; font-weight: 700; }
+.admin-sedes-alerta ul { margin: 0; padding-left: 1.25rem; }
+
+.admin-sedes-formulario-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.admin-sedes-mapa,
+.admin-sedes-formulario-tarjeta {
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.admin-sedes-mapa h2,
+.admin-sedes-formulario-tarjeta > h2,
+.admin-sedes-modal-card h2 {
+    margin-bottom: 0.75rem;
+    color: var(--unam-blue);
+    font-family: var(--font-nav);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.admin-sedes-mapa-marco {
+    min-height: 370px;
+    margin-top: 1.25rem;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    border-radius: 0.65rem;
+    background: #e5e7eb;
+}
+
+.admin-sedes-mapa iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 370px;
+    border: 0;
+}
+
+.admin-sedes-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.admin-sedes-formulario-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.admin-sedes-formulario-acciones {
+    margin-top: 0.75rem;
+    justify-content: flex-end;
+}
+
+.admin-sedes-formulario-acciones .admin-sedes-boton--eliminar {
+    margin-right: auto;
+}
+
+.admin-sedes-modal[hidden] { display: none; }
+
+.admin-sedes-modal {
+    position: fixed;
+    z-index: 1200;
+    inset: 0;
+    padding: 1rem;
+    display: grid;
+    place-items: center;
+}
+
+.admin-sedes-modal-fondo {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 26, 46, 0.58);
+}
+
+.admin-sedes-modal-card {
+    position: relative;
+    width: min(100%, 31rem);
+    padding: 1.75rem;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.admin-sedes-modal-card p {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.admin-sedes-modal-acciones { justify-content: flex-end; }
+.admin-sedes-modal-abierto { overflow: hidden; }
+
+@media (max-width: 850px) {
+    .admin-sedes-formulario-layout { grid-template-columns: 1fr; }
+    .admin-sedes-mapa-marco,
+    .admin-sedes-mapa iframe { min-height: 300px; }
+}
+
+@media (max-width: 600px) {
+    .admin-sedes-encabezado { flex-direction: column; }
+    .admin-sedes-encabezado .admin-sedes-boton { width: 100%; }
+    .admin-sedes-estadisticas { grid-template-columns: 1fr; }
+    .admin-sedes-filtros-formulario { flex-direction: column; align-items: stretch; }
+    .admin-sedes-filtros-acciones { flex-direction: column; }
+    .admin-sedes-formulario-grid { grid-template-columns: 1fr; }
+    .admin-sedes-formulario-acciones { flex-direction: column-reverse; }
+    .admin-sedes-formulario-acciones .admin-sedes-boton { width: 100%; }
+    .admin-sedes-formulario-acciones .admin-sedes-boton--eliminar { margin-right: 0; }
+    .admin-sedes-modal-acciones { flex-direction: column-reverse; }
+}

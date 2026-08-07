@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Admin\ConsultaPersonasRegistradas;
 
 /**
  * Admin\DashboardController
@@ -12,22 +13,9 @@ use App\Http\Controllers\Controller;
  */
 class DashboardController extends Controller
 {
-    /**
-     * Muestra el resumen provisional del panel administrativo.
-     *
-     * Los indicadores se sustituirán por datos persistidos cuando se apruebe
-     * e implemente la base de datos del sistema.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function index()
+    public function index(ConsultaPersonasRegistradas $consulta_personas)
     {
-        $resumen = [
-            'participantes_registrados' => 0,
-            'preregistros_pendientes' => 0,
-            'pagos_pendientes' => 0,
-            'certificados_pendientes' => 0,
-        ];
+        $resumen = $consulta_personas->resumenDashboard();
 
         /*
          * Se conservan los accesos del diseño aprobado. Ninguno se habilita
@@ -36,11 +24,13 @@ class DashboardController extends Controller
         $acciones = [
             [
                 'titulo' => 'Pre-registro',
+                'ruta' => 'admin.personas.index',
                 'descripcion' => 'Valida los pre-registros y documentación existentes.',
             ],
             [
                 'titulo' => 'Pagos',
-                'descripcion' => 'Gestiona los pagos realizados.',
+                'ruta' => 'admin.pagos.index',
+                'descripcion' => 'Consulta y resuelve los comprobantes de pago enviados.',
             ],
             [
                 'titulo' => 'Referencias bancarias',
@@ -51,8 +41,9 @@ class DashboardController extends Controller
                 'descripcion' => 'Administra la emisión de certificados.',
             ],
             [
-                'titulo' => 'Participantes registrados',
-                'descripcion' => 'Consulta los participantes registrados.',
+                'titulo' => 'Personas registradas',
+                'ruta' => 'admin.personas.registradas.index',
+                'descripcion' => 'Consulta las personas registradas.',
             ],
             [
                 'titulo' => 'Subir referencias bancarias',
@@ -60,6 +51,7 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Sedes',
+                'ruta' => 'admin.sedes.index',
                 'descripcion' => 'Gestiona las sedes activas.',
             ],
         ];

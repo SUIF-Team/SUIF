@@ -42,14 +42,14 @@ ON CONFLICT (enfe_clave_inegi) DO NOTHING;
 
 /* Roles del sistema */
 INSERT INTO rol (rol_id_rol, rol_tipo_rol) VALUES
-    (1, 'Participante'),
+    (1, 'Persona'),
     (2, 'Administrador')
 ON CONFLICT (rol_id_rol) DO NOTHING;
 
 SELECT setval(pg_get_serial_sequence('rol', 'rol_id_rol'),
               (SELECT MAX(rol_id_rol) FROM rol));
 
-/* Tipos de comunicación — correos y teléfono del participante */
+/* Tipos de comunicación — correos y teléfono de la persona */
 INSERT INTO tipo_comunicacion (tico_id_tipo_comunicacion, tico_tipo_comunicacion) VALUES
     (1, 'Correo principal'),
     (2, 'Correo alterno'),

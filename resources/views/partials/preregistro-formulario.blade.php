@@ -25,7 +25,7 @@
 
     <div class="pr-actions">
         @if($mostrarCancelar)
-            <a class="pr-btn pr-btn--secondary" href="{{ route('participante.preregistro.index') }}">Cancelar</a>
+            <a class="pr-btn pr-btn--secondary" href="{{ route('persona.preregistro.index') }}">Cancelar</a>
         @endif
         <button class="pr-btn" type="submit" {{ $botonDeshabilitado ? 'disabled' : '' }}>{{ $textoBoton }}</button>
     </div>
