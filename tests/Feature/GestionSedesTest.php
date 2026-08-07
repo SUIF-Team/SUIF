@@ -64,7 +64,7 @@ class GestionSedesTest extends TestCase
             ->get(route('admin.sedes.index', ['estado' => 'pendiente']))
             ->assertOk()
             ->assertSee('Sede pendiente')
-            ->assertSee('Programación pendiente');
+            ->assertSee('Pendiente');
 
         $this->actingAs(Usuario::findOrFail(2))
             ->put(route('admin.sedes.update', $idSede), [

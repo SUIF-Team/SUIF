@@ -47,7 +47,7 @@
                         <option value="">Todos</option>
                         <option value="con-cupo" @selected(($filtros['estado'] ?? '') === 'con-cupo')>Con cupo</option>
                         <option value="sin-cupo" @selected(($filtros['estado'] ?? '') === 'sin-cupo')>Sin cupo</option>
-                        <option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Programación pendiente</option>
+                        <option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Pendiente</option>
                     </select>
                 </div>
                 <div class="admin-sedes-filtros-acciones">

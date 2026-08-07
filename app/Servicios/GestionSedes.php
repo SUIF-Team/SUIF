@@ -275,7 +275,7 @@ class GestionSedes
                     'programada' => $programada,
                     'con_cupo' => $conCupo,
                     'estado_clave' => !$programada ? 'pendiente' : ($conCupo ? 'con-cupo' : 'sin-cupo'),
-                    'estado' => !$programada ? 'Programación pendiente' : ($conCupo ? 'Con cupo' : 'Sin cupo'),
+                    'estado' => !$programada ? 'Pendiente' : ($conCupo ? 'Con cupo' : 'Sin cupo'),
                     'fecha_inicio' => $programada ? (string) $fila->eval_fecha_inicio : null,
                     'hora_inicio' => $programada ? substr((string) $fila->eval_hora_inicio, 0, 5) : null,
                     'fecha_fin' => $programada ? (string) $fila->eval_fecha_fin : null,
