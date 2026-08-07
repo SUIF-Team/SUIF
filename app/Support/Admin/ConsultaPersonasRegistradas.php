@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\DB;
 
 class ConsultaPersonasRegistradas
 {
-    private const ROL_PERSONA = 'Persona';
+    private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
     /**
-     * Obtiene una fila por persona, sin limitarla a una convocatoria vigente.
-     * El estado corresponde a la solicitud más reciente de esa persona.
+     * Obtiene una fila por persona que ya tuvo una solicitud aprobada, sin
+     * limitarla a una convocatoria vigente. Una aprobación representa que el
+     * pre-registro y la revisión documental concluyeron satisfactoriamente.
      */
     public function personas(): array
     {
@@ -52,17 +53,18 @@ class ConsultaPersonasRegistradas
         return DB::table('persona as p')
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
             ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
-            ->joinSub($this->ultimasSolicitudes(), 'ultima_solicitud', function ($join): void {
-                $join->on('ultima_solicitud.soli_id_persona', '=', 'p.pers_id_persona');
+            ->joinSub($this->solicitudesAprobadas(), 'solicitud_aprobada', function ($join): void {
+                $join->on('solicitud_aprobada.soli_id_persona', '=', 'p.pers_id_persona');
             })
-            ->join('solicitud as s', 's.soli_id_solicitud', '=', 'ultima_solicitud.id_solicitud')
+            ->join('solicitud as s', 's.soli_id_solicitud', '=', 'solicitud_aprobada.id_solicitud')
             ->joinSub($this->ultimosEstadosSolicitud(), 'ultimo_estado', function ($join): void {
                 $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->where('r.rol_tipo_rol', self::ROL_PERSONA)
+            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
             ->whereNotNull('u.usua_clave_acceso')
+            ->where('ces.esso_estatus_solicitud', 'Aprobada')
             ->select([
                 'p.pers_id_persona',
                 'p.pers_nombre',
@@ -85,16 +87,22 @@ class ConsultaPersonasRegistradas
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->where('r.rol_tipo_rol', self::ROL_PERSONA)
+            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
             ->whereNotNull('u.usua_clave_acceso');
     }
 
-    private function ultimasSolicitudes(): Builder
+    private function solicitudesAprobadas(): Builder
     {
-        return DB::table('solicitud')
-            ->whereNotNull('soli_id_persona')
-            ->selectRaw('soli_id_persona, MAX(soli_id_solicitud) as id_solicitud')
-            ->groupBy('soli_id_persona');
+        return DB::table('solicitud as s')
+            ->joinSub($this->ultimosEstadosSolicitud(), 'ultimo_estado', function ($join): void {
+                $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
+            })
+            ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
+            ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
+            ->whereNotNull('s.soli_id_persona')
+            ->where('ces.esso_estatus_solicitud', 'Aprobada')
+            ->selectRaw('s.soli_id_persona, MAX(s.soli_id_solicitud) as id_solicitud')
+            ->groupBy('s.soli_id_persona');
     }
 
     private function ultimosEstadosSolicitud(): Builder

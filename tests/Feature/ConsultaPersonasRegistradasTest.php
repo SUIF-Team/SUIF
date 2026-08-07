@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Support\Admin\ConsultaPersonasRegistradas;
+use App\Support\Admin\ConsultaPreRegistros;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -18,14 +19,13 @@ class ConsultaPersonasRegistradasTest extends TestCase
         $this->cargarDatos();
     }
 
-    public function test_lista_una_fila_por_persona_con_el_estado_de_su_solicitud_mas_reciente(): void
+    public function test_lista_personas_con_una_solicitud_aprobada_aunque_tengan_otra_mas_reciente(): void
     {
         $personas = app(ConsultaPersonasRegistradas::class)->personas();
 
         $this->assertCount(2, $personas);
-        $this->assertSame(['2', '1'], array_column($personas, 'id'));
-        $this->assertSame('Rechazada', $personas[0]['estado']);
-        $this->assertSame('En revisión', $personas[1]['estado']);
+        $this->assertSame(['5', '1'], array_column($personas, 'id'));
+        $this->assertSame('Aprobada', $personas[0]['estado']);
         $this->assertSame(
             ['id', 'nombre', 'primer_apellido', 'segundo_apellido', 'nombre_completo', 'curp', 'fecha_registro', 'estado', 'clase_estado'],
             array_keys($personas[0])
@@ -62,8 +62,19 @@ class ConsultaPersonasRegistradasTest extends TestCase
         $this->get(route('admin.personas.registradas.index'))
             ->assertOk()
             ->assertSee('Ada Lovelace')
-            ->assertSee('En revisión')
+            ->assertSee('Cuenta Candidata')
+            ->assertSee('Aprobada')
+            ->assertDontSee('Grace Hopper')
             ->assertDontSee('Ver expediente');
+    }
+
+    public function test_bandeja_de_preregistros_incluye_a_toda_persona_con_clave_sin_importar_el_estado(): void
+    {
+        $personas = app(ConsultaPreRegistros::class)->bandeja();
+
+        $this->assertCount(3, $personas);
+        $this->assertSame(['50', '20', '11'], array_column($personas, 'id'));
+        $this->assertSame(['Aprobada', 'Pre-registro', 'En revisión'], array_column($personas, 'estado_bandeja'));
     }
 
     private function crearEsquemaTemporal(): void
@@ -87,11 +98,24 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->string('pers_apellido_paterno', 45)->nullable();
             $table->string('pers_apellido_materno', 45);
             $table->date('pers_fecha_registro');
+            $table->string('pers_clave_inegi')->nullable();
+        });
+
+        Schema::create('convocatoria', function (Blueprint $table): void {
+            $table->integer('conv_id_convocatoria')->primary();
+            $table->date('conv_fecha_inicio_registro');
+            $table->date('conv_fecha_fin');
+        });
+
+        Schema::create('entidad_federativa', function (Blueprint $table): void {
+            $table->string('enfe_clave_inegi')->primary();
+            $table->string('enfe_entidad_federativa');
         });
 
         Schema::create('solicitud', function (Blueprint $table): void {
             $table->integer('soli_id_solicitud')->primary();
             $table->integer('soli_id_persona')->nullable();
+            $table->integer('soli_id_convocatoria');
         });
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
@@ -111,7 +135,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
             ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
-            ['rol_id_rol' => 3, 'rol_tipo_rol' => 'Invitado'],
+            ['rol_id_rol' => 3, 'rol_tipo_rol' => 'Candidato'],
         ]);
 
         DB::table('usuario')->insert([
@@ -164,9 +188,9 @@ class ConsultaPersonasRegistradasTest extends TestCase
                 'pers_id_persona' => 5,
                 'pers_id_usuario' => 5,
                 'pers_curp' => 'LEGA900101MDFABC05',
-                'pers_nombre' => 'Rol',
-                'pers_apellido_paterno' => 'Anterior',
-                'pers_apellido_materno' => 'Excluido',
+                'pers_nombre' => 'Cuenta',
+                'pers_apellido_paterno' => 'Candidata',
+                'pers_apellido_materno' => 'Histórica',
                 'pers_fecha_registro' => '2026-08-05',
             ],
             [
@@ -189,23 +213,35 @@ class ConsultaPersonasRegistradasTest extends TestCase
             ['esso_id_c_estado_solicitud' => 6, 'esso_estatus_solicitud' => 'Cancelada'],
         ]);
 
+        DB::table('convocatoria')->insert([
+            [
+                'conv_id_convocatoria' => 1,
+                'conv_fecha_inicio_registro' => now()->subDay()->toDateString(),
+                'conv_fecha_fin' => now()->addYear()->toDateString(),
+            ],
+            [
+                'conv_id_convocatoria' => 2,
+                'conv_fecha_inicio_registro' => now()->subYears(2)->toDateString(),
+                'conv_fecha_fin' => now()->subYear()->toDateString(),
+            ],
+        ]);
+
         DB::table('solicitud')->insert([
-            ['soli_id_solicitud' => 10, 'soli_id_persona' => 1],
-            ['soli_id_solicitud' => 11, 'soli_id_persona' => 1],
-            ['soli_id_solicitud' => 20, 'soli_id_persona' => 2],
-            ['soli_id_solicitud' => 30, 'soli_id_persona' => 3],
-            ['soli_id_solicitud' => 50, 'soli_id_persona' => 5],
-            ['soli_id_solicitud' => 60, 'soli_id_persona' => 6],
+            ['soli_id_solicitud' => 10, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 2],
+            ['soli_id_solicitud' => 11, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 1],
+            ['soli_id_solicitud' => 20, 'soli_id_persona' => 2, 'soli_id_convocatoria' => 1],
+            ['soli_id_solicitud' => 30, 'soli_id_persona' => 3, 'soli_id_convocatoria' => 1],
+            ['soli_id_solicitud' => 50, 'soli_id_persona' => 5, 'soli_id_convocatoria' => 1],
+            ['soli_id_solicitud' => 60, 'soli_id_persona' => 6, 'soli_id_convocatoria' => 1],
         ]);
 
         DB::table('estado_solicitud')->insert([
             ['esso_id_estado_solicitud' => 1, 'esso_id_c_estado_solicitud' => 4, 'esso_id_solicitud' => 10],
             ['esso_id_estado_solicitud' => 2, 'esso_id_c_estado_solicitud' => 1, 'esso_id_solicitud' => 11],
             ['esso_id_estado_solicitud' => 3, 'esso_id_c_estado_solicitud' => 3, 'esso_id_solicitud' => 11],
-            ['esso_id_estado_solicitud' => 4, 'esso_id_c_estado_solicitud' => 3, 'esso_id_solicitud' => 20],
-            ['esso_id_estado_solicitud' => 5, 'esso_id_c_estado_solicitud' => 5, 'esso_id_solicitud' => 20],
+            ['esso_id_estado_solicitud' => 4, 'esso_id_c_estado_solicitud' => 1, 'esso_id_solicitud' => 20],
             ['esso_id_estado_solicitud' => 6, 'esso_id_c_estado_solicitud' => 3, 'esso_id_solicitud' => 30],
-            ['esso_id_estado_solicitud' => 7, 'esso_id_c_estado_solicitud' => 3, 'esso_id_solicitud' => 50],
+            ['esso_id_estado_solicitud' => 7, 'esso_id_c_estado_solicitud' => 4, 'esso_id_solicitud' => 50],
             ['esso_id_estado_solicitud' => 8, 'esso_id_c_estado_solicitud' => 3, 'esso_id_solicitud' => 60],
         ]);
     }

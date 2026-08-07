@@ -35,7 +35,10 @@ class PersonaController extends Controller
             ->all();
 
         return view('admin.personas', [
-            'datos_vista' => ['personas' => $personas],
+            'datos_vista' => [
+                'personas' => $personas,
+                'estados' => $consulta_pre_registros->estados(),
+            ],
         ]);
     }
 
