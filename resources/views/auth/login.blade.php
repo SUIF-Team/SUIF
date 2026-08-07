@@ -92,7 +92,7 @@
                 </div>
 
                 <p class="login-preregistro">
-                <a href="{{ route('participante.preregistro.index') }}">¿Aún no tienes clave? Realiza tu pre-registro.</a>                  
+                <a href="{{ route('persona.preregistro.index') }}">¿Aún no tienes clave? Realiza tu pre-registro.</a>
             </p>
             </form>
         </div>

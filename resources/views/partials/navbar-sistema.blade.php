@@ -40,7 +40,7 @@
                         <span>Salir</span>
                     </button>
                 </form>
-            @elseif (request()->routeIs('participante.*'))
+            @elseif (request()->routeIs('persona.*'))
                 <a href="{{ route('home') }}" class="navbar-sistema-salir">
                     <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                     <span>Salir</span>

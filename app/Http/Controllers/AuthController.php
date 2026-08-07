@@ -32,7 +32,7 @@ class AuthController extends Controller
     }
 
         /**
-     * Valida la CURP y la clave de acceso, y abre la sesión del participante.
+     * Valida la CURP y la clave de acceso, y abre la sesión de la persona.
      */
     public function login(Request $request)
     {
@@ -58,7 +58,15 @@ class AuthController extends Controller
         Auth::login($persona->usuario);
         $request->session()->regenerate();
 
-        return redirect()->route('participante.dashboard');
+        if ($persona->usuario->rol?->rol_tipo_rol === 'Administrador') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($persona->usuario->tienePrivilegio('Gestionar Pagos')) {
+            return redirect()->route('admin.pagos.index');
+        }
+
+        return redirect()->route('persona.dashboard');
     }
 
     /**

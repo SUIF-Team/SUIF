@@ -2,16 +2,17 @@
 
 SUIF es una aplicación web de la Facultad de Contaduría y Administración de la UNAM para el seguimiento administrativo de un proceso de certificación. El proyecto se está reconstruyendo de forma gradual sobre un stack moderno y fijado por versión exacta (ver tabla abajo); por ello se priorizan la compatibilidad entre el equipo, los cambios acotados y la trazabilidad.
 
-> SUIF no aplica ni administra exámenes. Su alcance es el pre-registro, documentación, referencias y pagos, selección de sede, consulta de resultados, certificados y los paneles de participante y administración.
+> SUIF no aplica ni administra exámenes. Su alcance es el pre-registro, documentación, referencias y pagos, selección de sede, consulta de resultados, certificados y los paneles de persona y administración.
 
 ## Estado actual
 
 - La landing pública (`/`) está maquetada y muestra información de la certificación. Parte de su contenido (periodo, nombre de certificación, fechas y enlaces de descarga) continúa como texto de ejemplo.
-- La pantalla de acceso en `resources/views/auth/login.blade.php` ya está adaptada visualmente a Blade con campos CURP y clave, CSRF, espacios para mostrar errores de validación, navbar institucional y footer. La validación del servidor, la persistencia y la autenticación real por CURP/clave siguen pendientes; el cierre de sesión ya cuenta con una acción de controlador compatible con Laravel.
-- El dashboard de participante (`/participante/dashboard`) construye temporalmente su avance a partir de datos de sesión y valores de ejemplo; aún no consulta modelos ni una base de datos de negocio. En entorno local también dispone de una vista de demostración sin autenticación para revisar todas sus transiciones visuales.
-- Las vistas, rutas y controladores de los módulos de participante y administración están en diferentes etapas de preparación. Varios controladores no tienen acciones implementadas y sus vistas contienen `TODO`; no se deben considerar funcionalidades terminadas.
-- Las rutas administrativas sólo exigen el middleware `auth` en este momento. La autorización por rol de administrador no está implementada.
-- No hay migraciones, seeders ni pruebas automatizadas versionadas. Antes de conectar flujos reales se debe definir el esquema de datos y la estrategia de pruebas.
+- La pantalla de acceso en `resources/views/auth/login.blade.php` autentica contra la persona y su clave persistida, con validación del servidor, CSRF y cierre de sesión.
+- El dashboard de persona (`/persona/dashboard`) consulta en la base el pre-registro, la solicitud y la documentación; los módulos posteriores siguen incompletos.
+- El dashboard administrativo y la bandeja general de personas consultan PostgreSQL. Los indicadores sin persistencia se identifican como tales y no muestran conteos ficticios.
+- Las vistas, rutas y controladores de los módulos de persona y administración están en diferentes etapas de preparación. Varios controladores no tienen acciones implementadas y sus vistas contienen `TODO`; no se deben considerar funcionalidades terminadas.
+- Las rutas administrativas conservan temporalmente el acceso abierto de desarrollo. La autenticación y autorización por rol de administrador siguen pendientes.
+- No hay migraciones ni seeders de negocio versionados. Las pruebas automatizadas crean un esquema temporal independiente para no modificar la base real.
 
 ## Stack y compatibilidad
 
@@ -52,7 +53,7 @@ No se utiliza un único `style.css` ni un bundler. La organización vigente es m
 
 1. `css/app.css`: tokens, reglas base y utilidades que se reutilizan.
 2. `css/partials/*.css`: componentes comunes, actualmente navbar y footer.
-3. `css/pages/*.css`: reglas de una pantalla concreta, por ejemplo `home.css` o `participante-dashboard.css`.
+3. `css/pages/*.css`: reglas de una pantalla concreta, por ejemplo `home.css` o `persona-dashboard.css`.
 4. `js/main.js` y `js/pages/*.js`: comportamiento compartido o exclusivo de una pantalla, respectivamente.
 
 Las vistas Blade deben contener la estructura y las clases CSS, no bloques `<style>` ni estilos inline. Una pantalla carga su CSS particular desde la sección que expone su layout. La landing es el ejemplo actual: carga `app.css`, los parciales y después `pages/home.css`.
@@ -107,28 +108,6 @@ En inicios posteriores basta con:
 docker compose up -d
 ```
 
-### Revisar el dashboard del participante sin base de datos
-
-Mientras `APP_ENV=local`, el dashboard se puede abrir sin autenticación en:
-
-<http://localhost:8088/participante/dashboard/demo>
-
-La última parte de la URL permite comprobar estados concretos del flujo:
-
-| Escenario | URL |
-|---|---|
-| Inicio del trámite | `/participante/dashboard/demo/inicio` |
-| Pre-registro completado | `/participante/dashboard/demo/preregistro-completo` |
-| Referencia generada | `/participante/dashboard/demo/referencia-generada` |
-| Pago enviado y en validación | `/participante/dashboard/demo/validando-pago` |
-| Pago validado | `/participante/dashboard/demo/pago-validado` |
-| Sede seleccionada y resultado en espera | `/participante/dashboard/demo/sede-seleccionada` |
-| Resultado publicado | `/participante/dashboard/demo/resultado-publicado` |
-| Certificado disponible | `/participante/dashboard/demo/certificado-disponible` |
-| Pago con observaciones | `/participante/dashboard/demo/pago-rechazado` |
-
-Estas rutas sólo se registran en el entorno local. En otros ambientes el dashboard real continúa protegido por el middleware `auth`.
-
 Los estados visuales del dashboard tienen una única leyenda compartida:
 
 | Color | Estado |
@@ -169,9 +148,9 @@ Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona.
 | Área | Rutas principales | Estado verificable |
 |---|---|---|
 | Pública | `GET /` | Landing disponible. |
-| Autenticación | `GET /login`, `POST /login`, `POST /logout` | El diseño del formulario CURP/clave y el cierre de sesión están integrados; falta definir el esquema de datos e implementar el inicio de sesión. |
-| Participante | `/participante/dashboard`, pre-registro, pago, referencia, documentos, sede, resultados, certificado y facturación | Rutas declaradas y protegidas con `auth`; el dashboard usa datos temporales y las pantallas enlazadas tienen acciones de lectura. Las operaciones de escritura y el contenido definitivo de varios módulos continúan pendientes. |
-| Administración | `/admin/dashboard`, participantes, pagos, referencias, documentos, sedes y resultados | Rutas declaradas y protegidas con `auth`; acciones y autorización administrativa están mayormente pendientes. |
+| Autenticación | `GET /login`, `POST /login`, `POST /logout` | Inicio y cierre de sesión integrados con los usuarios persistidos. |
+| Persona | `/persona/dashboard`, pre-registro, pago, referencia, documentos, sede, resultados, certificado y facturación | Rutas declaradas; el dashboard consulta la solicitud y documentación persistidas. Los módulos posteriores continúan pendientes. |
+| Administración | `/admin/dashboard`, personas, pagos, referencias, documentos, sedes y resultados | Dashboard y bandeja general de personas conectados a la base; la autorización por rol y otros módulos continúan pendientes. |
 
 `routes/web.php` es la fuente de verdad para el detalle de verbos HTTP y nombres de ruta. No se debe enlazar una pantalla como funcional hasta que su controlador, validaciones, persistencia y autorización estén implementados.
 

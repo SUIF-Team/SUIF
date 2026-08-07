@@ -19,7 +19,7 @@ componentes institucionales existentes.
 
 ## Datos y acciones
 
-El resumen tendrá las claves `participantes_registrados`,
+El resumen tendrá las claves `personas_registradas`,
 `preregistros_pendientes`, `pagos_pendientes` y
 `certificados_pendientes`, todas inicializadas en cero mientras no exista la
 persistencia aprobada.

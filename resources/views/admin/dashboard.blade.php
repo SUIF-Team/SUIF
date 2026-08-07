@@ -16,23 +16,27 @@
 
         <section class="admin-dashboard-indicadores" aria-label="Resumen administrativo">
             <article class="admin-dashboard-indicador admin-dashboard-indicador-azul">
-                <h2>Participantes registrados</h2>
-                <p>{{ number_format($resumen['participantes_registrados']) }}</p>
+                <h2>Personas registradas</h2>
+                <p>{{ number_format($resumen['personas_registradas']) }}</p>
             </article>
 
             <article class="admin-dashboard-indicador admin-dashboard-indicador-naranja">
-                <h2>Pre-registros pendientes</h2>
-                <p>{{ number_format($resumen['preregistros_pendientes']) }}</p>
+                <h2>Solicitudes en revisión</h2>
+                <p>{{ number_format($resumen['solicitudes_en_revision']) }}</p>
             </article>
 
             <article class="admin-dashboard-indicador admin-dashboard-indicador-naranja">
                 <h2>Pagos por validar</h2>
-                <p>{{ number_format($resumen['pagos_pendientes']) }}</p>
+                <p class="admin-dashboard-indicador-sin-datos">
+                    {{ is_null($resumen['pagos_pendientes']) ? 'Sin datos persistidos' : number_format($resumen['pagos_pendientes']) }}
+                </p>
             </article>
 
             <article class="admin-dashboard-indicador admin-dashboard-indicador-verde">
                 <h2>Certificados pendientes</h2>
-                <p>{{ number_format($resumen['certificados_pendientes']) }}</p>
+                <p class="admin-dashboard-indicador-sin-datos">
+                    {{ is_null($resumen['certificados_pendientes']) ? 'Sin datos persistidos' : number_format($resumen['certificados_pendientes']) }}
+                </p>
             </article>
         </section>
 
@@ -46,7 +50,11 @@
                             <h3>{{ $accion['titulo'] }}</h3>
                             <p>{{ $accion['descripcion'] }}</p>
                         </div>
-                        <span class="admin-dashboard-accion-pendiente" aria-disabled="true">Próximamente</span>
+                        @if (!empty($accion['ruta']))
+                            <a class="admin-dashboard-accion-disponible" href="{{ route($accion['ruta']) }}">Abrir</a>
+                        @else
+                            <span class="admin-dashboard-accion-pendiente" aria-disabled="true">Próximamente</span>
+                        @endif
                     </article>
                 @endforeach
             </div>

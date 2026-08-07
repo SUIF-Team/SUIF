@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Reemplaza el 'guest' por default: redirige al dashboard del participante
+        // Reemplaza el 'guest' por default: redirige al dashboard de la persona
         // en vez de a la ruta 'login' cuando ya hay sesión iniciada.
         $middleware->alias([
             'guest' => RedirectIfAuthenticated::class,
