@@ -7,15 +7,12 @@ use Illuminate\Support\Facades\DB;
 
 class ConsultaPreRegistros
 {
-    private const ESTADOS_VISIBLES = [
-        'En revisión',
-        'Aprobada',
-        'Rechazada',
-    ];
+    private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
     /**
-     * Obtiene las solicitudes de convocatorias vigentes que ya llegaron a
-     * revisión administrativa.
+     * Obtiene una fila por persona pre-registrada. La clave de acceso confirma
+     * que concluyó la captura inicial, aunque la convocatoria haya terminado o
+     * todavía no haya enviado su documentación a revisión.
      */
     public function bandeja(): array
     {
@@ -24,6 +21,18 @@ class ConsultaPreRegistros
             ->orderByDesc('s.soli_id_solicitud')
             ->get()
             ->map(fn (object $solicitud): array => $this->normalizarBandeja($solicitud))
+            ->all();
+    }
+
+    /**
+     * Devuelve los estados disponibles para filtrar la bandeja.
+     */
+    public function estados(): array
+    {
+        return DB::table('c_estado_solicitud')
+            ->orderBy('esso_id_c_estado_solicitud')
+            ->pluck('esso_estatus_solicitud')
+            ->map(fn (mixed $estado): string => (string) $estado)
             ->all();
     }
 
@@ -95,20 +104,21 @@ class ConsultaPreRegistros
 
     private function consultaBase(): Builder
     {
-        $fecha_actual = now()->toDateString();
-
         return DB::table('solicitud as s')
-            ->join('convocatoria as c', 'c.conv_id_convocatoria', '=', 's.soli_id_convocatoria')
+            ->joinSub($this->ultimasSolicitudes(), 'ultima_solicitud', function ($join): void {
+                $join->on('ultima_solicitud.id_solicitud', '=', 's.soli_id_solicitud');
+            })
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
+            ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
+            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
             ->joinSub($this->ultimosEstados(), 'ultimo_estado', function ($join): void {
                 $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->whereDate('c.conv_fecha_inicio_registro', '<=', $fecha_actual)
-            ->whereDate('c.conv_fecha_fin', '>=', $fecha_actual)
-            ->whereIn('ces.esso_estatus_solicitud', self::ESTADOS_VISIBLES)
+            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotNull('u.usua_clave_acceso')
             ->select([
                 's.soli_id_solicitud',
                 'p.pers_id_persona',
@@ -120,6 +130,14 @@ class ConsultaPreRegistros
                 'ef.enfe_entidad_federativa',
                 'ces.esso_estatus_solicitud as estado_solicitud',
             ]);
+    }
+
+    private function ultimasSolicitudes(): Builder
+    {
+        return DB::table('solicitud')
+            ->whereNotNull('soli_id_persona')
+            ->selectRaw('soli_id_persona, MAX(soli_id_solicitud) as id_solicitud')
+            ->groupBy('soli_id_persona');
     }
 
     private function ultimosEstados(): Builder
@@ -246,10 +264,15 @@ class ConsultaPreRegistros
                 'preregistro' => 'Rechazado',
                 'documentacion' => 'Pendiente',
             ],
-            default => [
+            'En revisión', 'En Revisión' => [
                 'general' => 'En revisión',
                 'preregistro' => 'Completado',
                 'documentacion' => 'En revisión',
+            ],
+            default => [
+                'general' => $estado_solicitud,
+                'preregistro' => 'Completado',
+                'documentacion' => 'Pendiente',
             ],
         };
     }
