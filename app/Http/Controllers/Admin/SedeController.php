@@ -41,10 +41,10 @@ class SedeController extends Controller
 
     public function store(Request $request, GestionSedes $gestion)
     {
-        $sede = $gestion->crear($this->validar($request));
+        $gestion->crear($this->validar($request));
 
         return redirect()
-            ->route('admin.sedes.edit', $sede->sede_id_sede)
+            ->route('admin.sedes.index')
             ->with('success', 'La sede se creó correctamente.');
     }
 
@@ -68,7 +68,7 @@ class SedeController extends Controller
         }
 
         return redirect()
-            ->route('admin.sedes.edit', $id)
+            ->route('admin.sedes.index')
             ->with('success', 'La sede se actualizó correctamente.');
     }
 
