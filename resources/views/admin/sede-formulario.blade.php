@@ -83,24 +83,24 @@
 
                     <div class="admin-sedes-formulario-grid">
                         <div class="admin-sedes-campo">
-                            <label for="cupo">Aforo máximo *</label>
-                            <input id="cupo" name="cupo" type="number" min="1" max="2147483647" required value="{{ old('cupo', $sede?->sede_cupo ?? '') }}">
+                            <label for="hora_inicio">Hora de inicio *</label>
+                            <input id="hora_inicio" name="hora_inicio" type="time" required value="{{ old('hora_inicio', $evaluacion ? substr((string) $evaluacion->eval_hora_inicio, 0, 5) : '') }}">
                         </div>
                         <div class="admin-sedes-campo">
                             <label for="fecha_inicio">Fecha de inicio *</label>
                             <input id="fecha_inicio" name="fecha_inicio" type="date" required value="{{ old('fecha_inicio', $evaluacion?->eval_fecha_inicio?->format('Y-m-d') ?? '') }}">
                         </div>
                         <div class="admin-sedes-campo">
-                            <label for="hora_inicio">Hora de inicio *</label>
-                            <input id="hora_inicio" name="hora_inicio" type="time" required value="{{ old('hora_inicio', $evaluacion ? substr((string) $evaluacion->eval_hora_inicio, 0, 5) : '') }}">
+                            <label for="hora_fin">Hora de fin *</label>
+                            <input id="hora_fin" name="hora_fin" type="time" required value="{{ old('hora_fin', $evaluacion ? substr((string) $evaluacion->eval_hora_fin, 0, 5) : '') }}">
                         </div>
                         <div class="admin-sedes-campo">
                             <label for="fecha_fin">Fecha de fin *</label>
                             <input id="fecha_fin" name="fecha_fin" type="date" required value="{{ old('fecha_fin', $evaluacion?->eval_fecha_fin?->format('Y-m-d') ?? '') }}">
                         </div>
                         <div class="admin-sedes-campo">
-                            <label for="hora_fin">Hora de fin *</label>
-                            <input id="hora_fin" name="hora_fin" type="time" required value="{{ old('hora_fin', $evaluacion ? substr((string) $evaluacion->eval_hora_fin, 0, 5) : '') }}">
+                            <label for="cupo">Aforo máximo *</label>
+                            <input id="cupo" name="cupo" type="number" min="1" max="2147483647" required value="{{ old('cupo', $sede?->sede_cupo ?? '') }}">
                         </div>
                     </div>
 

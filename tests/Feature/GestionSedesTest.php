@@ -36,7 +36,9 @@ class GestionSedesTest extends TestCase
         ]);
 
         $idSede = (int) DB::table('sede')->value('sede_id_sede');
-        $respuesta->assertRedirect(route('admin.sedes.edit', $idSede));
+        $respuesta
+            ->assertRedirect(route('admin.sedes.index'))
+            ->assertSessionHas('success', 'La sede se creó correctamente.');
         $this->assertDatabaseHas('sede', [
             'sede_id_sede' => $idSede,
             'sede_nombre' => 'Sede Universidad',
@@ -88,7 +90,8 @@ class GestionSedesTest extends TestCase
                 'fecha_fin' => '2026-10-15',
                 'hora_fin' => '13:00',
             ])
-            ->assertRedirect(route('admin.sedes.edit', $idSede));
+            ->assertRedirect(route('admin.sedes.index'))
+            ->assertSessionHas('success', 'La sede se actualizó correctamente.');
 
         $this->assertDatabaseHas('sede', [
             'sede_id_sede' => $idSede,
@@ -96,6 +99,29 @@ class GestionSedesTest extends TestCase
             'sede_estado' => 1,
         ]);
         $this->assertSame(1, DB::table('evaluacion')->where('eval_id_sede', $idSede)->count());
+    }
+
+    public function test_formularios_de_sede_muestran_horario_fechas_y_aforo_en_el_orden_solicitado(): void
+    {
+        $orden = [
+            'Hora de inicio *',
+            'Fecha de inicio *',
+            'Hora de fin *',
+            'Fecha de fin *',
+            'Aforo máximo *',
+        ];
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.sedes.create'))
+            ->assertOk()
+            ->assertSeeInOrder($orden);
+
+        [$idSede] = $this->crearSedeProgramada(2);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.sedes.edit', $idSede))
+            ->assertOk()
+            ->assertSeeInOrder($orden);
     }
 
     public function test_no_elimina_ni_reduce_una_sede_con_participantes_asignados(): void
