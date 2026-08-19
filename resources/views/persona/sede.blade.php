@@ -24,25 +24,46 @@
     @endif
 
     @if($confirmada)
-        <div class="sede-confirmada">
-            <span class="sede-confirmada__icono" aria-hidden="true">✓</span>
-            <h1>¡Sede confirmada!</h1>
-            <p class="sede-muted">Tu lugar quedó apartado para la evaluación.</p>
+        <div class="sede-confirmada-layout">
+            <div class="sede-confirmada">
+                <span class="sede-confirmada__icono" aria-hidden="true">✓</span>
+                <h1>¡Sede confirmada!</h1>
+                <p class="sede-muted">Tu lugar quedó apartado para la evaluación.</p>
 
-            <div class="sede-resumen">
-                <p class="sede-resumen__etiqueta">Sede seleccionada</p>
-                <p class="sede-resumen__nombre">{{ $sede['nombre'] }}</p>
-                <dl class="sede-resumen__datos">
-                    <dt>Dirección</dt><dd>{{ $sede['direccion'] }}</dd>
-                    <dt>Fecha</dt><dd>{{ $sede['fecha'] }}</dd>
-                    <dt>Horario</dt><dd>{{ $sede['horario'] }}</dd>
-                </dl>
+                <div class="sede-resumen">
+                    <p class="sede-resumen__etiqueta">Sede seleccionada</p>
+                    <p class="sede-resumen__nombre">{{ $sede['nombre'] }}</p>
+                    <dl class="sede-resumen__datos">
+                        <dt>Dirección</dt><dd>{{ $sede['direccion'] }}</dd>
+                        <dt>Fecha</dt><dd>{{ $sede['fecha'] }}</dd>
+                        <dt>Horario</dt><dd>{{ $sede['horario'] }}</dd>
+                    </dl>
+                </div>
+
+                <div class="sede-acciones">
+                    <button type="button" class="sede-boton sede-boton--secundario">Generar comprobante</button>
+                    <a href="{{ route('persona.dashboard') }}" class="sede-boton">Continuar</a>
+                </div>
             </div>
 
-            <div class="sede-acciones">
-                <button type="button" class="sede-boton sede-boton--secundario">Generar comprobante</button>
-                <a href="{{ route('persona.dashboard') }}" class="sede-boton">Continuar</a>
-            </div>
+            <aside class="sede-mapa" aria-labelledby="sede-mapa-titulo">
+                <h2 id="sede-mapa-titulo">Cómo llegar</h2>
+                <p class="sede-mapa__ayuda">Ubicación aproximada a partir de la dirección de la sede.</p>
+                <div class="sede-mapa__marco">
+                    <iframe
+                        src="https://maps.google.com/maps?q={{ urlencode($sede['direccion']) }}&amp;hl=es&amp;z=16&amp;output=embed"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Mapa con la ubicación de {{ $sede['nombre'] }}"></iframe>
+                </div>
+                <a
+                    class="sede-boton sede-boton--secundario sede-mapa__enlace"
+                    href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($sede['direccion']) }}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Abrir en Google Maps
+                </a>
+            </aside>
         </div>
     @else
         <h1>Elige tu sede y horario</h1>
@@ -111,6 +132,39 @@
             @empty
                 <p class="sede-muted">No hay sedes programadas que coincidan con tu búsqueda.</p>
             @endforelse
+        </div>
+
+        {{-- La selección no se puede deshacer, así que se pide confirmación
+             explícita. Sin JavaScript el formulario se envía como siempre. --}}
+        <div class="sede-modal" data-modal-confirmacion hidden>
+            <div class="sede-modal__fondo" data-cerrar-confirmacion></div>
+            <section
+                class="sede-modal__card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="sede-modal-titulo"
+                aria-describedby="sede-modal-descripcion">
+                <h2 id="sede-modal-titulo">¿Confirmas esta sede y horario?</h2>
+                <p id="sede-modal-descripcion">
+                    Tu lugar quedará apartado en el horario que elegiste.
+                    <strong>Una vez confirmado ya no podrás cambiarlo.</strong>
+                </p>
+
+                <dl class="sede-modal__datos">
+                    <dt>Sede</dt><dd data-confirmacion-sede></dd>
+                    <dt>Fecha</dt><dd data-confirmacion-fecha></dd>
+                    <dt>Horario</dt><dd data-confirmacion-horario></dd>
+                </dl>
+
+                <div class="sede-modal__acciones">
+                    <button type="button" class="sede-boton sede-boton--secundario" data-cerrar-confirmacion>
+                        Cancelar
+                    </button>
+                    <button type="button" class="sede-boton" data-confirmar-sede>
+                        Sí, confirmar
+                    </button>
+                </div>
+            </section>
         </div>
     @endif
 </section>
