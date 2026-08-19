@@ -46,9 +46,12 @@ class GestionSedesTest extends TestCase
             'sede_cupo' => 2,
             'sede_estado' => 1,
         ]);
+        $this->assertDatabaseHas('grupo', [
+            'sede_id_sede' => $idSede,
+            'grup_fecha_inicio' => '2026-10-15',
+        ]);
         $this->assertDatabaseHas('evaluacion', [
-            'eval_id_sede' => $idSede,
-            'eval_fecha_inicio' => '2026-10-15',
+            'grup_id_grupo' => (int) DB::table('grupo')->value('grup_id_grupo'),
             'eval_resultado' => null,
         ]);
     }
@@ -98,7 +101,7 @@ class GestionSedesTest extends TestCase
             'sede_nombre' => 'Sede corregida',
             'sede_estado' => 1,
         ]);
-        $this->assertSame(1, DB::table('evaluacion')->where('eval_id_sede', $idSede)->count());
+        $this->assertSame(1, DB::table('grupo')->where('sede_id_sede', $idSede)->count());
     }
 
     public function test_formularios_de_sede_muestran_horario_fechas_y_aforo_en_el_orden_solicitado(): void
@@ -161,6 +164,7 @@ class GestionSedesTest extends TestCase
 
         $this->assertDatabaseMissing('sede', ['sede_id_sede' => $idSede]);
         $this->assertDatabaseMissing('evaluacion', ['eval_id_evaluacion' => $idEvaluacion]);
+        $this->assertDatabaseMissing('grupo', ['sede_id_sede' => $idSede]);
     }
 
     public function test_participante_ve_cupos_y_persiste_una_eleccion_idempotente(): void
@@ -253,13 +257,17 @@ class GestionSedesTest extends TestCase
             $table->integer('sede_cupo');
             $table->boolean('sede_estado');
         });
+        Schema::create('grupo', function (Blueprint $table): void {
+            $table->increments('grup_id_grupo');
+            $table->integer('sede_id_sede')->unique();
+            $table->date('grup_fecha_inicio');
+            $table->time('grup_hora_inicio');
+            $table->date('grup_fecha_fin');
+            $table->time('grup_hora_fin');
+        });
         Schema::create('evaluacion', function (Blueprint $table): void {
             $table->increments('eval_id_evaluacion');
-            $table->integer('eval_id_sede')->unique();
-            $table->date('eval_fecha_inicio');
-            $table->time('eval_hora_inicio');
-            $table->date('eval_fecha_fin');
-            $table->time('eval_hora_fin');
+            $table->integer('grup_id_grupo')->unique();
             $table->integer('eval_resultado')->nullable();
         });
         Schema::create('solicitud', function (Blueprint $table): void {
@@ -285,7 +293,7 @@ class GestionSedesTest extends TestCase
         });
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
             $table->integer('esso_id_c_estado_solicitud')->primary();
-            $table->string('esso_estatus_solicitud', 40);
+            $table->string('esso_estado_solicitud', 40);
         });
         Schema::create('estado_solicitud', function (Blueprint $table): void {
             $table->increments('esso_id_estado_solicitud');
@@ -371,12 +379,15 @@ class GestionSedesTest extends TestCase
             'sede_cupo' => $cupo,
             'sede_estado' => true,
         ], 'sede_id_sede');
+        $idGrupo = DB::table('grupo')->insertGetId([
+            'sede_id_sede' => $idSede,
+            'grup_fecha_inicio' => '2026-10-15',
+            'grup_hora_inicio' => '09:00:00',
+            'grup_fecha_fin' => '2026-10-15',
+            'grup_hora_fin' => '13:00:00',
+        ], 'grup_id_grupo');
         $idEvaluacion = DB::table('evaluacion')->insertGetId([
-            'eval_id_sede' => $idSede,
-            'eval_fecha_inicio' => '2026-10-15',
-            'eval_hora_inicio' => '09:00:00',
-            'eval_fecha_fin' => '2026-10-15',
-            'eval_hora_fin' => '13:00:00',
+            'grup_id_grupo' => $idGrupo,
             'eval_resultado' => null,
         ], 'eval_id_evaluacion');
 

@@ -31,7 +31,7 @@ class ConsultaPersonasRegistradas
     {
         return DB::table('c_estado_solicitud')
             ->orderBy('esso_id_c_estado_solicitud')
-            ->pluck('esso_estatus_solicitud')
+            ->pluck('esso_estado_solicitud')
             ->map(fn (mixed $estado): string => (string) $estado)
             ->all();
     }
@@ -41,7 +41,7 @@ class ConsultaPersonasRegistradas
         return [
             'personas_registradas' => (clone $this->consultaPersonas())->count(),
             'solicitudes_en_revision' => $this->consultaSolicitudes()
-                ->where('ces.esso_estatus_solicitud', 'En revisión')
+                ->where('ces.esso_estado_solicitud', 'En revisión')
                 ->count(),
             'pagos_pendientes' => null,
             'certificados_pendientes' => null,
@@ -64,7 +64,7 @@ class ConsultaPersonasRegistradas
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
             ->whereNotNull('u.usua_clave_acceso')
-            ->where('ces.esso_estatus_solicitud', 'Aprobada')
+            ->where('ces.esso_estado_solicitud', 'Aprobada')
             ->select([
                 'p.pers_id_persona',
                 'p.pers_nombre',
@@ -72,7 +72,7 @@ class ConsultaPersonasRegistradas
                 'p.pers_apellido_materno',
                 'p.pers_curp',
                 'p.pers_fecha_registro',
-                'ces.esso_estatus_solicitud as estado',
+                'ces.esso_estado_solicitud as estado',
             ]);
     }
 
@@ -100,7 +100,7 @@ class ConsultaPersonasRegistradas
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->whereNotNull('s.soli_id_persona')
-            ->where('ces.esso_estatus_solicitud', 'Aprobada')
+            ->where('ces.esso_estado_solicitud', 'Aprobada')
             ->selectRaw('s.soli_id_persona, MAX(s.soli_id_solicitud) as id_solicitud')
             ->groupBy('s.soli_id_persona');
     }

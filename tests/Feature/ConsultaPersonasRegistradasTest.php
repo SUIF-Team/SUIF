@@ -120,7 +120,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
             $table->integer('esso_id_c_estado_solicitud')->primary();
-            $table->string('esso_estatus_solicitud', 40);
+            $table->string('esso_estado_solicitud', 40);
         });
 
         Schema::create('estado_solicitud', function (Blueprint $table): void {
@@ -205,12 +205,12 @@ class ConsultaPersonasRegistradasTest extends TestCase
         ]);
 
         DB::table('c_estado_solicitud')->insert([
-            ['esso_id_c_estado_solicitud' => 1, 'esso_estatus_solicitud' => 'Pre-registro'],
-            ['esso_id_c_estado_solicitud' => 2, 'esso_estatus_solicitud' => 'Documentación'],
-            ['esso_id_c_estado_solicitud' => 3, 'esso_estatus_solicitud' => 'En revisión'],
-            ['esso_id_c_estado_solicitud' => 4, 'esso_estatus_solicitud' => 'Aprobada'],
-            ['esso_id_c_estado_solicitud' => 5, 'esso_estatus_solicitud' => 'Rechazada'],
-            ['esso_id_c_estado_solicitud' => 6, 'esso_estatus_solicitud' => 'Cancelada'],
+            ['esso_id_c_estado_solicitud' => 1, 'esso_estado_solicitud' => 'Pre-registro'],
+            ['esso_id_c_estado_solicitud' => 2, 'esso_estado_solicitud' => 'Documentación'],
+            ['esso_id_c_estado_solicitud' => 3, 'esso_estado_solicitud' => 'En revisión'],
+            ['esso_id_c_estado_solicitud' => 4, 'esso_estado_solicitud' => 'Aprobada'],
+            ['esso_id_c_estado_solicitud' => 5, 'esso_estado_solicitud' => 'Rechazada'],
+            ['esso_id_c_estado_solicitud' => 6, 'esso_estado_solicitud' => 'Cancelada'],
         ]);
 
         DB::table('convocatoria')->insert([

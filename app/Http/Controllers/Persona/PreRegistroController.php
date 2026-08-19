@@ -316,7 +316,7 @@ class PreRegistroController extends Controller
             ], 'soli_id_solicitud');
 
             $idEstadoInicial = DB::table('c_estado_solicitud')
-                ->where('esso_estatus_solicitud', 'Pre-registro')
+                ->where('esso_estado_solicitud', 'Pre-registro')
                 ->value('esso_id_c_estado_solicitud');
 
             DB::table('estado_solicitud')->insert([
@@ -740,7 +740,7 @@ class PreRegistroController extends Controller
     private function registrarEstadoSolicitud($idSolicitud, $estado, $motivo = null)
     {
         $idEstado = DB::table('c_estado_solicitud')
-            ->where('esso_estatus_solicitud', $estado)
+            ->where('esso_estado_solicitud', $estado)
             ->value('esso_id_c_estado_solicitud');
 
         DB::table('estado_solicitud')->insert([

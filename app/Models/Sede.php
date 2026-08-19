@@ -27,8 +27,8 @@ class Sede extends Model
         ];
     }
 
-    public function evaluacion()
+    public function grupo()
     {
-        return $this->hasOne(Evaluacion::class, 'eval_id_sede', 'sede_id_sede');
+        return $this->hasOne(Grupo::class, 'sede_id_sede', 'sede_id_sede');
     }
 }

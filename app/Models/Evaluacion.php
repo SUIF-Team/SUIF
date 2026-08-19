@@ -13,25 +13,19 @@ class Evaluacion extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'eval_id_sede',
-        'eval_fecha_inicio',
-        'eval_hora_inicio',
-        'eval_fecha_fin',
-        'eval_hora_fin',
+        'grup_id_grupo',
         'eval_resultado',
     ];
 
     protected function casts(): array
     {
         return [
-            'eval_fecha_inicio' => 'date:Y-m-d',
-            'eval_fecha_fin' => 'date:Y-m-d',
             'eval_resultado' => 'integer',
         ];
     }
 
-    public function sede()
+    public function grupo()
     {
-        return $this->belongsTo(Sede::class, 'eval_id_sede', 'sede_id_sede');
+        return $this->belongsTo(Grupo::class, 'grup_id_grupo', 'grup_id_grupo');
     }
 }

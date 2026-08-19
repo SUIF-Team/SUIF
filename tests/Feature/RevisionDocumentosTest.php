@@ -131,7 +131,7 @@ class RevisionDocumentosTest extends TestCase
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
             $table->integer('esso_id_c_estado_solicitud')->primary();
-            $table->string('esso_estatus_solicitud', 40);
+            $table->string('esso_estado_solicitud', 40);
         });
 
         Schema::create('estado_solicitud', function (Blueprint $table): void {
@@ -166,9 +166,9 @@ class RevisionDocumentosTest extends TestCase
     private function cargarCatalogos(): void
     {
         DB::table('c_estado_solicitud')->insert([
-            ['esso_id_c_estado_solicitud' => 3, 'esso_estatus_solicitud' => 'En revisión'],
-            ['esso_id_c_estado_solicitud' => 4, 'esso_estatus_solicitud' => 'Aprobada'],
-            ['esso_id_c_estado_solicitud' => 5, 'esso_estatus_solicitud' => 'Rechazada'],
+            ['esso_id_c_estado_solicitud' => 3, 'esso_estado_solicitud' => 'En revisión'],
+            ['esso_id_c_estado_solicitud' => 4, 'esso_estado_solicitud' => 'Aprobada'],
+            ['esso_id_c_estado_solicitud' => 5, 'esso_estado_solicitud' => 'Rechazada'],
         ]);
 
         DB::table('c_estado_documento')->insert([
@@ -218,6 +218,6 @@ class RevisionDocumentosTest extends TestCase
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->where('es.esso_id_solicitud', 1)
             ->orderByDesc('es.esso_id_estado_solicitud')
-            ->value('ces.esso_estatus_solicitud');
+            ->value('ces.esso_estado_solicitud');
     }
 }

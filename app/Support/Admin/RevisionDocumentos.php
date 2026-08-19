@@ -146,7 +146,7 @@ class RevisionDocumentos
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->where('es.esso_id_solicitud', $id_solicitud)
             ->orderByDesc('es.esso_id_estado_solicitud')
-            ->value('ces.esso_estatus_solicitud');
+            ->value('ces.esso_estado_solicitud');
 
         if ($estado !== 'En revisión') {
             throw new DomainException('La solicitud ya fue resuelta o no está disponible para revisión.');
@@ -179,7 +179,7 @@ class RevisionDocumentos
     ): void
     {
         $id_estado = DB::table('c_estado_solicitud')
-            ->where('esso_estatus_solicitud', $estado)
+            ->where('esso_estado_solicitud', $estado)
             ->value('esso_id_c_estado_solicitud');
 
         if (!$id_estado) {

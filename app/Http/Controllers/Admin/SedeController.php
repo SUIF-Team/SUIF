@@ -34,7 +34,7 @@ class SedeController extends Controller
     {
         return view('admin.sede-formulario', [
             'sede' => null,
-            'evaluacion' => null,
+            'grupo' => null,
             'modoEdicion' => false,
         ]);
     }
@@ -50,11 +50,11 @@ class SedeController extends Controller
 
     public function edit(int $id)
     {
-        $sede = Sede::query()->with('evaluacion')->findOrFail($id);
+        $sede = Sede::query()->with('grupo')->findOrFail($id);
 
         return view('admin.sede-formulario', [
             'sede' => $sede,
-            'evaluacion' => $sede->evaluacion,
+            'grupo' => $sede->grupo,
             'modoEdicion' => true,
         ]);
     }

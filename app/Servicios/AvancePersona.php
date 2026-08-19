@@ -46,7 +46,7 @@ class AvancePersona
             ->join('c_estado_solicitud as c', 'c.esso_id_c_estado_solicitud', '=', 'e.esso_id_c_estado_solicitud')
             ->where('e.esso_id_solicitud', $this->idSolicitud)
             ->orderByDesc('e.esso_id_estado_solicitud')
-            ->value('c.esso_estatus_solicitud');
+            ->value('c.esso_estado_solicitud');
 
         $this->documentos = $this->cargarDocumentos();
         $this->pago = $this->cargarPago();

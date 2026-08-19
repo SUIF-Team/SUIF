@@ -19,8 +19,25 @@ ALTER TABLE estado_solicitud ALTER COLUMN esso_motivo_rechazo TYPE VARCHAR(255);
 /* Cargar un documento no requiere comentario del revisor. */
 ALTER TABLE estado_documento ALTER COLUMN esdo_comentarios DROP NOT NULL;
 
+/* La columna se llamaba esso_estatus_solicitud antes del esquema del
+   11/08/2026. Se renombra para que las bases anteriores queden alineadas
+   con suif.sql y con las consultas de la aplicación. */
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'c_estado_solicitud'
+          AND column_name = 'esso_estatus_solicitud'
+    ) THEN
+        ALTER TABLE c_estado_solicitud
+            RENAME COLUMN esso_estatus_solicitud TO esso_estado_solicitud;
+    END IF;
+END $$;
+
 /* "Documentación en revisión" no cabe en 15 caracteres. */
-ALTER TABLE c_estado_solicitud ALTER COLUMN esso_estatus_solicitud TYPE VARCHAR(40);
+ALTER TABLE c_estado_solicitud ALTER COLUMN esso_estado_solicitud TYPE VARCHAR(45);
 
 /* Nombre visible de la sede. El backfill sólo cubre filas preexistentes. */
 ALTER TABLE sede ADD COLUMN IF NOT EXISTS sede_nombre VARCHAR(150);
@@ -29,19 +46,34 @@ UPDATE sede
 SET sede_nombre = LEFT(sede_direccion, 150)
 WHERE sede_nombre IS NULL;
 
+/* suif.sql la declara en 50; el formulario admite 150. */
+ALTER TABLE sede ALTER COLUMN sede_nombre TYPE VARCHAR(150);
+
 ALTER TABLE sede ALTER COLUMN sede_nombre SET NOT NULL;
 
 /* El resultado se captura después de programar la evaluación. */
 ALTER TABLE evaluacion ALTER COLUMN eval_resultado DROP NOT NULL;
 
-/* La primera versión administra una sola programación por sede. */
+/* La primera versión administra una sola programación por sede, y la
+   programación vive en GRUPO desde el esquema del 11/08/2026. */
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'uq_evaluacion_sede'
+        SELECT 1 FROM pg_constraint WHERE conname = 'uq_grupo_sede'
+    ) THEN
+        ALTER TABLE grupo
+            ADD CONSTRAINT uq_grupo_sede UNIQUE (sede_id_sede);
+    END IF;
+END $$;
+
+/* Una evaluación por grupo: el cupo de la sede se cuenta contra ella. */
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uq_evaluacion_grupo'
     ) THEN
         ALTER TABLE evaluacion
-            ADD CONSTRAINT uq_evaluacion_sede UNIQUE (eval_id_sede);
+            ADD CONSTRAINT uq_evaluacion_grupo UNIQUE (grup_id_grupo);
     END IF;
 END $$;
 
@@ -49,8 +81,9 @@ END $$;
 UPDATE sede AS s
 SET sede_estado = EXISTS (
     SELECT 1
-    FROM evaluacion AS e
-    WHERE e.eval_id_sede = s.sede_id_sede
+    FROM grupo AS g
+    JOIN evaluacion AS e ON e.grup_id_grupo = g.grup_id_grupo
+    WHERE g.sede_id_sede = s.sede_id_sede
       AND s.sede_cupo > (
           SELECT COUNT(*)
           FROM solicitud AS so
