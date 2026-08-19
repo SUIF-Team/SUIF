@@ -27,8 +27,13 @@ class Sede extends Model
         ];
     }
 
-    public function grupo()
+    /**
+     * Cada grupo es una aplicación del examen con su propio horario.
+     */
+    public function grupos()
     {
-        return $this->hasOne(Grupo::class, 'sede_id_sede', 'sede_id_sede');
+        return $this->hasMany(Grupo::class, 'sede_id_sede', 'sede_id_sede')
+            ->orderBy('grup_fecha_inicio')
+            ->orderBy('grup_hora_inicio');
     }
 }

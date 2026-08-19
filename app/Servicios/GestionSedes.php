@@ -9,6 +9,11 @@ use DomainException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Una sede aplica el examen una o más veces. Cada aplicación es un GRUPO con
+ * su propio horario y su propia EVALUACION, y SEDE_CUPO es el aforo de cada
+ * aplicación, no el total de la sede.
+ */
 class GestionSedes
 {
     public function bandeja(array $filtros = []): array
@@ -54,14 +59,20 @@ class GestionSedes
             ->values();
     }
 
+    /**
+     * Lista plana de horarios para el sondeo de cupos del participante.
+     */
     public function disponibilidadParticipante(): array
     {
         return $this->catalogoParticipante()
-            ->map(fn (array $sede): array => [
-                'evaluacion_id' => $sede['evaluacion_id'],
-                'disponibles' => $sede['disponibles'],
-                'con_cupo' => $sede['con_cupo'],
-            ])
+            ->flatMap(fn (array $sede): array => array_map(
+                fn (array $horario): array => [
+                    'evaluacion_id' => $horario['evaluacion_id'],
+                    'disponibles' => $horario['disponibles'],
+                    'con_cupo' => $horario['con_cupo'],
+                ],
+                $sede['horarios']
+            ))
             ->all();
     }
 
@@ -75,12 +86,10 @@ class GestionSedes
                 'sede_estado' => true,
             ]);
 
-            $grupo = Grupo::query()->create($this->datosGrupo($sede->sede_id_sede, $datos));
+            $this->sincronizarHorarios($sede->sede_id_sede, $datos['horarios']);
 
-            Evaluacion::query()->create([
-                'grup_id_grupo' => $grupo->grup_id_grupo,
-                'eval_resultado' => null,
-            ]);
+            $sede->sede_estado = $this->sedeConCupo($sede->sede_id_sede, (int) $datos['cupo']);
+            $sede->save();
 
             return $sede;
         });
@@ -90,16 +99,11 @@ class GestionSedes
     {
         return DB::transaction(function () use ($id, $datos): Sede {
             $sede = Sede::query()->lockForUpdate()->findOrFail($id);
-            $grupo = Grupo::query()
-                ->where('sede_id_sede', $id)
-                ->lockForUpdate()
-                ->first();
-            $evaluacion = $grupo ? $this->evaluacionDeGrupo($grupo->grup_id_grupo) : null;
-            $ocupados = $evaluacion ? $this->ocupados($evaluacion->eval_id_evaluacion) : 0;
+            $ocupacion_mayor = $this->ocupacionMayor($id);
 
-            if ((int) $datos['cupo'] < $ocupados) {
+            if ((int) $datos['cupo'] < $ocupacion_mayor) {
                 throw new DomainException(
-                    "El aforo no puede ser menor que los {$ocupados} lugares ya asignados."
+                    "El aforo no puede ser menor que los {$ocupacion_mayor} lugares ya asignados en una de las aplicaciones."
                 );
             }
 
@@ -107,23 +111,12 @@ class GestionSedes
                 'sede_nombre' => $datos['nombre'],
                 'sede_direccion' => $datos['direccion'],
                 'sede_cupo' => $datos['cupo'],
-                'sede_estado' => (int) $datos['cupo'] > $ocupados,
             ])->save();
 
-            $valores = $this->datosGrupo($id, $datos);
-            if ($grupo) {
-                unset($valores['sede_id_sede']);
-                $grupo->fill($valores)->save();
-            } else {
-                $grupo = Grupo::query()->create($valores);
-            }
+            $this->sincronizarHorarios($id, $datos['horarios']);
 
-            if (!$evaluacion) {
-                Evaluacion::query()->create([
-                    'grup_id_grupo' => $grupo->grup_id_grupo,
-                    'eval_resultado' => null,
-                ]);
-            }
+            $sede->sede_estado = $this->sedeConCupo($id, (int) $datos['cupo']);
+            $sede->save();
 
             return $sede;
         });
@@ -133,24 +126,23 @@ class GestionSedes
     {
         DB::transaction(function () use ($id): void {
             $sede = Sede::query()->lockForUpdate()->findOrFail($id);
-            $grupo = Grupo::query()
+            $grupos = Grupo::query()
                 ->where('sede_id_sede', $sede->sede_id_sede)
                 ->lockForUpdate()
-                ->first();
-            $evaluacion = $grupo ? $this->evaluacionDeGrupo($grupo->grup_id_grupo) : null;
+                ->get();
 
-            if ($evaluacion && $this->ocupados($evaluacion->eval_id_evaluacion) > 0) {
-                throw new DomainException(
-                    'No es posible eliminar la sede porque tiene participantes asignados.'
-                );
+            foreach ($grupos as $grupo) {
+                $evaluacion = $this->evaluacionDeGrupo($grupo->grup_id_grupo);
+
+                if ($evaluacion && $this->ocupados($evaluacion->eval_id_evaluacion) > 0) {
+                    throw new DomainException(
+                        'No es posible eliminar la sede porque tiene participantes asignados.'
+                    );
+                }
             }
 
-            if ($evaluacion) {
-                $evaluacion->delete();
-            }
-
-            if ($grupo) {
-                $grupo->delete();
+            foreach ($grupos as $grupo) {
+                $this->eliminarGrupo($grupo);
             }
 
             $sede->delete();
@@ -200,7 +192,7 @@ class GestionSedes
                 ->first();
 
             if (!$referencia) {
-                throw new DomainException('Selecciona una sede válida.');
+                throw new DomainException('Selecciona un horario válido.');
             }
 
             $sede = Sede::query()->lockForUpdate()->find($referencia->sede_id_sede);
@@ -233,18 +225,80 @@ class GestionSedes
                 throw new DomainException('La selección de sede se habilita cuando tu pago ha sido validado.');
             }
 
-            $ocupados = $this->ocupados($idEvaluacion);
-            if ($ocupados >= $sede->sede_cupo) {
-                throw new DomainException('La sede seleccionada ya no tiene lugares disponibles.');
+            if ($this->ocupados($idEvaluacion) >= $sede->sede_cupo) {
+                throw new DomainException('El horario seleccionado ya no tiene lugares disponibles.');
             }
 
             DB::table('solicitud')
                 ->where('soli_id_solicitud', $solicitud->soli_id_solicitud)
                 ->update(['soli_id_evaluacion' => $idEvaluacion]);
 
-            $sede->sede_estado = ($ocupados + 1) < $sede->sede_cupo;
+            $sede->sede_estado = $this->sedeConCupo($sede->sede_id_sede, (int) $sede->sede_cupo);
             $sede->save();
         }, 3);
+    }
+
+    /**
+     * Deja los grupos de la sede exactamente como vienen en el formulario:
+     * actualiza los que conservan su identificador, agrega los nuevos y
+     * elimina los que se quitaron.
+     */
+    private function sincronizarHorarios(int $idSede, array $horarios): void
+    {
+        $existentes = Grupo::query()
+            ->where('sede_id_sede', $idSede)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('grup_id_grupo');
+
+        $conservados = [];
+
+        foreach ($horarios as $horario) {
+            $id_grupo = (int) ($horario['grupo_id'] ?? 0);
+            $grupo = $id_grupo ? $existentes->get($id_grupo) : null;
+
+            if ($grupo) {
+                $grupo->fill($this->datosGrupo($idSede, $horario))->save();
+                $conservados[] = $grupo->grup_id_grupo;
+            } else {
+                $grupo = Grupo::query()->create($this->datosGrupo($idSede, $horario));
+                $conservados[] = $grupo->grup_id_grupo;
+            }
+
+            if (!$this->evaluacionDeGrupo($grupo->grup_id_grupo)) {
+                Evaluacion::query()->create([
+                    'grup_id_grupo' => $grupo->grup_id_grupo,
+                    'eval_resultado' => null,
+                ]);
+            }
+        }
+
+        foreach ($existentes as $grupo) {
+            if (in_array($grupo->grup_id_grupo, $conservados, true)) {
+                continue;
+            }
+
+            $evaluacion = $this->evaluacionDeGrupo($grupo->grup_id_grupo);
+
+            if ($evaluacion && $this->ocupados($evaluacion->eval_id_evaluacion) > 0) {
+                throw new DomainException(
+                    'No es posible quitar una aplicación que ya tiene participantes asignados.'
+                );
+            }
+
+            $this->eliminarGrupo($grupo);
+        }
+    }
+
+    private function eliminarGrupo(Grupo $grupo): void
+    {
+        $evaluacion = $this->evaluacionDeGrupo($grupo->grup_id_grupo);
+
+        if ($evaluacion) {
+            $evaluacion->delete();
+        }
+
+        $grupo->delete();
     }
 
     private function filasCatalogo(): Collection
@@ -259,12 +313,15 @@ class GestionSedes
             ->leftJoin('evaluacion as e', 'e.grup_id_grupo', '=', 'g.grup_id_grupo')
             ->leftJoinSub($ocupaciones, 'o', 'o.soli_id_evaluacion', '=', 'e.eval_id_evaluacion')
             ->orderBy('s.sede_nombre')
+            ->orderBy('g.grup_fecha_inicio')
+            ->orderBy('g.grup_hora_inicio')
             ->select([
                 's.sede_id_sede',
                 's.sede_nombre',
                 's.sede_direccion',
                 's.sede_cupo',
                 's.sede_estado',
+                'g.grup_id_grupo',
                 'e.eval_id_evaluacion',
                 'g.grup_fecha_inicio',
                 'g.grup_hora_inicio',
@@ -273,42 +330,61 @@ class GestionSedes
                 DB::raw('COALESCE(o.ocupados, 0) AS ocupados'),
             ])
             ->get()
-            ->map(function (object $fila): array {
-                $programada = $fila->eval_id_evaluacion !== null;
-                $ocupados = (int) $fila->ocupados;
-                $disponibles = $programada
-                    ? max((int) $fila->sede_cupo - $ocupados, 0)
-                    : 0;
-                $conCupo = $programada && $disponibles > 0;
+            ->groupBy('sede_id_sede')
+            ->map(function (Collection $filas): array {
+                $sede = $filas->first();
+                $cupo = (int) $sede->sede_cupo;
+
+                $horarios = $filas
+                    ->filter(fn (object $fila): bool => $fila->eval_id_evaluacion !== null)
+                    ->map(function (object $fila) use ($cupo): array {
+                        $ocupados = (int) $fila->ocupados;
+                        $disponibles = max($cupo - $ocupados, 0);
+
+                        return [
+                            'evaluacion_id' => (int) $fila->eval_id_evaluacion,
+                            'grupo_id' => (int) $fila->grup_id_grupo,
+                            'fecha_inicio' => (string) $fila->grup_fecha_inicio,
+                            'hora_inicio' => substr((string) $fila->grup_hora_inicio, 0, 5),
+                            'fecha_fin' => (string) $fila->grup_fecha_fin,
+                            'hora_fin' => substr((string) $fila->grup_hora_fin, 0, 5),
+                            'ocupados' => $ocupados,
+                            'disponibles' => $disponibles,
+                            'con_cupo' => $disponibles > 0,
+                        ];
+                    })
+                    ->values()
+                    ->all();
+
+                $programada = $horarios !== [];
+                $con_cupo = (bool) array_filter($horarios, fn (array $horario): bool => $horario['con_cupo']);
 
                 return [
-                    'id' => (int) $fila->sede_id_sede,
-                    'evaluacion_id' => $programada ? (int) $fila->eval_id_evaluacion : null,
-                    'nombre' => $fila->sede_nombre,
-                    'direccion' => $fila->sede_direccion,
-                    'cupo' => (int) $fila->sede_cupo,
-                    'ocupados' => $ocupados,
-                    'disponibles' => $disponibles,
+                    'id' => (int) $sede->sede_id_sede,
+                    'nombre' => $sede->sede_nombre,
+                    'direccion' => $sede->sede_direccion,
+                    'cupo' => $cupo,
+                    'ocupados' => array_sum(array_column($horarios, 'ocupados')),
+                    'disponibles' => array_sum(array_column($horarios, 'disponibles')),
                     'programada' => $programada,
-                    'con_cupo' => $conCupo,
-                    'estado_clave' => !$programada ? 'pendiente' : ($conCupo ? 'con-cupo' : 'sin-cupo'),
-                    'estado' => !$programada ? 'Pendiente' : ($conCupo ? 'Con cupo' : 'Sin cupo'),
-                    'fecha_inicio' => $programada ? (string) $fila->grup_fecha_inicio : null,
-                    'hora_inicio' => $programada ? substr((string) $fila->grup_hora_inicio, 0, 5) : null,
-                    'fecha_fin' => $programada ? (string) $fila->grup_fecha_fin : null,
-                    'hora_fin' => $programada ? substr((string) $fila->grup_hora_fin, 0, 5) : null,
+                    'con_cupo' => $con_cupo,
+                    'estado_clave' => !$programada ? 'pendiente' : ($con_cupo ? 'con-cupo' : 'sin-cupo'),
+                    'estado' => !$programada ? 'Pendiente' : ($con_cupo ? 'Con cupo' : 'Sin cupo'),
+                    'horarios' => $horarios,
                 ];
-            });
+            })
+            ->sortBy('nombre')
+            ->values();
     }
 
-    private function datosGrupo(int $idSede, array $datos): array
+    private function datosGrupo(int $idSede, array $horario): array
     {
         return [
             'sede_id_sede' => $idSede,
-            'grup_fecha_inicio' => $datos['fecha_inicio'],
-            'grup_hora_inicio' => $datos['hora_inicio'],
-            'grup_fecha_fin' => $datos['fecha_fin'],
-            'grup_hora_fin' => $datos['hora_fin'],
+            'grup_fecha_inicio' => $horario['fecha_inicio'],
+            'grup_hora_inicio' => $horario['hora_inicio'],
+            'grup_fecha_fin' => $horario['fecha_fin'],
+            'grup_hora_fin' => $horario['hora_fin'],
         ];
     }
 
@@ -325,6 +401,39 @@ class GestionSedes
         return DB::table('solicitud')
             ->where('soli_id_evaluacion', $idEvaluacion)
             ->count();
+    }
+
+    /**
+     * Lugares asignados en la aplicación más llena de la sede. El aforo no
+     * puede quedar por debajo de esa cifra.
+     */
+    private function ocupacionMayor(int $idSede): int
+    {
+        return (int) DB::table('grupo as g')
+            ->join('evaluacion as e', 'e.grup_id_grupo', '=', 'g.grup_id_grupo')
+            ->leftJoin('solicitud as so', 'so.soli_id_evaluacion', '=', 'e.eval_id_evaluacion')
+            ->where('g.sede_id_sede', $idSede)
+            ->groupBy('e.eval_id_evaluacion')
+            ->selectRaw('COUNT(so.soli_id_solicitud) AS ocupados')
+            ->pluck('ocupados')
+            ->max();
+    }
+
+    /**
+     * Una sede ofrece cupo mientras al menos una de sus aplicaciones tenga
+     * lugares libres.
+     */
+    private function sedeConCupo(int $idSede, int $cupo): bool
+    {
+        $ocupaciones = DB::table('grupo as g')
+            ->join('evaluacion as e', 'e.grup_id_grupo', '=', 'g.grup_id_grupo')
+            ->leftJoin('solicitud as so', 'so.soli_id_evaluacion', '=', 'e.eval_id_evaluacion')
+            ->where('g.sede_id_sede', $idSede)
+            ->groupBy('e.eval_id_evaluacion')
+            ->selectRaw('COUNT(so.soli_id_solicitud) AS ocupados')
+            ->pluck('ocupados');
+
+        return $ocupaciones->contains(fn (mixed $ocupados): bool => (int) $ocupados < $cupo);
     }
 
     private function pagoValidado(?int $idPago): bool

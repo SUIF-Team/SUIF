@@ -48,7 +48,7 @@ class SedeController extends Controller
         $datos = $request->validate([
             'evaluacion_id' => ['required', 'integer', 'min:1'],
         ], [
-            'evaluacion_id.required' => 'Selecciona una sede válida.',
+            'evaluacion_id.required' => 'Selecciona el horario en el que presentarás tu evaluación.',
         ]);
 
         try {
@@ -61,7 +61,7 @@ class SedeController extends Controller
 
         return redirect()
             ->route('persona.sede.index')
-            ->with('success', 'Tu sede quedó confirmada.');
+            ->with('success', 'Tu sede y horario quedaron confirmados.');
     }
 
     public function disponibilidad(GestionSedes $gestion): JsonResponse

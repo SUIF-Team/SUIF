@@ -76,19 +76,21 @@
                                 <td class="admin-sedes-tabla-nombre">{{ $sede['nombre'] }}</td>
                                 <td>{{ $sede['direccion'] }}</td>
                                 <td>
-                                    <strong>{{ $sede['ocupados'] }} / {{ $sede['cupo'] }}</strong>
-                                    <small>{{ $sede['disponibles'] }} disponibles</small>
+                                    <strong>{{ $sede['ocupados'] }} / {{ $sede['cupo'] * count($sede['horarios']) }}</strong>
+                                    <small>{{ $sede['cupo'] }} por aplicación · {{ $sede['disponibles'] }} disponibles</small>
                                 </td>
                                 <td>
-                                    @if($sede['programada'])
-                                        {{ \Illuminate\Support\Carbon::parse($sede['fecha_inicio'])->format('d/m/Y') }}
-                                        @if($sede['fecha_inicio'] !== $sede['fecha_fin'])
-                                            –{{ \Illuminate\Support\Carbon::parse($sede['fecha_fin'])->format('d/m/Y') }}
-                                        @endif
-                                        <small>{{ $sede['hora_inicio'] }}–{{ $sede['hora_fin'] }} h</small>
-                                    @else
+                                    @forelse($sede['horarios'] as $horario)
+                                        <div class="admin-sedes-tabla-horario">
+                                            {{ \Illuminate\Support\Carbon::parse($horario['fecha_inicio'])->format('d/m/Y') }}
+                                            @if($horario['fecha_inicio'] !== $horario['fecha_fin'])
+                                                –{{ \Illuminate\Support\Carbon::parse($horario['fecha_fin'])->format('d/m/Y') }}
+                                            @endif
+                                            <small>{{ $horario['hora_inicio'] }}–{{ $horario['hora_fin'] }} h · {{ $horario['disponibles'] }} de {{ $sede['cupo'] }} disponibles</small>
+                                        </div>
+                                    @empty
                                         <span class="admin-sedes-texto-atenuado">Sin programación</span>
-                                    @endif
+                                    @endforelse
                                 </td>
                                 <td>
                                     <span class="admin-sedes-estado admin-sedes-estado--{{ $sede['estado_clave'] }}">

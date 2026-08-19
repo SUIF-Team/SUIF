@@ -1,6 +1,16 @@
 (function () {
     'use strict';
 
+    function horarioVacio() {
+        return {
+            grupo_id: '',
+            hora_inicio: '',
+            fecha_inicio: '',
+            hora_fin: '',
+            fecha_fin: ''
+        };
+    }
+
     var navegacion = document.getElementById('admin-sedes-navegacion');
     if (navegacion && window.Vue && window.SUIFComponentes && window.SUIFComponentes.BackNavigation) {
         window.Vue.createApp({
@@ -27,6 +37,36 @@
                 mapa.src = 'https://maps.google.com/maps?q=' + encodeURIComponent(consulta) + '&hl=es&z=16&output=embed';
             }, 800);
         });
+    }
+
+    var contenedorHorarios = formulario.querySelector('[data-horarios-app]');
+
+    if (contenedorHorarios && window.Vue) {
+        var horariosIniciales;
+
+        try {
+            horariosIniciales = JSON.parse(formulario.dataset.horarios);
+        } catch (error) {
+            horariosIniciales = [];
+        }
+
+        window.Vue.createApp({
+            data: function () {
+                return {
+                    horarios: horariosIniciales.length ? horariosIniciales : [horarioVacio()]
+                };
+            },
+            methods: {
+                agregarHorario: function () {
+                    this.horarios.push(horarioVacio());
+                },
+                quitarHorario: function (indice) {
+                    if (this.horarios.length > 1) {
+                        this.horarios.splice(indice, 1);
+                    }
+                }
+            }
+        }).mount(contenedorHorarios);
     }
 
     var modal = formulario.querySelector('[data-modal-eliminacion]');

@@ -5,6 +5,7 @@ Orden de ejecución en una instalación nueva:
 1. `suif.sql`               — esquema base (35 tablas)
 2. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
 3. `suif_catalogos.sql`     — catálogos y convocatoria
+4. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
 
 `suif_lleno.sql` es opcional: datos de prueba para ambientes de desarrollo.
 Nunca se ejecuta en producción.
@@ -35,11 +36,22 @@ contra lo que se cuenta el cupo de la sede.
 El cambio es incompatible con el esquema anterior: una base creada con
 `suif_antiguo.sql` no se migra, se reconstruye desde cero.
 
-## Los otros dos se pueden repetir
+## Una sede aplica el examen una o más veces
 
-`suif_ajustes_esquema.sql` y `suif_catalogos.sql` son idempotentes:
-volver a ejecutarlos no duplica ni destruye nada. Por eso la regla al
-desplegar es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
+`suif_ajustes_esquema.sql` limitaba cada sede a una sola programación con la
+restricción `uq_grupo_sede`. `suif_grupos_multiples.sql` la retira: cada
+aplicación es un `GRUPO` con su propio horario y su propia `EVALUACION`, y el
+participante elige el horario que le convenga.
+
+`SEDE_CUPO` es el aforo de **cada** aplicación, no el total de la sede: la
+sala admite el mismo número de personas en cada sesión.
+
+## Los otros tres se pueden repetir
+
+`suif_ajustes_esquema.sql`, `suif_catalogos.sql` y
+`suif_grupos_multiples.sql` son idempotentes: volver a ejecutarlos no
+duplica ni destruye nada. Por eso la regla al desplegar es correrlos
+SIEMPRE, sin preguntarse si ya se corrieron.
 
 ## Antes de tocar producción
 

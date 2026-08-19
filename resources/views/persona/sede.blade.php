@@ -45,8 +45,8 @@
             </div>
         </div>
     @else
-        <h1>Elige tu sede de evaluación</h1>
-        <p class="sede-muted">Selecciona dónde presentarás tu evaluación. Los lugares se actualizan automáticamente.</p>
+        <h1>Elige tu sede y horario</h1>
+        <p class="sede-muted">Selecciona dónde y cuándo presentarás tu evaluación. Cada sede puede aplicar el examen en varios horarios; los lugares se actualizan automáticamente.</p>
 
         <form method="GET" action="{{ route('persona.sede.index') }}" class="sede-filtro">
             <input type="search" name="buscar" placeholder="Buscar por nombre o dirección…" value="{{ $buscarActual }}">
@@ -60,37 +60,51 @@
 
         <div class="sede-lista" aria-live="polite">
             @forelse($sedes as $sede)
-                <article class="sede-tarjeta" data-evaluacion-id="{{ $sede['evaluacion_id'] }}">
+                <article class="sede-tarjeta" data-sede-tarjeta>
                     <div class="sede-tarjeta__info">
                         <h2 class="sede-tarjeta__nombre">{{ $sede['nombre'] }}</h2>
                         <p class="sede-tarjeta__direccion">{{ $sede['direccion'] }}</p>
-                        <div class="sede-tarjeta__meta">
-                            <span class="sede-chip">
-                                {{ \Illuminate\Support\Carbon::parse($sede['fecha_inicio'])->format('d/m/Y') }}
-                                @if($sede['fecha_inicio'] !== $sede['fecha_fin'])
-                                    –{{ \Illuminate\Support\Carbon::parse($sede['fecha_fin'])->format('d/m/Y') }}
-                                @endif
-                            </span>
-                            <span class="sede-fecha">{{ $sede['hora_inicio'] }}–{{ $sede['hora_fin'] }} h</span>
-                        </div>
                     </div>
-                    <div class="sede-tarjeta__cupo">
-                        <span
-                            class="sede-cupo sede-cupo--{{ !$sede['con_cupo'] ? 'lleno' : ($sede['disponibles'] <= 15 ? 'bajo' : 'libre') }}"
-                            data-cupo-estado>
-                            <span data-cupo-disponible>{{ $sede['disponibles'] }}</span> de {{ $sede['cupo'] }} disponibles
-                        </span>
-                        <small data-cupo-etiqueta>{{ $sede['con_cupo'] ? 'Lugares disponibles' : 'Sin cupo' }}</small>
-                    </div>
-                    <form method="POST" action="{{ route('persona.sede.seleccionar') }}">
+                    <form method="POST" action="{{ route('persona.sede.seleccionar') }}" class="sede-tarjeta__seleccion">
                         @csrf
-                        <input type="hidden" name="evaluacion_id" value="{{ $sede['evaluacion_id'] }}">
+                        <fieldset class="sede-horarios">
+                            <legend class="sede-horarios__titulo">
+                                Horarios disponibles · {{ count($sede['horarios']) }}
+                            </legend>
+                            @foreach($sede['horarios'] as $horario)
+                                <label class="sede-horario {{ $horario['con_cupo'] ? '' : 'sede-horario--lleno' }}" data-evaluacion-id="{{ $horario['evaluacion_id'] }}">
+                                    <input
+                                        type="radio"
+                                        name="evaluacion_id"
+                                        value="{{ $horario['evaluacion_id'] }}"
+                                        data-horario-opcion
+                                        @disabled(!$horario['con_cupo'])>
+                                    <span class="sede-horario__datos">
+                                        <span class="sede-chip">
+                                            {{ \Illuminate\Support\Carbon::parse($horario['fecha_inicio'])->format('d/m/Y') }}
+                                            @if($horario['fecha_inicio'] !== $horario['fecha_fin'])
+                                                –{{ \Illuminate\Support\Carbon::parse($horario['fecha_fin'])->format('d/m/Y') }}
+                                            @endif
+                                        </span>
+                                        <span class="sede-fecha">{{ $horario['hora_inicio'] }}–{{ $horario['hora_fin'] }} h</span>
+                                    </span>
+                                    <span class="sede-horario__cupo">
+                                        <span
+                                            class="sede-cupo sede-cupo--{{ !$horario['con_cupo'] ? 'lleno' : ($horario['disponibles'] <= 15 ? 'bajo' : 'libre') }}"
+                                            data-cupo-estado>
+                                            <span data-cupo-disponible>{{ $horario['disponibles'] }}</span> de {{ $sede['cupo'] }} disponibles
+                                        </span>
+                                        <small data-cupo-etiqueta>{{ $horario['con_cupo'] ? 'Lugares disponibles' : 'Sin cupo' }}</small>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </fieldset>
                         <button
                             type="submit"
                             class="sede-boton {{ $sede['con_cupo'] ? '' : 'sede-boton--deshabilitado' }}"
                             data-seleccionar-sede
                             @disabled(!$sede['con_cupo'])>
-                            {{ $sede['con_cupo'] ? 'Seleccionar' : 'Sin cupo' }}
+                            {{ $sede['con_cupo'] ? 'Seleccionar horario' : 'Sin cupo' }}
                         </button>
                     </form>
                 </article>

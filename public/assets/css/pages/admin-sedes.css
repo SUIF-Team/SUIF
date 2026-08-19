@@ -312,6 +312,45 @@
     gap: 1.25rem;
 }
 
+/* Una sede lista todas sus aplicaciones en la columna de horario. */
+.admin-sedes-tabla-horario + .admin-sedes-tabla-horario {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-light);
+}
+
+/* Cada aplicación del examen es un bloque repetible dentro del formulario. */
+.admin-sedes-subtitulo {
+    margin: 0.5rem 0 0.25rem;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.admin-sedes-ayuda {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+.admin-sedes-horario {
+    margin: 0 0 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+}
+
+.admin-sedes-horario-titulo {
+    padding: 0 0.35rem;
+    color: var(--text-dark);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
+.admin-sedes-horario-quitar {
+    margin-top: 1rem;
+}
+
 .admin-sedes-formulario-acciones {
     margin-top: 0.75rem;
     justify-content: flex-end;

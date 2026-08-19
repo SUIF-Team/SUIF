@@ -8,24 +8,54 @@
 
     var intervalo;
 
-    function actualizarSede(sede) {
-        var tarjeta = root.querySelector('[data-evaluacion-id="' + sede.evaluacion_id + '"]');
-        if (!tarjeta) {
+    /**
+     * Una sede aplica el examen en uno o más horarios. El cupo se controla por
+     * horario, así que cada uno se actualiza por separado.
+     */
+    function actualizarHorario(horario) {
+        var opcion = root.querySelector('[data-evaluacion-id="' + horario.evaluacion_id + '"]');
+        if (!opcion) {
             return;
         }
 
-        var disponible = tarjeta.querySelector('[data-cupo-disponible]');
-        var estado = tarjeta.querySelector('[data-cupo-estado]');
-        var etiqueta = tarjeta.querySelector('[data-cupo-etiqueta]');
-        var boton = tarjeta.querySelector('[data-seleccionar-sede]');
+        var disponible = opcion.querySelector('[data-cupo-disponible]');
+        var estado = opcion.querySelector('[data-cupo-estado]');
+        var etiqueta = opcion.querySelector('[data-cupo-etiqueta]');
+        var radio = opcion.querySelector('[data-horario-opcion]');
 
-        disponible.textContent = sede.disponibles;
+        disponible.textContent = horario.disponibles;
         estado.classList.remove('sede-cupo--libre', 'sede-cupo--bajo', 'sede-cupo--lleno');
-        estado.classList.add(!sede.con_cupo ? 'sede-cupo--lleno' : (sede.disponibles <= 15 ? 'sede-cupo--bajo' : 'sede-cupo--libre'));
-        etiqueta.textContent = sede.con_cupo ? 'Lugares disponibles' : 'Sin cupo';
-        boton.disabled = !sede.con_cupo;
-        boton.textContent = sede.con_cupo ? 'Seleccionar' : 'Sin cupo';
-        boton.classList.toggle('sede-boton--deshabilitado', !sede.con_cupo);
+        estado.classList.add(!horario.con_cupo ? 'sede-cupo--lleno' : (horario.disponibles <= 15 ? 'sede-cupo--bajo' : 'sede-cupo--libre'));
+        etiqueta.textContent = horario.con_cupo ? 'Lugares disponibles' : 'Sin cupo';
+        radio.disabled = !horario.con_cupo;
+        opcion.classList.toggle('sede-horario--lleno', !horario.con_cupo);
+
+        if (radio.disabled && radio.checked) {
+            radio.checked = false;
+        }
+    }
+
+    function actualizarTarjeta(tarjeta) {
+        var boton = tarjeta.querySelector('[data-seleccionar-sede]');
+        if (!boton) {
+            return;
+        }
+
+        var opciones = Array.from(tarjeta.querySelectorAll('[data-horario-opcion]'));
+        var hayCupo = opciones.some(function (radio) {
+            return !radio.disabled;
+        });
+        var elegido = opciones.some(function (radio) {
+            return radio.checked && !radio.disabled;
+        });
+
+        boton.disabled = !elegido;
+        boton.classList.toggle('sede-boton--deshabilitado', !elegido);
+        boton.textContent = hayCupo ? 'Seleccionar horario' : 'Sin cupo';
+    }
+
+    function actualizarTarjetas() {
+        root.querySelectorAll('[data-sede-tarjeta]').forEach(actualizarTarjeta);
     }
 
     function consultar() {
@@ -40,22 +70,23 @@
             }
             return respuesta.json();
         }).then(function (datos) {
-            var sedes = datos.sedes || [];
-            var vigentes = sedes.map(function (sede) {
-                return String(sede.evaluacion_id);
+            var horarios = datos.sedes || [];
+            var vigentes = horarios.map(function (horario) {
+                return String(horario.evaluacion_id);
             });
 
-            root.querySelectorAll('[data-evaluacion-id]').forEach(function (tarjeta) {
-                if (!vigentes.includes(tarjeta.dataset.evaluacionId)) {
-                    actualizarSede({
-                        evaluacion_id: tarjeta.dataset.evaluacionId,
+            root.querySelectorAll('[data-evaluacion-id]').forEach(function (opcion) {
+                if (!vigentes.includes(opcion.dataset.evaluacionId)) {
+                    actualizarHorario({
+                        evaluacion_id: opcion.dataset.evaluacionId,
                         disponibles: 0,
                         con_cupo: false
                     });
                 }
             });
 
-            sedes.forEach(actualizarSede);
+            horarios.forEach(actualizarHorario);
+            actualizarTarjetas();
         }).catch(function () {
             // Se conserva el último estado visible; el POST vuelve a validar el cupo.
         });
@@ -72,6 +103,12 @@
         intervalo = null;
     }
 
+    root.addEventListener('change', function (evento) {
+        if (evento.target.matches('[data-horario-opcion]')) {
+            actualizarTarjetas();
+        }
+    });
+
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
             detener();
@@ -80,5 +117,6 @@
         }
     });
 
+    actualizarTarjetas();
     iniciar();
 }());
