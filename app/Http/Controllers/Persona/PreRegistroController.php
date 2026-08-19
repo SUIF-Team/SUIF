@@ -596,8 +596,20 @@ class PreRegistroController extends Controller
             }
         }
 
-        DB::transaction(function () use ($idSolicitud, $documentos) {
-            foreach ($documentos as $doc) {
+        /* Los documentos ya aprobados conservan su estado: al subsanar sólo
+           vuelven a revisión los que fueron rechazados o reemplazados. */
+        $porRevisar = array_filter(
+            $documentos,
+            fn (array $doc): bool => $doc['estado'] !== 'aprobado'
+        );
+
+        if (!$porRevisar) {
+            return redirect()->route('persona.documentos.index')
+                ->withErrors(['documentos' => 'Todos tus documentos ya fueron aprobados.']);
+        }
+
+        DB::transaction(function () use ($idSolicitud, $porRevisar) {
+            foreach ($porRevisar as $doc) {
                 $this->registrarEstadoDocumento($doc['id'], 'En revisión');
             }
 
@@ -605,7 +617,9 @@ class PreRegistroController extends Controller
         });
 
         return redirect()->route('persona.documentos.index')
-            ->with('success', 'Tus documentos fueron enviados a revisión.');
+            ->with('success', count($porRevisar) === count($documentos)
+                ? 'Tus documentos fueron enviados a revisión.'
+                : 'Los documentos que corregiste fueron enviados a revisión.');
     }
 
     public function reiniciar(Request $request)

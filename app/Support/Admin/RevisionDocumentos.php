@@ -3,6 +3,7 @@
 namespace App\Support\Admin;
 
 use DomainException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class RevisionDocumentos
@@ -29,20 +30,24 @@ class RevisionDocumentos
         return DB::transaction(function () use ($id_solicitud, $decisiones, $comentarios, $fecha_limite): string {
             $this->bloquearSolicitudEnRevision($id_solicitud);
 
-            $documentos = DB::table('documento')
+            DB::table('documento')
                 ->where('soli_id_solicitud', $id_solicitud)
-                ->orderBy('docu_id_documento')
                 ->lockForUpdate()
-                ->pluck('docu_id_documento')
-                ->map(fn (mixed $id): string => (string) $id)
-                ->all();
+                ->get();
 
+            /* Sólo se resuelven los documentos que esperan revisión. Los que ya
+               fueron aprobados conservan su estado y no vuelven a revisarse. */
+            $pendientes = $this->documentosEnRevision($id_solicitud);
             $recibidos = array_map('strval', array_keys($decisiones));
-            sort($documentos);
+            sort($pendientes);
             sort($recibidos);
 
-            if (!$documentos || $documentos !== $recibidos) {
-                throw new DomainException('Los documentos recibidos no corresponden al expediente completo.');
+            if (!$pendientes) {
+                throw new DomainException('El expediente no tiene documentos pendientes de revisión.');
+            }
+
+            if ($pendientes !== $recibidos) {
+                throw new DomainException('Los documentos recibidos no corresponden a los que esperan revisión.');
             }
 
             foreach ($decisiones as $decision) {
@@ -50,8 +55,6 @@ class RevisionDocumentos
                     throw new DomainException('Una o más decisiones documentales no son válidas.');
                 }
             }
-
-            $this->verificarDocumentosEnRevision($documentos);
 
             $hay_rechazos = in_array(self::RECHAZADO, $decisiones, true);
 
@@ -99,6 +102,12 @@ class RevisionDocumentos
             DB::table('estado_documento')->insert($historial);
 
             if ($hay_rechazos) {
+                return self::REVISION;
+            }
+
+            /* La solicitud sólo se aprueba cuando el expediente completo quedó
+               aprobado, contando los documentos resueltos en revisiones previas. */
+            if ($this->documentosSinAprobar($id_solicitud) > 0) {
                 return self::REVISION;
             }
 
@@ -160,23 +169,49 @@ class RevisionDocumentos
         }
     }
 
-    private function verificarDocumentosEnRevision(array $documentos): void
+    /**
+     * Documentos de la solicitud cuyo último estado es "En revisión".
+     *
+     * @return array<int, string>
+     */
+    private function documentosEnRevision(int $id_solicitud): array
     {
-        $ultimos_estados = DB::table('estado_documento as ed')
+        return $this->ultimosEstados($id_solicitud)
+            ->filter(fn (string $estado): bool => $estado === 'En revisión')
+            ->keys()
+            ->map(fn (mixed $id): string => (string) $id)
+            ->all();
+    }
+
+    /**
+     * Cuántos documentos de la solicitud aún no están aprobados.
+     */
+    private function documentosSinAprobar(int $id_solicitud): int
+    {
+        return $this->ultimosEstados($id_solicitud)
+            ->filter(fn (string $estado): bool => $estado !== 'Aprobado')
+            ->count();
+    }
+
+    /**
+     * Último estado de cada documento de la solicitud, indexado por documento.
+     *
+     * ESTADO_DOCUMENTO es una bitácora: el estado vigente es el registro con
+     * el identificador más alto de cada documento.
+     */
+    private function ultimosEstados(int $id_solicitud): Collection
+    {
+        return DB::table('documento as d')
+            ->join('estado_documento as ed', 'ed.esdo_id_documento', '=', 'd.docu_id_documento')
             ->join('c_estado_documento as ced', 'ced.esdo_id_c_estado_documento', '=', 'ed.esdo_id_c_estado_documento')
-            ->whereIn('ed.esdo_id_documento', $documentos)
+            ->where('d.soli_id_solicitud', $id_solicitud)
             ->whereRaw('ed.esdo_id_estado_documento = (
                 SELECT MAX(ultimo.esdo_id_estado_documento)
                 FROM estado_documento AS ultimo
                 WHERE ultimo.esdo_id_documento = ed.esdo_id_documento
             )')
-            ->pluck('ced.esdo_estado_documento', 'ed.esdo_id_documento');
-
-        foreach ($documentos as $id_documento) {
-            if ($ultimos_estados->get($id_documento) !== 'En revisión') {
-                throw new DomainException('Uno o más documentos ya no están disponibles para revisión.');
-            }
-        }
+            ->orderBy('d.docu_id_documento')
+            ->pluck('ced.esdo_estado_documento', 'd.docu_id_documento');
     }
 
     private function registrarEstadoSolicitud(

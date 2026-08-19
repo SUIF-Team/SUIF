@@ -49,7 +49,7 @@
     <form method="POST" action="{{ route('admin.documentos.validar', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}" class="admin-preregistro-contenido-principal" v-on:submit="enviando = true">
         @csrf
         <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
-        <input v-for="documento in persona.documentos" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
+        <input v-for="documento in documentosPendientes" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
         <main class="admin-preregistro-tarjeta admin-preregistro-documentos" aria-labelledby="lista-documentos-titulo">
             <h2 id="lista-documentos-titulo">Documentación</h2>
             <p v-if="!persona.documentos.length" class="admin-preregistro-documentos-vacio">
@@ -63,20 +63,23 @@
                         <p class="admin-preregistro-documento-meta">@{{ documento.fecha_carga }}</p>
                     </div>
                     <div class="admin-preregistro-documento-acciones">
-                        <button type="button" class="admin-preregistro-icono admin-preregistro-icono--aprobar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'aprobado' }" :aria-pressed="estadoDocumento(documento.id) === 'aprobado'" :aria-label="'Aprobar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'aprobado')">✓</button>
-                        <button type="button" class="admin-preregistro-icono admin-preregistro-icono--rechazar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'rechazado' }" :aria-pressed="estadoDocumento(documento.id) === 'rechazado'" :aria-label="'Rechazar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'rechazado')">×</button>
+                        <template v-if="documento.pendiente">
+                            <button type="button" class="admin-preregistro-icono admin-preregistro-icono--aprobar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'aprobado' }" :aria-pressed="estadoDocumento(documento.id) === 'aprobado'" :aria-label="'Aprobar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'aprobado')">✓</button>
+                            <button type="button" class="admin-preregistro-icono admin-preregistro-icono--rechazar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'rechazado' }" :aria-pressed="estadoDocumento(documento.id) === 'rechazado'" :aria-label="'Rechazar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'rechazado')">×</button>
+                        </template>
+                        <span v-else class="admin-preregistro-documento-resuelto" :class="claseEstadoDocumento(documento.estado)">@{{ documento.estado }}</span>
                         <button type="button" class="admin-preregistro-previsualizar" v-on:click="abrirDocumento(documento, $event)">Previsualizar</button>
                     </div>
-                    <div v-if="estadoDocumento(documento.id) === 'rechazado'" class="admin-preregistro-campo-observacion admin-preregistro-documento-comentario">
+                    <div v-if="mostrarComentario(documento)" class="admin-preregistro-campo-observacion admin-preregistro-documento-comentario">
                         <label :for="`comentario-${documento.id}`">Motivo del rechazo</label>
                         <textarea
                             :id="`comentario-${documento.id}`"
-                            :name="`comentarios[${documento.id}]`"
+                            :name="documento.pendiente ? `comentarios[${documento.id}]` : null"
+                            :readonly="!documento.pendiente || modoSoloLectura"
                             v-model="comentarios[documento.id]"
                             rows="3"
                             maxlength="500"
-                            required
-                            :readonly="modoSoloLectura"
+                            :required="documento.pendiente"
                             placeholder="Explica qué debe corregirse en este documento."></textarea>
                         <p v-if="errorComentario(documento.id)" class="admin-preregistro-mensaje-validacion" role="alert">@{{ errorComentario(documento.id) }}</p>
                     </div>

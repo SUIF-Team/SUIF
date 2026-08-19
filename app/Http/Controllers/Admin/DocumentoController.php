@@ -111,10 +111,15 @@ class DocumentoController extends Controller
         }
 
         $documentos = $request->input('documentos', []);
-        $documentos_requeridos = array_map(
-            'strval',
-            array_column($expediente['persona']['documentos'], 'id')
-        );
+        /* Sólo se resuelven los documentos que esperan revisión; los aprobados
+           en una revisión anterior ya no vuelven a decidirse. */
+        $documentos_requeridos = array_map('strval', array_column(
+            array_filter(
+                $expediente['persona']['documentos'],
+                fn (array $documento): bool => $documento['estado'] === 'En revisión'
+            ),
+            'id'
+        ));
 
         $validador = Validator::make($request->all(), [
             'documentos' => ['required', 'array'],
@@ -136,7 +141,7 @@ class DocumentoController extends Controller
             if ($documentos_requeridos !== $documentos_recibidos) {
                 $validador->errors()->add(
                     'documentos',
-                    'Resuelve exactamente todos los documentos del expediente antes de guardar.'
+                    'Resuelve exactamente los documentos que esperan revisión antes de guardar.'
                 );
             }
 
@@ -276,6 +281,8 @@ class DocumentoController extends Controller
                     'solicitud' => $id_solicitud,
                     'documento' => $documento['id'],
                 ]);
+                // Los aprobados en una revisión anterior se muestran sin decidir.
+                $documento['pendiente'] = $documento['estado'] === 'En revisión';
 
                 return $documento;
             })

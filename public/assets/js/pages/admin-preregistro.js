@@ -82,11 +82,20 @@
             hayDocumentosRechazados: function () {
                 return Object.values(this.estados_documentos).includes('rechazado');
             },
+            /**
+             * Sólo se resuelven los documentos que esperan revisión; los
+             * aprobados en una revisión anterior ya no se vuelven a decidir.
+             */
+            documentosPendientes: function () {
+                return this.persona.documentos.filter(function (documento) {
+                    return documento.pendiente;
+                });
+            },
             todosDocumentosResueltos: function () {
                 var estados_documentos = this.estados_documentos;
 
-                return this.persona.documentos.length > 0
-                    && this.persona.documentos.every(function (documento) {
+                return this.documentosPendientes.length > 0
+                    && this.documentosPendientes.every(function (documento) {
                         return ['aprobado', 'rechazado'].includes(estados_documentos[documento.id]);
                     });
             },
@@ -94,7 +103,7 @@
                 var estados_documentos = this.estados_documentos;
                 var comentarios = this.comentarios;
 
-                return this.persona.documentos.every(function (documento) {
+                return this.documentosPendientes.every(function (documento) {
                     if (estados_documentos[documento.id] !== 'rechazado') {
                         return true;
                     }
@@ -127,6 +136,26 @@
             errorComentario: function (id) {
                 return this.erroresComentarios[id] || null;
             },
+            /**
+             * El motivo se captura al rechazar y se conserva visible, en sólo
+             * lectura, mientras el documento siga rechazado.
+             */
+            mostrarComentario: function (documento) {
+                return documento.pendiente
+                    ? this.estadoDocumento(documento.id) === 'rechazado'
+                    : documento.estado === 'Rechazado';
+            },
+            claseEstadoDocumento: function (estado) {
+                if (estado === 'Aprobado') {
+                    return 'admin-preregistro-documento-resuelto--aprobado';
+                }
+
+                if (estado === 'Rechazado') {
+                    return 'admin-preregistro-documento-resuelto--rechazado';
+                }
+
+                return '';
+            },
             actualizarDocumento: function (id, estado) {
                 if (this.modoSoloLectura) {
                     return;
@@ -146,6 +175,7 @@
             abrirDocumento: function (documento, evento) {
                 this.activadorDocumento = evento.currentTarget;
                 this.documentoPrevisualizado = documento;
+                document.body.classList.add('admin-preregistro-modal-abierto');
 
                 this.$nextTick(function () {
                     this.$refs.botonCerrarVisor.focus();
@@ -156,6 +186,7 @@
 
                 this.documentoPrevisualizado = null;
                 this.activadorDocumento = null;
+                document.body.classList.remove('admin-preregistro-modal-abierto');
 
                 this.$nextTick(function () {
                     if (activador) {

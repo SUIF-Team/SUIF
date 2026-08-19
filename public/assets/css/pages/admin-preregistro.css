@@ -378,6 +378,27 @@
     border-bottom: 1px solid var(--border-light);
 }
 
+/* Estado de un documento resuelto en una revisión anterior. */
+.admin-preregistro-documento-resuelto {
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: var(--border-light);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.admin-preregistro-documento-resuelto--aprobado {
+    background: #d8f0e0;
+    color: #0f6e56;
+}
+
+.admin-preregistro-documento-resuelto--rechazado {
+    background: #fbdcdc;
+    color: #a32d2d;
+}
+
 /* El motivo del rechazo se captura por documento, en su propio renglón. */
 .admin-preregistro-documento-comentario {
     flex: 1 0 100%;
@@ -456,14 +477,19 @@
     background: #f0f0f0;
 }
 
+/* Por encima del navbar y del footer del sistema, que van en z-index 1030. */
 .admin-preregistro-modal {
     position: fixed;
-    z-index: 1000;
+    z-index: 1050;
     inset: 0;
     padding: 1rem;
     display: grid;
     place-items: center;
     background: rgba(17, 47, 75, 0.65);
+}
+
+.admin-preregistro-modal-abierto {
+    overflow: hidden;
 }
 
 .admin-preregistro-modal-contenido {
