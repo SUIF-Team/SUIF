@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      PostgreSQL 8                                 */
-/* Created on:     11/08/2026 10:37:58 p. m.                    */
+/* Created on:     31/07/2026 11:13:46 a. m.                    */
 /*==============================================================*/
 
 
@@ -96,6 +96,8 @@ drop index ESTADO_SOLICITUD_PK;
 
 drop table ESTADO_SOLICITUD;
 
+drop index RELATIONSHIP_13_FK;
+
 drop index EVALUACION_PK;
 
 drop table EVALUACION;
@@ -107,8 +109,6 @@ drop index GRADO_PERSONA_FK;
 drop index GRADO_PERSONA_PK;
 
 drop table GRADO_PERSONA;
-
-drop table GRUPO;
 
 drop index NIVEL_PROFESIONAL_PK;
 
@@ -163,6 +163,8 @@ drop table ROL;
 drop index SEDE_PK;
 
 drop table SEDE;
+
+drop index RELATIONSHIP_19_FK;
 
 drop index RELATIONSHIP_18_FK;
 
@@ -224,7 +226,6 @@ AUSO_ID_AUTORIZACION_SOLICITUD
 /*==============================================================*/
 create table CERTIFICACION (
    CERT_ID_CERTIFICACION SERIAL               not null,
-   EVAL_ID_EVALUACION   INT4                 null,
    CERT_FECHA_EMISION   DATE                 not null,
    CERT_HORA_EMISION    TIME                 not null,
    CERT_ESTADO          BOOL                 not null,
@@ -360,7 +361,7 @@ ESPA_ID_C_ESTADO_PAGO
 /*==============================================================*/
 create table C_ESTADO_SOLICITUD (
    ESSO_ID_C_ESTADO_SOLICITUD SERIAL               not null,
-   ESSO_ESTADO_SOLICITUD VARCHAR(45)          not null,
+   ESSO_ESTATUS_SOLICITUD VARCHAR(15)          not null,
    constraint PK_C_ESTADO_SOLICITUD primary key (ESSO_ID_C_ESTADO_SOLICITUD)
 );
 
@@ -413,7 +414,7 @@ create table DOCUMENTO (
    DOCU_ID_DOCUMENTO    SERIAL               not null,
    TIDO_ID_TIPO_DOCUMENTO INT4                 not null,
    SOLI_ID_SOLICITUD    INT4                 not null,
-   DOCU_NOMBRE          VARCHAR(150)         not null,
+   DOCU_NOMBRE          VARCHAR(30)          not null,
    DOCU_PATH            VARCHAR(250)         not null,
    DOCU_FECHA_CARGA     DATE                 not null,
    DOCU_HORA_CARGA      TIME                 not null,
@@ -499,7 +500,7 @@ create table ESTADO_DOCUMENTO (
    ESDO_ID_ESTADO_DOCUMENTO SERIAL               not null,
    ESDO_ID_C_ESTADO_DOCUMENTO INT4                 not null,
    ESDO_ID_DOCUMENTO    INT4                 not null,
-   ESDO_COMENTARIOS     TEXT                 null,
+   ESDO_COMENTARIOS     TEXT                 not null,
    ESDO_FECHA           DATE                 not null,
    ESDO_HORA            TIME                 not null,
    constraint PK_ESTADO_DOCUMENTO primary key (ESDO_ID_ESTADO_DOCUMENTO)
@@ -531,11 +532,10 @@ ESDO_ID_DOCUMENTO
 /*==============================================================*/
 create table ESTADO_PAGO (
    ESPA_ID_ESTADO_PAGO  SERIAL               not null,
-   ESPA_ID_PAGO         INT4                 not null,
+   ESPA_ID_PAGO  INT4                 not null,
    ESPA_ID_C_ESTADO_PAGO INT4                 not null,
    ESPA_FECHA           DATE                 null,
    ESPA_HORA            TIME                 not null,
-   ESPA_COMENTARIO      TEXT                 null,
    constraint PK_ESTADO_PAGO primary key (ESPA_ID_ESTADO_PAGO)
 );
 
@@ -569,7 +569,7 @@ create table ESTADO_SOLICITUD (
    ESSO_ID_SOLICITUD    INT4                 not null,
    ESSO_FECHA           DATE                 not null,
    ESSO_HORA            TIME                 not null,
-   ESSO_MOTIVO_RECHAZO  VARCHAR(255)         null,
+   ESSO_MOTIVO_RECHAZO  VARCHAR(35)          null,
    constraint PK_ESTADO_SOLICITUD primary key (ESSO_ID_ESTADO_SOLICITUD)
 );
 
@@ -599,9 +599,14 @@ ESSO_ID_SOLICITUD
 /*==============================================================*/
 create table EVALUACION (
    EVAL_ID_EVALUACION   SERIAL               not null,
-   GRUP_ID_GRUPO        INT4                 not null,
+   EVAL_ID_SEDE         INT4                 not null,
+   EVAL_FECHA_INICIO    DATE                 not null,
+   EVAL_HORA_INICIO     TIME                 not null,
+   EVAL_FECHA_FIN       DATE                 not null,
+   EVAL_HORA_FIN        TIME                 not null,
    EVAL_RESULTADO       INT4                 null,
-   constraint PK_EVALUACION primary key (EVAL_ID_EVALUACION)
+   constraint PK_EVALUACION primary key (EVAL_ID_EVALUACION),
+   constraint UQ_EVALUACION_SEDE unique (EVAL_ID_SEDE)
 );
 
 /*==============================================================*/
@@ -609,6 +614,13 @@ create table EVALUACION (
 /*==============================================================*/
 create unique index EVALUACION_PK on EVALUACION (
 EVAL_ID_EVALUACION
+);
+
+/*==============================================================*/
+/* Index: RELATIONSHIP_13_FK                                    */
+/*==============================================================*/
+create  index RELATIONSHIP_13_FK on EVALUACION (
+EVAL_ID_SEDE
 );
 
 /*==============================================================*/
@@ -640,19 +652,6 @@ GRPE_ID_NIVEL_PROFESIONAL
 /*==============================================================*/
 create  index GRADO_PERSONA2_FK on GRADO_PERSONA (
 GRPE_ID_PERSONA
-);
-
-/*==============================================================*/
-/* Table: GRUPO                                                 */
-/*==============================================================*/
-create table GRUPO (
-   GRUP_ID_GRUPO        SERIAL               not null,
-   SEDE_ID_SEDE         INT4                 not null,
-   GRUP_FECHA_INICIO    DATE                 not null,
-   GRUP_FECHA_FIN       DATE                 not null,
-   GRUP_HORA_INICIO     TIME                 not null,
-   GRUP_HORA_FIN        TIME                 not null,
-   constraint PK_GRUPO primary key (GRUP_ID_GRUPO)
 );
 
 /*==============================================================*/
@@ -823,7 +822,7 @@ REVO_ID_REVOCACION
 create table REVOCACION_CERTIFICADO (
    RECE_ID_REVOCACION_CERTIFICADO SERIAL               not null,
    RECE_ID_REVOCACION   INT4                 not null,
-   RECE_ID_CERTIFICACION INT4                 null,
+   RECE_ID_CERTIFICACION INT4                 not null,
    RECE_FECHA           DATE                 not null,
    RECE_HORA            TIME                 not null,
    RECE_NOMBRE_RESPONSABLE VARCHAR(25)          null,
@@ -872,7 +871,7 @@ ROL_ID_ROL
 /*==============================================================*/
 create table SEDE (
    SEDE_ID_SEDE         SERIAL               not null,
-   SEDE_NOMBRE          VARCHAR(50)          not null,
+   SEDE_NOMBRE          VARCHAR(150)         not null,
    SEDE_DIRECCION       TEXT                 not null,
    SEDE_CUPO            INT4                 not null,
    SEDE_ESTADO          BOOL                 not null,
@@ -893,9 +892,10 @@ create table SOLICITUD (
    SOLI_ID_SOLICITUD    SERIAL               not null,
    SOLI_ID_EVALUACION   INT4                 null,
    SOLI_ID_AUTORIZACION_SOLICITUD INT4                 null,
-   SOLI_ID_PERSONA      INT4                 not null,
-   SOLI_ID_CONVOCATORIA INT4                 not null,
+   SOLI_ID_PERSONA      INT4                 null,
+   SOLI_ID_CONVOCATORIA INT4                 null,
    SOLI_ID_PAGO         INT4                 null,
+   SOLI_ID_CERTIFICACION INT4                 null,
    constraint PK_SOLICITUD primary key (SOLI_ID_SOLICITUD)
 );
 
@@ -942,6 +942,13 @@ SOLI_ID_PAGO
 );
 
 /*==============================================================*/
+/* Index: RELATIONSHIP_19_FK                                    */
+/*==============================================================*/
+create  index RELATIONSHIP_19_FK on SOLICITUD (
+SOLI_ID_CERTIFICACION
+);
+
+/*==============================================================*/
 /* Table: TIPO_COMUNICACION                                     */
 /*==============================================================*/
 create table TIPO_COMUNICACION (
@@ -962,7 +969,7 @@ TICO_ID_TIPO_COMUNICACION
 /*==============================================================*/
 create table TIPO_DOCUMENTO (
    TIDO_ID_TIPO_DOCUMENTO SERIAL               not null,
-   TIDO_TIPO_DOCUMENTO  VARCHAR(60)          not null,
+   TIDO_TIPO_DOCUMENTO  VARCHAR(25)          not null,
    constraint PK_TIPO_DOCUMENTO primary key (TIDO_ID_TIPO_DOCUMENTO)
 );
 
@@ -1027,7 +1034,7 @@ TRPE_ID_PERSONA
 create table USUARIO (
    USUA_ID_USUARIO      SERIAL               not null,
    USUA_ID_ROL          INT4                 not null,
-   USUA_CLAVE_ACCESO    VARCHAR(255)         not null,
+   USUA_CLAVE_ACCESO    VARCHAR(255)          not null,
    constraint PK_USUARIO primary key (USUA_ID_USUARIO)
 );
 
@@ -1037,11 +1044,6 @@ create table USUARIO (
 create unique index USUARIO_PK on USUARIO (
 USUA_ID_USUARIO
 );
-
-alter table CERTIFICACION
-   add constraint FK_CERTIFIC_REFERENCE_EVALUACI foreign key (EVAL_ID_EVALUACION)
-      references EVALUACION (EVAL_ID_EVALUACION)
-      on delete restrict on update restrict;
 
 alter table COMUNICACION
    add constraint FK_COMUNICA_COMUNICAC_PERSONA foreign key (COMU_ID_PERSONA)
@@ -1114,8 +1116,8 @@ alter table ESTADO_SOLICITUD
       on delete restrict on update restrict;
 
 alter table EVALUACION
-   add constraint FK_EVALUACI_REFERENCE_GRUPO foreign key (GRUP_ID_GRUPO)
-      references GRUPO (GRUP_ID_GRUPO)
+   add constraint FK_EVALUACI_RELATIONS_SEDE foreign key (EVAL_ID_SEDE)
+      references SEDE (SEDE_ID_SEDE)
       on delete restrict on update restrict;
 
 alter table GRADO_PERSONA
@@ -1126,11 +1128,6 @@ alter table GRADO_PERSONA
 alter table GRADO_PERSONA
    add constraint FK_GRADO_PE_GRADO_PER_PERSONA foreign key (GRPE_ID_PERSONA)
       references PERSONA (PERS_ID_PERSONA)
-      on delete restrict on update restrict;
-
-alter table GRUPO
-   add constraint FK_GRUPO_REFERENCE_SEDE foreign key (SEDE_ID_SEDE)
-      references SEDE (SEDE_ID_SEDE)
       on delete restrict on update restrict;
 
 alter table PAGO
@@ -1184,6 +1181,11 @@ alter table SOLICITUD
       on delete restrict on update restrict;
 
 alter table SOLICITUD
+   add constraint FK_SOLICITU_RELATIONS_CERTIFIC foreign key (SOLI_ID_CERTIFICACION)
+      references CERTIFICACION (CERT_ID_CERTIFICACION)
+      on delete restrict on update restrict;
+
+alter table SOLICITUD
    add constraint FK_SOLICITU_RELATIONS_PERSONA foreign key (SOLI_ID_PERSONA)
       references PERSONA (PERS_ID_PERSONA)
       on delete restrict on update restrict;
@@ -1207,4 +1209,3 @@ alter table USUARIO
    add constraint FK_USUARIO_REFERENCE_ROL foreign key (USUA_ID_ROL)
       references ROL (ROL_ID_ROL)
       on delete restrict on update restrict;
-

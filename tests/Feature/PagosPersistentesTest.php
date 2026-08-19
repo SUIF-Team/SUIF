@@ -187,7 +187,7 @@ class PagosPersistentesTest extends TestCase
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
             $table->integer('esso_id_c_estado_solicitud')->primary();
-            $table->string('esso_estatus_solicitud', 40);
+            $table->string('esso_estado_solicitud', 40);
         });
 
         Schema::create('estado_solicitud', function (Blueprint $table): void {
@@ -297,7 +297,7 @@ class PagosPersistentesTest extends TestCase
             ['soli_id_solicitud' => 200, 'soli_id_persona' => 2, 'soli_id_pago' => 2],
         ]);
         DB::table('c_estado_solicitud')->insert([
-            ['esso_id_c_estado_solicitud' => 1, 'esso_estatus_solicitud' => 'Aprobada'],
+            ['esso_id_c_estado_solicitud' => 1, 'esso_estado_solicitud' => 'Aprobada'],
         ]);
         DB::table('estado_solicitud')->insert([
             ['esso_id_c_estado_solicitud' => 1, 'esso_id_solicitud' => 100, 'esso_fecha' => '2026-08-01', 'esso_hora' => '10:00:00'],

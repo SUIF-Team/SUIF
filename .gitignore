@@ -76,3 +76,7 @@ prueba.php
 debug.php
 public/index2.php
 .env
+
+# Documentos que suben las personas en tiempo de ejecución
+storage/app/preregistro/
+storage/framework/testing/

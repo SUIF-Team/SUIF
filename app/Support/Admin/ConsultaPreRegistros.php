@@ -31,7 +31,7 @@ class ConsultaPreRegistros
     {
         return DB::table('c_estado_solicitud')
             ->orderBy('esso_id_c_estado_solicitud')
-            ->pluck('esso_estatus_solicitud')
+            ->pluck('esso_estado_solicitud')
             ->map(fn (mixed $estado): string => (string) $estado)
             ->all();
     }
@@ -128,7 +128,7 @@ class ConsultaPreRegistros
                 'p.pers_curp',
                 'p.pers_fecha_registro',
                 'ef.enfe_entidad_federativa',
-                'ces.esso_estatus_solicitud as estado_solicitud',
+                'ces.esso_estado_solicitud as estado_solicitud',
             ]);
     }
 

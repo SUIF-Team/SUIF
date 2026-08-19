@@ -109,7 +109,7 @@ class RevisionPagos
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->where('es.esso_id_solicitud', $id_solicitud)
             ->orderByDesc('es.esso_id_estado_solicitud')
-            ->value('ces.esso_estatus_solicitud');
+            ->value('ces.esso_estado_solicitud');
 
         if ($estado !== 'Aprobada') {
             throw new DomainException('La solicitud aún no está aprobada para revisar el pago.');

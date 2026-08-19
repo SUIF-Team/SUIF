@@ -65,7 +65,7 @@
                             <th>Sede</th>
                             <th>Ubicación</th>
                             <th>Capacidad</th>
-                            <th>Programación</th>
+                            <th>Horario</th>
                             <th>Estatus</th>
                             <th>Acción</th>
                         </tr>

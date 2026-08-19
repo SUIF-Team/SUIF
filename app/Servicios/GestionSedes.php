@@ -3,6 +3,7 @@
 namespace App\Servicios;
 
 use App\Models\Evaluacion;
+use App\Models\Grupo;
 use App\Models\Sede;
 use DomainException;
 use Illuminate\Support\Collection;
@@ -74,7 +75,12 @@ class GestionSedes
                 'sede_estado' => true,
             ]);
 
-            Evaluacion::query()->create($this->datosEvaluacion($sede->sede_id_sede, $datos));
+            $grupo = Grupo::query()->create($this->datosGrupo($sede->sede_id_sede, $datos));
+
+            Evaluacion::query()->create([
+                'grup_id_grupo' => $grupo->grup_id_grupo,
+                'eval_resultado' => null,
+            ]);
 
             return $sede;
         });
@@ -84,10 +90,11 @@ class GestionSedes
     {
         return DB::transaction(function () use ($id, $datos): Sede {
             $sede = Sede::query()->lockForUpdate()->findOrFail($id);
-            $evaluacion = Evaluacion::query()
-                ->where('eval_id_sede', $id)
+            $grupo = Grupo::query()
+                ->where('sede_id_sede', $id)
                 ->lockForUpdate()
                 ->first();
+            $evaluacion = $grupo ? $this->evaluacionDeGrupo($grupo->grup_id_grupo) : null;
             $ocupados = $evaluacion ? $this->ocupados($evaluacion->eval_id_evaluacion) : 0;
 
             if ((int) $datos['cupo'] < $ocupados) {
@@ -103,12 +110,19 @@ class GestionSedes
                 'sede_estado' => (int) $datos['cupo'] > $ocupados,
             ])->save();
 
-            $valores = $this->datosEvaluacion($id, $datos);
-            if ($evaluacion) {
-                unset($valores['eval_id_sede'], $valores['eval_resultado']);
-                $evaluacion->fill($valores)->save();
+            $valores = $this->datosGrupo($id, $datos);
+            if ($grupo) {
+                unset($valores['sede_id_sede']);
+                $grupo->fill($valores)->save();
             } else {
-                Evaluacion::query()->create($valores);
+                $grupo = Grupo::query()->create($valores);
+            }
+
+            if (!$evaluacion) {
+                Evaluacion::query()->create([
+                    'grup_id_grupo' => $grupo->grup_id_grupo,
+                    'eval_resultado' => null,
+                ]);
             }
 
             return $sede;
@@ -119,10 +133,11 @@ class GestionSedes
     {
         DB::transaction(function () use ($id): void {
             $sede = Sede::query()->lockForUpdate()->findOrFail($id);
-            $evaluacion = Evaluacion::query()
-                ->where('eval_id_sede', $sede->sede_id_sede)
+            $grupo = Grupo::query()
+                ->where('sede_id_sede', $sede->sede_id_sede)
                 ->lockForUpdate()
                 ->first();
+            $evaluacion = $grupo ? $this->evaluacionDeGrupo($grupo->grup_id_grupo) : null;
 
             if ($evaluacion && $this->ocupados($evaluacion->eval_id_evaluacion) > 0) {
                 throw new DomainException(
@@ -134,6 +149,10 @@ class GestionSedes
                 $evaluacion->delete();
             }
 
+            if ($grupo) {
+                $grupo->delete();
+            }
+
             $sede->delete();
         });
     }
@@ -143,16 +162,17 @@ class GestionSedes
         $fila = DB::table('solicitud as so')
             ->join('persona as p', 'p.pers_id_persona', '=', 'so.soli_id_persona')
             ->join('evaluacion as e', 'e.eval_id_evaluacion', '=', 'so.soli_id_evaluacion')
-            ->join('sede as s', 's.sede_id_sede', '=', 'e.eval_id_sede')
+            ->join('grupo as g', 'g.grup_id_grupo', '=', 'e.grup_id_grupo')
+            ->join('sede as s', 's.sede_id_sede', '=', 'g.sede_id_sede')
             ->where('p.pers_id_usuario', $idUsuario)
             ->orderByDesc('so.soli_id_solicitud')
             ->select([
                 's.sede_nombre',
                 's.sede_direccion',
-                'e.eval_fecha_inicio',
-                'e.eval_hora_inicio',
-                'e.eval_fecha_fin',
-                'e.eval_hora_fin',
+                'g.grup_fecha_inicio',
+                'g.grup_hora_inicio',
+                'g.grup_fecha_fin',
+                'g.grup_hora_fin',
             ])
             ->first();
 
@@ -163,33 +183,29 @@ class GestionSedes
         return [
             'nombre' => $fila->sede_nombre,
             'direccion' => $fila->sede_direccion,
-            'fecha_inicio' => (string) $fila->eval_fecha_inicio,
-            'hora_inicio' => substr((string) $fila->eval_hora_inicio, 0, 5),
-            'fecha_fin' => (string) $fila->eval_fecha_fin,
-            'hora_fin' => substr((string) $fila->eval_hora_fin, 0, 5),
+            'fecha_inicio' => (string) $fila->grup_fecha_inicio,
+            'hora_inicio' => substr((string) $fila->grup_hora_inicio, 0, 5),
+            'fecha_fin' => (string) $fila->grup_fecha_fin,
+            'hora_fin' => substr((string) $fila->grup_hora_fin, 0, 5),
         ];
     }
 
     public function seleccionarParaUsuario(int $idUsuario, int $idEvaluacion): void
     {
         DB::transaction(function () use ($idUsuario, $idEvaluacion): void {
-            $referencia = DB::table('evaluacion')
-                ->where('eval_id_evaluacion', $idEvaluacion)
-                ->select('eval_id_sede')
+            $referencia = DB::table('evaluacion as e')
+                ->join('grupo as g', 'g.grup_id_grupo', '=', 'e.grup_id_grupo')
+                ->where('e.eval_id_evaluacion', $idEvaluacion)
+                ->select('g.sede_id_sede')
                 ->first();
 
             if (!$referencia) {
                 throw new DomainException('Selecciona una sede válida.');
             }
 
-            $sede = Sede::query()->lockForUpdate()->find($referencia->eval_id_sede);
-            $evaluacion = Evaluacion::query()
-                ->where('eval_id_evaluacion', $idEvaluacion)
-                ->where('eval_id_sede', $referencia->eval_id_sede)
-                ->lockForUpdate()
-                ->first();
+            $sede = Sede::query()->lockForUpdate()->find($referencia->sede_id_sede);
 
-            if (!$sede || !$evaluacion) {
+            if (!$sede) {
                 throw new DomainException('La sede seleccionada ya no está disponible.');
             }
 
@@ -239,7 +255,8 @@ class GestionSedes
             ->groupBy('soli_id_evaluacion');
 
         return DB::table('sede as s')
-            ->leftJoin('evaluacion as e', 'e.eval_id_sede', '=', 's.sede_id_sede')
+            ->leftJoin('grupo as g', 'g.sede_id_sede', '=', 's.sede_id_sede')
+            ->leftJoin('evaluacion as e', 'e.grup_id_grupo', '=', 'g.grup_id_grupo')
             ->leftJoinSub($ocupaciones, 'o', 'o.soli_id_evaluacion', '=', 'e.eval_id_evaluacion')
             ->orderBy('s.sede_nombre')
             ->select([
@@ -249,10 +266,10 @@ class GestionSedes
                 's.sede_cupo',
                 's.sede_estado',
                 'e.eval_id_evaluacion',
-                'e.eval_fecha_inicio',
-                'e.eval_hora_inicio',
-                'e.eval_fecha_fin',
-                'e.eval_hora_fin',
+                'g.grup_fecha_inicio',
+                'g.grup_hora_inicio',
+                'g.grup_fecha_fin',
+                'g.grup_hora_fin',
                 DB::raw('COALESCE(o.ocupados, 0) AS ocupados'),
             ])
             ->get()
@@ -276,24 +293,31 @@ class GestionSedes
                     'con_cupo' => $conCupo,
                     'estado_clave' => !$programada ? 'pendiente' : ($conCupo ? 'con-cupo' : 'sin-cupo'),
                     'estado' => !$programada ? 'Pendiente' : ($conCupo ? 'Con cupo' : 'Sin cupo'),
-                    'fecha_inicio' => $programada ? (string) $fila->eval_fecha_inicio : null,
-                    'hora_inicio' => $programada ? substr((string) $fila->eval_hora_inicio, 0, 5) : null,
-                    'fecha_fin' => $programada ? (string) $fila->eval_fecha_fin : null,
-                    'hora_fin' => $programada ? substr((string) $fila->eval_hora_fin, 0, 5) : null,
+                    'fecha_inicio' => $programada ? (string) $fila->grup_fecha_inicio : null,
+                    'hora_inicio' => $programada ? substr((string) $fila->grup_hora_inicio, 0, 5) : null,
+                    'fecha_fin' => $programada ? (string) $fila->grup_fecha_fin : null,
+                    'hora_fin' => $programada ? substr((string) $fila->grup_hora_fin, 0, 5) : null,
                 ];
             });
     }
 
-    private function datosEvaluacion(int $idSede, array $datos): array
+    private function datosGrupo(int $idSede, array $datos): array
     {
         return [
-            'eval_id_sede' => $idSede,
-            'eval_fecha_inicio' => $datos['fecha_inicio'],
-            'eval_hora_inicio' => $datos['hora_inicio'],
-            'eval_fecha_fin' => $datos['fecha_fin'],
-            'eval_hora_fin' => $datos['hora_fin'],
-            'eval_resultado' => null,
+            'sede_id_sede' => $idSede,
+            'grup_fecha_inicio' => $datos['fecha_inicio'],
+            'grup_hora_inicio' => $datos['hora_inicio'],
+            'grup_fecha_fin' => $datos['fecha_fin'],
+            'grup_hora_fin' => $datos['hora_fin'],
         ];
+    }
+
+    private function evaluacionDeGrupo(int $idGrupo): ?Evaluacion
+    {
+        return Evaluacion::query()
+            ->where('grup_id_grupo', $idGrupo)
+            ->lockForUpdate()
+            ->first();
     }
 
     private function ocupados(int $idEvaluacion): int

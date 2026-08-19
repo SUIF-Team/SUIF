@@ -97,7 +97,7 @@ SELECT setval(pg_get_serial_sequence('c_estado_documento', 'esdo_id_c_estado_doc
               (SELECT MAX(esdo_id_c_estado_documento) FROM c_estado_documento));
 
 /* Estados posibles de la solicitud */
-INSERT INTO c_estado_solicitud (esso_id_c_estado_solicitud, esso_estatus_solicitud) VALUES
+INSERT INTO c_estado_solicitud (esso_id_c_estado_solicitud, esso_estado_solicitud) VALUES
     (1, 'Pre-registro'),
     (2, 'Documentación'),
     (3, 'En revisión'),

@@ -34,27 +34,27 @@ class SedeController extends Controller
     {
         return view('admin.sede-formulario', [
             'sede' => null,
-            'evaluacion' => null,
+            'grupo' => null,
             'modoEdicion' => false,
         ]);
     }
 
     public function store(Request $request, GestionSedes $gestion)
     {
-        $sede = $gestion->crear($this->validar($request));
+        $gestion->crear($this->validar($request));
 
         return redirect()
-            ->route('admin.sedes.edit', $sede->sede_id_sede)
+            ->route('admin.sedes.index')
             ->with('success', 'La sede se creó correctamente.');
     }
 
     public function edit(int $id)
     {
-        $sede = Sede::query()->with('evaluacion')->findOrFail($id);
+        $sede = Sede::query()->with('grupo')->findOrFail($id);
 
         return view('admin.sede-formulario', [
             'sede' => $sede,
-            'evaluacion' => $sede->evaluacion,
+            'grupo' => $sede->grupo,
             'modoEdicion' => true,
         ]);
     }
@@ -68,7 +68,7 @@ class SedeController extends Controller
         }
 
         return redirect()
-            ->route('admin.sedes.edit', $id)
+            ->route('admin.sedes.index')
             ->with('success', 'La sede se actualizó correctamente.');
     }
 

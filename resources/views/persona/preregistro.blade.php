@@ -18,7 +18,7 @@
                 <p class="pr-muted">Todos los campos son obligatorios. No podrás avanzar hasta completarlos.</p>
 
                 <div class="pr-notice pr-notice--identidad">
-                    <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial</strong>, incluidos los acentos.</p>
+                    <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial, sin incluir acentos.</strong></p>
                     <p>No importa si los escribes en mayúsculas: el sistema ajusta el formato automáticamente. Tu CURP se guardará siempre en mayúsculas.</p>
                 </div>
 
@@ -56,7 +56,7 @@
                 <p class="pr-muted">Modifica solo lo necesario. Podrás hacerlo hasta que tu documentación entre a revisión.</p>
 
                 <div class="pr-notice pr-notice--identidad">
-                    <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial</strong>, incluidos los acentos.</p>
+                    <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial</strong>, sin incluir acentos.</p>
                 </div>
 
                 @include('partials.preregistro-formulario', [

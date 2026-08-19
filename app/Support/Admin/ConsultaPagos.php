@@ -104,7 +104,7 @@ class ConsultaPagos
                 'envio.espa_hora as hora_envio',
                 'primer.espa_fecha as fecha_primer_estado',
                 'primer.espa_hora as hora_primer_estado',
-                'ces.esso_estatus_solicitud as estado_solicitud',
+                'ces.esso_estado_solicitud as estado_solicitud',
             ]);
     }
 
