@@ -27,9 +27,7 @@
 
             <article class="admin-dashboard-indicador admin-dashboard-indicador-naranja">
                 <h2>Pagos por validar</h2>
-                <p class="admin-dashboard-indicador-sin-datos">
-                    {{ is_null($resumen['pagos_pendientes']) ? 'Sin datos persistidos' : number_format($resumen['pagos_pendientes']) }}
-                </p>
+                <p>{{ number_format($resumen['pagos_pendientes']) }}</p>
             </article>
 
             <article class="admin-dashboard-indicador admin-dashboard-indicador-verde">
@@ -59,16 +57,6 @@
                 @endforeach
             </div>
         </section>
-
-        <form method="POST" action="{{ route('logout') }}" class="admin-dashboard-salida">
-            @csrf
-            <button type="submit" class="sistema-salir">
-                <span class="sistema-salir-icono" aria-hidden="true">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                </span>
-                <span>Salir</span>
-            </button>
-        </form>
     </div>
 </section>
 @endsection

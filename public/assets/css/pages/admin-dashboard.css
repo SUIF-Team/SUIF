@@ -157,10 +157,6 @@
     transform: translateY(-1px);
 }
 
-.admin-dashboard-salida {
-    margin: 0;
-}
-
 @media (min-width: 768px) {
     .admin-dashboard-indicadores,
     .admin-dashboard-acciones-grid {

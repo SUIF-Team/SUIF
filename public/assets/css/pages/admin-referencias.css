@@ -196,7 +196,7 @@
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .admin-referencias-boton--primario {
@@ -210,24 +210,42 @@
     color: #fff;
 }
 
-.admin-referencias-boton--secundario,
-.admin-referencias-boton--limpiar {
+.admin-referencias-boton--secundario {
     border-color: var(--border-light);
     background: #fff;
     color: var(--text-dark);
 }
 
 .admin-referencias-boton--secundario:hover,
-.admin-referencias-boton--secundario:focus-visible,
-.admin-referencias-boton--limpiar:hover,
-.admin-referencias-boton--limpiar:focus-visible {
+.admin-referencias-boton--secundario:focus-visible {
     background: #f2f4f7;
     color: var(--text-dark);
 }
 
+/* Filtrar y Limpiar comparten el aspecto de las demás bandejas
+   (admin-bandeja-preregistros.css). */
 .admin-referencias-boton--filtrar {
-    background: var(--unam-blue);
-    color: #fff;
+    border-color: #bae6fd;
+    background: #e0f2fe;
+    color: #0276ad;
+}
+
+.admin-referencias-boton--filtrar:hover,
+.admin-referencias-boton--filtrar:focus-visible {
+    background: #bae6fd;
+    color: #025f8b;
+}
+
+.admin-referencias-boton--limpiar {
+    border-color: #fecaca;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.admin-referencias-boton--limpiar:hover,
+.admin-referencias-boton--limpiar:focus-visible {
+    background: #fecaca;
+    color: #991b1b;
 }
 
 .admin-referencias-filtros {

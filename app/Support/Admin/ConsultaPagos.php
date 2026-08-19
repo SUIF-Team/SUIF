@@ -41,6 +41,22 @@ class ConsultaPagos
         return $pago ? $this->normalizar($pago) : null;
     }
 
+    /**
+     * Comprobantes enviados que siguen esperando decisión. Se cuenta sobre la
+     * misma consulta de la bandeja para que el indicador del dashboard y lo
+     * que ahí se ve como «Por revisar» no se puedan desincronizar; se resuelve
+     * en SQL porque normalizar cada fila toca el disco.
+     */
+    public function totalPorValidar(): int
+    {
+        return $this->consultaBase()
+            ->where(function (Builder $consulta): void {
+                $consulta->where('cep.esta_estado_pago', self::PENDIENTE)
+                    ->orWhereNull('cep.esta_estado_pago');
+            })
+            ->count();
+    }
+
     public function archivoDisponible(?string $ruta): bool
     {
         return $this->rutaArchivoValida($ruta)
