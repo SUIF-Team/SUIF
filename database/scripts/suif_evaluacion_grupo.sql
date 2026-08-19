@@ -10,7 +10,8 @@
    uq_evaluacion_grupo dando por hecho que la columna existe.
 
    Queda sin cubrir el caso intermedio: una base cuyo GRUPO ya se creó pero
-   cuyo EVALUACION conservó EVAL_ID_SEDE y EVAL_FECHA_*/EVAL_HORA_*. Ahí
+   cuyo EVALUACION conservó EVAL_ID_SEDE junto con EVAL_FECHA_INICIO,
+   EVAL_HORA_INICIO, EVAL_FECHA_FIN y EVAL_HORA_FIN. Ahí
    uq_evaluacion_grupo aborta por columna inexistente y toda la gestión de
    sedes —la del administrador y la del participante— responde 500, porque
    ambas recorren sede -> grupo -> evaluacion.
