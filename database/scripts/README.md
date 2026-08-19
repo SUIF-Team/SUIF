@@ -4,9 +4,10 @@ Orden de ejecución en una instalación nueva:
 
 1. `suif.sql`               — esquema base (35 tablas)
 2. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
-3. `suif_catalogos.sql`     — catálogos y convocatoria
-4. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
-5. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
+3. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
+4. `suif_catalogos.sql`     — catálogos y convocatoria
+5. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
+6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
 
 `suif_lleno.sql` es opcional: datos de prueba para ambientes de desarrollo.
 Nunca se ejecuta en producción.
@@ -36,6 +37,29 @@ contra lo que se cuenta el cupo de la sede.
 
 El cambio es incompatible con el esquema anterior: una base creada con
 `suif_antiguo.sql` no se migra, se reconstruye desde cero.
+
+## Bases a medio migrar: suif_evaluacion_grupo.sql
+
+Existe un caso intermedio que ningún otro script cubre: una base donde
+`GRUPO` ya se creó pero `EVALUACION` conservó `EVAL_ID_SEDE` y sus fechas y
+horas. `suif_ajustes_esquema.sql` no crea `EVALUACION.GRUP_ID_GRUPO` —da por
+hecho que vino de `suif.sql`— y sólo añade la restricción
+`uq_evaluacion_grupo`, que ahí aborta por columna inexistente.
+
+Con ese hueco, las dos pantallas de sedes responden 500 con
+`column e.grup_id_grupo does not exist`, porque ambas recorren
+`sede -> grupo -> evaluacion`. El resto del sistema no se entera: ninguna
+otra consulta toca esas tablas.
+
+`suif_evaluacion_grupo.sql` agrega la columna, traspasa a `GRUPO` la
+programación que todavía viva en `EVALUACION` —reutilizando el grupo que
+coincida en sede, fechas y horas, o creándolo— y deja la correspondencia uno
+a uno que exige `uq_evaluacion_grupo`.
+
+No borra columnas ni renglones. Las columnas del esquema anterior se
+conservan con sus datos y sólo dejan de ser obligatorias, porque las altas
+nuevas ya no las llenan. En una instalación desde cero el script no hace
+nada: `EVALUACION` ya nace apuntando a `GRUPO`.
 
 ## Una sede aplica el examen una o más veces
 
@@ -70,13 +94,13 @@ También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
 `suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
 registrar nada.
 
-## Los otros cuatro se pueden repetir
+## Los otros cinco se pueden repetir
 
-`suif_ajustes_esquema.sql`, `suif_catalogos.sql`,
-`suif_grupos_multiples.sql` y `suif_referencias_bancarias.sql` son
-idempotentes: volver a ejecutarlos no duplica ni destruye nada. Por eso la
-regla al desplegar es correrlos SIEMPRE, sin preguntarse si ya se
-corrieron.
+`suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
+`suif_catalogos.sql`, `suif_grupos_multiples.sql` y
+`suif_referencias_bancarias.sql` son idempotentes: volver a ejecutarlos no
+duplica ni destruye nada. Por eso la regla al desplegar es correrlos
+SIEMPRE, sin preguntarse si ya se corrieron.
 
 ## Antes de tocar producción
 
