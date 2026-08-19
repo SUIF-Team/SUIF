@@ -340,7 +340,15 @@
     border-radius: 0.75rem;
 }
 
+/* El reboot de Bootstrap flota el legend a la izquierda con width:100% y sólo
+   limpia el float en el hermano inmediato. Aquí ese hermano es el input
+   oculto del grupo, así que la rejilla de campos quedaba junto al float:
+   como establece su propio contexto de formato, se encogía a un ancho casi
+   nulo y las etiquetas se encimaban contra el borde derecho. */
 .admin-sedes-horario-titulo {
+    float: none;
+    width: auto;
+    margin-bottom: 0;
     padding: 0 0.35rem;
     color: var(--text-dark);
     font-size: 0.8125rem;
