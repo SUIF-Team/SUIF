@@ -152,6 +152,9 @@
 .pago-archivo {
     position: relative;
     overflow: hidden;
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
     padding: 0.65rem 1.1rem;
     border: 1px solid #d9dee7;
     border-radius: 8px;
@@ -281,4 +284,68 @@
     .pago-tracker__conector {
         display: none;
     }
+}
+
+/* ─── Confirmación de lo adjuntado ───────────────────────────────────── */
+
+/* El input va oculto, así que el label es quien muestra el foco del teclado. */
+.pago-archivo:focus-within {
+    outline: 2px solid #172a44;
+    outline-offset: 2px;
+}
+
+.pago-archivo--cargado {
+    border-color: #16a34a;
+    background: #d8ecdf;
+    color: #075b2c;
+    font-weight: 600;
+}
+
+.pago-adjunto {
+    flex-basis: 100%;
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin: 0;
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    background: #d8ecdf;
+    color: #075b2c;
+    font-size: 0.85rem;
+}
+
+.pago-adjunto[hidden] {
+    display: none;
+}
+
+.pago-adjunto--error {
+    background: #fcdede;
+    color: #9b1717;
+}
+
+.pago-adjunto__detalle {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.pago-adjunto__quitar {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.pago-boton[disabled] {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.pago-boton[disabled]:hover,
+.pago-boton[disabled]:focus-visible {
+    background: #e5e7eb;
 }
