@@ -58,6 +58,7 @@ class ConsultaPreRegistros
                 'nombre' => (string) $solicitud->pers_nombre,
                 'primer_apellido' => (string) ($solicitud->pers_apellido_paterno ?? ''),
                 'segundo_apellido' => (string) ($solicitud->pers_apellido_materno ?? ''),
+                'nombre_completo' => $this->nombreCompleto($solicitud),
                 'curp' => (string) $solicitud->pers_curp,
                 'correo_principal' => $contactos['Correo principal'] ?? 'No registrado',
                 'correo_alterno' => $contactos['Correo alterno'] ?? 'No registrado',
@@ -192,20 +193,27 @@ class ConsultaPreRegistros
             ->groupBy('esdo_id_documento');
     }
 
-    private function normalizarBandeja(object $solicitud): array
+    /**
+     * Nombre para mostrar. Tanto la bandeja como el expediente lo exponen con
+     * la misma llave: las pantallas de resultado leen `nombre_completo`.
+     */
+    private function nombreCompleto(object $solicitud): string
     {
-        $nombre_completo = trim(implode(' ', array_filter([
+        return trim(implode(' ', array_filter([
             $solicitud->pers_nombre,
             $solicitud->pers_apellido_paterno,
             $solicitud->pers_apellido_materno,
         ])));
+    }
 
+    private function normalizarBandeja(object $solicitud): array
+    {
         return [
             'id' => (string) $solicitud->soli_id_solicitud,
             'nombre' => (string) $solicitud->pers_nombre,
             'primer_apellido' => (string) ($solicitud->pers_apellido_paterno ?? ''),
             'segundo_apellido' => (string) ($solicitud->pers_apellido_materno ?? ''),
-            'nombre_completo' => $nombre_completo,
+            'nombre_completo' => $this->nombreCompleto($solicitud),
             'curp' => (string) $solicitud->pers_curp,
             'fecha_registro' => $solicitud->pers_fecha_registro.' 00:00:00',
             'estado_bandeja' => (string) $solicitud->estado_solicitud,

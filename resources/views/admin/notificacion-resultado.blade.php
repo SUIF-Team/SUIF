@@ -3,7 +3,7 @@
 @section('title', $notificacion['titulo_pagina'])
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-preregistro.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
 @endsection
 
 @section('content')
@@ -59,5 +59,5 @@
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
 <script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
-<script src="{{ asset('assets/js/pages/admin-preregistro.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-preregistro.js') }}"></script>
 @endsection
