@@ -3,11 +3,15 @@
 Orden de ejecución en una instalación nueva:
 
 1. `suif.sql`               — esquema base (35 tablas)
-2. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
-3. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
+2. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
+3. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
 4. `suif_catalogos.sql`     — catálogos y convocatoria
 5. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
 6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
+
+`suif_evaluacion_grupo.sql` va ANTES que `suif_ajustes_esquema.sql`, no
+después: es el que crea `EVALUACION.GRUP_ID_GRUPO`, y sin esa columna
+`suif_ajustes_esquema.sql` aborta a media ejecución. Ver más abajo.
 
 `suif_lleno.sql` es opcional: datos de prueba para ambientes de desarrollo.
 Nunca se ejecuta en producción.
@@ -60,6 +64,26 @@ No borra columnas ni renglones. Las columnas del esquema anterior se
 conservan con sus datos y sólo dejan de ser obligatorias, porque las altas
 nuevas ya no las llenan. En una instalación desde cero el script no hace
 nada: `EVALUACION` ya nace apuntando a `GRUPO`.
+
+### Corre ANTES que suif_ajustes_esquema.sql
+
+El orden importa y es contraintuitivo. `suif_ajustes_esquema.sql` aborta en
+el bloque de `uq_evaluacion_grupo` mientras falte la columna, y con
+`ON_ERROR_STOP=1` psql se detiene ahí. Todo lo que viene después de ese
+bloque se queda sin ejecutar:
+
+- el `UPDATE sede SET sede_estado` que recalcula el cupo,
+- la sincronización de secuencias, sin la cual un alta nueva puede chocar
+  con un identificador ya existente,
+- la restricción `uq_documento_solicitud_tipo`,
+- el `UPDATE rol` que renombra «Participante» a «Persona», sin el cual el
+  pre-registro no encuentra el rol al dar de alta.
+
+Por eso `suif_evaluacion_grupo.sql` va primero: deja la columna en su sitio
+y entonces `suif_ajustes_esquema.sql` corre completo de principio a fin. Si
+ya se ejecutó `suif_ajustes_esquema.sql` y se detuvo, basta con correr
+`suif_evaluacion_grupo.sql` y volver a ejecutarlo: es idempotente y esta vez
+llega al final.
 
 ## Una sede aplica el examen una o más veces
 
