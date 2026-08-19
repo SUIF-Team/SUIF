@@ -101,9 +101,4 @@
 
 @push('scripts')
 <script src="{{ asset_versionado('assets/js/pages/persona-preregistro.js') }}"></script>
-<script>
-(function(){
-  var copy=document.querySelector('[data-copy-key]');if(copy){copy.addEventListener('click',function(){var t=document.getElementById('pr-key').textContent;navigator.clipboard&&navigator.clipboard.writeText(t);copy.textContent='Clave copiada';});}
-})();
-</script>
 @endpush

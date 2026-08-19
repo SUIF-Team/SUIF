@@ -34,6 +34,7 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Referencias bancarias',
+                'ruta' => 'admin.referencias.index',
                 'descripcion' => 'Consulta la correspondencia de referencias bancarias.',
             ],
             [
@@ -47,6 +48,7 @@ class DashboardController extends Controller
             ],
             [
                 'titulo' => 'Subir referencias bancarias',
+                'ruta' => 'admin.referencias.carga',
                 'descripcion' => 'Carga la lista de referencias bancarias.',
             ],
             [

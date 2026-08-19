@@ -6,6 +6,7 @@ Orden de ejecución en una instalación nueva:
 2. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
 3. `suif_catalogos.sql`     — catálogos y convocatoria
 4. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
+5. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
 
 `suif_lleno.sql` es opcional: datos de prueba para ambientes de desarrollo.
 Nunca se ejecuta en producción.
@@ -46,12 +47,36 @@ participante elige el horario que le convenga.
 `SEDE_CUPO` es el aforo de **cada** aplicación, no el total de la sede: la
 sala admite el mismo número de personas en cada sesión.
 
-## Los otros tres se pueden repetir
+## Las referencias bancarias son un catálogo aparte
 
-`suif_ajustes_esquema.sql`, `suif_catalogos.sql` y
-`suif_grupos_multiples.sql` son idempotentes: volver a ejecutarlos no
-duplica ni destruye nada. Por eso la regla al desplegar es correrlos
-SIEMPRE, sin preguntarse si ya se corrieron.
+`suif_referencias_bancarias.sql` crea `REFERENCIA_BANCARIA`, la lista de
+referencias que el administrador sube por CSV y de la que el sistema va
+entregando una a cada persona:
+
+    REFERENCIA_BANCARIA ──(REBA_ID_PAGO, único)── PAGO ──< SOLICITUD
+
+Al entregarse, la referencia y la ruta de su PDF se copian a
+`PAGO_REFERENCIA_BANCARIA` y `PAGO_REFERENCIA_BANCARIA_PATH`, y el renglón
+del catálogo queda ligado a ese `PAGO`. Como `REBA_ID_PAGO` es único, la
+base misma impide que una referencia se reparta dos veces.
+
+El mismo script afloja cuatro columnas de `PAGO`
+(`PAGO_ID_DATO_FISCAL`, `PAGO_FECHA_PAGO`, `PAGO_HORA_PAGO` y
+`PAGO_COMPROBANTE_PATH`): el renglón de `PAGO` nace cuando se asigna la
+referencia, y en ese momento todavía no hay datos fiscales, ni fecha de
+pago, ni comprobante. Se llenan más adelante en el trámite.
+
+También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
+`suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
+registrar nada.
+
+## Los otros cuatro se pueden repetir
+
+`suif_ajustes_esquema.sql`, `suif_catalogos.sql`,
+`suif_grupos_multiples.sql` y `suif_referencias_bancarias.sql` son
+idempotentes: volver a ejecutarlos no duplica ni destruye nada. Por eso la
+regla al desplegar es correrlos SIEMPRE, sin preguntarse si ya se
+corrieron.
 
 ## Antes de tocar producción
 

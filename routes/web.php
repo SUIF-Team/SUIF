@@ -51,6 +51,8 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::get('/pago', [PersonaPagoController::class, 'index'])->name('pago.index');
         Route::post('/pago/comprobante', [PersonaPagoController::class, 'subirComprobante'])->name('pago.comprobante');
         Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
+        Route::post('/referencia', [PersonaReferenciaController::class, 'generar'])->name('referencia.generar');
+        Route::get('/referencia/formato', [PersonaReferenciaController::class, 'formato'])->name('referencia.formato');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
         Route::get('/sede', [PersonaSedeController::class, 'index'])->name('sede.index');
         Route::get('/sede/disponibilidad', [PersonaSedeController::class, 'disponibilidad'])->name('sede.disponibilidad');
@@ -79,7 +81,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('/pagos/{id}/resultado', [AdminPagoController::class, 'resultado'])->name('pagos.resultado');
         Route::get('/pagos/{id}', [AdminPagoController::class, 'show'])->name('pagos.show');
     });
-    Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
+    /* El catálogo de referencias asigna dinero y archivos: se exige rol. */
+    Route::middleware(['auth', 'can:gestionar-referencias'])->group(function () {
+        Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
+        Route::get('/referencias/carga', [AdminReferenciaController::class, 'carga'])->name('referencias.carga');
+        Route::post('/referencias/catalogo', [AdminReferenciaController::class, 'guardarCatalogo'])->name('referencias.catalogo.store');
+        Route::post('/referencias/formatos', [AdminReferenciaController::class, 'guardarFormatos'])->name('referencias.formatos.store');
+        Route::get('/referencias/{id}/formato', [AdminReferenciaController::class, 'formato'])->name('referencias.formato');
+    });
     Route::get('/documentos', [AdminDocumentoController::class, 'index'])->name('documentos.index');
     Route::get('/documentos/{id}/resultado', [AdminDocumentoController::class, 'resultado'])->name('documentos.resultado');
     Route::get('/documentos/{id}', [AdminDocumentoController::class, 'show'])->name('documentos.show');
