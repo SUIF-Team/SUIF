@@ -15,15 +15,18 @@ class RevisionDocumentos
 
     /**
      * Registra una resolución histórica para cada documento de la solicitud.
+     *
+     * Cada documento rechazado exige su propio comentario; la fecha límite es
+     * única para el expediente y se anexa al comentario de cada rechazo.
      */
     public function resolver(
         int $id_solicitud,
         array $decisiones,
-        ?string $motivo_rechazo,
+        array $comentarios,
         ?string $fecha_limite = null
     ): string
     {
-        return DB::transaction(function () use ($id_solicitud, $decisiones, $motivo_rechazo, $fecha_limite): string {
+        return DB::transaction(function () use ($id_solicitud, $decisiones, $comentarios, $fecha_limite): string {
             $this->bloquearSolicitudEnRevision($id_solicitud);
 
             $documentos = DB::table('documento')
@@ -51,19 +54,17 @@ class RevisionDocumentos
             $this->verificarDocumentosEnRevision($documentos);
 
             $hay_rechazos = in_array(self::RECHAZADO, $decisiones, true);
-            $motivo_rechazo = trim((string) $motivo_rechazo);
 
-            if ($hay_rechazos && $motivo_rechazo === '') {
-                throw new DomainException('Escribe el motivo del rechazo.');
+            foreach ($decisiones as $id_documento => $decision) {
+                if ($decision === self::RECHAZADO
+                    && trim((string) ($comentarios[$id_documento] ?? '')) === '') {
+                    throw new DomainException('Escribe el motivo del rechazo de cada documento rechazado.');
+                }
             }
 
             if ($hay_rechazos && !$this->fechaLimiteValida($fecha_limite)) {
                 throw new DomainException('Indica una fecha límite válida.');
             }
-
-            $comentario_rechazo = $hay_rechazos
-                ? sprintf("%s\nFecha límite: %s", $motivo_rechazo, $fecha_limite)
-                : null;
 
             $catalogo = DB::table('c_estado_documento')
                 ->whereIn('esdo_estado_documento', ['Aprobado', 'Rechazado'])
@@ -83,7 +84,13 @@ class RevisionDocumentos
                 $historial[] = [
                     'esdo_id_c_estado_documento' => $catalogo[$estado],
                     'esdo_id_documento' => (int) $id_documento,
-                    'esdo_comentarios' => $es_rechazado ? $comentario_rechazo : null,
+                    'esdo_comentarios' => $es_rechazado
+                        ? sprintf(
+                            "%s\nFecha límite: %s",
+                            trim((string) $comentarios[$id_documento]),
+                            $fecha_limite
+                        )
+                        : null,
                     'esdo_fecha' => $ahora->toDateString(),
                     'esdo_hora' => $ahora->toTimeString(),
                 ];

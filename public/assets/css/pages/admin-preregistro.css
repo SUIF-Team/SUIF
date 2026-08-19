@@ -373,8 +373,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 1rem;
     border-bottom: 1px solid var(--border-light);
+}
+
+/* El motivo del rechazo se captura por documento, en su propio renglón. */
+.admin-preregistro-documento-comentario {
+    flex: 1 0 100%;
+    margin-top: 0;
+}
+
+.admin-preregistro-documento-comentario textarea {
+    min-height: 4.25rem;
 }
 
 .admin-preregistro-documento:first-child {

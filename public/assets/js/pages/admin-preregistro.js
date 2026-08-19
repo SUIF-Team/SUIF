@@ -25,7 +25,8 @@
                 estados: datos_vista.estados,
                 enviando: false,
                 estados_documentos: datos_vista.decisiones || {},
-                motivoRechazo: datos_vista.motivo_rechazo || '',
+                comentarios: Object.assign({}, datos_vista.comentarios || {}),
+                erroresComentarios: datos_vista.errores_comentarios || {},
                 fechaLimite: datos_vista.fecha_limite || '',
                 modoSoloLectura: datos_vista.modo_solo_lectura || false,
                 documentoPrevisualizado: null,
@@ -88,6 +89,18 @@
                     && this.persona.documentos.every(function (documento) {
                         return ['aprobado', 'rechazado'].includes(estados_documentos[documento.id]);
                     });
+            },
+            comentariosCompletos: function () {
+                var estados_documentos = this.estados_documentos;
+                var comentarios = this.comentarios;
+
+                return this.persona.documentos.every(function (documento) {
+                    if (estados_documentos[documento.id] !== 'rechazado') {
+                        return true;
+                    }
+
+                    return String(comentarios[documento.id] || '').trim() !== '';
+                });
             }
         },
         methods: {
@@ -111,14 +124,24 @@
             estadoDocumento: function (id) {
                 return this.estados_documentos[id] || null;
             },
+            errorComentario: function (id) {
+                return this.erroresComentarios[id] || null;
+            },
             actualizarDocumento: function (id, estado) {
                 if (this.modoSoloLectura) {
                     return;
                 }
 
+                var siguiente = this.estadoDocumento(id) === estado ? null : estado;
+
                 this.estados_documentos = Object.assign({}, this.estados_documentos, {
-                    [id]: this.estadoDocumento(id) === estado ? null : estado
+                    [id]: siguiente
                 });
+
+                if (siguiente !== 'rechazado') {
+                    delete this.comentarios[id];
+                    delete this.erroresComentarios[id];
+                }
             },
             abrirDocumento: function (documento, evento) {
                 this.activadorDocumento = evento.currentTarget;

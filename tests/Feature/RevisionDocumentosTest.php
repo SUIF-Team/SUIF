@@ -26,7 +26,7 @@ class RevisionDocumentosTest extends TestCase
         $resultado = app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::APROBADO,
-        ], null);
+        ], []);
 
         $this->assertSame(RevisionDocumentos::APROBADO, $resultado);
         $this->assertSame(2, DB::table('estado_documento')
@@ -42,7 +42,7 @@ class RevisionDocumentosTest extends TestCase
         $resultado = app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::RECHAZADO,
-        ], 'El archivo no es legible.', '2026-08-20');
+        ], ['11' => 'El archivo no es legible.'], '2026-08-20');
 
         $this->assertSame(RevisionDocumentos::REVISION, $resultado);
         $this->assertDatabaseHas('estado_documento', [
@@ -51,6 +51,41 @@ class RevisionDocumentosTest extends TestCase
             'esdo_comentarios' => "El archivo no es legible.\nFecha límite: 2026-08-20",
         ]);
         $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
+    }
+
+    public function test_cada_documento_rechazado_guarda_su_propio_comentario(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        app(RevisionDocumentos::class)->resolver(1, [
+            '10' => RevisionDocumentos::RECHAZADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], [
+            '10' => 'Falta la firma autógrafa.',
+            '11' => 'El archivo no es legible.',
+        ], '2026-08-20');
+
+        $this->assertDatabaseHas('estado_documento', [
+            'esdo_id_documento' => 10,
+            'esdo_comentarios' => "Falta la firma autógrafa.\nFecha límite: 2026-08-20",
+        ]);
+        $this->assertDatabaseHas('estado_documento', [
+            'esdo_id_documento' => 11,
+            'esdo_comentarios' => "El archivo no es legible.\nFecha límite: 2026-08-20",
+        ]);
+    }
+
+    public function test_rechazar_documento_requiere_su_comentario(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Escribe el motivo del rechazo de cada documento rechazado.');
+
+        app(RevisionDocumentos::class)->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], ['11' => '   '], '2026-08-20');
     }
 
     public function test_interrumpir_agrega_rechazo_al_historial_de_solicitud(): void
@@ -80,7 +115,7 @@ class RevisionDocumentosTest extends TestCase
         app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::RECHAZADO,
-        ], 'El archivo no es legible.');
+        ], ['11' => 'El archivo no es legible.']);
     }
 
     public function test_interrumpir_no_requiere_un_motivo_documental(): void
@@ -103,13 +138,13 @@ class RevisionDocumentosTest extends TestCase
         $revision->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::APROBADO,
-        ], null);
+        ], []);
 
         $this->expectException(DomainException::class);
         $revision->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::APROBADO,
-        ], null);
+        ], []);
     }
 
     private function crearEsquemaTemporal(): void
