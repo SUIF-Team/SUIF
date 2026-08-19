@@ -56,6 +56,11 @@ class DashboardController extends Controller
                 'ruta' => 'admin.sedes.index',
                 'descripcion' => 'Gestiona las sedes activas.',
             ],
+            [
+                'titulo' => 'Grupos',
+                'ruta' => 'admin.grupos.index',
+                'descripcion' => 'Programa las aplicaciones del examen en cada sede.',
+            ],
         ];
 
         return view('admin.dashboard', compact('resumen', 'acciones'));

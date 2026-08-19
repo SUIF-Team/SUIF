@@ -47,7 +47,7 @@
                         <option value="">Todos</option>
                         <option value="con-cupo" @selected(($filtros['estado'] ?? '') === 'con-cupo')>Con cupo</option>
                         <option value="sin-cupo" @selected(($filtros['estado'] ?? '') === 'sin-cupo')>Sin cupo</option>
-                        <option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Pendiente</option>
+                        <option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Por programar</option>
                     </select>
                 </div>
                 <div class="admin-sedes-filtros-acciones">
@@ -65,7 +65,7 @@
                             <th>Sede</th>
                             <th>Ubicación</th>
                             <th>Capacidad</th>
-                            <th>Horario</th>
+                            <th>Grupos</th>
                             <th>Estatus</th>
                             <th>Acción</th>
                         </tr>
@@ -79,19 +79,9 @@
                                     <strong>{{ $sede['ocupados'] }} / {{ $sede['cupo'] * count($sede['horarios']) }}</strong>
                                     <small>{{ $sede['cupo'] }} por aplicación · {{ $sede['disponibles'] }} disponibles</small>
                                 </td>
-                                <td>
-                                    @forelse($sede['horarios'] as $horario)
-                                        <div class="admin-sedes-tabla-horario">
-                                            {{ \Illuminate\Support\Carbon::parse($horario['fecha_inicio'])->format('d/m/Y') }}
-                                            @if($horario['fecha_inicio'] !== $horario['fecha_fin'])
-                                                –{{ \Illuminate\Support\Carbon::parse($horario['fecha_fin'])->format('d/m/Y') }}
-                                            @endif
-                                            <small>{{ $horario['hora_inicio'] }}–{{ $horario['hora_fin'] }} h · {{ $horario['disponibles'] }} de {{ $sede['cupo'] }} disponibles</small>
-                                        </div>
-                                    @empty
-                                        <span class="admin-sedes-texto-atenuado">Sin programación</span>
-                                    @endforelse
-                                </td>
+                                {{-- La programación se administra en el módulo Grupos; aquí
+                                     sólo interesa cuántos tiene registrados la sede. --}}
+                                <td>{{ count($sede['horarios']) }}</td>
                                 <td>
                                     <span class="admin-sedes-estado admin-sedes-estado--{{ $sede['estado_clave'] }}">
                                         {{ $sede['estado'] }}

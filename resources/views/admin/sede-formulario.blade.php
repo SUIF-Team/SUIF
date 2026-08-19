@@ -11,20 +11,13 @@
 @php
     $direccionActual = old('direccion', $sede?->sede_direccion ?? '');
     $consultaMapa = $direccionActual !== '' ? $direccionActual : '19.324167,-99.184722';
-    $horariosActuales = old('horarios', $horarios ?: [[
-        'grupo_id' => '',
-        'hora_inicio' => '',
-        'fecha_inicio' => '',
-        'hora_fin' => '',
-        'fecha_fin' => '',
-    ]]);
 @endphp
-<section class="admin-sedes admin-sedes--formulario" data-admin-sede-formulario data-horarios='@json(array_values($horariosActuales))' aria-labelledby="admin-sede-formulario-titulo">
+<section class="admin-sedes admin-sedes--formulario" data-admin-sede-formulario aria-labelledby="admin-sede-formulario-titulo">
     <div class="admin-sedes-contenedor">
         <header class="admin-sedes-encabezado">
             <div>
                 <h1 id="admin-sede-formulario-titulo">{{ $modoEdicion ? 'Editar sede' : 'Crear sede' }}</h1>
-                <p>Captura la sede y los horarios que se mostrarán a las personas participantes.</p>
+                <p>Captura el lugar donde se aplicará el examen. Su programación se registra después en el módulo de grupos.</p>
             </div>
         </header>
 
@@ -86,46 +79,6 @@
                             required
                             data-sede-direccion
                             placeholder="Calle, número, colonia, municipio, código postal y entidad federativa">{{ $direccionActual }}</textarea>
-                    </div>
-
-                    <h3 class="admin-sedes-subtitulo">Aplicaciones del examen</h3>
-                    <p class="admin-sedes-ayuda">
-                        Una sede puede aplicar el examen varias veces. Cada aplicación se muestra
-                        a las personas participantes como un horario que pueden elegir.
-                    </p>
-
-                    <div data-horarios-app>
-                        <fieldset v-for="(horario, indice) in horarios" :key="indice" class="admin-sedes-horario">
-                            <legend class="admin-sedes-horario-titulo">Aplicación @{{ indice + 1 }}</legend>
-                            <input type="hidden" :name="`horarios[${indice}][grupo_id]`" :value="horario.grupo_id || ''">
-                            <div class="admin-sedes-formulario-grid">
-                                <div class="admin-sedes-campo">
-                                    <label :for="`hora_inicio_${indice}`">Hora de inicio *</label>
-                                    <input :id="`hora_inicio_${indice}`" :name="`horarios[${indice}][hora_inicio]`" type="time" required v-model="horario.hora_inicio">
-                                </div>
-                                <div class="admin-sedes-campo">
-                                    <label :for="`fecha_inicio_${indice}`">Fecha de inicio *</label>
-                                    <input :id="`fecha_inicio_${indice}`" :name="`horarios[${indice}][fecha_inicio]`" type="date" required v-model="horario.fecha_inicio">
-                                </div>
-                                <div class="admin-sedes-campo">
-                                    <label :for="`hora_fin_${indice}`">Hora de fin *</label>
-                                    <input :id="`hora_fin_${indice}`" :name="`horarios[${indice}][hora_fin]`" type="time" required v-model="horario.hora_fin">
-                                </div>
-                                <div class="admin-sedes-campo">
-                                    <label :for="`fecha_fin_${indice}`">Fecha de fin *</label>
-                                    <input :id="`fecha_fin_${indice}`" :name="`horarios[${indice}][fecha_fin]`" type="date" required v-model="horario.fecha_fin">
-                                </div>
-                            </div>
-                            <button
-                                v-if="horarios.length > 1"
-                                class="admin-sedes-boton admin-sedes-boton--secundario admin-sedes-horario-quitar"
-                                type="button"
-                                v-on:click="quitarHorario(indice)">Quitar aplicación</button>
-                        </fieldset>
-
-                        <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" v-on:click="agregarHorario">
-                            Agregar aplicación
-                        </button>
                     </div>
 
                     <div class="admin-sedes-formulario-grid">

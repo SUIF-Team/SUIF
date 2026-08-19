@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DocumentoController as AdminDocumentoController;
+use App\Http\Controllers\Admin\GrupoController as AdminGrupoController;
 use App\Http\Controllers\Admin\PagoController as AdminPagoController;
 use App\Http\Controllers\Admin\PersonaController as AdminPersonaController;
 use App\Http\Controllers\Admin\ReferenciaController as AdminReferenciaController;
@@ -101,6 +102,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('/sedes/{id}/editar', [AdminSedeController::class, 'edit'])->name('sedes.edit');
         Route::put('/sedes/{id}', [AdminSedeController::class, 'update'])->name('sedes.update');
         Route::delete('/sedes/{id}', [AdminSedeController::class, 'destroy'])->name('sedes.destroy');
+        /* Los grupos son la programación de las sedes: mismo permiso. */
+        Route::get('/grupos', [AdminGrupoController::class, 'index'])->name('grupos.index');
+        Route::get('/grupos/crear', [AdminGrupoController::class, 'create'])->name('grupos.create');
+        Route::post('/grupos', [AdminGrupoController::class, 'store'])->name('grupos.store');
+        Route::get('/grupos/{id}/editar', [AdminGrupoController::class, 'edit'])->name('grupos.edit');
+        Route::put('/grupos/{id}', [AdminGrupoController::class, 'update'])->name('grupos.update');
+        Route::delete('/grupos/{id}', [AdminGrupoController::class, 'destroy'])->name('grupos.destroy');
     });
     Route::get('/resultados', [AdminResultadoController::class, 'index'])->name('resultados.index');
 });
