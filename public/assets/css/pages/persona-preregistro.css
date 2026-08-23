@@ -21,8 +21,9 @@
     margin-top: 0.4rem;
 }
 
-/* La CURP se ve en mayúsculas mientras se escribe. */
-.pr-field input[name="curp"] {
+/* La CURP y el RFC se ven en mayúsculas mientras se escriben. */
+.pr-field input[name="curp"],
+.pr-field input[name="rfc"] {
     text-transform: uppercase;
 }
 

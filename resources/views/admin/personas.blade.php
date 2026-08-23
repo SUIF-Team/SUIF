@@ -44,6 +44,7 @@
                         <div>
                             <h3>@{{ persona.nombre_completo }}</h3>
                             <p>Registro: @{{ fechaRegistro(persona[campoFecha]) }}</p>
+                            <p>RFC: @{{ persona.rfc }}</p>
                         </div>
                     </div>
                     <div class="admin-bandeja-preregistros-estado-contenedor">

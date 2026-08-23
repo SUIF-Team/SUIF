@@ -22,6 +22,7 @@ class Persona extends Model
         'pers_clave_inegi',
         'pers_id_usuario',
         'pers_curp',
+        'pers_rfc',
         'pers_nombre',
         'pers_apellido_paterno',
         'pers_apellido_materno',

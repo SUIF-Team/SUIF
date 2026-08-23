@@ -116,6 +116,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('pers_id_persona')->primary();
             $table->integer('pers_id_usuario');
             $table->string('pers_curp', 18);
+            $table->string('pers_rfc', 13)->nullable();
             $table->string('pers_nombre', 45);
             $table->string('pers_apellido_paterno', 45)->nullable();
             $table->string('pers_apellido_materno', 45);

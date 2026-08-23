@@ -50,6 +50,7 @@
                     { etiqueta: 'Primer Apellido', valor: this.persona.primer_apellido },
                     { etiqueta: 'Segundo Apellido', valor: this.persona.segundo_apellido },
                     { etiqueta: 'CURP', valor: this.persona.curp },
+                    { etiqueta: 'RFC', valor: this.persona.rfc },
                     { etiqueta: 'Correo principal', valor: this.persona.correo_principal },
                     { etiqueta: 'Correo alterno', valor: this.persona.correo_alterno },
                     { etiqueta: 'Teléfono (celular)', valor: this.persona.telefono },
