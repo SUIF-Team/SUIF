@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
+use App\Servicios\FormatoPreRegistro;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PreRegistroController extends Controller
 {
@@ -476,27 +478,37 @@ class PreRegistroController extends Controller
         return redirect()->route('persona.documentos.index');
     }
 
-        public function formato($documento, $descargar = false)
+    /**
+     * Genera el formato oficial que pidió la persona y lo entrega para
+     * descarga. El PDF no se guarda en ningún lado: se arma en memoria en
+     * cada clic con los datos vigentes del pre-registro.
+     */
+    public function generarFormato($documento)
     {
         /* Solo los cuatro que tienen formato oficial. */
         if (!in_array($documento, $this->formatos, true)) {
             abort(404);
         }
 
-        $archivo = storage_path('app/preregistro/formatos/'.$documento.'.pdf');
+        /* datosGuardados() resuelve a la persona desde la sesión, así que
+           nadie puede pedir el formato de alguien más. */
+        $datos = $this->datosGuardados();
 
-        if (!is_file($archivo)) {
-            abort(404, 'El formato todavía no está disponible.');
+        if (!$datos) {
+            return redirect()->route('persona.preregistro.index')
+                ->withErrors(['datos' => 'Completa tu pre-registro antes de generar los formatos.']);
         }
 
-        if ($descargar) {
-            return response()->download($archivo, $documento.'.pdf');
-        }
+        $formato = new FormatoPreRegistro($documento, $datos);
+        $pdf = Pdf::loadView($formato->vista(), $formato->datos())->setPaper('letter');
 
-        return response()->file($archivo, [
+        /* La respuesta se arma a mano porque download() del paquete no admite
+           cabeceras extra y estos documentos llevan datos personales. */
+        return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$documento.'.pdf"',
+            'Content-Disposition' => 'attachment; filename="'.$formato->nombreArchivo().'"',
             'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
         ]);
     }
 

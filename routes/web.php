@@ -38,10 +38,7 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::get('/dashboard', [PersonaDashboardController::class, 'index'])->name('dashboard');
 
         Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');
-        Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'formato'])->name('preregistro.formatos.ver');
-        Route::get('/preregistro/formatos/{documento}/descargar', function ($documento) {
-            return app(PreRegistroController::class)->formato($documento, true);
-        })->name('preregistro.formatos.descargar');
+        Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'generarFormato'])->name('preregistro.formatos.generar');
         Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
         Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
         Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
