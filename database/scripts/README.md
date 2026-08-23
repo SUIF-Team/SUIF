@@ -9,6 +9,13 @@ Orden de ejecución en una instalación nueva:
 5. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
 6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
 7. `suif_rfc_persona.sql` — RFC de la persona en PERSONA
+8. `suif_referencia_fecha_emision.sql` — fecha de emisión en REFERENCIA_BANCARIA
+
+`suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
+que el banco emitió la referencia. Va DESPUÉS de
+`suif_referencias_bancarias.sql`, que es quien crea la tabla. Córrelo ANTES de
+publicar el código: sin esa columna, la carga del catálogo falla con
+`column reba_fecha_emision does not exist`.
 
 `suif_evaluacion_grupo.sql` va ANTES que `suif_ajustes_esquema.sql`, no
 después: es el que crea `EVALUACION.GRUP_ID_GRUPO`, y sin esa columna

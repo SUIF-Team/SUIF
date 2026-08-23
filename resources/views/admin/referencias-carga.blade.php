@@ -79,11 +79,22 @@
                 <dl class="admin-referencias-formato">
                     <div>
                         <dt>Columnas</dt>
-                        <dd><code>referencia</code> (obligatoria), <code>monto</code> y <code>vigencia</code> (opcionales).</dd>
+                        <dd>
+                            Las cuatro son obligatorias: <code>fecha</code> (de emisión),
+                            <code>referencia</code>, <code>importe</code> y <code>vigencia</code>.
+                            Si falta alguna no se carga ninguna referencia, y el aviso te dice cuál.
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Membrete</dt>
+                        <dd>
+                            No recortes el archivo: los renglones del membrete institucional que van
+                            arriba de la tabla se ignoran solos.
+                        </dd>
                     </div>
                     <div>
                         <dt>Separador</dt>
-                        <dd>Coma o punto y coma. La fecha se acepta como <code>AAAA-MM-DD</code> o <code>DD/MM/AAAA</code>.</dd>
+                        <dd>Coma o punto y coma. Las fechas se aceptan como <code>AAAA-MM-DD</code> o <code>DD/MM/AAAA</code>.</dd>
                     </div>
                     <div>
                         <dt>Repeticiones</dt>

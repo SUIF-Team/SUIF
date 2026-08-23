@@ -34,7 +34,28 @@ class CatalogoReferencias
         'referencia' => ['referencia', 'referencia_bancaria', 'referenciabancaria', 'numero', 'no_referencia'],
         'monto' => ['monto', 'importe', 'cantidad'],
         'vigencia' => ['vigencia', 'fecha_vigencia', 'fecha_limite', 'vencimiento'],
+        'emision' => ['fecha', 'fecha_emision', 'fecha_de_emision', 'emision', 'expedicion', 'fecha_expedicion'],
     ];
+
+    /**
+     * Las cuatro columnas que debe traer el archivo, con el nombre con el que
+     * se le reclaman al administrador cuando falta alguna.
+     */
+    private const OBLIGATORIAS = [
+        'emision' => 'fecha de emisión',
+        'referencia' => 'referencia',
+        'monto' => 'importe',
+        'vigencia' => 'vigencia',
+    ];
+
+    /**
+     * Renglones de membrete que se toleran antes de la tabla.
+     *
+     * El archivo oficial de la DEC trae siete (UNAM, facultad, división y el
+     * título del listado) y el encabezado cae en el octavo. El margen sobra
+     * para que agregar un renglón no rompa la carga.
+     */
+    private const MAX_PREAMBULO = 25;
 
     public function resumen(): array
     {
@@ -71,6 +92,7 @@ class CatalogoReferencias
                 'rb.reba_path',
                 'rb.reba_monto',
                 'rb.reba_vigencia',
+                'rb.reba_fecha_emision',
                 'rb.reba_id_pago',
                 'rb.reba_fecha_asignacion',
                 'p.pers_nombre',
@@ -108,6 +130,7 @@ class CatalogoReferencias
                 'tiene_formato' => $fila->reba_path !== null && $fila->reba_path !== '',
                 'monto' => $fila->reba_monto === null ? null : (float) $fila->reba_monto,
                 'vigencia' => $fila->reba_vigencia,
+                'fecha_emision' => $fila->reba_fecha_emision,
                 'asignada' => $fila->reba_id_pago !== null,
                 'fecha_asignacion' => $fila->reba_fecha_asignacion,
                 'titular' => $titular,
@@ -120,8 +143,11 @@ class CatalogoReferencias
      * Carga el CSV con las referencias disponibles.
      *
      * Volver a subir el mismo archivo no duplica: las referencias ya
-     * registradas sólo actualizan monto y vigencia, y las ya entregadas a una
-     * persona no se tocan.
+     * registradas sólo actualizan sus datos, y las ya entregadas a una persona
+     * no se tocan.
+     *
+     * Si al archivo le falta una columna, leerCsv() revienta antes de esta
+     * transacción: o entra el catálogo completo o no entra nada.
      */
     public function importarCatalogo(UploadedFile $archivo): array
     {
@@ -158,6 +184,7 @@ class CatalogoReferencias
                         'reba_referencia' => $referencia,
                         'reba_monto' => $renglon['monto'],
                         'reba_vigencia' => $renglon['vigencia'],
+                        'reba_fecha_emision' => $renglon['emision'],
                         'reba_fecha_carga' => $ahora->toDateString(),
                         'reba_hora_carga' => $ahora->toTimeString(),
                     ]);
@@ -179,6 +206,7 @@ class CatalogoReferencias
                     ->update([
                         'reba_monto' => $renglon['monto'],
                         'reba_vigencia' => $renglon['vigencia'],
+                        'reba_fecha_emision' => $renglon['emision'],
                         'reba_fecha_carga' => $ahora->toDateString(),
                         'reba_hora_carga' => $ahora->toTimeString(),
                     ]);
@@ -403,9 +431,41 @@ class CatalogoReferencias
     /**
      * Lee el CSV y devuelve los renglones ya normalizados.
      *
-     * @return array<int, array{referencia: string, monto: float|null, vigencia: string|null}>
+     * El archivo llega tal como lo manda la DEC, con su membrete institucional
+     * encima de la tabla, así que el encabezado no es el primer renglón: se
+     * busca. Y se exige completo antes de devolver nada, para que un archivo al
+     * que le falta una columna no alcance a escribir media carga.
+     *
+     * @return array<int, array{referencia: string, monto: float, vigencia: string, emision: string}>
      */
     private function leerCsv(UploadedFile $archivo): array
+    {
+        $crudos = $this->renglonesDelArchivo($archivo);
+
+        if ($crudos === []) {
+            return [];
+        }
+
+        [$columnas, $inicio] = $this->ubicarEncabezados($crudos);
+
+        $this->verificarEncabezadoCompleto($columnas);
+
+        $renglones = [];
+
+        foreach (array_slice($crudos, $inicio) as $crudo) {
+            $renglones[] = $this->armarRenglon($crudo['campos'], $columnas, $crudo['numero']);
+        }
+
+        return $renglones;
+    }
+
+    /**
+     * Renglones con contenido del archivo, con el número de fila que ve el
+     * administrador en Excel para poder nombrárselo si algo falla.
+     *
+     * @return array<int, array{numero: int, campos: array<int, string>}>
+     */
+    private function renglonesDelArchivo(UploadedFile $archivo): array
     {
         $manejador = @fopen($archivo->getRealPath(), 'r');
 
@@ -424,7 +484,6 @@ class CatalogoReferencias
             $separador = substr_count($primera, ';') > substr_count($primera, ',') ? ';' : ',';
 
             rewind($manejador);
-            $columnas = null;
             $renglones = [];
             $numero = 0;
 
@@ -438,37 +497,13 @@ class CatalogoReferencias
                 $campos[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) ($campos[0] ?? ''));
                 $campos = array_map(fn ($campo): string => trim((string) $campo), $campos);
 
+                /* Excel exporta como ",,," los renglones que sólo tienen
+                   formato. No son datos ni membrete: sobran. */
                 if (implode('', $campos) === '') {
                     continue;
                 }
 
-                if ($columnas === null) {
-                    $columnas = $this->mapearEncabezados($campos);
-
-                    /* Sin encabezado reconocible, la primera columna es la
-                       referencia y este renglón ya es un dato. */
-                    if ($columnas === null) {
-                        $columnas = ['referencia' => 0, 'monto' => null, 'vigencia' => null];
-                    } else {
-                        continue;
-                    }
-                }
-
-                $referencia = $this->normalizarReferencia($campos[$columnas['referencia']] ?? '');
-
-                if ($referencia === '') {
-                    throw new DomainException('El renglón '.$numero.' del CSV no tiene número de referencia.');
-                }
-
-                if (mb_strlen($referencia) > 20) {
-                    throw new DomainException('La referencia del renglón '.$numero.' excede 20 caracteres.');
-                }
-
-                $renglones[] = [
-                    'referencia' => $referencia,
-                    'monto' => $this->normalizarMonto($columnas['monto'] === null ? '' : ($campos[$columnas['monto']] ?? '')),
-                    'vigencia' => $this->normalizarFecha($columnas['vigencia'] === null ? '' : ($campos[$columnas['vigencia']] ?? '')),
-                ];
+                $renglones[] = ['numero' => $numero, 'campos' => $campos];
             }
 
             return $renglones;
@@ -478,12 +513,109 @@ class CatalogoReferencias
     }
 
     /**
-     * @return array{referencia: int, monto: int|null, vigencia: int|null}|null
+     * Encuentra el renglón de encabezados y devuelve dónde empiezan los datos.
+     *
+     * Se busca en vez de saltar un número fijo de renglones a propósito: si la
+     * DEC agrega un oficio o una fecha de corte al membrete, un salto fijo se
+     * comería la primera referencia sin que nadie se entere.
+     *
+     * @param  array<int, array{numero: int, campos: array<int, string>}>  $renglones
+     * @return array{0: array<string, int|null>, 1: int}
+     */
+    private function ubicarEncabezados(array $renglones): array
+    {
+        foreach (array_slice($renglones, 0, self::MAX_PREAMBULO) as $indice => $renglon) {
+            $mapa = $this->mapearEncabezados($renglon['campos']);
+
+            if ($mapa !== null) {
+                return [$mapa, $indice + 1];
+            }
+        }
+
+        throw new DomainException(
+            'No se encontró el encabezado de la tabla. El archivo debe tener un renglón con los '
+            .'títulos de las columnas: '.implode(', ', self::OBLIGATORIAS).'.'
+        );
+    }
+
+    /**
+     * Ninguna de las cuatro columnas puede faltar, y se reclaman todas juntas:
+     * así el administrador corrige el archivo una vez en lugar de descubrir las
+     * faltantes de a una.
+     *
+     * @param  array<string, int|null>  $columnas
+     */
+    private function verificarEncabezadoCompleto(array $columnas): void
+    {
+        $faltantes = [];
+
+        foreach (self::OBLIGATORIAS as $campo => $nombre) {
+            if (($columnas[$campo] ?? null) === null) {
+                $faltantes[] = $nombre;
+            }
+        }
+
+        if ($faltantes !== []) {
+            throw new DomainException(
+                'El archivo está incompleto y no se cargó ninguna referencia. Faltan estas '
+                .'columnas: '.implode(', ', $faltantes).'.'
+            );
+        }
+    }
+
+    /**
+     * Un renglón de datos ya validado. Que la columna exista no garantiza que
+     * traiga dato, así que los cuatro campos se revisan aquí.
+     *
+     * @param  array<int, string>  $campos
+     * @param  array<string, int|null>  $columnas
+     * @return array{referencia: string, monto: float, vigencia: string, emision: string}
+     */
+    private function armarRenglon(array $campos, array $columnas, int $numero): array
+    {
+        $referencia = $this->normalizarReferencia($campos[$columnas['referencia']] ?? '');
+
+        if ($referencia === '') {
+            throw new DomainException('El renglón '.$numero.' del CSV no tiene número de referencia.');
+        }
+
+        if (mb_strlen($referencia) > 20) {
+            throw new DomainException('La referencia del renglón '.$numero.' excede 20 caracteres.');
+        }
+
+        $monto = $this->normalizarMonto($campos[$columnas['monto']] ?? '');
+
+        if ($monto === null) {
+            throw new DomainException('El renglón '.$numero.' del CSV no tiene un importe válido.');
+        }
+
+        $vigencia = $this->normalizarFecha($campos[$columnas['vigencia']] ?? '');
+
+        if ($vigencia === null) {
+            throw new DomainException('El renglón '.$numero.' del CSV no tiene una vigencia válida.');
+        }
+
+        $emision = $this->normalizarFecha($campos[$columnas['emision']] ?? '');
+
+        if ($emision === null) {
+            throw new DomainException('El renglón '.$numero.' del CSV no tiene una fecha de emisión válida.');
+        }
+
+        return [
+            'referencia' => $referencia,
+            'monto' => $monto,
+            'vigencia' => $vigencia,
+            'emision' => $emision,
+        ];
+    }
+
+    /**
+     * @return array<string, int|null>|null
      */
     private function mapearEncabezados(array $campos): ?array
     {
         $normalizados = array_map(fn (string $campo): string => $this->clave($campo), $campos);
-        $mapa = ['referencia' => null, 'monto' => null, 'vigencia' => null];
+        $mapa = array_fill_keys(array_keys(self::ENCABEZADOS), null);
 
         foreach ($normalizados as $posicion => $encabezado) {
             foreach (self::ENCABEZADOS as $campo => $alias) {
@@ -493,6 +625,8 @@ class CatalogoReferencias
             }
         }
 
+        /* La referencia es lo que distingue al encabezado del membrete: sin
+           ella, este renglón todavía no es la tabla. */
         return $mapa['referencia'] === null ? null : $mapa;
     }
 
@@ -522,6 +656,13 @@ class CatalogoReferencias
 
         if ($valor === '') {
             return null;
+        }
+
+        /* Hay conversores que no formatean la fecha y dejan el número de serie
+           de Excel: 46254 es el 20/08/2026, contado desde el 30/12/1899. Sin
+           este caso un archivo bueno se rechazaría por una fecha que sí venía. */
+        if (preg_match('/^\d{5}$/', $valor) === 1 && (int) $valor >= 40000 && (int) $valor <= 60000) {
+            return Carbon::create(1899, 12, 30)->addDays((int) $valor)->toDateString();
         }
 
         foreach (['Y-m-d', 'd/m/Y', 'd-m-Y', 'Y/m/d'] as $formato) {

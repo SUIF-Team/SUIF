@@ -96,6 +96,12 @@
                                     @else
                                         <span class="admin-referencias-texto-atenuado">Sin vigencia</span>
                                     @endif
+
+                                    @if($referencia['fecha_emision'])
+                                        <div class="admin-referencias-texto-atenuado">
+                                            Emitida el {{ \Illuminate\Support\Carbon::parse($referencia['fecha_emision'])->format('d/m/Y') }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($referencia['tiene_formato'])
