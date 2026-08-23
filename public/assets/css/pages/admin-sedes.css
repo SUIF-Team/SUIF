@@ -312,6 +312,41 @@
     gap: 1.25rem;
 }
 
+.admin-sedes-subtitulo {
+    margin: 0.5rem 0 0.25rem;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.admin-sedes-ayuda {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+}
+
+/* Los datos de aplicación de un grupo viven en un bloque con borde. */
+.admin-sedes-horario {
+    margin: 0 0 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+}
+
+/* El reboot de Bootstrap flota el legend a la izquierda con width:100%. La
+   rejilla de campos que le sigue establece su propio contexto de formato, así
+   que quedaba junto al float: se encogía a un ancho casi nulo y las etiquetas
+   se encimaban contra el borde derecho. */
+.admin-sedes-horario-titulo {
+    float: none;
+    width: auto;
+    margin-bottom: 0;
+    padding: 0 0.35rem;
+    color: var(--text-dark);
+    font-size: 0.8125rem;
+    font-weight: 700;
+}
+
 .admin-sedes-formulario-acciones {
     margin-top: 0.75rem;
     justify-content: flex-end;

@@ -9,6 +9,9 @@ class ConsultaPersonasRegistradas
 {
     private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
+    /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
+    private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
+
     /**
      * Obtiene una fila por persona que ya tuvo una solicitud aprobada, sin
      * limitarla a una convocatoria vigente. Una aprobación representa que el
@@ -25,7 +28,10 @@ class ConsultaPersonasRegistradas
     }
 
     /**
-     * Devuelve los estados definidos por el catálogo de solicitudes.
+     * Estados con los que se puede filtrar la bandeja. Son los tres que le
+     * importan a quien revisa; se toman del catálogo para conservar su
+     * escritura exacta y se comparan sin distinguir mayúsculas, porque los
+     * scripts de la base no coinciden entre sí («En revisión» / «En Revisión»).
      */
     public function estados(): array
     {
@@ -33,6 +39,12 @@ class ConsultaPersonasRegistradas
             ->orderBy('esso_id_c_estado_solicitud')
             ->pluck('esso_estado_solicitud')
             ->map(fn (mixed $estado): string => (string) $estado)
+            ->filter(fn (string $estado): bool => in_array(
+                mb_strtolower($estado),
+                self::ESTADOS_FILTRO,
+                true
+            ))
+            ->values()
             ->all();
     }
 
@@ -43,7 +55,6 @@ class ConsultaPersonasRegistradas
             'solicitudes_en_revision' => $this->consultaSolicitudes()
                 ->where('ces.esso_estado_solicitud', 'En revisión')
                 ->count(),
-            'pagos_pendientes' => null,
             'certificados_pendientes' => null,
         ];
     }

@@ -1,0 +1,189 @@
+/* Referencia bancaria de la persona: obtención, consulta y descarga del formato. */
+
+.referencia-shell {
+    padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 5rem);
+}
+
+.referencia-alerta {
+    margin-bottom: 1.25rem;
+    padding: 13px 16px;
+    border-radius: 10px;
+    background: #eef7f0;
+    color: #245f35;
+}
+
+.referencia-alerta--error {
+    background: #fff0f0;
+    color: #9b1717;
+}
+
+.referencia-tarjetas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.referencia-tarjeta {
+    padding: 2rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
+}
+
+.referencia-tarjeta--sola {
+    max-width: 620px;
+    margin: 0;
+}
+
+.referencia-tarjeta h1 {
+    margin: 0 0 0.4rem;
+    color: #172a44;
+    font-size: 1.4rem;
+}
+
+.referencia-tarjeta__titulo {
+    margin: 0 0 0.6rem;
+    color: #b38612;
+    font-size: 1rem;
+    font-style: italic;
+}
+
+.referencia-muted {
+    margin: 0 0 1.25rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.referencia-codigo {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 0.7rem 0.8rem 0.7rem 1.2rem;
+    border: 1px solid #dfc77f;
+    border-radius: 0.7rem;
+    background: #fffaf0;
+}
+
+.referencia-codigo > span {
+    color: #172a44;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    word-break: break-all;
+}
+
+.referencia-copiar {
+    padding: 0.55rem 0.75rem;
+    display: inline-flex;
+    gap: 0.45rem;
+    align-items: center;
+    flex-shrink: 0;
+    border: 1px solid #d9b75d;
+    border-radius: 0.45rem;
+    background: #fff;
+    color: #6f4d00;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.referencia-copiar:hover,
+.referencia-copiar:focus-visible {
+    background: #fff2c9;
+}
+
+.referencia-copiar.is-error {
+    border-color: #e0a6a6;
+    background: #fff0f0;
+    color: #9b1717;
+}
+
+.referencia-datos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1rem;
+    margin: 0;
+}
+
+.referencia-datos dt {
+    color: #6b7280;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.referencia-datos dd {
+    margin: 0.25rem 0 0;
+    color: #172a44;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.referencia-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.referencia-boton {
+    min-width: 150px;
+    padding: 0.65rem 1.25rem;
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 8px;
+    background: #111827;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.referencia-boton:hover,
+.referencia-boton:focus-visible {
+    background: #1f2937;
+    color: #fff;
+}
+
+.referencia-boton--secundario {
+    border: 1px solid #d9dee7;
+    background: #f7f8fa;
+    color: #172a44;
+}
+
+.referencia-boton--secundario:hover,
+.referencia-boton--secundario:focus-visible {
+    background: #eceff4;
+    color: #172a44;
+}
+
+.referencia-siguiente {
+    margin: 1.5rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px dashed #d7dce5;
+}
+
+@media (max-width: 900px) {
+    .referencia-tarjetas {
+        grid-template-columns: 1fr;
+    }
+
+    .referencia-codigo {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .referencia-copiar {
+        justify-content: center;
+    }
+}

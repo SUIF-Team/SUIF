@@ -53,3 +53,96 @@
         updateScrollState();
     });
 }());
+
+/*
+ * Copiado al portapapeles.
+ *
+ * navigator.clipboard sólo existe en contextos seguros: sobre HTTP —como el
+ * servidor de despliegue, que se sirve por IP— es undefined y el botón se
+ * quedaba sin hacer nada, dejando en el portapapeles lo que ya hubiera antes.
+ * Por eso hay respaldo con execCommand y el resultado se devuelve para que la
+ * pantalla avise si no se pudo copiar.
+ */
+(function () {
+    'use strict';
+
+    window.SUIF = window.SUIF || {};
+
+    function copiarConRespaldo(texto) {
+        var area = document.createElement('textarea');
+
+        area.value = texto;
+        area.setAttribute('readonly', 'readonly');
+        area.style.position = 'fixed';
+        area.style.top = '-1000px';
+        area.style.opacity = '0';
+
+        document.body.appendChild(area);
+        area.select();
+        area.setSelectionRange(0, area.value.length);
+
+        var copiado = false;
+
+        try {
+            copiado = document.execCommand('copy');
+        } catch (error) {
+            copiado = false;
+        }
+
+        document.body.removeChild(area);
+
+        return copiado;
+    }
+
+    /* Devuelve una promesa que resuelve a true sólo si el texto se copió. */
+    window.SUIF.copiarTexto = function (texto) {
+        texto = String(texto == null ? '' : texto).trim();
+
+        if (texto === '') {
+            return Promise.resolve(false);
+        }
+
+        if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(texto).then(function () {
+                return true;
+            }).catch(function () {
+                return copiarConRespaldo(texto);
+            });
+        }
+
+        return Promise.resolve(copiarConRespaldo(texto));
+    };
+
+    /*
+     * Conecta un botón con el elemento cuyo texto debe copiarse y le cambia la
+     * etiqueta según el resultado.
+     */
+    window.SUIF.conectarCopiado = function (boton, selectorOrigen, textoExito, textoError) {
+        if (!boton) {
+            return;
+        }
+
+        var etiqueta = boton.querySelector('span') || boton;
+        var original = etiqueta.textContent;
+        var temporizador;
+
+        boton.addEventListener('click', function () {
+            var origen = document.querySelector(selectorOrigen);
+
+            if (!origen) {
+                return;
+            }
+
+            window.SUIF.copiarTexto(origen.textContent).then(function (copiado) {
+                etiqueta.textContent = copiado ? textoExito : textoError;
+                boton.classList.toggle('is-error', !copiado);
+
+                window.clearTimeout(temporizador);
+                temporizador = window.setTimeout(function () {
+                    etiqueta.textContent = original;
+                    boton.classList.remove('is-error');
+                }, 2500);
+            });
+        });
+    };
+}());

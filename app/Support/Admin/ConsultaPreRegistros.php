@@ -9,6 +9,9 @@ class ConsultaPreRegistros
 {
     private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
+    /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
+    private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
+
     /**
      * Obtiene una fila por persona pre-registrada. La clave de acceso confirma
      * que concluyó la captura inicial, aunque la convocatoria haya terminado o
@@ -25,7 +28,10 @@ class ConsultaPreRegistros
     }
 
     /**
-     * Devuelve los estados disponibles para filtrar la bandeja.
+     * Estados con los que se puede filtrar la bandeja. Son los tres que le
+     * importan a quien revisa; se toman del catálogo para conservar su
+     * escritura exacta y se comparan sin distinguir mayúsculas, porque los
+     * scripts de la base no coinciden entre sí («En revisión» / «En Revisión»).
      */
     public function estados(): array
     {
@@ -33,6 +39,12 @@ class ConsultaPreRegistros
             ->orderBy('esso_id_c_estado_solicitud')
             ->pluck('esso_estado_solicitud')
             ->map(fn (mixed $estado): string => (string) $estado)
+            ->filter(fn (string $estado): bool => in_array(
+                mb_strtolower($estado),
+                self::ESTADOS_FILTRO,
+                true
+            ))
+            ->values()
             ->all();
     }
 
@@ -58,7 +70,9 @@ class ConsultaPreRegistros
                 'nombre' => (string) $solicitud->pers_nombre,
                 'primer_apellido' => (string) ($solicitud->pers_apellido_paterno ?? ''),
                 'segundo_apellido' => (string) ($solicitud->pers_apellido_materno ?? ''),
+                'nombre_completo' => $this->nombreCompleto($solicitud),
                 'curp' => (string) $solicitud->pers_curp,
+                'rfc' => (string) $solicitud->pers_rfc,
                 'correo_principal' => $contactos['Correo principal'] ?? 'No registrado',
                 'correo_alterno' => $contactos['Correo alterno'] ?? 'No registrado',
                 'telefono' => $contactos['Teléfono celular'] ?? 'No registrado',
@@ -126,6 +140,7 @@ class ConsultaPreRegistros
                 'p.pers_apellido_paterno',
                 'p.pers_apellido_materno',
                 'p.pers_curp',
+                'p.pers_rfc',
                 'p.pers_fecha_registro',
                 'ef.enfe_entidad_federativa',
                 'ces.esso_estado_solicitud as estado_solicitud',
@@ -192,21 +207,29 @@ class ConsultaPreRegistros
             ->groupBy('esdo_id_documento');
     }
 
-    private function normalizarBandeja(object $solicitud): array
+    /**
+     * Nombre para mostrar. Tanto la bandeja como el expediente lo exponen con
+     * la misma llave: las pantallas de resultado leen `nombre_completo`.
+     */
+    private function nombreCompleto(object $solicitud): string
     {
-        $nombre_completo = trim(implode(' ', array_filter([
+        return trim(implode(' ', array_filter([
             $solicitud->pers_nombre,
             $solicitud->pers_apellido_paterno,
             $solicitud->pers_apellido_materno,
         ])));
+    }
 
+    private function normalizarBandeja(object $solicitud): array
+    {
         return [
             'id' => (string) $solicitud->soli_id_solicitud,
             'nombre' => (string) $solicitud->pers_nombre,
             'primer_apellido' => (string) ($solicitud->pers_apellido_paterno ?? ''),
             'segundo_apellido' => (string) ($solicitud->pers_apellido_materno ?? ''),
-            'nombre_completo' => $nombre_completo,
+            'nombre_completo' => $this->nombreCompleto($solicitud),
             'curp' => (string) $solicitud->pers_curp,
+            'rfc' => (string) $solicitud->pers_rfc,
             'fecha_registro' => $solicitud->pers_fecha_registro.' 00:00:00',
             'estado_bandeja' => (string) $solicitud->estado_solicitud,
             'clase_estado' => $this->claseEstado((string) $solicitud->estado_solicitud),

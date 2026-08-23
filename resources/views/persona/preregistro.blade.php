@@ -74,6 +74,7 @@
                 <dl class="pr-datos">
                     <div><dt>Nombre</dt><dd>{{ $estado['datos']['nombre'] ?? '' }} {{ $estado['datos']['primer_apellido'] ?? '' }} {{ $estado['datos']['segundo_apellido'] ?? '' }}</dd></div>
                     <div><dt>CURP</dt><dd>{{ $estado['datos']['curp'] ?? '' }}</dd></div>
+                    <div><dt>RFC</dt><dd>{{ $estado['datos']['rfc'] ?? '' }}</dd></div>
                     <div><dt>Correo principal</dt><dd>{{ $estado['datos']['correo_principal'] ?? '' }}</dd></div>
                     <div><dt>Correo alterno</dt><dd>{{ $estado['datos']['correo_alterno'] ?? '' }}</dd></div>
                     <div><dt>Teléfono celular</dt><dd>{{ $estado['datos']['telefono'] ?? '' }}</dd></div>
@@ -101,9 +102,4 @@
 
 @push('scripts')
 <script src="{{ asset_versionado('assets/js/pages/persona-preregistro.js') }}"></script>
-<script>
-(function(){
-  var copy=document.querySelector('[data-copy-key]');if(copy){copy.addEventListener('click',function(){var t=document.getElementById('pr-key').textContent;navigator.clipboard&&navigator.clipboard.writeText(t);copy.textContent='Clave copiada';});}
-})();
-</script>
 @endpush

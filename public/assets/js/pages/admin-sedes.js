@@ -1,3 +1,4 @@
+/* Pantallas de sedes y de grupos: comparten diseño, mapa y modal de baja. */
 (function () {
     'use strict';
 
@@ -10,7 +11,7 @@
         }).mount(navegacion);
     }
 
-    var formulario = document.querySelector('[data-admin-sede-formulario]');
+    var formulario = document.querySelector('[data-admin-sede-formulario], [data-admin-grupo-formulario]');
     if (!formulario) {
         return;
     }

@@ -59,9 +59,17 @@ class RevisionPagos
                 throw new DomainException('Tu comprobante ya está en revisión o fue aprobado y no puede reemplazarse.');
             }
 
+            /* El pago queda fechado con la carga del comprobante: hasta aquí
+               PAGO sólo tenía la referencia bancaria que se le asignó. */
+            $ahora = now();
+
             DB::table('pago')
                 ->where('pago_id_pago', $pago->pago_id_pago)
-                ->update(['pago_comprobante_path' => $ruta_archivo]);
+                ->update([
+                    'pago_comprobante_path' => $ruta_archivo,
+                    'pago_fecha_pago' => $ahora->toDateString(),
+                    'pago_hora_pago' => $ahora->toTimeString(),
+                ]);
 
             $this->registrarEstado((int) $pago->pago_id_pago, ConsultaPagos::PENDIENTE);
         });

@@ -12,7 +12,13 @@
         'persona' => $persona,
         'estados' => $estados,
         'decisiones' => old('documentos', $decisiones_documentos ?? []),
-        'motivo_rechazo' => old('motivo_rechazo', $observaciones_rechazo['motivo_rechazo'] ?? ''),
+        'comentarios' => old('comentarios', $observaciones_rechazo['comentarios'] ?? []),
+        'errores_comentarios' => collect($errors->keys())
+            ->filter(fn (string $llave): bool => str_starts_with($llave, 'comentarios.'))
+            ->mapWithKeys(fn (string $llave): array => [
+                substr($llave, strlen('comentarios.')) => $errors->first($llave),
+            ])
+            ->all(),
         'fecha_limite' => old('fecha_limite', $observaciones_rechazo['fecha_limite'] ?? ''),
         'modo_solo_lectura' => $modo_solo_lectura ?? false,
     ];
@@ -43,7 +49,7 @@
     <form method="POST" action="{{ route('admin.documentos.validar', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}" class="admin-preregistro-contenido-principal" v-on:submit="enviando = true">
         @csrf
         <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
-        <input v-for="documento in persona.documentos" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
+        <input v-for="documento in documentosPendientes" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
         <main class="admin-preregistro-tarjeta admin-preregistro-documentos" aria-labelledby="lista-documentos-titulo">
             <h2 id="lista-documentos-titulo">Documentación</h2>
             <p v-if="!persona.documentos.length" class="admin-preregistro-documentos-vacio">
@@ -57,9 +63,25 @@
                         <p class="admin-preregistro-documento-meta">@{{ documento.fecha_carga }}</p>
                     </div>
                     <div class="admin-preregistro-documento-acciones">
-                        <button type="button" class="admin-preregistro-icono admin-preregistro-icono--aprobar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'aprobado' }" :aria-pressed="estadoDocumento(documento.id) === 'aprobado'" :aria-label="'Aprobar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'aprobado')">✓</button>
-                        <button type="button" class="admin-preregistro-icono admin-preregistro-icono--rechazar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'rechazado' }" :aria-pressed="estadoDocumento(documento.id) === 'rechazado'" :aria-label="'Rechazar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'rechazado')">×</button>
+                        <template v-if="documento.pendiente">
+                            <button type="button" class="admin-preregistro-icono admin-preregistro-icono--aprobar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'aprobado' }" :aria-pressed="estadoDocumento(documento.id) === 'aprobado'" :aria-label="'Aprobar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'aprobado')">✓</button>
+                            <button type="button" class="admin-preregistro-icono admin-preregistro-icono--rechazar" :class="{ 'esta-seleccionado': estadoDocumento(documento.id) === 'rechazado' }" :aria-pressed="estadoDocumento(documento.id) === 'rechazado'" :aria-label="'Rechazar ' + documento.titulo" :disabled="modoSoloLectura" v-on:click="actualizarDocumento(documento.id, 'rechazado')">×</button>
+                        </template>
+                        <span v-else class="admin-preregistro-documento-resuelto" :class="claseEstadoDocumento(documento.estado)">@{{ documento.estado }}</span>
                         <button type="button" class="admin-preregistro-previsualizar" v-on:click="abrirDocumento(documento, $event)">Previsualizar</button>
+                    </div>
+                    <div v-if="mostrarComentario(documento)" class="admin-preregistro-campo-observacion admin-preregistro-documento-comentario">
+                        <label :for="`comentario-${documento.id}`">Motivo del rechazo</label>
+                        <textarea
+                            :id="`comentario-${documento.id}`"
+                            :name="documento.pendiente ? `comentarios[${documento.id}]` : null"
+                            :readonly="!documento.pendiente || modoSoloLectura"
+                            v-model="comentarios[documento.id]"
+                            rows="3"
+                            maxlength="500"
+                            :required="documento.pendiente"
+                            placeholder="Explica qué debe corregirse en este documento."></textarea>
+                        <p v-if="errorComentario(documento.id)" class="admin-preregistro-mensaje-validacion" role="alert">@{{ errorComentario(documento.id) }}</p>
                     </div>
                 </li>
             </ul>
@@ -77,12 +99,15 @@
                         :disabled="enviando">
                         @{{ enviando ? 'Procesando...' : 'Interrumpir trámite' }}
                     </button>
-                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando || !todosDocumentosResueltos">
+                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando || !todosDocumentosResueltos || !comentariosCompletos">
                         @{{ enviando ? 'Guardando...' : 'Guardar' }}
                     </button>
                 </div>
                 <p v-if="!todosDocumentosResueltos" id="estado-documentos-pendientes" class="admin-preregistro-mensaje-validacion" role="status">
                     Resuelve todos los documentos para guardar la revisi&oacute;n.
+                </p>
+                <p v-else-if="!comentariosCompletos" class="admin-preregistro-mensaje-validacion" role="status">
+                    Escribe el motivo de cada documento rechazado.
                 </p>
                 @if ($errors->has('documentos'))
                     <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $errors->first('documentos') }}</p>
@@ -91,25 +116,9 @@
 
             <section v-if="hayDocumentosRechazados" class="admin-preregistro-tarjeta admin-preregistro-observaciones" aria-labelledby="observaciones-titulo">
                 <h2 id="observaciones-titulo">Observaciones</h2>
-                <div class="admin-preregistro-campo-observacion">
-                    <label for="motivo-rechazo">Motivo del rechazo</label>
-                    <textarea
-                        id="motivo-rechazo"
-                        name="motivo_rechazo"
-                        v-model="motivoRechazo"
-                        rows="5"
-                        maxlength="255"
-                        required
-                        :readonly="modoSoloLectura"
-                        aria-describedby="motivo-rechazo-ayuda"
-                        placeholder="Describe el motivo del rechazo."></textarea>
-                    <p id="motivo-rechazo-ayuda" class="admin-preregistro-ayuda">
-                        Es obligatorio al rechazar uno o más documentos.
-                    </p>
-                    @error('motivo_rechazo')
-                        <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $message }}</p>
-                    @enderror
-                </div>
+                <p class="admin-preregistro-ayuda">
+                    El motivo se captura en cada documento rechazado. La fecha límite aplica a todo el expediente.
+                </p>
                 <div class="admin-preregistro-campo-observacion">
                     <label for="fecha-limite">Fecha límite</label>
                     <input

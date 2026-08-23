@@ -26,7 +26,7 @@ class RevisionDocumentosTest extends TestCase
         $resultado = app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::APROBADO,
-        ], null);
+        ], []);
 
         $this->assertSame(RevisionDocumentos::APROBADO, $resultado);
         $this->assertSame(2, DB::table('estado_documento')
@@ -42,7 +42,7 @@ class RevisionDocumentosTest extends TestCase
         $resultado = app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::RECHAZADO,
-        ], 'El archivo no es legible.', '2026-08-20');
+        ], ['11' => 'El archivo no es legible.'], '2026-08-20');
 
         $this->assertSame(RevisionDocumentos::REVISION, $resultado);
         $this->assertDatabaseHas('estado_documento', [
@@ -50,6 +50,97 @@ class RevisionDocumentosTest extends TestCase
             'esdo_id_c_estado_documento' => 5,
             'esdo_comentarios' => "El archivo no es legible.\nFecha límite: 2026-08-20",
         ]);
+        $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
+    }
+
+    public function test_cada_documento_rechazado_guarda_su_propio_comentario(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        app(RevisionDocumentos::class)->resolver(1, [
+            '10' => RevisionDocumentos::RECHAZADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], [
+            '10' => 'Falta la firma autógrafa.',
+            '11' => 'El archivo no es legible.',
+        ], '2026-08-20');
+
+        $this->assertDatabaseHas('estado_documento', [
+            'esdo_id_documento' => 10,
+            'esdo_comentarios' => "Falta la firma autógrafa.\nFecha límite: 2026-08-20",
+        ]);
+        $this->assertDatabaseHas('estado_documento', [
+            'esdo_id_documento' => 11,
+            'esdo_comentarios' => "El archivo no es legible.\nFecha límite: 2026-08-20",
+        ]);
+    }
+
+    public function test_rechazar_documento_requiere_su_comentario(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Escribe el motivo del rechazo de cada documento rechazado.');
+
+        app(RevisionDocumentos::class)->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], ['11' => '   '], '2026-08-20');
+    }
+
+    public function test_la_segunda_revision_solo_resuelve_el_documento_subsanado(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], ['11' => 'El archivo no es legible.'], '2026-08-20');
+
+        // La persona vuelve a subir sólo el documento rechazado.
+        $this->reenviarARevision(11);
+
+        // El aprobado ya no se recibe: resolverlo otra vez es un error.
+        try {
+            $revision->resolver(1, [
+                '10' => RevisionDocumentos::APROBADO,
+                '11' => RevisionDocumentos::APROBADO,
+            ], []);
+            $this->fail('Se esperaba que el expediente completo fuera rechazado.');
+        } catch (DomainException $excepcion) {
+            $this->assertStringContainsString('esperan revisión', $excepcion->getMessage());
+        }
+
+        $resultado = $revision->resolver(1, ['11' => RevisionDocumentos::APROBADO], []);
+
+        $this->assertSame(RevisionDocumentos::APROBADO, $resultado);
+        $this->assertSame('Aprobada', $this->ultimoEstadoSolicitud());
+        $this->assertSame(1, DB::table('estado_documento')
+            ->where('esdo_id_documento', 10)
+            ->where('esdo_id_c_estado_documento', 4)
+            ->count());
+    }
+
+    public function test_no_aprueba_la_solicitud_si_queda_un_documento_rechazado(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->resolver(1, [
+            '10' => RevisionDocumentos::RECHAZADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], [
+            '10' => 'Falta la firma.',
+            '11' => 'El archivo no es legible.',
+        ], '2026-08-20');
+
+        // Sólo se subsana uno de los dos.
+        $this->reenviarARevision(11);
+
+        $resultado = $revision->resolver(1, ['11' => RevisionDocumentos::APROBADO], []);
+
+        $this->assertSame(RevisionDocumentos::REVISION, $resultado);
         $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
     }
 
@@ -80,7 +171,7 @@ class RevisionDocumentosTest extends TestCase
         app(RevisionDocumentos::class)->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::RECHAZADO,
-        ], 'El archivo no es legible.');
+        ], ['11' => 'El archivo no es legible.']);
     }
 
     public function test_interrumpir_no_requiere_un_motivo_documental(): void
@@ -103,13 +194,13 @@ class RevisionDocumentosTest extends TestCase
         $revision->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::APROBADO,
-        ], null);
+        ], []);
 
         $this->expectException(DomainException::class);
         $revision->resolver(1, [
             '10' => RevisionDocumentos::APROBADO,
             '11' => RevisionDocumentos::APROBADO,
-        ], null);
+        ], []);
     }
 
     private function crearEsquemaTemporal(): void
@@ -209,6 +300,20 @@ class RevisionDocumentosTest extends TestCase
                 'esdo_fecha' => '2026-08-05',
                 'esdo_hora' => '12:00:00',
             ],
+        ]);
+    }
+
+    /**
+     * Simula que la persona subsanó un documento y lo volvió a enviar.
+     */
+    private function reenviarARevision(int $idDocumento): void
+    {
+        DB::table('estado_documento')->insert([
+            'esdo_id_c_estado_documento' => 3,
+            'esdo_id_documento' => $idDocumento,
+            'esdo_comentarios' => null,
+            'esdo_fecha' => '2026-08-06',
+            'esdo_hora' => '12:00:00',
         ]);
     }
 

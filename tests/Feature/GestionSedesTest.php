@@ -29,10 +29,6 @@ class GestionSedesTest extends TestCase
             'nombre' => 'Sede Universidad',
             'direccion' => 'Circuito Exterior 1, Coyoacán',
             'cupo' => 2,
-            'fecha_inicio' => '2026-10-15',
-            'hora_inicio' => '09:00',
-            'fecha_fin' => '2026-10-15',
-            'hora_fin' => '13:00',
         ]);
 
         $idSede = (int) DB::table('sede')->value('sede_id_sede');
@@ -44,19 +40,66 @@ class GestionSedesTest extends TestCase
             'sede_nombre' => 'Sede Universidad',
             'sede_direccion' => 'Circuito Exterior 1, Coyoacán',
             'sede_cupo' => 2,
-            'sede_estado' => 1,
+            'sede_estado' => 0,
         ]);
-        $this->assertDatabaseHas('grupo', [
-            'sede_id_sede' => $idSede,
-            'grup_fecha_inicio' => '2026-10-15',
-        ]);
-        $this->assertDatabaseHas('evaluacion', [
-            'grup_id_grupo' => (int) DB::table('grupo')->value('grup_id_grupo'),
-            'eval_resultado' => null,
-        ]);
+
+        /* La sede nace sin programación: eso se registra desde el módulo de grupos. */
+        $this->assertSame(0, DB::table('grupo')->count());
     }
 
-    public function test_edicion_programa_una_sede_pendiente_y_valida_el_intervalo(): void
+    public function test_la_sede_por_programar_no_se_muestra_al_participante_hasta_que_tiene_un_grupo(): void
+    {
+        $this->actingAs(Usuario::findOrFail(2))->post(route('admin.sedes.store'), [
+            'nombre' => 'Sede sin programar',
+            'direccion' => 'Dirección sin programar',
+            'cupo' => 3,
+        ]);
+
+        $idSede = (int) DB::table('sede')->value('sede_id_sede');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.sedes.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Sede sin programar', 'Por programar']);
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.index'))
+            ->assertOk()
+            ->assertDontSee('Sede sin programar');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.grupos.store'), [
+                'sede_id' => $idSede,
+                'fecha_inicio' => '2026-10-15',
+                'hora_inicio' => '09:00',
+                'fecha_fin' => '2026-10-15',
+                'hora_fin' => '13:00',
+            ])
+            ->assertRedirect(route('admin.grupos.index'))
+            ->assertSessionHas('success', 'El grupo se creó correctamente.');
+
+        $this->assertDatabaseHas('sede', ['sede_id_sede' => $idSede, 'sede_estado' => 1]);
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.index'))
+            ->assertOk()
+            ->assertSee('Sede sin programar')
+            ->assertSeeText('09:00–13:00 h');
+    }
+
+    public function test_el_listado_de_sedes_cuenta_los_grupos_registrados(): void
+    {
+        [$idSede] = $this->crearSedeProgramada(4);
+        $this->agregarHorario($idSede, '2026-10-16', '16:00:00', '2026-10-16', '20:00:00');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.sedes.index'))
+            ->assertOk()
+            ->assertSee('Grupos')
+            ->assertSee('<td>2</td>', false);
+    }
+
+    public function test_la_edicion_de_la_sede_no_toca_su_programacion(): void
     {
         $idSede = DB::table('sede')->insertGetId([
             'sede_nombre' => 'Sede pendiente',
@@ -68,30 +111,15 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.sedes.index', ['estado' => 'pendiente']))
             ->assertOk()
-            ->assertSee('Sede pendiente')
-            ->assertSee('Pendiente');
+            ->assertSeeInOrder(['Sede pendiente', 'Por programar']);
+
+        $idEvaluacion = $this->agregarHorario($idSede, '2026-10-15', '09:00:00', '2026-10-15', '13:00:00');
 
         $this->actingAs(Usuario::findOrFail(2))
             ->put(route('admin.sedes.update', $idSede), [
                 'nombre' => 'Sede corregida',
                 'direccion' => 'Dirección corregida',
                 'cupo' => 12,
-                'fecha_inicio' => '2026-10-15',
-                'hora_inicio' => '13:00',
-                'fecha_fin' => '2026-10-15',
-                'hora_fin' => '09:00',
-            ])
-            ->assertSessionHasErrors('fecha_fin');
-
-        $this->actingAs(Usuario::findOrFail(2))
-            ->put(route('admin.sedes.update', $idSede), [
-                'nombre' => 'Sede corregida',
-                'direccion' => 'Dirección corregida',
-                'cupo' => 12,
-                'fecha_inicio' => '2026-10-15',
-                'hora_inicio' => '09:00',
-                'fecha_fin' => '2026-10-15',
-                'hora_fin' => '13:00',
             ])
             ->assertRedirect(route('admin.sedes.index'))
             ->assertSessionHas('success', 'La sede se actualizó correctamente.');
@@ -101,30 +129,51 @@ class GestionSedesTest extends TestCase
             'sede_nombre' => 'Sede corregida',
             'sede_estado' => 1,
         ]);
+
+        /* Editar el lugar no puede borrar ni alterar sus aplicaciones. */
         $this->assertSame(1, DB::table('grupo')->where('sede_id_sede', $idSede)->count());
+        $this->assertDatabaseHas('evaluacion', ['eval_id_evaluacion' => $idEvaluacion]);
     }
 
-    public function test_formularios_de_sede_muestran_horario_fechas_y_aforo_en_el_orden_solicitado(): void
+    public function test_el_formulario_de_sede_captura_solo_el_lugar(): void
     {
         $orden = [
-            'Hora de inicio *',
-            'Fecha de inicio *',
-            'Hora de fin *',
-            'Fecha de fin *',
-            'Aforo máximo *',
+            'Nombre de sede *',
+            'Dirección completa *',
+            'Aforo máximo por aplicación *',
         ];
 
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.sedes.create'))
             ->assertOk()
-            ->assertSeeInOrder($orden);
+            ->assertSeeInOrder($orden)
+            ->assertDontSee('Hora de inicio *');
 
         [$idSede] = $this->crearSedeProgramada(2);
 
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.sedes.edit', $idSede))
             ->assertOk()
-            ->assertSeeInOrder($orden);
+            ->assertSeeInOrder($orden)
+            ->assertDontSee('Hora de inicio *');
+    }
+
+    public function test_el_formulario_de_grupo_muestra_la_sede_y_los_datos_de_aplicacion(): void
+    {
+        $this->crearSedeProgramada(7);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.grupos.create'))
+            ->assertOk()
+            ->assertSeeInOrder([
+                'Sede *',
+                'Hora de inicio *',
+                'Fecha de inicio *',
+                'Hora de fin *',
+                'Fecha de fin *',
+            ])
+            /* El selector de sede muestra su aforo y su estatus. */
+            ->assertSeeText('Sede de prueba · aforo 7 · 1 grupo · Con cupo');
     }
 
     public function test_no_elimina_ni_reduce_una_sede_con_participantes_asignados(): void
@@ -138,10 +187,6 @@ class GestionSedesTest extends TestCase
             'nombre' => 'Sede ocupada',
             'direccion' => 'Dirección ocupada',
             'cupo' => 1,
-            'fecha_inicio' => '2026-10-15',
-            'hora_inicio' => '09:00',
-            'fecha_fin' => '2026-10-15',
-            'hora_fin' => '13:00',
         ];
 
         $this->actingAs(Usuario::findOrFail(2))
@@ -210,6 +255,204 @@ class GestionSedesTest extends TestCase
             ->assertSee('Sede de prueba');
     }
 
+    public function test_una_sede_ofrece_varios_horarios_y_el_participante_elige_uno(): void
+    {
+        [$idSede, $idPrimero] = $this->crearSedeProgramada(1);
+        $idSegundo = $this->agregarHorario($idSede, '2026-10-16', '16:00:00', '2026-10-16', '20:00:00');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.index'))
+            ->assertOk()
+            ->assertSee('Sede de prueba')
+            ->assertSeeText('Horarios disponibles · 2')
+            ->assertSeeText('09:00–13:00 h')
+            ->assertSeeText('16:00–20:00 h');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idSegundo])
+            ->assertRedirect(route('persona.sede.index'));
+
+        $this->assertDatabaseHas('solicitud', [
+            'soli_id_solicitud' => 100,
+            'soli_id_evaluacion' => $idSegundo,
+        ]);
+        $this->assertNotSame($idPrimero, $idSegundo);
+    }
+
+    public function test_llenar_un_horario_no_bloquea_los_demas_de_la_sede(): void
+    {
+        [$idSede, $idPrimero] = $this->crearSedeProgramada(1);
+        $idSegundo = $this->agregarHorario($idSede, '2026-10-16', '16:00:00', '2026-10-16', '20:00:00');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idPrimero])
+            ->assertRedirect(route('persona.sede.index'));
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad'))
+            ->assertOk()
+            ->assertJsonFragment(['evaluacion_id' => $idPrimero, 'disponibles' => 0, 'con_cupo' => false])
+            ->assertJsonFragment(['evaluacion_id' => $idSegundo, 'disponibles' => 1, 'con_cupo' => true]);
+
+        $this->assertDatabaseHas('sede', [
+            'sede_id_sede' => $idSede,
+            'sede_estado' => 1,
+        ]);
+    }
+
+    public function test_alta_edicion_y_baja_de_grupos_desde_su_modulo(): void
+    {
+        $idSede = DB::table('sede')->insertGetId([
+            'sede_nombre' => 'Sede con grupos',
+            'sede_direccion' => 'Dirección con grupos',
+            'sede_cupo' => 5,
+            'sede_estado' => false,
+        ], 'sede_id_sede');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('admin.grupos.index'))
+            ->assertForbidden();
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.grupos.store'), [
+                'sede_id' => $idSede,
+                'fecha_inicio' => '2026-10-15',
+                'hora_inicio' => '09:00',
+                'fecha_fin' => '2026-10-15',
+                'hora_fin' => '13:00',
+            ])
+            ->assertRedirect(route('admin.grupos.index'));
+
+        $idGrupo = (int) DB::table('grupo')->where('sede_id_sede', $idSede)->value('grup_id_grupo');
+
+        /* Cada grupo nace con su evaluación: es contra ella que se cuenta el cupo. */
+        $this->assertDatabaseHas('evaluacion', ['grup_id_grupo' => $idGrupo, 'eval_resultado' => null]);
+        $this->assertDatabaseHas('sede', ['sede_id_sede' => $idSede, 'sede_estado' => 1]);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.grupos.index'))
+            ->assertOk()
+            ->assertSee('15/10/2026')
+            ->assertSeeText('0 / 5')
+            ->assertSee('admin-sedes-estado--con-cupo', false);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->put(route('admin.grupos.update', $idGrupo), [
+                'sede_id' => $idSede,
+                'fecha_inicio' => '2026-10-16',
+                'hora_inicio' => '10:00',
+                'fecha_fin' => '2026-10-16',
+                'hora_fin' => '14:00',
+            ])
+            ->assertRedirect(route('admin.grupos.index'))
+            ->assertSessionHas('success', 'El grupo se actualizó correctamente.');
+
+        $this->assertDatabaseHas('grupo', [
+            'grup_id_grupo' => $idGrupo,
+            'grup_fecha_inicio' => '2026-10-16',
+            'grup_hora_inicio' => '10:00:00',
+        ]);
+        $this->assertSame(1, DB::table('grupo')->where('sede_id_sede', $idSede)->count());
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->delete(route('admin.grupos.destroy', $idGrupo))
+            ->assertRedirect(route('admin.grupos.index'))
+            ->assertSessionHas('success', 'El grupo se eliminó correctamente.');
+
+        $this->assertDatabaseMissing('grupo', ['grup_id_grupo' => $idGrupo]);
+        $this->assertDatabaseMissing('evaluacion', ['grup_id_grupo' => $idGrupo]);
+
+        /* Sin programación la sede vuelve a quedar «Por programar». */
+        $this->assertDatabaseHas('sede', ['sede_id_sede' => $idSede, 'sede_estado' => 0]);
+    }
+
+    public function test_no_admite_dos_grupos_empalmados_en_la_misma_sede(): void
+    {
+        [$idSede] = $this->crearSedeProgramada(5);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.grupos.store'), [
+                'sede_id' => $idSede,
+                'fecha_inicio' => '2026-10-15',
+                'hora_inicio' => '12:00',
+                'fecha_fin' => '2026-10-15',
+                'hora_fin' => '16:00',
+            ])
+            ->assertSessionHasErrors('fecha_inicio');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.grupos.store'), [
+                'sede_id' => $idSede,
+                'fecha_inicio' => '2026-10-15',
+                'hora_inicio' => '16:00',
+                'fecha_fin' => '2026-10-15',
+                'hora_fin' => '13:00',
+            ])
+            ->assertSessionHasErrors('fecha_fin');
+
+        $this->assertSame(1, DB::table('grupo')->where('sede_id_sede', $idSede)->count());
+
+        /* Fuera del intervalo ocupado sí entra. */
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.grupos.store'), [
+                'sede_id' => $idSede,
+                'fecha_inicio' => '2026-10-15',
+                'hora_inicio' => '13:00',
+                'fecha_fin' => '2026-10-15',
+                'hora_fin' => '17:00',
+            ])
+            ->assertRedirect(route('admin.grupos.index'));
+
+        $this->assertSame(2, DB::table('grupo')->where('sede_id_sede', $idSede)->count());
+    }
+
+    public function test_no_elimina_ni_mueve_de_sede_un_grupo_con_participantes(): void
+    {
+        [$idSede, $idEvaluacion] = $this->crearSedeProgramada(3);
+        $idGrupo = (int) DB::table('evaluacion')
+            ->where('eval_id_evaluacion', $idEvaluacion)
+            ->value('grup_id_grupo');
+        $idOtraSede = DB::table('sede')->insertGetId([
+            'sede_nombre' => 'Otra sede',
+            'sede_direccion' => 'Otra dirección',
+            'sede_cupo' => 3,
+            'sede_estado' => false,
+        ], 'sede_id_sede');
+
+        DB::table('solicitud')->where('soli_id_solicitud', 100)->update([
+            'soli_id_evaluacion' => $idEvaluacion,
+        ]);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->put(route('admin.grupos.update', $idGrupo), [
+                'sede_id' => $idOtraSede,
+                'fecha_inicio' => '2026-10-15',
+                'hora_inicio' => '09:00',
+                'fecha_fin' => '2026-10-15',
+                'hora_fin' => '13:00',
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('grupo', ['grup_id_grupo' => $idGrupo, 'sede_id_sede' => $idSede]);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->delete(route('admin.grupos.destroy', $idGrupo))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('grupo', ['grup_id_grupo' => $idGrupo]);
+
+        /* Liberado el lugar, la baja procede. */
+        DB::table('solicitud')->where('soli_id_solicitud', 100)->update([
+            'soli_id_evaluacion' => null,
+        ]);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->delete(route('admin.grupos.destroy', $idGrupo))
+            ->assertRedirect(route('admin.grupos.index'));
+
+        $this->assertDatabaseMissing('grupo', ['grup_id_grupo' => $idGrupo]);
+    }
+
     private function crearEsquemaTemporal(): void
     {
         foreach ([
@@ -259,7 +502,7 @@ class GestionSedesTest extends TestCase
         });
         Schema::create('grupo', function (Blueprint $table): void {
             $table->increments('grup_id_grupo');
-            $table->integer('sede_id_sede')->unique();
+            $table->integer('sede_id_sede');
             $table->date('grup_fecha_inicio');
             $table->time('grup_hora_inicio');
             $table->date('grup_fecha_fin');
@@ -379,18 +622,34 @@ class GestionSedesTest extends TestCase
             'sede_cupo' => $cupo,
             'sede_estado' => true,
         ], 'sede_id_sede');
+        $idEvaluacion = $this->agregarHorario($idSede, '2026-10-15', '09:00:00', '2026-10-15', '13:00:00');
+
+        return [$idSede, $idEvaluacion];
+    }
+
+    /**
+     * Una sede aplica el examen una o más veces; cada aplicación es un grupo
+     * con su propia evaluación.
+     */
+    private function agregarHorario(
+        int $idSede,
+        string $fechaInicio,
+        string $horaInicio,
+        string $fechaFin,
+        string $horaFin
+    ): int
+    {
         $idGrupo = DB::table('grupo')->insertGetId([
             'sede_id_sede' => $idSede,
-            'grup_fecha_inicio' => '2026-10-15',
-            'grup_hora_inicio' => '09:00:00',
-            'grup_fecha_fin' => '2026-10-15',
-            'grup_hora_fin' => '13:00:00',
+            'grup_fecha_inicio' => $fechaInicio,
+            'grup_hora_inicio' => $horaInicio,
+            'grup_fecha_fin' => $fechaFin,
+            'grup_hora_fin' => $horaFin,
         ], 'grup_id_grupo');
-        $idEvaluacion = DB::table('evaluacion')->insertGetId([
+
+        return (int) DB::table('evaluacion')->insertGetId([
             'grup_id_grupo' => $idGrupo,
             'eval_resultado' => null,
         ], 'eval_id_evaluacion');
-
-        return [$idSede, $idEvaluacion];
     }
 }

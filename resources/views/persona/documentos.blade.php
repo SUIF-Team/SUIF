@@ -63,13 +63,9 @@
                                     <td data-titulo="Formato">
                                         @if(in_array($slug, $formatos))
                                             <div class="pr-fila__acciones">
-                                                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('persona.preregistro.formatos.ver', $slug) }}">
-                                                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
-                                                    <span>Previsualizar</span>
-                                                </a>
-                                                <a class="pr-btn" href="{{ route('persona.preregistro.formatos.descargar', $slug) }}">
-                                                    <i class="fa-solid fa-download" aria-hidden="true"></i>
-                                                    <span>Descargar</span>
+                                                <a class="pr-btn" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
+                                                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
+                                                    <span>Generar</span>
                                                 </a>
                                             </div>
                                         @else

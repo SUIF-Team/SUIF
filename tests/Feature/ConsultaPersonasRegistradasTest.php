@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use App\Support\Admin\ConsultaPreRegistros;
 use Illuminate\Database\Schema\Blueprint;
@@ -39,16 +40,23 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
         $this->assertSame(2, $resumen['personas_registradas']);
         $this->assertSame(1, $resumen['solicitudes_en_revision']);
-        $this->assertNull($resumen['pagos_pendientes']);
         $this->assertNull($resumen['certificados_pendientes']);
+
+        /* Los pagos los aporta ConsultaPagos, no este resumen. */
+        $this->assertArrayNotHasKey('pagos_pendientes', $resumen);
     }
 
-    public function test_estados_del_filtro_provienen_del_catalogo(): void
+    public function test_cuenta_los_pagos_que_siguen_esperando_decision(): void
     {
-        $this->assertSame(
-            ['Pre-registro', 'Documentación', 'En revisión', 'Aprobada', 'Rechazada', 'Cancelada'],
-            app(ConsultaPersonasRegistradas::class)->estados()
-        );
+        $this->assertSame(2, app(ConsultaPagos::class)->totalPorValidar());
+    }
+
+    public function test_el_filtro_solo_ofrece_los_tres_estados_de_revision(): void
+    {
+        $esperados = ['En revisión', 'Aprobada', 'Rechazada'];
+
+        $this->assertSame($esperados, app(ConsultaPersonasRegistradas::class)->estados());
+        $this->assertSame($esperados, app(ConsultaPreRegistros::class)->estados());
     }
 
     public function test_dashboard_y_bandeja_renderizan_datos_reales_sin_expediente_general(): void
@@ -57,7 +65,21 @@ class ConsultaPersonasRegistradasTest extends TestCase
             ->assertOk()
             ->assertSee('Personas registradas')
             ->assertSee('Solicitudes en revisión')
-            ->assertSee('Sin datos persistidos');
+            ->assertSee('Pagos por validar')
+            /* Sólo certificados sigue sin datos. */
+            ->assertSee('Sin datos persistidos')
+            /* El cierre de sesión vive únicamente en el navbar. */
+            ->assertDontSee('admin-dashboard-salida', false)
+            ->assertSeeInOrder([
+                'Pre-registro',
+                'Personas registradas',
+                'Subir referencias bancarias',
+                'Referencias bancarias',
+                'Pagos',
+                'Sedes',
+                'Grupos',
+                'Certificados',
+            ]);
 
         $this->get(route('admin.personas.registradas.index'))
             ->assertOk()
@@ -94,6 +116,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('pers_id_persona')->primary();
             $table->integer('pers_id_usuario');
             $table->string('pers_curp', 18);
+            $table->string('pers_rfc', 13)->nullable();
             $table->string('pers_nombre', 45);
             $table->string('pers_apellido_paterno', 45)->nullable();
             $table->string('pers_apellido_materno', 45);
@@ -116,6 +139,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('soli_id_solicitud')->primary();
             $table->integer('soli_id_persona')->nullable();
             $table->integer('soli_id_convocatoria');
+            $table->integer('soli_id_pago')->nullable();
         });
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
@@ -127,6 +151,30 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('esso_id_estado_solicitud')->primary();
             $table->integer('esso_id_c_estado_solicitud');
             $table->integer('esso_id_solicitud');
+        });
+
+        /* El dashboard cuenta los pagos por validar con ConsultaPagos. */
+        Schema::create('pago', function (Blueprint $table): void {
+            $table->integer('pago_id_pago')->primary();
+            $table->string('pago_comprobante_path', 200)->nullable();
+            $table->decimal('pago_monto_pagado', 10, 4)->nullable();
+            $table->string('pago_referencia_bancaria', 20)->nullable();
+            $table->date('pago_fecha_pago')->nullable();
+            $table->time('pago_hora_pago')->nullable();
+        });
+
+        Schema::create('c_estado_pago', function (Blueprint $table): void {
+            $table->integer('espa_id_c_estado_pago')->primary();
+            $table->string('esta_estado_pago', 15);
+        });
+
+        Schema::create('estado_pago', function (Blueprint $table): void {
+            $table->integer('espa_id_estado_pago')->primary();
+            $table->integer('espa_id_pago');
+            $table->integer('espa_id_c_estado_pago');
+            $table->date('espa_fecha')->nullable();
+            $table->time('espa_hora')->nullable();
+            $table->text('espa_comentario')->nullable();
         });
     }
 
@@ -227,12 +275,37 @@ class ConsultaPersonasRegistradasTest extends TestCase
         ]);
 
         DB::table('solicitud')->insert([
-            ['soli_id_solicitud' => 10, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 2],
-            ['soli_id_solicitud' => 11, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 1],
-            ['soli_id_solicitud' => 20, 'soli_id_persona' => 2, 'soli_id_convocatoria' => 1],
-            ['soli_id_solicitud' => 30, 'soli_id_persona' => 3, 'soli_id_convocatoria' => 1],
-            ['soli_id_solicitud' => 50, 'soli_id_persona' => 5, 'soli_id_convocatoria' => 1],
-            ['soli_id_solicitud' => 60, 'soli_id_persona' => 6, 'soli_id_convocatoria' => 1],
+            ['soli_id_solicitud' => 10, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 2, 'soli_id_pago' => 5],
+            ['soli_id_solicitud' => 11, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 1, 'soli_id_pago' => 1],
+            ['soli_id_solicitud' => 20, 'soli_id_persona' => 2, 'soli_id_convocatoria' => 1, 'soli_id_pago' => 2],
+            ['soli_id_solicitud' => 30, 'soli_id_persona' => 3, 'soli_id_convocatoria' => 1, 'soli_id_pago' => 4],
+            ['soli_id_solicitud' => 50, 'soli_id_persona' => 5, 'soli_id_convocatoria' => 1, 'soli_id_pago' => 3],
+            ['soli_id_solicitud' => 60, 'soli_id_persona' => 6, 'soli_id_convocatoria' => 1, 'soli_id_pago' => null],
+        ]);
+
+        /*
+         * Sólo los pagos 1 y 2 cuentan como «por validar»: el 3 ya se resolvió,
+         * el 4 es de una cuenta administrativa y el 5 no tiene comprobante.
+         */
+        DB::table('pago')->insert([
+            ['pago_id_pago' => 1, 'pago_comprobante_path' => 'solicitudes/11/comprobante.pdf'],
+            ['pago_id_pago' => 2, 'pago_comprobante_path' => 'solicitudes/20/comprobante.pdf'],
+            ['pago_id_pago' => 3, 'pago_comprobante_path' => 'solicitudes/50/comprobante.pdf'],
+            ['pago_id_pago' => 4, 'pago_comprobante_path' => 'solicitudes/30/comprobante.pdf'],
+            ['pago_id_pago' => 5, 'pago_comprobante_path' => ''],
+        ]);
+
+        DB::table('c_estado_pago')->insert([
+            ['espa_id_c_estado_pago' => 1, 'esta_estado_pago' => 'Pendiente'],
+            ['espa_id_c_estado_pago' => 2, 'esta_estado_pago' => 'Completado'],
+        ]);
+
+        /* El pago 1 no tiene ningún estado: la bandeja lo trata como pendiente. */
+        DB::table('estado_pago')->insert([
+            ['espa_id_estado_pago' => 1, 'espa_id_pago' => 2, 'espa_id_c_estado_pago' => 1],
+            ['espa_id_estado_pago' => 2, 'espa_id_pago' => 3, 'espa_id_c_estado_pago' => 1],
+            ['espa_id_estado_pago' => 3, 'espa_id_pago' => 3, 'espa_id_c_estado_pago' => 2],
+            ['espa_id_estado_pago' => 4, 'espa_id_pago' => 4, 'espa_id_c_estado_pago' => 1],
         ]);
 
         DB::table('estado_solicitud')->insert([

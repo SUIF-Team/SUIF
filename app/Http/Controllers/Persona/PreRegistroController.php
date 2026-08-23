@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
+use App\Servicios\FormatoPreRegistro;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PreRegistroController extends Controller
 {
@@ -117,6 +119,7 @@ class PreRegistroController extends Controller
 
         $request->merge([
             'curp' => mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8'),
+            'rfc' => mb_strtoupper(trim((string) $request->input('rfc')), 'UTF-8'),
         ]);
 
         $entidades = implode(',', $this->entidades());
@@ -127,6 +130,7 @@ class PreRegistroController extends Controller
             'primer_apellido' => 'required|string|max:45',
             'segundo_apellido' => 'required|string|max:45',
             'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/', 'unique:persona,pers_curp,'.$idPersona.',pers_id_persona'],
+            'rfc' => ['required', 'string', 'size:13', 'regex:/^[A-ZÑ]{4}[0-9]{2}[0-1][0-9][0-3][0-9][A-Z0-9]{3}$/', 'unique:persona,pers_rfc,'.$idPersona.',pers_id_persona'],
             'correo_principal' => 'required|email|max:65',
             'telefono' => 'required|digits:10',
             'entidad_federativa' => 'required|in:'.$entidades,
@@ -143,12 +147,17 @@ class PreRegistroController extends Controller
             'different' => 'El correo alterno debe ser distinto al principal.',
             'in' => 'Selecciona una opción válida.',
             'curp.unique' => 'Esa CURP ya está registrada por otra persona.',
+            'rfc.required' => 'El campo RFC es obligatorio.',
+            'rfc.size' => 'El RFC debe contener exactamente 13 caracteres.',
+            'rfc.regex' => 'Escribe tu RFC con homoclave, como aparece en tu constancia fiscal.',
+            'rfc.unique' => 'Ese RFC ya está registrado por otra persona.',
         ]);
 
         $datos['nombre'] = $this->nombrePropio($datos['nombre']);
         $datos['primer_apellido'] = $this->nombrePropio($datos['primer_apellido']);
         $datos['segundo_apellido'] = $this->nombrePropio($datos['segundo_apellido']);
         $datos['curp'] = mb_strtoupper(trim($datos['curp']), 'UTF-8');
+        $datos['rfc'] = mb_strtoupper(trim($datos['rfc']), 'UTF-8');
         $datos['correo_principal'] = mb_strtolower(trim($datos['correo_principal']), 'UTF-8');
         $datos['correo_alterno'] = mb_strtolower(trim($datos['correo_alterno']), 'UTF-8');
 
@@ -169,6 +178,7 @@ class PreRegistroController extends Controller
            de duplicados no dependa de cómo la haya escrito la persona. */
         $request->merge([
             'curp' => mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8'),
+            'rfc' => mb_strtoupper(trim((string) $request->input('rfc')), 'UTF-8'),
         ]);
         $entidades = implode(',', $this->entidades());
         $grados = implode(',', array_keys($this->grados()));
@@ -178,6 +188,7 @@ class PreRegistroController extends Controller
             'primer_apellido' => 'required|string|max:45',
             'segundo_apellido' => 'required|string|max:45',
             'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/', 'unique:persona,pers_curp'],
+            'rfc' => ['required', 'string', 'size:13', 'regex:/^[A-ZÑ]{4}[0-9]{2}[0-1][0-9][0-3][0-9][A-Z0-9]{3}$/', 'unique:persona,pers_rfc'],
             'correo_principal' => 'required|email|max:65',
             'telefono' => 'required|digits:10',
             'entidad_federativa' => 'required|in:'.$entidades,
@@ -194,6 +205,10 @@ class PreRegistroController extends Controller
             'different' => 'El correo alterno debe ser distinto al principal.',
             'in' => 'Selecciona una opción válida.',
             'curp.unique' => 'Esa CURP ya tiene un pre-registro. Inicia sesión con tu clave de acceso.',
+            'rfc.required' => 'El campo RFC es obligatorio.',
+            'rfc.size' => 'El RFC debe contener exactamente 13 caracteres.',
+            'rfc.regex' => 'Escribe tu RFC con homoclave, como aparece en tu constancia fiscal.',
+            'rfc.unique' => 'Ese RFC ya tiene un pre-registro. Inicia sesión con tu clave de acceso.',
         ]);
 
         /* Formato uniforme sin importar cómo lo haya escrito la persona. */
@@ -201,6 +216,7 @@ class PreRegistroController extends Controller
         $datos['primer_apellido'] = $this->nombrePropio($datos['primer_apellido']);
         $datos['segundo_apellido'] = $this->nombrePropio($datos['segundo_apellido']);
         $datos['curp'] = mb_strtoupper(trim($datos['curp']), 'UTF-8');
+        $datos['rfc'] = mb_strtoupper(trim($datos['rfc']), 'UTF-8');
         $datos['correo_principal'] = mb_strtolower(trim($datos['correo_principal']), 'UTF-8');
         $datos['correo_alterno'] = mb_strtolower(trim($datos['correo_alterno']), 'UTF-8');
 
@@ -255,6 +271,7 @@ class PreRegistroController extends Controller
                 'pers_clave_inegi' => $claveInegi,
                 'pers_id_usuario' => $idUsuario,
                 'pers_curp' => $datos['curp'],
+                'pers_rfc' => $datos['rfc'],
                 'pers_nombre' => $datos['nombre'],
                 'pers_apellido_paterno' => $datos['primer_apellido'],
                 'pers_apellido_materno' => $datos['segundo_apellido'],
@@ -347,6 +364,7 @@ class PreRegistroController extends Controller
                 ->update([
                     'pers_clave_inegi' => $claveInegi,
                     'pers_curp' => $datos['curp'],
+                    'pers_rfc' => $datos['rfc'],
                     'pers_nombre' => $datos['nombre'],
                     'pers_apellido_paterno' => $datos['primer_apellido'],
                     'pers_apellido_materno' => $datos['segundo_apellido'],
@@ -434,6 +452,7 @@ class PreRegistroController extends Controller
             'primer_apellido' => $persona->pers_apellido_paterno,
             'segundo_apellido' => $persona->pers_apellido_materno,
             'curp' => $persona->pers_curp,
+            'rfc' => $persona->pers_rfc,
             'correo_principal' => isset($contactos[1]) ? $contactos[1] : '',
             'correo_alterno' => isset($contactos[2]) ? $contactos[2] : '',
             'telefono' => isset($contactos[3]) ? $contactos[3] : '',
@@ -459,27 +478,37 @@ class PreRegistroController extends Controller
         return redirect()->route('persona.documentos.index');
     }
 
-        public function formato($documento, $descargar = false)
+    /**
+     * Genera el formato oficial que pidió la persona y lo entrega para
+     * descarga. El PDF no se guarda en ningún lado: se arma en memoria en
+     * cada clic con los datos vigentes del pre-registro.
+     */
+    public function generarFormato($documento)
     {
         /* Solo los cuatro que tienen formato oficial. */
         if (!in_array($documento, $this->formatos, true)) {
             abort(404);
         }
 
-        $archivo = storage_path('app/preregistro/formatos/'.$documento.'.pdf');
+        /* datosGuardados() resuelve a la persona desde la sesión, así que
+           nadie puede pedir el formato de alguien más. */
+        $datos = $this->datosGuardados();
 
-        if (!is_file($archivo)) {
-            abort(404, 'El formato todavía no está disponible.');
+        if (!$datos) {
+            return redirect()->route('persona.preregistro.index')
+                ->withErrors(['datos' => 'Completa tu pre-registro antes de generar los formatos.']);
         }
 
-        if ($descargar) {
-            return response()->download($archivo, $documento.'.pdf');
-        }
+        $formato = new FormatoPreRegistro($documento, $datos);
+        $pdf = Pdf::loadView($formato->vista(), $formato->datos())->setPaper('letter');
 
-        return response()->file($archivo, [
+        /* La respuesta se arma a mano porque download() del paquete no admite
+           cabeceras extra y estos documentos llevan datos personales. */
+        return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$documento.'.pdf"',
+            'Content-Disposition' => 'attachment; filename="'.$formato->nombreArchivo().'"',
             'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
         ]);
     }
 
@@ -596,8 +625,20 @@ class PreRegistroController extends Controller
             }
         }
 
-        DB::transaction(function () use ($idSolicitud, $documentos) {
-            foreach ($documentos as $doc) {
+        /* Los documentos ya aprobados conservan su estado: al subsanar sólo
+           vuelven a revisión los que fueron rechazados o reemplazados. */
+        $porRevisar = array_filter(
+            $documentos,
+            fn (array $doc): bool => $doc['estado'] !== 'aprobado'
+        );
+
+        if (!$porRevisar) {
+            return redirect()->route('persona.documentos.index')
+                ->withErrors(['documentos' => 'Todos tus documentos ya fueron aprobados.']);
+        }
+
+        DB::transaction(function () use ($idSolicitud, $porRevisar) {
+            foreach ($porRevisar as $doc) {
                 $this->registrarEstadoDocumento($doc['id'], 'En revisión');
             }
 
@@ -605,7 +646,9 @@ class PreRegistroController extends Controller
         });
 
         return redirect()->route('persona.documentos.index')
-            ->with('success', 'Tus documentos fueron enviados a revisión.');
+            ->with('success', count($porRevisar) === count($documentos)
+                ? 'Tus documentos fueron enviados a revisión.'
+                : 'Los documentos que corregiste fueron enviados a revisión.');
     }
 
     public function reiniciar(Request $request)

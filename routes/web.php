@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DocumentoController as AdminDocumentoController;
+use App\Http\Controllers\Admin\GrupoController as AdminGrupoController;
 use App\Http\Controllers\Admin\PagoController as AdminPagoController;
 use App\Http\Controllers\Admin\PersonaController as AdminPersonaController;
 use App\Http\Controllers\Admin\ReferenciaController as AdminReferenciaController;
@@ -37,10 +38,7 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::get('/dashboard', [PersonaDashboardController::class, 'index'])->name('dashboard');
 
         Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');
-        Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'formato'])->name('preregistro.formatos.ver');
-        Route::get('/preregistro/formatos/{documento}/descargar', function ($documento) {
-            return app(PreRegistroController::class)->formato($documento, true);
-        })->name('preregistro.formatos.descargar');
+        Route::get('/preregistro/formatos/{documento}', [PreRegistroController::class, 'generarFormato'])->name('preregistro.formatos.generar');
         Route::post('/preregistro/documentos/enviar', [PreRegistroController::class, 'enviarRevision'])->name('preregistro.documentos.enviar');
         Route::post('/preregistro/documentos/{documento}', [PreRegistroController::class, 'subirDocumento'])->name('preregistro.documentos.store');
         Route::get('/preregistro/documentos/{documento}', [PreRegistroController::class, 'verDocumento'])->name('preregistro.documentos.ver');
@@ -51,6 +49,8 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::get('/pago', [PersonaPagoController::class, 'index'])->name('pago.index');
         Route::post('/pago/comprobante', [PersonaPagoController::class, 'subirComprobante'])->name('pago.comprobante');
         Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
+        Route::post('/referencia', [PersonaReferenciaController::class, 'generar'])->name('referencia.generar');
+        Route::get('/referencia/formato', [PersonaReferenciaController::class, 'formato'])->name('referencia.formato');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
         Route::get('/sede', [PersonaSedeController::class, 'index'])->name('sede.index');
         Route::get('/sede/disponibilidad', [PersonaSedeController::class, 'disponibilidad'])->name('sede.disponibilidad');
@@ -79,7 +79,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('/pagos/{id}/resultado', [AdminPagoController::class, 'resultado'])->name('pagos.resultado');
         Route::get('/pagos/{id}', [AdminPagoController::class, 'show'])->name('pagos.show');
     });
-    Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
+    /* El catálogo de referencias asigna dinero y archivos: se exige rol. */
+    Route::middleware(['auth', 'can:gestionar-referencias'])->group(function () {
+        Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
+        Route::get('/referencias/carga', [AdminReferenciaController::class, 'carga'])->name('referencias.carga');
+        Route::post('/referencias/catalogo', [AdminReferenciaController::class, 'guardarCatalogo'])->name('referencias.catalogo.store');
+        Route::post('/referencias/formatos', [AdminReferenciaController::class, 'guardarFormatos'])->name('referencias.formatos.store');
+        Route::get('/referencias/{id}/formato', [AdminReferenciaController::class, 'formato'])->name('referencias.formato');
+    });
     Route::get('/documentos', [AdminDocumentoController::class, 'index'])->name('documentos.index');
     Route::get('/documentos/{id}/resultado', [AdminDocumentoController::class, 'resultado'])->name('documentos.resultado');
     Route::get('/documentos/{id}', [AdminDocumentoController::class, 'show'])->name('documentos.show');
@@ -92,6 +99,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('/sedes/{id}/editar', [AdminSedeController::class, 'edit'])->name('sedes.edit');
         Route::put('/sedes/{id}', [AdminSedeController::class, 'update'])->name('sedes.update');
         Route::delete('/sedes/{id}', [AdminSedeController::class, 'destroy'])->name('sedes.destroy');
+        /* Los grupos son la programación de las sedes: mismo permiso. */
+        Route::get('/grupos', [AdminGrupoController::class, 'index'])->name('grupos.index');
+        Route::get('/grupos/crear', [AdminGrupoController::class, 'create'])->name('grupos.create');
+        Route::post('/grupos', [AdminGrupoController::class, 'store'])->name('grupos.store');
+        Route::get('/grupos/{id}/editar', [AdminGrupoController::class, 'edit'])->name('grupos.edit');
+        Route::put('/grupos/{id}', [AdminGrupoController::class, 'update'])->name('grupos.update');
+        Route::delete('/grupos/{id}', [AdminGrupoController::class, 'destroy'])->name('grupos.destroy');
     });
     Route::get('/resultados', [AdminResultadoController::class, 'index'])->name('resultados.index');
 });

@@ -149,6 +149,12 @@ class AvancePersona
             }
         }
 
+        /* Tras una subsanación conviven documentos aprobados y documentos que
+           volvieron a revisión: la etapa sigue en manos del administrador. */
+        if (!array_diff($unicos, ['aprobado', 'revision']) && in_array('revision', $estados, true)) {
+            return 'revision';
+        }
+
         return 'en_proceso';
     }
 

@@ -66,9 +66,9 @@ class DashboardController extends Controller
             $capturado ? 'completed' : 'in-progress',
             'persona.preregistro.index');
 
-        $pasos[] = $this->pasoDocumentacion($capturado, $documentacion);
+        $pasos[] = $this->pasoDocumentacion($capturado, $documentacion, $rechazada);
 
-        $pasos[] = $this->pasoReferencia($aprobada, $rechazada, !empty($sesion['referencia_generada']), $cuota, $moneda);
+        $pasos[] = $this->pasoReferencia($aprobada, !empty($sesion['referencia_generada']), $cuota, $moneda);
 
         $pasos[] = $this->pasoPago(!empty($sesion['referencia_generada']), $sesion['pago_estado']);
 
@@ -87,12 +87,21 @@ class DashboardController extends Controller
         return $pasos;
     }
 
-    private function pasoDocumentacion($capturado, $documentacion)
+    private function pasoDocumentacion($capturado, $documentacion, $rechazada)
     {
         if (!$capturado) {
             return $this->paso(2, 'Documentación',
                 'Disponible después de capturar tus datos personales.',
                 'pending', 'persona.documentos.index');
+        }
+
+        /* El trámite se interrumpe durante la revisión documental: los
+           documentos siguen "En revisión" en la bitácora, pero para la persona
+           la etapa que quedó cerrada es ésta y las siguientes nunca se abren. */
+        if ($rechazada) {
+            return $this->paso(2, 'Documentación',
+                'El equipo administrativo rechazó tu solicitud en esta etapa.',
+                'rejected', 'persona.documentos.index', 'Ver');
         }
 
         $mensajes = [
@@ -108,14 +117,8 @@ class DashboardController extends Controller
         return $this->paso(2, 'Documentación', $info[0], $info[1], 'persona.documentos.index');
     }
 
-    private function pasoReferencia($aprobada, $rechazada, $referenciaGenerada, $cuota, $moneda)
+    private function pasoReferencia($aprobada, $referenciaGenerada, $cuota, $moneda)
     {
-        if ($rechazada) {
-            return $this->paso(3, 'Obtener referencia',
-                'Tu solicitud fue rechazada. Revisa el motivo en la etapa de documentación.',
-                'rejected', 'persona.referencia.index');
-        }
-
         if (!$aprobada) {
             return $this->paso(3, 'Obtener referencia',
                 'Disponible cuando el equipo administrativo apruebe tu solicitud.',
@@ -190,13 +193,15 @@ class DashboardController extends Controller
             'completed', 'persona.resultados');
     }
 
-    private function paso($numero, $titulo, $descripcion, $estado, $ruta)
+    private function paso($numero, $titulo, $descripcion, $estado, $ruta, $textoBoton = null)
     {
         $etiqueta = $this->etiquetaEstado($estado);
 
         /* Las etapas cerradas o en revisión se consultan; las accionables se continúan. */
         $mostrarBoton = in_array($estado, ['completed', 'review', 'in-progress', 'rejected'], true);
-        $textoBoton = in_array($estado, ['completed', 'review'], true) ? 'Ver' : 'Continuar';
+        $textoBoton = $textoBoton
+            ?: (in_array($estado, ['completed', 'review'], true) ? 'Ver' : 'Continuar');
+
         return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
     }
 

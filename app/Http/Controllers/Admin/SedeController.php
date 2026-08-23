@@ -7,14 +7,13 @@ use App\Models\Sede;
 use App\Servicios\GestionSedes;
 use DomainException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Admin\SedeController
  *
  * Migrado desde: app/controllers/admin/SedeController.php
  * Responsabilidad: alta, edición y gestión de sedes de aplicación desde el panel administrativo.
+ * La programación de cada sede vive en Admin\GrupoController.
  */
 class SedeController extends Controller
 {
@@ -34,14 +33,17 @@ class SedeController extends Controller
     {
         return view('admin.sede-formulario', [
             'sede' => null,
-            'grupo' => null,
             'modoEdicion' => false,
         ]);
     }
 
     public function store(Request $request, GestionSedes $gestion)
     {
-        $gestion->crear($this->validar($request));
+        try {
+            $gestion->crear($this->validar($request));
+        } catch (DomainException $exception) {
+            return back()->withInput()->with('error', $exception->getMessage());
+        }
 
         return redirect()
             ->route('admin.sedes.index')
@@ -50,11 +52,8 @@ class SedeController extends Controller
 
     public function edit(int $id)
     {
-        $sede = Sede::query()->with('grupo')->findOrFail($id);
-
         return view('admin.sede-formulario', [
-            'sede' => $sede,
-            'grupo' => $sede->grupo,
+            'sede' => Sede::query()->findOrFail($id),
             'modoEdicion' => true,
         ]);
     }
@@ -85,46 +84,25 @@ class SedeController extends Controller
             ->with('success', 'La sede se eliminó correctamente.');
     }
 
+    /**
+     * La sede sólo captura el lugar. Su programación se registra aparte, en
+     * el módulo de grupos.
+     */
     private function validar(Request $request): array
     {
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:150'],
             'direccion' => ['required', 'string', 'max:1000'],
             'cupo' => ['required', 'integer', 'min:1', 'max:2147483647'],
-            'fecha_inicio' => ['required', 'date_format:Y-m-d'],
-            'hora_inicio' => ['required', 'date_format:H:i'],
-            'fecha_fin' => ['required', 'date_format:Y-m-d'],
-            'hora_fin' => ['required', 'date_format:H:i'],
         ], [
             'nombre.required' => 'Escribe el nombre de la sede.',
             'nombre.max' => 'El nombre de la sede no puede exceder 150 caracteres.',
             'direccion.required' => 'Escribe la dirección completa de la sede.',
             'direccion.max' => 'La dirección no puede exceder 1000 caracteres.',
-            'cupo.required' => 'Indica el aforo máximo de la sede.',
+            'cupo.required' => 'Indica el aforo máximo por aplicación.',
             'cupo.integer' => 'El aforo máximo debe ser un número entero.',
             'cupo.min' => 'El aforo máximo debe ser al menos 1.',
-            'fecha_inicio.required' => 'Indica la fecha de inicio.',
-            'hora_inicio.required' => 'Indica la hora de inicio.',
-            'fecha_fin.required' => 'Indica la fecha de fin.',
-            'hora_fin.required' => 'Indica la hora de fin.',
         ]);
-
-        $inicio = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            $datos['fecha_inicio'].' '.$datos['hora_inicio'],
-            config('app.timezone')
-        );
-        $fin = Carbon::createFromFormat(
-            'Y-m-d H:i',
-            $datos['fecha_fin'].' '.$datos['hora_fin'],
-            config('app.timezone')
-        );
-
-        if ($fin->lessThanOrEqualTo($inicio)) {
-            throw ValidationException::withMessages([
-                'fecha_fin' => 'La fecha y hora de fin deben ser posteriores al inicio.',
-            ]);
-        }
 
         $datos['nombre'] = trim($datos['nombre']);
         $datos['direccion'] = trim($datos['direccion']);

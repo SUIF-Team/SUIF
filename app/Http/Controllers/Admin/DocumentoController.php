@@ -82,7 +82,7 @@ class DocumentoController extends Controller
             : [];
         $observaciones_rechazo = $modo_solo_lectura
             ? $this->observacionesRechazo($persona['documentos'])
-            : ['motivo_rechazo' => '', 'fecha_limite' => ''];
+            : ['comentarios' => [], 'fecha_limite' => ''];
 
         return view('admin.preregistro-documentacion', compact(
             'persona',
@@ -111,15 +111,21 @@ class DocumentoController extends Controller
         }
 
         $documentos = $request->input('documentos', []);
-        $documentos_requeridos = array_map(
-            'strval',
-            array_column($expediente['persona']['documentos'], 'id')
-        );
+        /* Sólo se resuelven los documentos que esperan revisión; los aprobados
+           en una revisión anterior ya no vuelven a decidirse. */
+        $documentos_requeridos = array_map('strval', array_column(
+            array_filter(
+                $expediente['persona']['documentos'],
+                fn (array $documento): bool => $documento['estado'] === 'En revisión'
+            ),
+            'id'
+        ));
 
         $validador = Validator::make($request->all(), [
             'documentos' => ['required', 'array'],
             'documentos.*' => ['required', 'in:aprobado,rechazado'],
-            'motivo_rechazo' => ['nullable', 'string', 'max:255'],
+            'comentarios' => ['nullable', 'array'],
+            'comentarios.*' => ['nullable', 'string', 'max:500'],
             'fecha_limite' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
@@ -135,13 +141,23 @@ class DocumentoController extends Controller
             if ($documentos_requeridos !== $documentos_recibidos) {
                 $validador->errors()->add(
                     'documentos',
-                    'Resuelve exactamente todos los documentos del expediente antes de guardar.'
+                    'Resuelve exactamente los documentos que esperan revisión antes de guardar.'
                 );
             }
 
-            if (in_array(RevisionDocumentos::RECHAZADO, $documentos, true)
-                && trim((string) $request->input('motivo_rechazo')) === '') {
-                $validador->errors()->add('motivo_rechazo', 'Escribe el motivo del rechazo.');
+            $comentarios = $request->input('comentarios', []);
+
+            foreach ($documentos as $id_documento => $decision) {
+                if ($decision !== RevisionDocumentos::RECHAZADO) {
+                    continue;
+                }
+
+                if (trim((string) (is_array($comentarios) ? ($comentarios[$id_documento] ?? '') : '')) === '') {
+                    $validador->errors()->add(
+                        'comentarios.'.$id_documento,
+                        'Escribe el motivo del rechazo de este documento.'
+                    );
+                }
             }
 
             if (in_array(RevisionDocumentos::RECHAZADO, $documentos, true)
@@ -160,7 +176,7 @@ class DocumentoController extends Controller
             $revision_documentos->resolver(
                 (int) $id,
                 $documentos,
-                $request->input('motivo_rechazo'),
+                (array) $request->input('comentarios', []),
                 $request->input('fecha_limite')
             );
         } catch (DomainException $exception) {
@@ -236,8 +252,8 @@ class DocumentoController extends Controller
         $notificacion = $notificacion_resultado->paraPreRegistro($expediente['persona'], $estados);
         $notificacion = array_merge($notificacion, [
             'ruta_regreso' => $contexto_bandeja['ruta'],
-            'etiqueta_regreso' => 'Volver a la bandeja',
-            'etiqueta_regreso_accesible' => 'Volver a la bandeja',
+            'etiqueta_regreso' => $contexto_bandeja['etiqueta_resultado'],
+            'etiqueta_regreso_accesible' => $contexto_bandeja['etiqueta_resultado'],
         ]);
 
         return view('admin.notificacion-resultado', [
@@ -265,6 +281,8 @@ class DocumentoController extends Controller
                     'solicitud' => $id_solicitud,
                     'documento' => $documento['id'],
                 ]);
+                // Los aprobados en una revisión anterior se muestran sin decidir.
+                $documento['pendiente'] = $documento['estado'] === 'En revisión';
 
                 return $documento;
             })
@@ -300,20 +318,31 @@ class DocumentoController extends Controller
             ->all();
     }
 
+    /**
+     * Separa el comentario de cada documento rechazado de la fecha límite que
+     * comparte todo el expediente.
+     */
     private function observacionesRechazo(array $documentos): array
     {
-        $documento_rechazado = collect($documentos)
-            ->first(fn (array $documento): bool => $documento['estado'] === 'Rechazado');
-        $comentario = (string) ($documento_rechazado['comentario'] ?? '');
+        $comentarios = [];
+        $fecha_limite = '';
 
-        if (preg_match('/\\RFecha límite: (\\d{4}-\\d{2}-\\d{2})$/u', $comentario, $coincidencias)) {
-            return [
-                'motivo_rechazo' => rtrim(substr($comentario, 0, -strlen($coincidencias[0]))),
-                'fecha_limite' => $coincidencias[1],
-            ];
+        foreach ($documentos as $documento) {
+            if ($documento['estado'] !== 'Rechazado') {
+                continue;
+            }
+
+            $comentario = (string) ($documento['comentario'] ?? '');
+
+            if (preg_match('/\\RFecha límite: (\\d{4}-\\d{2}-\\d{2})$/u', $comentario, $coincidencias)) {
+                $comentario = rtrim(substr($comentario, 0, -strlen($coincidencias[0])));
+                $fecha_limite = $coincidencias[1];
+            }
+
+            $comentarios[$documento['id']] = $comentario;
         }
 
-        return ['motivo_rechazo' => $comentario, 'fecha_limite' => ''];
+        return ['comentarios' => $comentarios, 'fecha_limite' => $fecha_limite];
     }
 
     private function redirigirRevision(string $id, array $contexto_bandeja)

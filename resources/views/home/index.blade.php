@@ -96,7 +96,7 @@
             </div>
 
             <div class="text-center mt-5 pt-4">
-                <a href="http://localhost:8088/login" class="btn btn-pill btn-gold px-5">Iniciar mi pre-registro</a>
+                <a href="http://132.247.218.60/login" class="btn btn-pill btn-gold px-5">Iniciar mi pre-registro</a>
             </div>
         </div>
     </section>

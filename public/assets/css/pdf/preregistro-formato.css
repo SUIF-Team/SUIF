@@ -1,0 +1,92 @@
+/*
+    preregistro-formato.css
+    Hoja de estilo de los formatos oficiales del pre-registro que genera Dompdf.
+    Reproduce la maqueta de los PDF de la UIF: carta, Arial 11 pt, párrafos
+    justificados a interlineado 1.5 y firma autógrafa al pie.
+
+    Dompdf no puede resolver un <link> a una URL sin habilitar enable_remote,
+    así que el layout incrusta este archivo. Se mantiene aquí, junto al resto
+    del CSS del proyecto, para que se edite y se revise como cualquier otro.
+*/
+
+@page {
+    margin: 2.5cm 2.5cm 2cm 2.5cm;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #000000;
+    margin: 0;
+}
+
+p {
+    margin: 0 0 12pt 0;
+    text-align: justify;
+}
+
+/* Lugar y fecha: primera línea del documento, alineada a la derecha. */
+.fecha {
+    text-align: right;
+    margin-bottom: 24pt;
+}
+
+/* Bloque del asunto: ocupa la mitad derecha de la caja de texto. */
+.asunto {
+    margin-left: 40%;
+    margin-bottom: 30pt;
+}
+
+.destinatario {
+    margin-bottom: 18pt;
+    text-align: left;
+}
+
+/* Datos que el sistema llena: se conserva la raya del formato original. */
+.dato {
+    border-bottom: 1px solid #7f7f7f;
+    padding: 0 4pt;
+    white-space: nowrap;
+}
+
+/* Incisos a) b) c) d) de la carta bajo protesta. */
+.incisos {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 12pt 0;
+}
+
+.incisos td {
+    padding: 0 0 12pt 0;
+    text-align: justify;
+    vertical-align: top;
+}
+
+.incisos__letra {
+    width: 22pt;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Casilla «(si / no)» del consentimiento de publicación: se llena a mano. */
+.opcion {
+    color: #7f7f7f;
+}
+
+.atentamente {
+    text-align: center;
+    margin-top: 30pt;
+    margin-bottom: 36pt;
+}
+
+/* Línea de firma autógrafa: el formato se imprime y se firma con pluma. */
+.firma {
+    width: 70%;
+    margin: 0 auto;
+    padding-top: 4pt;
+    border-top: 1px solid #7f7f7f;
+    text-align: center;
+    font-weight: bold;
+    color: #7f7f7f;
+}

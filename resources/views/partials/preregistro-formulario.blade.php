@@ -10,6 +10,7 @@
         <div class="pr-field"><label>Primer apellido *</label><input name="primer_apellido" value="{{ old('primer_apellido', $estado['datos']['primer_apellido'] ?? '') }}" required></div>
         <div class="pr-field"><label>Segundo apellido *</label><input name="segundo_apellido" value="{{ old('segundo_apellido', $estado['datos']['segundo_apellido'] ?? '') }}" required></div>
         <div class="pr-field"><label>CURP *</label><input name="curp" maxlength="18" value="{{ old('curp', $estado['datos']['curp'] ?? '') }}" required></div>
+        <div class="pr-field"><label>RFC *</label><input name="rfc" maxlength="13" pattern="[A-Za-zÑñ]{4}[0-9]{2}[0-1][0-9][0-3][0-9][A-Za-z0-9]{3}" value="{{ old('rfc', $estado['datos']['rfc'] ?? '') }}" required></div>
         <div class="pr-field"><label>Correo principal *</label><input type="email" name="correo_principal" value="{{ old('correo_principal', $estado['datos']['correo_principal'] ?? '') }}" required></div>
         <div class="pr-field"><label>Teléfono celular *</label><input name="telefono" maxlength="10" pattern="[0-9]{10}" value="{{ old('telefono', $estado['datos']['telefono'] ?? '') }}" required></div>
         <div class="pr-field"><label>Entidad federativa *</label><select name="entidad_federativa" required><option value="">Selecciona una opción</option>@foreach($entidades as $entidad)<option value="{{ $entidad }}" {{ old('entidad_federativa', $estado['datos']['entidad_federativa'] ?? '') === $entidad ? 'selected' : '' }}>{{ $entidad }}</option>@endforeach</select></div>

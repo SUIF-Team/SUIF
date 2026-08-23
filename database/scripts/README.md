@@ -3,8 +3,16 @@
 Orden de ejecución en una instalación nueva:
 
 1. `suif.sql`               — esquema base (35 tablas)
-2. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
-3. `suif_catalogos.sql`     — catálogos y convocatoria
+2. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
+3. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
+4. `suif_catalogos.sql`     — catálogos y convocatoria
+5. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
+6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
+7. `suif_rfc_persona.sql` — RFC de la persona en PERSONA
+
+`suif_evaluacion_grupo.sql` va ANTES que `suif_ajustes_esquema.sql`, no
+después: es el que crea `EVALUACION.GRUP_ID_GRUPO`, y sin esa columna
+`suif_ajustes_esquema.sql` aborta a media ejecución. Ver más abajo.
 
 `suif_lleno.sql` es opcional: datos de prueba para ambientes de desarrollo.
 Nunca se ejecuta en producción.
@@ -35,11 +43,89 @@ contra lo que se cuenta el cupo de la sede.
 El cambio es incompatible con el esquema anterior: una base creada con
 `suif_antiguo.sql` no se migra, se reconstruye desde cero.
 
-## Los otros dos se pueden repetir
+## Bases a medio migrar: suif_evaluacion_grupo.sql
 
-`suif_ajustes_esquema.sql` y `suif_catalogos.sql` son idempotentes:
-volver a ejecutarlos no duplica ni destruye nada. Por eso la regla al
-desplegar es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
+Existe un caso intermedio que ningún otro script cubre: una base donde
+`GRUPO` ya se creó pero `EVALUACION` conservó `EVAL_ID_SEDE` y sus fechas y
+horas. `suif_ajustes_esquema.sql` no crea `EVALUACION.GRUP_ID_GRUPO` —da por
+hecho que vino de `suif.sql`— y sólo añade la restricción
+`uq_evaluacion_grupo`, que ahí aborta por columna inexistente.
+
+Con ese hueco, las dos pantallas de sedes responden 500 con
+`column e.grup_id_grupo does not exist`, porque ambas recorren
+`sede -> grupo -> evaluacion`. El resto del sistema no se entera: ninguna
+otra consulta toca esas tablas.
+
+`suif_evaluacion_grupo.sql` agrega la columna, traspasa a `GRUPO` la
+programación que todavía viva en `EVALUACION` —reutilizando el grupo que
+coincida en sede, fechas y horas, o creándolo— y deja la correspondencia uno
+a uno que exige `uq_evaluacion_grupo`.
+
+No borra columnas ni renglones. Las columnas del esquema anterior se
+conservan con sus datos y sólo dejan de ser obligatorias, porque las altas
+nuevas ya no las llenan. En una instalación desde cero el script no hace
+nada: `EVALUACION` ya nace apuntando a `GRUPO`.
+
+### Corre ANTES que suif_ajustes_esquema.sql
+
+El orden importa y es contraintuitivo. `suif_ajustes_esquema.sql` aborta en
+el bloque de `uq_evaluacion_grupo` mientras falte la columna, y con
+`ON_ERROR_STOP=1` psql se detiene ahí. Todo lo que viene después de ese
+bloque se queda sin ejecutar:
+
+- el `UPDATE sede SET sede_estado` que recalcula el cupo,
+- la sincronización de secuencias, sin la cual un alta nueva puede chocar
+  con un identificador ya existente,
+- la restricción `uq_documento_solicitud_tipo`,
+- el `UPDATE rol` que renombra «Participante» a «Persona», sin el cual el
+  pre-registro no encuentra el rol al dar de alta.
+
+Por eso `suif_evaluacion_grupo.sql` va primero: deja la columna en su sitio
+y entonces `suif_ajustes_esquema.sql` corre completo de principio a fin. Si
+ya se ejecutó `suif_ajustes_esquema.sql` y se detuvo, basta con correr
+`suif_evaluacion_grupo.sql` y volver a ejecutarlo: es idempotente y esta vez
+llega al final.
+
+## Una sede aplica el examen una o más veces
+
+`suif_ajustes_esquema.sql` limitaba cada sede a una sola programación con la
+restricción `uq_grupo_sede`. `suif_grupos_multiples.sql` la retira: cada
+aplicación es un `GRUPO` con su propio horario y su propia `EVALUACION`, y el
+participante elige el horario que le convenga.
+
+`SEDE_CUPO` es el aforo de **cada** aplicación, no el total de la sede: la
+sala admite el mismo número de personas en cada sesión.
+
+## Las referencias bancarias son un catálogo aparte
+
+`suif_referencias_bancarias.sql` crea `REFERENCIA_BANCARIA`, la lista de
+referencias que el administrador sube por CSV y de la que el sistema va
+entregando una a cada persona:
+
+    REFERENCIA_BANCARIA ──(REBA_ID_PAGO, único)── PAGO ──< SOLICITUD
+
+Al entregarse, la referencia y la ruta de su PDF se copian a
+`PAGO_REFERENCIA_BANCARIA` y `PAGO_REFERENCIA_BANCARIA_PATH`, y el renglón
+del catálogo queda ligado a ese `PAGO`. Como `REBA_ID_PAGO` es único, la
+base misma impide que una referencia se reparta dos veces.
+
+El mismo script afloja cuatro columnas de `PAGO`
+(`PAGO_ID_DATO_FISCAL`, `PAGO_FECHA_PAGO`, `PAGO_HORA_PAGO` y
+`PAGO_COMPROBANTE_PATH`): el renglón de `PAGO` nace cuando se asigna la
+referencia, y en ese momento todavía no hay datos fiscales, ni fecha de
+pago, ni comprobante. Se llenan más adelante en el trámite.
+
+También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
+`suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
+registrar nada.
+
+## Los otros cinco se pueden repetir
+
+`suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
+`suif_catalogos.sql`, `suif_grupos_multiples.sql` y
+`suif_referencias_bancarias.sql` son idempotentes: volver a ejecutarlos no
+duplica ni destruye nada. Por eso la regla al desplegar es correrlos
+SIEMPRE, sin preguntarse si ya se corrieron.
 
 ## Antes de tocar producción
 

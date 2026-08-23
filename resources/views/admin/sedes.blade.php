@@ -47,7 +47,7 @@
                         <option value="">Todos</option>
                         <option value="con-cupo" @selected(($filtros['estado'] ?? '') === 'con-cupo')>Con cupo</option>
                         <option value="sin-cupo" @selected(($filtros['estado'] ?? '') === 'sin-cupo')>Sin cupo</option>
-                        <option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Pendiente</option>
+                        <option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Por programar</option>
                     </select>
                 </div>
                 <div class="admin-sedes-filtros-acciones">
@@ -65,7 +65,7 @@
                             <th>Sede</th>
                             <th>Ubicación</th>
                             <th>Capacidad</th>
-                            <th>Horario</th>
+                            <th>Grupos</th>
                             <th>Estatus</th>
                             <th>Acción</th>
                         </tr>
@@ -76,20 +76,12 @@
                                 <td class="admin-sedes-tabla-nombre">{{ $sede['nombre'] }}</td>
                                 <td>{{ $sede['direccion'] }}</td>
                                 <td>
-                                    <strong>{{ $sede['ocupados'] }} / {{ $sede['cupo'] }}</strong>
-                                    <small>{{ $sede['disponibles'] }} disponibles</small>
+                                    <strong>{{ $sede['ocupados'] }} / {{ $sede['cupo'] * count($sede['horarios']) }}</strong>
+                                    <small>{{ $sede['cupo'] }} por aplicación · {{ $sede['disponibles'] }} disponibles</small>
                                 </td>
-                                <td>
-                                    @if($sede['programada'])
-                                        {{ \Illuminate\Support\Carbon::parse($sede['fecha_inicio'])->format('d/m/Y') }}
-                                        @if($sede['fecha_inicio'] !== $sede['fecha_fin'])
-                                            –{{ \Illuminate\Support\Carbon::parse($sede['fecha_fin'])->format('d/m/Y') }}
-                                        @endif
-                                        <small>{{ $sede['hora_inicio'] }}–{{ $sede['hora_fin'] }} h</small>
-                                    @else
-                                        <span class="admin-sedes-texto-atenuado">Sin programación</span>
-                                    @endif
-                                </td>
+                                {{-- La programación se administra en el módulo Grupos; aquí
+                                     sólo interesa cuántos tiene registrados la sede. --}}
+                                <td>{{ count($sede['horarios']) }}</td>
                                 <td>
                                     <span class="admin-sedes-estado admin-sedes-estado--{{ $sede['estado_clave'] }}">
                                         {{ $sede['estado'] }}

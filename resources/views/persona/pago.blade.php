@@ -31,14 +31,7 @@
             <h1>Sube tu comprobante de pago</h1>
             <p class="pago-muted">Adjunta el comprobante de tu pago por ${{ $cuota }} {{ $moneda }}. Solo se acepta un archivo PDF de máximo 1 MB.</p>
             @if($puedeCargar)
-                <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
-                    @csrf
-                    <label class="pago-archivo">
-                        Seleccionar PDF
-                        <input type="file" name="comprobante" accept="application/pdf" required>
-                    </label>
-                    <button type="submit" class="pago-boton">Enviar comprobante</button>
-                </form>
+                @include('partials.pago-comprobante-form', ['etiquetaBoton' => 'Enviar comprobante'])
             @elseif($mensajeBloqueo)
                 <p class="pago-muted">{{ $mensajeBloqueo }}</p>
             @endif
@@ -70,14 +63,7 @@
                     <p>{{ $motivoRechazo ?: 'Tu comprobante fue rechazado porque no cumple con los requisitos necesarios.' }}</p>
                     <p>Para subsanar esta situación, carga nuevamente un comprobante correcto y legible.</p>
                     @if($puedeCargar)
-                        <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
-                            @csrf
-                            <label class="pago-archivo">
-                                Seleccionar PDF
-                                <input type="file" name="comprobante" accept="application/pdf" required>
-                            </label>
-                            <button type="submit" class="pago-boton">Subsanar</button>
-                        </form>
+                        @include('partials.pago-comprobante-form', ['etiquetaBoton' => 'Subsanar'])
                     @elseif($mensajeBloqueo)
                         <p class="pago-muted">{{ $mensajeBloqueo }}</p>
                     @endif
@@ -104,3 +90,9 @@
 
 </section>
 @endsection
+
+@if($puedeCargar)
+    @push('scripts')
+    <script src="{{ asset_versionado('assets/js/pages/persona-pago.js') }}"></script>
+    @endpush
+@endif

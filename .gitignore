@@ -26,6 +26,7 @@ storage/app/documentos/*
 storage/app/referencias/*
 storage/app/facturas/*
 storage/app/certificados/*
+storage/fonts/*
 storage/logs/*
 
 # Conservar estructura de carpetas en Git
@@ -34,6 +35,7 @@ storage/logs/*
 !storage/app/referencias/.gitkeep
 !storage/app/facturas/.gitkeep
 !storage/app/certificados/.gitkeep
+!storage/fonts/.gitkeep
 !storage/logs/.gitkeep
 
 # ─── Caché y archivos temporales de PHP ──────────────────────────────────────
