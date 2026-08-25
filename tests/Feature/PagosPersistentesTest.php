@@ -302,6 +302,7 @@ class PagosPersistentesTest extends TestCase
             $table->string('pago_comprobante_path', 200);
             $table->decimal('pago_monto_pagado', 10, 4);
             $table->string('pago_referencia_bancaria', 20);
+            $table->string('pago_referencia_bancaria_path', 200)->nullable();
             $table->date('pago_fecha_pago');
             $table->time('pago_hora_pago');
         });

@@ -399,12 +399,15 @@ class GestionSedesTest extends TestCase
     {
         [$idSede] = $this->crearSedeProgramada(5);
 
+        /* El mismo día que ocupa crearSedeProgramada(), de 09:00 a 13:00. */
+        $dia = $this->fechaFutura(30);
+
         $this->actingAs(Usuario::findOrFail(2))
             ->post(route('admin.grupos.store'), [
                 'sede_id' => $idSede,
-                'fecha_inicio' => '2026-10-15',
+                'fecha_inicio' => $dia,
                 'hora_inicio' => '12:00',
-                'fecha_fin' => '2026-10-15',
+                'fecha_fin' => $dia,
                 'hora_fin' => '16:00',
             ])
             ->assertSessionHasErrors('fecha_inicio');
@@ -412,9 +415,9 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->post(route('admin.grupos.store'), [
                 'sede_id' => $idSede,
-                'fecha_inicio' => '2026-10-15',
+                'fecha_inicio' => $dia,
                 'hora_inicio' => '16:00',
-                'fecha_fin' => '2026-10-15',
+                'fecha_fin' => $dia,
                 'hora_fin' => '13:00',
             ])
             ->assertSessionHasErrors('fecha_fin');
@@ -425,9 +428,9 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->post(route('admin.grupos.store'), [
                 'sede_id' => $idSede,
-                'fecha_inicio' => '2026-10-15',
+                'fecha_inicio' => $dia,
                 'hora_inicio' => '13:00',
-                'fecha_fin' => '2026-10-15',
+                'fecha_fin' => $dia,
                 'hora_fin' => '17:00',
             ])
             ->assertRedirect(route('admin.grupos.index'));
