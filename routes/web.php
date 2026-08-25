@@ -55,6 +55,7 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::get('/sede', [PersonaSedeController::class, 'index'])->name('sede.index');
         Route::get('/sede/disponibilidad', [PersonaSedeController::class, 'disponibilidad'])->name('sede.disponibilidad');
         Route::post('/sede', [PersonaSedeController::class, 'seleccionar'])->name('sede.seleccionar');
+        Route::get('/sede/comprobante', [PersonaSedeController::class, 'comprobante'])->name('sede.comprobante');
         Route::get('/resultados', [PersonaResultadoController::class, 'resultados'])->name('resultados');
         Route::get('/resultados/demo/{estado}', [PersonaResultadoController::class, 'demo'])->name('resultados.demo');
         Route::get('/certificado', [CertificadoController::class, 'index'])->name('certificado');

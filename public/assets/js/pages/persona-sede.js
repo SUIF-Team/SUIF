@@ -1,242 +1,248 @@
+/*
+ * Catálogo de sedes del participante.
+ *
+ * La lista se sondea cada 15 s porque los cupos se mueven mientras la persona
+ * decide, y desde el cambio de agosto de 2026 también se mueve la lista misma:
+ * una aplicación que ya pasó su fecha y hora de fin deja de ofrecerse, y si era
+ * la última de su sede, la sede entera se va. Por eso el servidor devuelve el
+ * catálogo completo en cada sondeo y aquí se sustituye entero, en lugar de
+ * parchar nodo por nodo.
+ *
+ * El envío sigue siendo un POST normal del formulario: Vue sólo intercepta para
+ * pedir confirmación, porque apartar el lugar no se puede deshacer.
+ */
 (function () {
     'use strict';
 
-    var root = document.querySelector('[data-sedes-participante]');
-    if (!root) {
+    var raiz = document.querySelector('#sedes-app');
+
+    if (!raiz || !window.Vue) {
         return;
     }
 
-    var intervalo;
+    var vista;
 
-    /**
-     * Una sede aplica el examen en uno o más horarios. El cupo se controla por
-     * horario, así que cada uno se actualiza por separado.
-     */
-    function actualizarHorario(horario) {
-        var opcion = root.querySelector('[data-evaluacion-id="' + horario.evaluacion_id + '"]');
-        if (!opcion) {
-            return;
-        }
-
-        var disponible = opcion.querySelector('[data-cupo-disponible]');
-        var estado = opcion.querySelector('[data-cupo-estado]');
-        var etiqueta = opcion.querySelector('[data-cupo-etiqueta]');
-        var radio = opcion.querySelector('[data-horario-opcion]');
-
-        disponible.textContent = horario.disponibles;
-        estado.classList.remove('sede-cupo--libre', 'sede-cupo--bajo', 'sede-cupo--lleno');
-        estado.classList.add(!horario.con_cupo ? 'sede-cupo--lleno' : (horario.disponibles <= 15 ? 'sede-cupo--bajo' : 'sede-cupo--libre'));
-        etiqueta.textContent = horario.con_cupo ? 'Lugares disponibles' : 'Sin cupo';
-        radio.disabled = !horario.con_cupo;
-        opcion.classList.toggle('sede-horario--lleno', !horario.con_cupo);
-
-        if (radio.disabled && radio.checked) {
-            radio.checked = false;
-        }
+    try {
+        vista = JSON.parse(raiz.dataset.vista);
+    } catch (error) {
+        return;
     }
 
-    function actualizarTarjeta(tarjeta) {
-        var boton = tarjeta.querySelector('[data-seleccionar-sede]');
-        if (!boton) {
-            return;
-        }
+    var LAPSO_SONDEO = 15000;
 
-        var opciones = Array.from(tarjeta.querySelectorAll('[data-horario-opcion]'));
-        var hayCupo = opciones.some(function (radio) {
-            return !radio.disabled;
-        });
-        var elegido = opciones.some(function (radio) {
-            return radio.checked && !radio.disabled;
-        });
-
-        boton.disabled = !elegido;
-        boton.classList.toggle('sede-boton--deshabilitado', !elegido);
-        boton.textContent = hayCupo ? 'Seleccionar horario' : 'Sin cupo';
-    }
-
-    function actualizarTarjetas() {
-        root.querySelectorAll('[data-sede-tarjeta]').forEach(actualizarTarjeta);
-    }
-
-    function consultar() {
-        window.fetch(root.dataset.disponibilidadUrl, {
-            headers: {
-                Accept: 'application/json'
-            },
-            credentials: 'same-origin'
-        }).then(function (respuesta) {
-            if (!respuesta.ok) {
-                throw new Error('No fue posible actualizar los cupos.');
-            }
-            return respuesta.json();
-        }).then(function (datos) {
-            var horarios = datos.sedes || [];
-            var vigentes = horarios.map(function (horario) {
-                return String(horario.evaluacion_id);
-            });
-
-            root.querySelectorAll('[data-evaluacion-id]').forEach(function (opcion) {
-                if (!vigentes.includes(opcion.dataset.evaluacionId)) {
-                    actualizarHorario({
-                        evaluacion_id: opcion.dataset.evaluacionId,
-                        disponibles: 0,
-                        con_cupo: false
-                    });
-                }
-            });
-
-            horarios.forEach(actualizarHorario);
-            actualizarTarjetas();
-        }).catch(function () {
-            // Se conserva el último estado visible; el POST vuelve a validar el cupo.
-        });
-    }
-
-    function iniciar() {
-        window.clearInterval(intervalo);
-        consultar();
-        intervalo = window.setInterval(consultar, 15000);
-    }
-
-    function detener() {
-        window.clearInterval(intervalo);
-        intervalo = null;
-    }
-
-    root.addEventListener('change', function (evento) {
-        if (evento.target.matches('[data-horario-opcion]')) {
-            actualizarTarjetas();
-        }
-    });
-
-    /*
-     * Confirmación antes de apartar el lugar. La selección no se puede
-     * deshacer, así que el envío se detiene hasta que la persona acepta.
-     * Si el modal no está en la página, el formulario se envía como siempre.
-     */
-    var modal = root.querySelector('[data-modal-confirmacion]');
+    /* Fuera del estado reactivo a propósito: son nodos del DOM y el temporizador,
+       no datos que la plantilla tenga que observar. */
+    var intervalo = null;
     var formularioPendiente = null;
     var focoAnterior = null;
 
-    function textoDe(elemento) {
-        return elemento ? elemento.textContent.trim().replace(/\s+/g, ' ') : '';
-    }
+    window.Vue.createApp({
+        data: function () {
+            return {
+                sedes: vista.sedes || [],
+                buscar: vista.buscar || '',
+                umbralCupoBajo: vista.umbralCupoBajo || 15,
+                /* sede.id -> evaluacion_id marcada */
+                seleccion: {},
+                /* { sede, horario } mientras el diálogo está abierto */
+                confirmacion: null,
+                enviando: false
+            };
+        },
+        methods: {
+            /* Las fechas llegan como AAAA-MM-DD; se voltean a mano para no
+               pasar por Date, que reinterpretaría la cadena en UTC. */
+            fechaCorta: function (iso) {
+                var partes = String(iso).slice(0, 10).split('-');
 
-    function cerrarModal() {
-        modal.hidden = true;
-        document.body.classList.remove('sede-modal-abierto');
-        formularioPendiente = null;
+                return partes.length === 3
+                    ? partes[2] + '/' + partes[1] + '/' + partes[0]
+                    : String(iso);
+            },
 
-        if (focoAnterior) {
-            focoAnterior.focus();
-            focoAnterior = null;
+            /* Una aplicación puede abarcar más de un día. */
+            etiquetaFecha: function (horario) {
+                var inicio = this.fechaCorta(horario.fecha_inicio);
+                var fin = this.fechaCorta(horario.fecha_fin);
+
+                return inicio === fin ? inicio : inicio + '–' + fin;
+            },
+
+            claseCupo: function (horario) {
+                if (!horario.con_cupo) {
+                    return 'sede-cupo--lleno';
+                }
+
+                return horario.disponibles <= this.umbralCupoBajo
+                    ? 'sede-cupo--bajo'
+                    : 'sede-cupo--libre';
+            },
+
+            horarioElegido: function (sede) {
+                var elegido = this.seleccion[sede.id];
+
+                if (elegido === undefined || elegido === null) {
+                    return null;
+                }
+
+                return sede.horarios.filter(function (horario) {
+                    return horario.evaluacion_id === elegido;
+                })[0] || null;
+            },
+
+            puedeEnviar: function (sede) {
+                var horario = this.horarioElegido(sede);
+
+                return !this.enviando && horario !== null && horario.con_cupo;
+            },
+
+            /* ── Confirmación ─────────────────────────────────────────────── */
+
+            abrirConfirmacion: function (sede, evento) {
+                var horario = this.horarioElegido(sede);
+
+                if (!horario || !horario.con_cupo) {
+                    return;
+                }
+
+                formularioPendiente = evento.target;
+                focoAnterior = document.activeElement;
+                this.confirmacion = { sede: sede, horario: horario };
+
+                /* Con el diálogo abierto el sondeo cambiaría la tarjeta que la
+                   persona está confirmando; se reanuda al cerrarlo. */
+                this.detener();
+                document.body.classList.add('sede-modal-abierto');
+
+                /* Arranca el foco en Cancelar: la acción de al lado no tiene
+                   vuelta atrás. */
+                this.$nextTick(function () {
+                    if (this.$refs.cancelar) {
+                        this.$refs.cancelar.focus();
+                    }
+                }.bind(this));
+            },
+
+            cerrarConfirmacion: function () {
+                this.confirmacion = null;
+                formularioPendiente = null;
+                document.body.classList.remove('sede-modal-abierto');
+
+                if (focoAnterior) {
+                    focoAnterior.focus();
+                    focoAnterior = null;
+                }
+
+                this.iniciar();
+            },
+
+            confirmarSeleccion: function () {
+                if (!formularioPendiente || this.enviando) {
+                    return;
+                }
+
+                var formulario = formularioPendiente;
+
+                this.enviando = true;
+                this.detener();
+                formularioPendiente = null;
+
+                /* submit() no dispara el evento submit, así que no se vuelve a
+                   abrir el diálogo. */
+                formulario.submit();
+            },
+
+            atraparFoco: function (evento) {
+                var enfocables = Array.prototype.slice.call(
+                    evento.currentTarget.querySelectorAll('button:not([disabled])')
+                );
+
+                if (!enfocables.length) {
+                    return;
+                }
+
+                var primero = enfocables[0];
+                var ultimo = enfocables[enfocables.length - 1];
+
+                if (evento.shiftKey && document.activeElement === primero) {
+                    evento.preventDefault();
+                    ultimo.focus();
+                } else if (!evento.shiftKey && document.activeElement === ultimo) {
+                    evento.preventDefault();
+                    primero.focus();
+                }
+            },
+
+            /* ── Sondeo ───────────────────────────────────────────────────── */
+
+            consultar: function () {
+                var url = raiz.dataset.disponibilidadUrl
+                    + '?buscar=' + encodeURIComponent(this.buscar);
+
+                window.fetch(url, {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin'
+                }).then(function (respuesta) {
+                    if (!respuesta.ok) {
+                        throw new Error('No fue posible actualizar los cupos.');
+                    }
+
+                    return respuesta.json();
+                }).then(function (datos) {
+                    this.sedes = datos.sedes || [];
+                    this.sanearSeleccion();
+                }.bind(this)).catch(function () {
+                    /* Se conserva el último estado visible; el POST vuelve a
+                       validar cupo y vigencia de todas formas. */
+                });
+            },
+
+            /* Lo único que el sondeo no resuelve solo: la opción marcada pudo
+               desaparecer o llenarse entre una consulta y la siguiente. */
+            sanearSeleccion: function () {
+                this.sedes.forEach(function (sede) {
+                    if (this.seleccion[sede.id] === undefined) {
+                        return;
+                    }
+
+                    var horario = this.horarioElegido(sede);
+
+                    if (!horario || !horario.con_cupo) {
+                        delete this.seleccion[sede.id];
+                    }
+                }, this);
+            },
+
+            iniciar: function () {
+                this.detener();
+                this.consultar();
+                intervalo = window.setInterval(this.consultar, LAPSO_SONDEO);
+            },
+
+            detener: function () {
+                window.clearInterval(intervalo);
+                intervalo = null;
+            },
+
+            alCambiarVisibilidad: function () {
+                if (document.hidden) {
+                    this.detener();
+
+                    return;
+                }
+
+                if (!this.confirmacion) {
+                    this.iniciar();
+                }
+            }
+        },
+        mounted: function () {
+            document.addEventListener('visibilitychange', this.alCambiarVisibilidad);
+            this.iniciar();
+        },
+        unmounted: function () {
+            document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
+            this.detener();
         }
-
-        iniciar();
-    }
-
-    function abrirModal(formulario, opcion) {
-        var tarjeta = formulario.closest('[data-sede-tarjeta]');
-
-        modal.querySelector('[data-confirmacion-sede]').textContent =
-            textoDe(tarjeta.querySelector('.sede-tarjeta__nombre'));
-        modal.querySelector('[data-confirmacion-fecha]').textContent =
-            textoDe(opcion.querySelector('.sede-chip'));
-        modal.querySelector('[data-confirmacion-horario]').textContent =
-            textoDe(opcion.querySelector('.sede-fecha'));
-
-        formularioPendiente = formulario;
-        focoAnterior = document.activeElement;
-
-        /* Con el diálogo abierto el sondeo dejaría de cuadrar con lo que la
-           persona está leyendo; se reanuda al cerrarlo. */
-        detener();
-
-        modal.hidden = false;
-        document.body.classList.add('sede-modal-abierto');
-
-        /* El fondo también cierra, así que se pide el botón explícitamente.
-           Arranca en Cancelar: la acción de al lado no tiene vuelta atrás. */
-        modal.querySelector('button[data-cerrar-confirmacion]').focus();
-    }
-
-    if (modal) {
-        root.addEventListener('submit', function (evento) {
-            var formulario = evento.target;
-
-            if (!formulario.matches('.sede-tarjeta__seleccion')) {
-                return;
-            }
-
-            var opcion = formulario.querySelector('[data-horario-opcion]:checked');
-
-            if (!opcion || opcion.disabled) {
-                return;
-            }
-
-            evento.preventDefault();
-            abrirModal(formulario, opcion.closest('[data-evaluacion-id]'));
-        });
-
-        modal.querySelectorAll('[data-cerrar-confirmacion]').forEach(function (boton) {
-            boton.addEventListener('click', cerrarModal);
-        });
-
-        modal.querySelector('[data-confirmar-sede]').addEventListener('click', function (evento) {
-            if (!formularioPendiente) {
-                return;
-            }
-
-            var formulario = formularioPendiente;
-
-            detener();
-            formularioPendiente = null;
-
-            /* El envío navega; se bloquea el botón por si alguien insiste. */
-            evento.currentTarget.disabled = true;
-            evento.currentTarget.textContent = 'Confirmando…';
-
-            /* submit() no vuelve a disparar el evento, así que no se reabre. */
-            formulario.submit();
-        });
-
-        modal.addEventListener('keydown', function (evento) {
-            if (evento.key === 'Escape') {
-                cerrarModal();
-                return;
-            }
-
-            if (evento.key !== 'Tab') {
-                return;
-            }
-
-            var enfocables = Array.from(modal.querySelectorAll('button:not([disabled])'));
-            var primero = enfocables[0];
-            var ultimo = enfocables[enfocables.length - 1];
-
-            if (evento.shiftKey && document.activeElement === primero) {
-                evento.preventDefault();
-                ultimo.focus();
-            } else if (!evento.shiftKey && document.activeElement === ultimo) {
-                evento.preventDefault();
-                primero.focus();
-            }
-        });
-    }
-
-    document.addEventListener('visibilitychange', function () {
-        if (document.hidden) {
-            detener();
-            return;
-        }
-
-        /* Con el diálogo abierto el sondeo cambiaría la tarjeta que la persona
-           está confirmando: se reanuda al cerrarlo. */
-        if (!formularioPendiente) {
-            iniciar();
-        }
-    });
-
-    actualizarTarjetas();
-    iniciar();
+    }).mount('#sedes-app');
 }());

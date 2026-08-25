@@ -30,4 +30,20 @@ return [
         'aviso_privacidad_simplificado' => 'https://www.fca.unam.mx/docs/permanentes/aviso_simplificado.pdf',
         'cifca' => 'https://cifca.fca.unam.mx/',
     ],
+
+    /*
+     * Comprobante de sede y horario.
+     *
+     * Las recomendaciones viven aquí y no en la plantilla para que cambiarlas
+     * no obligue a tocar Blade: son texto de la convocatoria, no maquetación.
+     */
+    'comprobante_sede' => [
+        'recomendaciones' => [
+            'Preséntate al menos 20 minutos antes de la hora de inicio.',
+            'Lleva impreso este comprobante y una identificación oficial vigente.',
+            'No se permite el acceso una vez iniciada la aplicación.',
+            'No está permitido el uso de teléfonos celulares ni de dispositivos electrónicos durante la evaluación.',
+            'Confirma la ubicación y el tiempo de traslado con anticipación.',
+        ],
+    ],
 ];

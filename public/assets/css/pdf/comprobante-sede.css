@@ -1,0 +1,217 @@
+/*
+    comprobante-sede.css
+    Hoja de estilo del comprobante de sede y horario que genera Dompdf.
+    Carta, Helvetica 10 pt, membrete institucional arriba y bloque de la
+    aplicación al centro, con el QR de la ubicación a la derecha.
+
+    Dompdf no puede resolver un <link> a una URL sin habilitar enable_remote,
+    así que la plantilla incrusta este archivo. Se mantiene aquí, junto al resto
+    del CSS del proyecto, para que se edite y se revise como cualquier otro.
+
+    Todo va en unidades absolutas (pt, cm, %): Dompdf no interpreta rem ni vh.
+    La maquetación usa tablas porque su soporte de flex y grid es inexistente.
+*/
+
+@page {
+    margin: 1.6cm 1.8cm 1.4cm 1.8cm;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 10pt;
+    line-height: 1.45;
+    color: #2b2b28;
+    margin: 0;
+}
+
+/* ── Membrete ─────────────────────────────────────────────────────────── */
+
+.membrete {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 2pt solid #16263f;
+    padding-bottom: 6pt;
+}
+
+.membrete td {
+    vertical-align: middle;
+    padding: 0 0 8pt 0;
+}
+
+.membrete__escudos {
+    width: 26%;
+    text-align: left;
+}
+
+.membrete__escudos img {
+    height: 46pt;
+    margin-right: 8pt;
+}
+
+.membrete__texto {
+    text-align: center;
+    font-size: 8pt;
+    line-height: 1.35;
+    color: #16263f;
+}
+
+.membrete__texto strong {
+    display: block;
+    font-size: 8.5pt;
+    letter-spacing: 0.2pt;
+}
+
+.membrete__texto span {
+    display: block;
+    color: #6b6b66;
+}
+
+.membrete__uif {
+    width: 22%;
+    text-align: right;
+}
+
+.membrete__uif img {
+    width: 92pt;
+}
+
+/* ── Título ───────────────────────────────────────────────────────────── */
+
+.titulo {
+    margin: 18pt 0 2pt 0;
+    text-align: center;
+    font-size: 14pt;
+    font-weight: bold;
+    color: #16263f;
+}
+
+.titulo__folio {
+    margin: 0 0 18pt 0;
+    text-align: center;
+    font-size: 9pt;
+    color: #6b6b66;
+}
+
+/* ── Bloques de datos ─────────────────────────────────────────────────── */
+
+.bloque {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14pt;
+}
+
+.bloque__titulo {
+    margin: 0 0 6pt 0;
+    padding-bottom: 3pt;
+    border-bottom: 1pt solid #e2e2da;
+    font-size: 9pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.6pt;
+    color: #16263f;
+}
+
+.datos {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.datos th {
+    width: 26%;
+    padding: 3pt 8pt 3pt 0;
+    text-align: left;
+    vertical-align: top;
+    font-weight: normal;
+    font-size: 9pt;
+    color: #6b6b66;
+}
+
+.datos td {
+    padding: 3pt 0;
+    vertical-align: top;
+    font-weight: bold;
+    color: #16263f;
+}
+
+/* La aplicación a la izquierda y el QR de la ubicación a la derecha. */
+.aplicacion {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.aplicacion__datos {
+    width: 66%;
+    vertical-align: top;
+    padding-right: 14pt;
+}
+
+.aplicacion__mapa {
+    width: 34%;
+    vertical-align: top;
+    text-align: center;
+    padding: 8pt;
+    border: 1pt solid #e2e2da;
+}
+
+.aplicacion__mapa img {
+    width: 120pt;
+    height: 120pt;
+}
+
+.aplicacion__mapa p {
+    margin: 6pt 0 0 0;
+    font-size: 7.5pt;
+    line-height: 1.3;
+    color: #6b6b66;
+}
+
+/* El enlace se imprime completo: si el QR no se puede escanear, se teclea. */
+.aplicacion__enlace {
+    word-wrap: break-word;
+    font-size: 6.5pt;
+    color: #6b6b66;
+}
+
+/* ── Recomendaciones ──────────────────────────────────────────────────── */
+
+.recomendaciones {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4pt;
+    background-color: #f6f6f1;
+}
+
+.recomendaciones td {
+    padding: 3pt 8pt;
+    vertical-align: top;
+    font-size: 9pt;
+}
+
+.recomendaciones .recomendaciones__vineta {
+    width: 14pt;
+    font-weight: bold;
+    color: #16263f;
+}
+
+.recomendaciones tr.recomendaciones__primera td {
+    padding-top: 8pt;
+}
+
+.recomendaciones tr.recomendaciones__ultima td {
+    padding-bottom: 8pt;
+}
+
+/* ── Pie ──────────────────────────────────────────────────────────────── */
+
+.pie {
+    margin-top: 18pt;
+    padding-top: 6pt;
+    border-top: 1pt solid #e2e2da;
+    font-size: 7.5pt;
+    line-height: 1.4;
+    color: #6b6b66;
+}
+
+.pie strong {
+    color: #2b2b28;
+}

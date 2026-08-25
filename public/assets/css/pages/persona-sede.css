@@ -1,5 +1,10 @@
 /* Selección de sede: lista con filtro y confirmación. */
 
+/* El catálogo lo pinta Vue; sin esto se ve la plantilla en crudo al cargar. */
+[v-cloak] {
+    display: none;
+}
+
 .sede-paso {
     margin-bottom: auto;
     padding: 14px;
@@ -401,10 +406,6 @@
 }
 
 /* Confirmación previa a apartar el lugar: la elección no se puede deshacer. */
-.sede-modal[hidden] {
-    display: none;
-}
-
 .sede-modal {
     position: fixed;
     z-index: 1200;

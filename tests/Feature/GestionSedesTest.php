@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Usuario;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -70,9 +71,9 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->post(route('admin.grupos.store'), [
                 'sede_id' => $idSede,
-                'fecha_inicio' => '2026-10-15',
+                'fecha_inicio' => $this->fechaFutura(30),
                 'hora_inicio' => '09:00',
-                'fecha_fin' => '2026-10-15',
+                'fecha_fin' => $this->fechaFutura(30),
                 'hora_fin' => '13:00',
             ])
             ->assertRedirect(route('admin.grupos.index'))
@@ -83,8 +84,15 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(1))
             ->get(route('persona.sede.index'))
             ->assertOk()
-            ->assertSee('Sede sin programar')
-            ->assertSeeText('09:00–13:00 h');
+            ->assertSee('Sede sin programar');
+
+        /* El marcado lo genera Vue, así que el horario se comprueba sobre el
+           catálogo que consume, no sobre el HTML. */
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad'))
+            ->assertOk()
+            ->assertJsonPath('sedes.0.horarios.0.hora_inicio', '09:00')
+            ->assertJsonPath('sedes.0.horarios.0.hora_fin', '13:00');
     }
 
     public function test_el_listado_de_sedes_cuenta_los_grupos_registrados(): void
@@ -219,8 +227,13 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(1))
             ->get(route('persona.sede.index'))
             ->assertOk()
-            ->assertSee('Sede de prueba')
-            ->assertSeeText('1 de 1 disponibles');
+            ->assertSee('Sede de prueba');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad'))
+            ->assertOk()
+            ->assertJsonPath('sedes.0.horarios.0.disponibles', 1)
+            ->assertJsonPath('sedes.0.horarios.0.con_cupo', true);
 
         $this->actingAs(Usuario::findOrFail(1))
             ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idEvaluacion])
@@ -258,15 +271,25 @@ class GestionSedesTest extends TestCase
     public function test_una_sede_ofrece_varios_horarios_y_el_participante_elige_uno(): void
     {
         [$idSede, $idPrimero] = $this->crearSedeProgramada(1);
-        $idSegundo = $this->agregarHorario($idSede, '2026-10-16', '16:00:00', '2026-10-16', '20:00:00');
+        $idSegundo = $this->agregarHorario(
+            $idSede,
+            $this->fechaFutura(31),
+            '16:00:00',
+            $this->fechaFutura(31),
+            '20:00:00'
+        );
 
         $this->actingAs(Usuario::findOrFail(1))
             ->get(route('persona.sede.index'))
             ->assertOk()
-            ->assertSee('Sede de prueba')
-            ->assertSeeText('Horarios disponibles · 2')
-            ->assertSeeText('09:00–13:00 h')
-            ->assertSeeText('16:00–20:00 h');
+            ->assertSee('Sede de prueba');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad'))
+            ->assertOk()
+            ->assertJsonCount(2, 'sedes.0.horarios')
+            ->assertJsonPath('sedes.0.horarios.0.hora_inicio', '09:00')
+            ->assertJsonPath('sedes.0.horarios.1.hora_inicio', '16:00');
 
         $this->actingAs(Usuario::findOrFail(1))
             ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idSegundo])
@@ -282,7 +305,13 @@ class GestionSedesTest extends TestCase
     public function test_llenar_un_horario_no_bloquea_los_demas_de_la_sede(): void
     {
         [$idSede, $idPrimero] = $this->crearSedeProgramada(1);
-        $idSegundo = $this->agregarHorario($idSede, '2026-10-16', '16:00:00', '2026-10-16', '20:00:00');
+        $idSegundo = $this->agregarHorario(
+            $idSede,
+            $this->fechaFutura(31),
+            '16:00:00',
+            $this->fechaFutura(31),
+            '20:00:00'
+        );
 
         $this->actingAs(Usuario::findOrFail(1))
             ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idPrimero])
@@ -451,6 +480,118 @@ class GestionSedesTest extends TestCase
             ->assertRedirect(route('admin.grupos.index'));
 
         $this->assertDatabaseMissing('grupo', ['grup_id_grupo' => $idGrupo]);
+    }
+
+    public function test_el_participante_no_ve_ni_puede_elegir_una_aplicacion_que_ya_termino(): void
+    {
+        [$idSede, $idVigente] = $this->crearSedeProgramada(2);
+        $idVencida = $this->agregarHorario(
+            $idSede,
+            $this->fechaPasada(2),
+            '09:00:00',
+            $this->fechaPasada(2),
+            '13:00:00'
+        );
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad'))
+            ->assertOk()
+            ->assertJsonCount(1, 'sedes.0.horarios')
+            ->assertJsonPath('sedes.0.horarios.0.evaluacion_id', $idVigente);
+
+        /* El administrador conserva las dos: su bandeja es el historial. */
+        $this->assertSame(2, DB::table('grupo')->where('sede_id_sede', $idSede)->count());
+
+        /* Quien dejó la pestaña abierta todavía puede mandar el id viejo. */
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idVencida])
+            ->assertRedirect(route('persona.sede.index'))
+            ->assertSessionHasErrors('sede');
+
+        $this->assertDatabaseHas('solicitud', [
+            'soli_id_solicitud' => 100,
+            'soli_id_evaluacion' => null,
+        ]);
+    }
+
+    public function test_la_sede_sin_aplicaciones_vigentes_sale_del_catalogo_pero_no_de_la_bandeja(): void
+    {
+        $idSede = DB::table('sede')->insertGetId([
+            'sede_nombre' => 'Sede vencida',
+            'sede_direccion' => 'Dirección vencida',
+            'sede_cupo' => 5,
+            'sede_estado' => true,
+        ], 'sede_id_sede');
+
+        $this->agregarHorario(
+            $idSede,
+            $this->fechaPasada(5),
+            '09:00:00',
+            $this->fechaPasada(5),
+            '13:00:00'
+        );
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.index'))
+            ->assertOk()
+            ->assertDontSee('Sede vencida');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad'))
+            ->assertOk()
+            ->assertJsonCount(0, 'sedes');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.sedes.index'))
+            ->assertOk()
+            ->assertSee('Sede vencida');
+    }
+
+    public function test_el_sondeo_respeta_el_filtro_de_busqueda_vigente(): void
+    {
+        $this->crearSedeProgramada(1);
+
+        $idOtra = DB::table('sede')->insertGetId([
+            'sede_nombre' => 'Sede Norte',
+            'sede_direccion' => 'Avenida Norte',
+            'sede_cupo' => 4,
+            'sede_estado' => true,
+        ], 'sede_id_sede');
+
+        $this->agregarHorario(
+            $idOtra,
+            $this->fechaFutura(40),
+            '09:00:00',
+            $this->fechaFutura(40),
+            '13:00:00'
+        );
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->getJson(route('persona.sede.disponibilidad', ['buscar' => 'Norte']))
+            ->assertOk()
+            ->assertJsonCount(1, 'sedes')
+            ->assertJsonPath('sedes.0.nombre', 'Sede Norte');
+    }
+
+    public function test_el_comprobante_de_sede_se_entrega_en_pdf_solo_con_la_sede_confirmada(): void
+    {
+        [, $idEvaluacion] = $this->crearSedeProgramada(1);
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.comprobante'))
+            ->assertRedirect(route('persona.sede.index'))
+            ->assertSessionHasErrors('sede');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.sede.seleccionar'), ['evaluacion_id' => $idEvaluacion])
+            ->assertRedirect(route('persona.sede.index'));
+
+        $respuesta = $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.comprobante'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $this->assertStringStartsWith('%PDF', $respuesta->getContent());
     }
 
     private function crearEsquemaTemporal(): void
@@ -622,9 +763,30 @@ class GestionSedesTest extends TestCase
             'sede_cupo' => $cupo,
             'sede_estado' => true,
         ], 'sede_id_sede');
-        $idEvaluacion = $this->agregarHorario($idSede, '2026-10-15', '09:00:00', '2026-10-15', '13:00:00');
+        $idEvaluacion = $this->agregarHorario(
+            $idSede,
+            $this->fechaFutura(30),
+            '09:00:00',
+            $this->fechaFutura(30),
+            '13:00:00'
+        );
 
         return [$idSede, $idEvaluacion];
+    }
+
+    /**
+     * Las fechas de las aplicaciones que ve el participante son relativas a
+     * hoy: desde que el catálogo oculta las que ya terminaron, una fecha fija
+     * haría que estas pruebas empezaran a fallar solas al llegar ese día.
+     */
+    private function fechaFutura(int $dias): string
+    {
+        return Carbon::now()->addDays($dias)->toDateString();
+    }
+
+    private function fechaPasada(int $dias): string
+    {
+        return Carbon::now()->subDays($dias)->toDateString();
     }
 
     /**
