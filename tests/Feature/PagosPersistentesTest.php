@@ -6,6 +6,8 @@ use App\Models\Usuario;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\RevisionPagos;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -69,7 +71,8 @@ class PagosPersistentesTest extends TestCase
 
         app(RevisionPagos::class)->registrarComprobanteDePersona(
             1,
-            'solicitudes/100/comprobante-corregido.pdf'
+            'solicitudes/100/comprobante-corregido.pdf',
+            ['monto_pagado' => '7000.00', 'fecha_pago' => '2026-08-03', 'hora_pago' => '11:45']
         );
 
         $this->assertDatabaseHas('pago', [
@@ -82,6 +85,62 @@ class PagosPersistentesTest extends TestCase
             'espa_id_c_estado_pago' => 1,
             'espa_comentario' => null,
         ]);
+    }
+
+    public function test_la_persona_captura_monto_fecha_y_hora_al_subir_su_comprobante(): void
+    {
+        app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.pago.comprobante'), [
+                'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
+                'monto_pagado' => '6850.50',
+                'fecha_pago' => '2026-08-03',
+                'hora_pago' => '11:45',
+            ])
+            ->assertRedirect(route('persona.pago.index'))
+            ->assertSessionHas('success');
+
+        /* Los segundos los completa el servicio: PostgreSQL los rellenaría solo
+           al guardar en TIME, pero SQLite guarda la cadena tal cual. */
+        $this->assertDatabaseHas('pago', [
+            'pago_id_pago' => 1,
+            'pago_monto_pagado' => 6850.5,
+            'pago_fecha_pago' => '2026-08-03',
+            'pago_hora_pago' => '11:45:00',
+        ]);
+        $this->assertSame('Pendiente', $this->ultimoEstadoPago(1));
+    }
+
+    public function test_el_comprobante_se_rechaza_sin_los_datos_del_pago_o_con_una_fecha_futura(): void
+    {
+        app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->from(route('persona.pago.index'))
+            ->post(route('persona.pago.comprobante'), [
+                'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
+            ])
+            ->assertRedirect(route('persona.pago.index'))
+            ->assertSessionHasErrors(['monto_pagado', 'fecha_pago', 'hora_pago']);
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->from(route('persona.pago.index'))
+            ->post(route('persona.pago.comprobante'), [
+                'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
+                'monto_pagado' => '7000.00',
+                'fecha_pago' => Carbon::now()->addDay()->toDateString(),
+                'hora_pago' => '11:45',
+            ])
+            ->assertRedirect(route('persona.pago.index'))
+            ->assertSessionHasErrors('fecha_pago');
+
+        /* Nada alcanzó a escribirse: sigue el comprobante rechazado. */
+        $this->assertDatabaseHas('pago', [
+            'pago_id_pago' => 1,
+            'pago_comprobante_path' => 'solicitudes/100/recibo.pdf',
+        ]);
+        $this->assertSame('Declinado', $this->ultimoEstadoPago(1));
     }
 
     public function test_rutas_administrativas_requieren_el_privilegio_de_gestionar_pagos(): void
@@ -135,6 +194,8 @@ class PagosPersistentesTest extends TestCase
             'privilegio',
             'estado_pago',
             'c_estado_pago',
+            'referencia_bancaria',
+            'convocatoria',
             'pago',
             'estado_solicitud',
             'c_estado_solicitud',
@@ -181,8 +242,24 @@ class PagosPersistentesTest extends TestCase
         Schema::create('solicitud', function (Blueprint $table): void {
             $table->integer('soli_id_solicitud')->primary();
             $table->integer('soli_id_persona')->nullable();
+            $table->integer('soli_id_convocatoria')->nullable();
             $table->integer('soli_id_pago')->nullable();
             $table->integer('soli_id_evaluacion')->nullable();
+        });
+
+        /* La pantalla de pago muestra la cuota que hay que pagar, y ésa sale
+           del catálogo de referencias con respaldo en la convocatoria. */
+        Schema::create('convocatoria', function (Blueprint $table): void {
+            $table->integer('conv_id_convocatoria')->primary();
+            $table->string('conv_monto_recuperacion')->nullable();
+        });
+
+        Schema::create('referencia_bancaria', function (Blueprint $table): void {
+            $table->increments('reba_id_referencia_bancaria');
+            $table->integer('reba_id_pago')->nullable();
+            $table->string('reba_referencia', 20);
+            $table->decimal('reba_monto', 10, 4)->nullable();
+            $table->date('reba_vigencia')->nullable();
         });
 
         Schema::create('c_estado_solicitud', function (Blueprint $table): void {
@@ -292,9 +369,16 @@ class PagosPersistentesTest extends TestCase
         DB::table('entidad_federativa')->insert([
             ['enfe_clave_inegi' => '009', 'enfe_entidad_federativa' => 'Ciudad de México'],
         ]);
+        DB::table('convocatoria')->insert([
+            ['conv_id_convocatoria' => 1, 'conv_monto_recuperacion' => '$7,000.00'],
+        ]);
         DB::table('solicitud')->insert([
-            ['soli_id_solicitud' => 100, 'soli_id_persona' => 1, 'soli_id_pago' => 1],
-            ['soli_id_solicitud' => 200, 'soli_id_persona' => 2, 'soli_id_pago' => 2],
+            ['soli_id_solicitud' => 100, 'soli_id_persona' => 1, 'soli_id_convocatoria' => 1, 'soli_id_pago' => 1],
+            ['soli_id_solicitud' => 200, 'soli_id_persona' => 2, 'soli_id_convocatoria' => 1, 'soli_id_pago' => 2],
+        ]);
+        DB::table('referencia_bancaria')->insert([
+            ['reba_id_pago' => 1, 'reba_referencia' => 'REF-100', 'reba_monto' => 7000],
+            ['reba_id_pago' => 2, 'reba_referencia' => 'REF-200', 'reba_monto' => 7000],
         ]);
         DB::table('c_estado_solicitud')->insert([
             ['esso_id_c_estado_solicitud' => 1, 'esso_estado_solicitud' => 'Aprobada'],

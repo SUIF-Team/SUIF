@@ -102,11 +102,6 @@ class AvancePersona
             : null;
     }
 
-    public function montoPago()
-    {
-        return $this->tienePago() ? $this->pago->pago_monto_pagado : null;
-    }
-
     /**
      * El pre-registro se considera completo cuando el administrador aprobó
      * la solicitud, no cuando la persona terminó de capturar.
@@ -233,7 +228,6 @@ class AvancePersona
             ->select([
                 'p.pago_id_pago',
                 'p.pago_comprobante_path',
-                'p.pago_monto_pagado',
                 'cep.esta_estado_pago',
                 'ep.espa_comentario',
             ])

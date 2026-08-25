@@ -380,6 +380,10 @@ class CatalogoReferencias
 
     /**
      * Referencia entregada a la persona, con el PDF sólo si existe el archivo.
+     *
+     * El monto es el que hay que pagar y sale del catálogo —REBA_MONTO—, no de
+     * PAGO_MONTO_PAGADO: desde que la persona captura su pago, esa columna
+     * guarda lo que declaró haber pagado y las dos cifras pueden no coincidir.
      */
     public function referenciaDePersona(int $id_usuario): ?array
     {
@@ -389,10 +393,10 @@ class CatalogoReferencias
             ->where('p.pers_id_usuario', $id_usuario)
             ->orderByDesc('s.soli_id_solicitud')
             ->select([
+                's.soli_id_convocatoria',
                 'pg.pago_id_pago',
                 'pg.pago_referencia_bancaria',
                 'pg.pago_referencia_bancaria_path',
-                'pg.pago_monto_pagado',
             ])
             ->first();
 
@@ -400,14 +404,20 @@ class CatalogoReferencias
             return null;
         }
 
-        $vigencia = DB::table('referencia_bancaria')
+        $catalogo = DB::table('referencia_bancaria')
             ->where('reba_id_pago', $fila->pago_id_pago)
-            ->value('reba_vigencia');
+            ->select('reba_vigencia', 'reba_monto')
+            ->first();
 
         return [
             'referencia' => (string) $fila->pago_referencia_bancaria,
-            'monto' => (float) $fila->pago_monto_pagado,
-            'vigencia' => $vigencia,
+            'monto' => $this->montoConvocatoria(
+                (int) $fila->soli_id_convocatoria,
+                $catalogo === null || $catalogo->reba_monto === null
+                    ? null
+                    : (float) $catalogo->reba_monto
+            ),
+            'vigencia' => $catalogo?->reba_vigencia,
             'ruta_formato' => $this->rutaFormatoDisponible($fila->pago_referencia_bancaria_path),
         ];
     }

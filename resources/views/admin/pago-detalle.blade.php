@@ -63,21 +63,29 @@
         </section>
 
         <dl class="admin-preregistro-datos admin-pago-datos">
+            {{-- La persona declara el monto que pagó; el de la referencia es el
+                 que se le cobró. Revisar el comprobante es comparar los dos. --}}
             <div class="admin-preregistro-dato">
-                <dt>Monto</dt>
+                <dt>Monto pagado</dt>
                 <dd>{{ $pago['monto'] }}</dd>
+            </div>
+            <div class="admin-preregistro-dato">
+                <dt>Monto de la referencia</dt>
+                <dd>{{ $pago['monto_referencia'] ?? 'Sin registro' }}</dd>
             </div>
             <div class="admin-preregistro-dato">
                 <dt>Referencia bancaria</dt>
                 <dd>{{ $pago['referencia_bancaria'] }}</dd>
             </div>
+            {{-- Ambas columnas son nulables: el renglón de PAGO nace al asignar
+                 la referencia y la persona las llena hasta que paga. --}}
             <div class="admin-preregistro-dato">
                 <dt>Fecha de pago</dt>
-                <dd>{{ \Illuminate\Support\Carbon::parse($pago['fecha_pago'])->translatedFormat('d M Y') }}</dd>
+                <dd>{{ $pago['fecha_pago'] ? \Illuminate\Support\Carbon::parse($pago['fecha_pago'])->translatedFormat('d M Y') : 'Sin capturar' }}</dd>
             </div>
             <div class="admin-preregistro-dato">
                 <dt>Hora de pago</dt>
-                <dd>{{ \Illuminate\Support\Carbon::parse($pago['hora_pago'])->translatedFormat('H:i') }}</dd>
+                <dd>{{ $pago['hora_pago'] ? \Illuminate\Support\Carbon::parse($pago['hora_pago'])->translatedFormat('H:i') : 'Sin capturar' }}</dd>
             </div>
         </dl>
 

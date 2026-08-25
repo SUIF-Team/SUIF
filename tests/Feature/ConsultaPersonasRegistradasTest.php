@@ -163,6 +163,16 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->time('pago_hora_pago')->nullable();
         });
 
+        /* ConsultaPagos cruza PAGO con el catálogo para mostrar, junto al monto
+           declarado, el que se cobró. */
+        Schema::create('referencia_bancaria', function (Blueprint $table): void {
+            $table->increments('reba_id_referencia_bancaria');
+            $table->integer('reba_id_pago')->nullable();
+            $table->string('reba_referencia', 20);
+            $table->decimal('reba_monto', 10, 4)->nullable();
+            $table->date('reba_vigencia')->nullable();
+        });
+
         Schema::create('c_estado_pago', function (Blueprint $table): void {
             $table->integer('espa_id_c_estado_pago')->primary();
             $table->string('esta_estado_pago', 15);
@@ -293,6 +303,11 @@ class ConsultaPersonasRegistradasTest extends TestCase
             ['pago_id_pago' => 3, 'pago_comprobante_path' => 'solicitudes/50/comprobante.pdf'],
             ['pago_id_pago' => 4, 'pago_comprobante_path' => 'solicitudes/30/comprobante.pdf'],
             ['pago_id_pago' => 5, 'pago_comprobante_path' => ''],
+        ]);
+
+        DB::table('referencia_bancaria')->insert([
+            ['reba_id_pago' => 1, 'reba_referencia' => 'REF-0001', 'reba_monto' => 7000],
+            ['reba_id_pago' => 2, 'reba_referencia' => 'REF-0002', 'reba_monto' => 7000],
         ]);
 
         DB::table('c_estado_pago')->insert([

@@ -1,5 +1,11 @@
 /* Estado del pago: subir comprobante y seguimiento de su revisión. */
 
+/* Sólo los avisos del formulario llevan v-cloak; los campos se ven siempre,
+   con JavaScript o sin él. */
+[v-cloak] {
+    display: none;
+}
+
 .pago-paso {
     margin-bottom: auto;
     padding: 14px;
@@ -149,6 +155,68 @@
     align-items: center;
 }
 
+/* Los datos declarados ocupan el ancho completo del formulario, que por lo
+   demás alinea el adjunto y el botón en una sola línea. */
+.pago-datos {
+    flex-basis: 100%;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    border: 0;
+}
+
+.pago-datos__titulo {
+    padding: 0;
+    margin-bottom: 0.75rem;
+    color: #172a44;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.pago-datos__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pago-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.pago-campo label {
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.pago-campo input {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #fff;
+    color: #172a44;
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+
+.pago-campo input:focus-visible {
+    outline: 2px solid #172a44;
+    outline-offset: 1px;
+}
+
+.pago-campo__ayuda {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+.pago-mensaje-validacion {
+    margin: 0;
+    color: #9b1717;
+    font-size: 0.75rem;
+}
+
 .pago-archivo {
     position: relative;
     overflow: hidden;
@@ -284,6 +352,10 @@
     .pago-tracker__conector {
         display: none;
     }
+
+    .pago-datos__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 /* ─── Confirmación de lo adjuntado ───────────────────────────────────── */
@@ -312,10 +384,6 @@
     background: #d8ecdf;
     color: #075b2c;
     font-size: 0.85rem;
-}
-
-.pago-adjunto[hidden] {
-    display: none;
 }
 
 .pago-adjunto--error {

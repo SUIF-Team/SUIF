@@ -20,7 +20,7 @@
     @endif
     @if($errors->any())
         <div class="pago-alerta pago-alerta--error">
-            <strong>Revisa tu archivo:</strong>
+            <strong>Revisa los datos de tu pago:</strong>
             <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
         </div>
     @endif
@@ -31,7 +31,10 @@
             <h1>Sube tu comprobante de pago</h1>
             <p class="pago-muted">Adjunta el comprobante de tu pago por ${{ $cuota }} {{ $moneda }}. Solo se acepta un archivo PDF de máximo 1 MB.</p>
             @if($puedeCargar)
-                @include('partials.pago-comprobante-form', ['etiquetaBoton' => 'Enviar comprobante'])
+                @include('partials.pago-comprobante-form', [
+    'etiquetaBoton' => 'Enviar comprobante',
+    'vistaFormulario' => $vistaFormulario,
+])
             @elseif($mensajeBloqueo)
                 <p class="pago-muted">{{ $mensajeBloqueo }}</p>
             @endif
@@ -63,7 +66,10 @@
                     <p>{{ $motivoRechazo ?: 'Tu comprobante fue rechazado porque no cumple con los requisitos necesarios.' }}</p>
                     <p>Para subsanar esta situación, carga nuevamente un comprobante correcto y legible.</p>
                     @if($puedeCargar)
-                        @include('partials.pago-comprobante-form', ['etiquetaBoton' => 'Subsanar'])
+                        @include('partials.pago-comprobante-form', [
+    'etiquetaBoton' => 'Subsanar',
+    'vistaFormulario' => $vistaFormulario,
+])
                     @elseif($mensajeBloqueo)
                         <p class="pago-muted">{{ $mensajeBloqueo }}</p>
                     @endif
@@ -93,6 +99,7 @@
 
 @if($puedeCargar)
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
     <script src="{{ asset_versionado('assets/js/pages/persona-pago.js') }}"></script>
     @endpush
 @endif

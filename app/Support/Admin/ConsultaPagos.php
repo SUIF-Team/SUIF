@@ -80,6 +80,9 @@ class ConsultaPagos
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
             ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
+            /* El renglón del catálogo trae el monto que se cobró; PAGO guarda
+               el que la persona declaró haber pagado. */
+            ->leftJoin('referencia_bancaria as rb', 'rb.reba_id_pago', '=', 'pg.pago_id_pago')
             ->leftJoinSub($this->ultimosEstadosPago(), 'estado_actual', function ($join): void {
                 $join->on('estado_actual.espa_id_pago', '=', 'pg.pago_id_pago');
             })
@@ -105,6 +108,7 @@ class ConsultaPagos
                 'pg.pago_id_pago',
                 'pg.pago_comprobante_path',
                 'pg.pago_monto_pagado',
+                'rb.reba_monto',
                 'pg.pago_referencia_bancaria',
                 'pg.pago_fecha_pago',
                 'pg.pago_hora_pago',
@@ -203,7 +207,12 @@ class ConsultaPagos
                 'nombre' => basename((string) $pago->pago_comprobante_path),
             ],
             'comprobante_disponible' => $archivo_disponible,
+            /* Lo que la persona declaró contra lo que se le cobró: sin las dos
+               cifras no hay forma de revisar el comprobante. */
             'monto' => '$'.number_format((float) $pago->pago_monto_pagado, 2).' '.config('suif.moneda', 'MXN'),
+            'monto_referencia' => $pago->reba_monto === null
+                ? null
+                : '$'.number_format((float) $pago->reba_monto, 2).' '.config('suif.moneda', 'MXN'),
             'referencia_bancaria' => (string) $pago->pago_referencia_bancaria,
             'fecha_pago' => (string) $pago->pago_fecha_pago,
             'hora_pago' => (string) $pago->pago_hora_pago,

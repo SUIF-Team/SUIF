@@ -26,10 +26,15 @@ class RevisionPagos
     /**
      * Registra una carga nueva únicamente para el pago ligado a la solicitud
      * más reciente de la persona autenticada.
+     *
+     * $datos_pago trae el monto, la fecha y la hora que capturó la persona, ya
+     * validados por el controlador.
+     *
+     * @param array{monto_pagado: string|float, fecha_pago: string, hora_pago: string} $datos_pago
      */
-    public function registrarComprobanteDePersona(int $id_usuario, string $ruta_archivo): void
+    public function registrarComprobanteDePersona(int $id_usuario, string $ruta_archivo, array $datos_pago): void
     {
-        DB::transaction(function () use ($id_usuario, $ruta_archivo): void {
+        DB::transaction(function () use ($id_usuario, $ruta_archivo, $datos_pago): void {
             $solicitud = DB::table('solicitud as s')
                 ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
                 ->where('p.pers_id_usuario', $id_usuario)
@@ -59,16 +64,23 @@ class RevisionPagos
                 throw new DomainException('Tu comprobante ya está en revisión o fue aprobado y no puede reemplazarse.');
             }
 
-            /* El pago queda fechado con la carga del comprobante: hasta aquí
-               PAGO sólo tenía la referencia bancaria que se le asignó. */
-            $ahora = now();
+            /* El pago se fecha con lo que declaró la persona, no con el momento
+               de la carga: quien revisa el comprobante compara contra eso.
 
+               PAGO_MONTO_PAGADO nació con el monto de la referencia porque el
+               renglón se crea al asignarla; aquí pasa a guardar lo pagado. El
+               monto que se cobró sigue en REFERENCIA_BANCARIA.REBA_MONTO.
+
+               Los segundos se completan a mano: PostgreSQL los rellena solo al
+               guardar en TIME, pero SQLite —el motor de las pruebas— almacena
+               la cadena tal cual. */
             DB::table('pago')
                 ->where('pago_id_pago', $pago->pago_id_pago)
                 ->update([
                     'pago_comprobante_path' => $ruta_archivo,
-                    'pago_fecha_pago' => $ahora->toDateString(),
-                    'pago_hora_pago' => $ahora->toTimeString(),
+                    'pago_monto_pagado' => $datos_pago['monto_pagado'],
+                    'pago_fecha_pago' => $datos_pago['fecha_pago'],
+                    'pago_hora_pago' => substr((string) $datos_pago['hora_pago'], 0, 5).':00',
                 ]);
 
             $this->registrarEstado((int) $pago->pago_id_pago, ConsultaPagos::PENDIENTE);

@@ -1,16 +1,36 @@
 /*
- * Confirmación de lo adjuntado en la pantalla de pago.
+ * Formulario del paso de pago.
  *
- * El input de archivo va oculto (opacity: 0) para poder estilizar el botón, y
- * con él se esconde el texto nativo del navegador con el nombre del archivo.
- * Sin esto la persona elige su PDF y la pantalla no cambia en nada, así que no
- * sabe si el adjunto quedó tomado. Aquí se pinta esa confirmación y se
- * adelanta la validación que de todas formas hace el servidor.
+ * La persona declara cuánto, cuándo y a qué hora pagó, y adjunta el PDF que lo
+ * respalda. Vue sólo adelanta lo que de todas formas valida el servidor y pinta
+ * la confirmación del adjunto: el input de archivo va oculto (opacity: 0) para
+ * poder estilizar el botón, y con él se esconde el texto nativo del navegador
+ * con el nombre del archivo, así que sin esto la persona elige su PDF y la
+ * pantalla no cambia en nada.
+ *
+ * El formulario sigue siendo HTML real con required, min, max y step: si este
+ * script no llega a cargar, se envía como siempre.
  */
 (function () {
     'use strict';
 
+    var raiz = document.querySelector('#pago-form-app');
+
+    if (!raiz || !window.Vue) {
+        return;
+    }
+
+    var vista;
+
+    try {
+        vista = JSON.parse(raiz.dataset.vista);
+    } catch (error) {
+        return;
+    }
+
     var LIMITE_BYTES = 1048576; /* Equivale al max:1024 (KB) del controlador. */
+    var MONTO_MAXIMO = 999999; /* Equivale al max:999999 del controlador. */
+    var DOS_DECIMALES = /^\d+(\.\d{1,2})?$/;
 
     function pesoEnKb(bytes) {
         return Math.ceil(bytes / 1024) + ' KB';
@@ -35,96 +55,100 @@
         return null;
     }
 
-    function conectarFormulario(formulario) {
-        var input = formulario.querySelector('[data-pago-archivo-input]');
-        var etiqueta = formulario.querySelector('[data-pago-archivo]');
-        var textoEtiqueta = formulario.querySelector('[data-pago-archivo-texto]');
-        var iconoEtiqueta = formulario.querySelector('[data-pago-archivo-icono]');
-        var aviso = formulario.querySelector('[data-pago-adjunto]');
-        var titulo = formulario.querySelector('[data-pago-adjunto-titulo]');
-        var nombre = formulario.querySelector('[data-pago-adjunto-nombre]');
-        var peso = formulario.querySelector('[data-pago-adjunto-peso]');
-        var iconoAviso = formulario.querySelector('[data-pago-adjunto-icono]');
-        var quitar = formulario.querySelector('[data-pago-adjunto-quitar]');
-        var enviar = formulario.querySelector('[data-pago-enviar]');
+    window.Vue.createApp({
+        data: function () {
+            return {
+                montoPagado: vista.montoPagado || '',
+                fechaPago: vista.fechaPago || '',
+                horaPago: vista.horaPago || '',
+                maxFecha: vista.maxFecha || '',
+                /* { nombre, peso } del PDF elegido, o null */
+                archivo: null,
+                error: null
+            };
+        },
+        computed: {
+            /* Los avisos repiten los límites de las reglas del controlador; se
+               adelantan aquí para que la persona no tenga que enviar el
+               formulario para enterarse. */
+            avisoMonto: function () {
+                if (this.montoPagado === '' || this.montoPagado === null) {
+                    return null;
+                }
 
-        if (!input || !etiqueta || !textoEtiqueta || !iconoEtiqueta || !aviso
-            || !titulo || !nombre || !peso || !iconoAviso || !quitar || !enviar) {
-            return;
-        }
+                var monto = Number(this.montoPagado);
 
-        function limpiar() {
-            aviso.hidden = true;
-            aviso.classList.remove('pago-adjunto--error');
-            titulo.textContent = 'Archivo adjunto:';
-            nombre.textContent = '';
-            peso.textContent = '';
-            iconoAviso.className = 'fa-solid fa-circle-check';
-            quitar.hidden = false;
-            etiqueta.classList.remove('pago-archivo--cargado');
-            textoEtiqueta.textContent = 'Seleccionar PDF';
-            iconoEtiqueta.className = 'fa-solid fa-paperclip';
-            enviar.disabled = true;
-        }
+                if (isNaN(monto)) {
+                    return 'El monto pagado debe ser una cantidad.';
+                }
 
-        function rechazar(motivo) {
-            input.value = '';
-            limpiar();
-            titulo.textContent = motivo;
-            iconoAviso.className = 'fa-solid fa-circle-exclamation';
-            quitar.hidden = true;
-            aviso.classList.add('pago-adjunto--error');
-            aviso.hidden = false;
-        }
+                if (monto <= 0) {
+                    return 'El monto pagado debe ser mayor que cero.';
+                }
 
-        function aceptar(archivo) {
-            limpiar();
-            nombre.textContent = archivo.name;
-            peso.textContent = '· ' + pesoEnKb(archivo.size);
-            aviso.hidden = false;
-            etiqueta.classList.add('pago-archivo--cargado');
-            textoEtiqueta.textContent = 'Cambiar PDF';
-            iconoEtiqueta.className = 'fa-solid fa-circle-check';
-            enviar.disabled = false;
-        }
+                if (monto > MONTO_MAXIMO) {
+                    return 'El monto pagado excede el máximo permitido.';
+                }
 
-        input.addEventListener('change', function () {
-            var archivo = input.files && input.files[0];
+                if (!DOS_DECIMALES.test(String(this.montoPagado))) {
+                    return 'El monto pagado admite como máximo dos decimales.';
+                }
 
-            if (!archivo) {
-                limpiar();
+                return null;
+            },
 
-                return;
+            /* Las fechas ISO se comparan como cadenas sin ambigüedad. */
+            avisoFecha: function () {
+                if (this.fechaPago === '') {
+                    return null;
+                }
+
+                return this.fechaPago > this.maxFecha
+                    ? 'La fecha de pago no puede ser posterior a hoy.'
+                    : null;
+            },
+
+            puedeEnviar: function () {
+                return this.archivo !== null
+                    && this.montoPagado !== '' && this.avisoMonto === null
+                    && this.fechaPago !== '' && this.avisoFecha === null
+                    && this.horaPago !== '';
             }
+        },
+        methods: {
+            elegirArchivo: function (evento) {
+                var elegido = evento.target.files && evento.target.files[0];
 
-            var motivo = motivoDeRechazo(archivo);
+                if (!elegido) {
+                    this.archivo = null;
+                    this.error = null;
 
-            if (motivo) {
-                rechazar(motivo);
+                    return;
+                }
 
-                return;
+                var motivo = motivoDeRechazo(elegido);
+
+                if (motivo) {
+                    evento.target.value = '';
+                    this.archivo = null;
+                    this.error = motivo;
+
+                    return;
+                }
+
+                this.archivo = { nombre: elegido.name, peso: pesoEnKb(elegido.size) };
+                this.error = null;
+            },
+
+            quitarArchivo: function () {
+                if (this.$refs.entradaArchivo) {
+                    this.$refs.entradaArchivo.value = '';
+                    this.$refs.entradaArchivo.focus();
+                }
+
+                this.archivo = null;
+                this.error = null;
             }
-
-            aceptar(archivo);
-        });
-
-        quitar.addEventListener('click', function () {
-            input.value = '';
-            limpiar();
-            input.focus();
-        });
-
-        /*
-         * El botón nace habilitado en el HTML y se apaga desde aquí: si este
-         * script no llega a cargar, el formulario sigue enviándose como antes.
-         */
-        limpiar();
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        Array.prototype.forEach.call(
-            document.querySelectorAll('.pago-form'),
-            conectarFormulario
-        );
-    });
+        }
+    }).mount('#pago-form-app');
 }());
