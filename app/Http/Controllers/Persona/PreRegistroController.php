@@ -841,6 +841,14 @@ class PreRegistroController extends Controller
             return 'revision';
         }
 
+        /* Tras reenviar una subsanación conviven documentos aprobados y
+           documentos que volvieron a revisión: la etapa sigue en manos del
+           administrador y la persona ya no tiene nada que enviar. Mismo
+           criterio que AvancePersona::documentacionEstado(). */
+        if (!array_diff($unicos, ['aprobado', 'revision']) && in_array('revision', $estados, true)) {
+            return 'revision';
+        }
+
         return 'documentos';
     }
 
