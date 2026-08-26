@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
+use App\Servicios\AvancePersona;
 use App\Servicios\FormatoPreRegistro;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -69,11 +70,19 @@ class PreRegistroController extends Controller
         $estado['documentos'] = $this->documentosGuardados($idSolicitud);
         $estado['fase'] = $this->faseSegunDocumentos($estado['documentos']);
 
+        /* El estado de la solicitud completa lo resuelve el mismo servicio que
+           alimenta el panel y la barra de avance, para no abrir otra verdad. */
+        $avance = new AvancePersona(auth()->id());
+
         return view('persona.documentos', [
             'estado' => $estado,
             'documentos' => $this->documentos,
             'formatos' => $this->formatos,
             'verFormatos' => $request->query('ver') === 'formatos',
+            'solicitudAprobada' => $avance->solicitudAprobada(),
+            'solicitudRechazada' => $avance->estadoSolicitud() === 'Rechazada',
+            'fechaEnvio' => $this->fechaDelEstado($estado['documentos'], 'revision'),
+            'fechaAprobacion' => $this->fechaDelEstado($estado['documentos'], 'aprobado'),
         ]);
     }
 
@@ -533,6 +542,17 @@ class PreRegistroController extends Controller
                 ->withErrors(['documentos' => 'No encontramos tu solicitud. Vuelve a iniciar sesión.']);
         }
 
+        /* Espejo de la regla de la vista: un documento en revisión o aprobado
+           dejó de ser de la persona hasta que el revisor lo devuelva. Se
+           comprueba antes de guardar el archivo para no dejarlo huérfano. */
+        $guardados = $this->documentosGuardados($idSolicitud);
+        $estadoActual = isset($guardados[$documento]) ? $guardados[$documento]['estado'] : 'pendiente';
+
+        if (in_array($estadoActual, ['revision', 'aprobado'], true)) {
+            return redirect()->route('persona.documentos.index')
+                ->withErrors(['documentos' => 'Ese documento ya no se puede reemplazar: está en revisión o fue aprobado.']);
+        }
+
         $idTipo = DB::table('tipo_documento')
             ->where('tido_tipo_documento', $this->documentos[$documento])
             ->value('tido_id_tipo_documento');
@@ -851,7 +871,7 @@ class PreRegistroController extends Controller
             ->join('c_estado_documento as ce', 'ce.esdo_id_c_estado_documento', '=', 'ed.esdo_id_c_estado_documento')
             ->whereIn('ed.esdo_id_documento', $filas->pluck('docu_id_documento'))
             ->orderBy('ed.esdo_id_estado_documento')
-            ->select('ed.esdo_id_documento', 'ed.esdo_comentarios', 'ce.esdo_estado_documento')
+            ->select('ed.esdo_id_documento', 'ed.esdo_comentarios', 'ed.esdo_fecha', 'ce.esdo_estado_documento')
             ->get()
             ->keyBy('esdo_id_documento');
 
@@ -883,10 +903,37 @@ class PreRegistroController extends Controller
                 'nombre_original' => $fila->docu_nombre,
                 'estado' => isset($equivalencias[$nombreEstado]) ? $equivalencias[$nombreEstado] : 'cargado',
                 'observacion' => $estado ? $estado->esdo_comentarios : null,
+                'fecha' => $estado ? $estado->esdo_fecha : null,
             ];
         }
 
         return $resultado;
+    }
+
+    /**
+     * Fecha en que los documentos entraron a un estado, para poder decirle a
+     * la persona cuándo envió o cuándo le aceptaron su expediente. Se toma la
+     * más reciente porque una subsanación mueve unos documentos y otros no.
+     */
+    private function fechaDelEstado(array $documentos, $estado)
+    {
+        $fechas = [];
+
+        foreach ($documentos as $doc) {
+            if ($doc['estado'] === $estado && !empty($doc['fecha'])) {
+                $fechas[] = $doc['fecha'];
+            }
+        }
+
+        if (!$fechas) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse(max($fechas))->format('d/m/Y');
+        } catch (\Exception $error) {
+            return null;
+        }
     }
 
     private function entidades()

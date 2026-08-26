@@ -15,6 +15,37 @@
 
             @if($verFormatos)
                 @include('partials.preregistro-formatos', ['soloConsulta' => true])
+            @elseif($estado['fase'] === 'aprobado' && !$solicitudRechazada)
+                {{-- La etapa terminó: en vez de la tabla se confirma el resultado. --}}
+                <div class="pr-aceptado">
+                    <span class="pr-aceptado__icono" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                    <h1>¡Documentación aceptada!</h1>
+                    <p class="pr-muted pr-aceptado__texto">
+                        Revisamos tus documentos y todos fueron aceptados{{ $fechaAprobacion ? ' el '.$fechaAprobacion : '' }}.
+                    </p>
+
+                    <ul class="pr-aceptado__lista">
+                        @foreach($documentos as $slug => $nombre)
+                            <li class="pr-aceptado__fila">
+                                <span class="pr-aceptado__doc">{{ $nombre }}</span>
+                                <span class="pr-status pr-status--approved">Aprobado</span>
+                                <a class="pr-aceptado__abrir" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
+                                    <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                                    <span>Abrir</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="pr-aceptado__acciones">
+                        @if($solicitudAprobada)
+                            <a href="{{ route('persona.referencia.index') }}" class="pr-btn">Continuar</a>
+                        @else
+                            <p class="pr-muted">Falta que el equipo administrativo cierre la revisión de tu solicitud completa.</p>
+                            <a href="{{ route('persona.dashboard') }}" class="pr-btn pr-btn--secondary">Volver a mi panel</a>
+                        @endif
+                    </div>
+                </div>
             @else
                 <h1>Documentación requerida</h1>
                 <p class="pr-muted">Sube los documentos uno por uno. Cada PDF debe pesar máximo 1 MB.</p>
@@ -53,6 +84,9 @@
                                         'aprobado' => 'Aprobado',
                                         'rechazado' => 'Rechazado',
                                     ];
+                                    /* El archivo sólo se puede cambiar mientras nadie lo esté
+                                       revisando: en revisión y aprobado quedan cerrados. */
+                                    $puedeReemplazar = !in_array($docEstado, ['revision', 'aprobado'], true);
                                 ?>
                                 <tr class="pr-fila pr-fila--{{ $docEstado }}">
                                     <td data-titulo="Documento">
@@ -82,7 +116,7 @@
                                                 </a>
                                             @endif
 
-                                            @if(!in_array($estado['fase'], ['revision','aprobado']))
+                                            @if($puedeReemplazar)
                                                 <form method="POST" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
                                                     @csrf
                                                     <label class="pr-btn pr-file">
@@ -122,8 +156,50 @@
 
                 @if($estado['fase'] === 'aprobado')
                     <p class="pr-notice">Tus documentos fueron aprobados. Espera la resolución de tu solicitud.</p>
-                @elseif(!in_array($estado['fase'], ['revision','rechazado']))
-                    <form method="POST" action="{{ route('persona.preregistro.documentos.enviar') }}" class="pr-actions">@csrf<button class="pr-btn">Enviar a revisión</button></form>
+                @elseif($estado['fase'] === 'revision' && !$solicitudRechazada)
+                    <p class="pr-notice pr-notice--enviado" role="status">
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        <span>
+                            Tus documentos fueron enviados a revisión{{ $fechaEnvio ? ' el '.$fechaEnvio : '' }}.
+                            Te avisaremos en cuanto el equipo administrativo los revise.
+                        </span>
+                    </p>
+                @elseif(!in_array($estado['fase'], ['revision', 'rechazado'], true) && !$solicitudRechazada)
+                    <?php
+                        /* Misma regla que enviarRevision(): los aprobados no se
+                           reenvían, así que el conteo del diálogo no miente
+                           cuando la persona está subsanando. */
+                        $porEnviar = 0;
+                        foreach (array_keys($documentos) as $slugConteo) {
+                            $docConteo = isset($estado['documentos'][$slugConteo])
+                                ? $estado['documentos'][$slugConteo]
+                                : null;
+
+                            if (!$docConteo || $docConteo['estado'] !== 'aprobado') {
+                                $porEnviar++;
+                            }
+                        }
+                    ?>
+                    <form method="POST" action="{{ route('persona.preregistro.documentos.enviar') }}" class="pr-actions" data-envio-revision>
+                        @csrf
+                        <button type="submit" class="pr-btn" data-boton-envio>Enviar a revisión</button>
+                    </form>
+
+                    <div class="pr-modal" data-modal-envio hidden>
+                        <div class="pr-modal__fondo" data-cerrar-envio></div>
+                        <section class="pr-modal__card" role="dialog" aria-modal="true"
+                                 aria-labelledby="pr-envio-titulo" aria-describedby="pr-envio-texto">
+                            <h2 id="pr-envio-titulo">¿Enviar tus documentos a revisión?</h2>
+                            <p id="pr-envio-texto">
+                                Se {{ $porEnviar === 1 ? 'enviará 1 documento' : 'enviarán '.$porEnviar.' documentos' }}.
+                                Después ya no podrás reemplazarlos hasta que el equipo administrativo termine de revisarlos.
+                            </p>
+                            <div class="pr-modal__acciones">
+                                <button type="button" class="pr-btn pr-btn--secondary" data-cerrar-envio>Cancelar</button>
+                                <button type="button" class="pr-btn" data-confirmar-envio>Sí, enviar</button>
+                            </div>
+                        </section>
+                    </div>
                 @endif
             @endif
         </main>
@@ -132,9 +208,5 @@
 @endsection
 
 @push('scripts')
-<script>
-(function(){
-  document.querySelectorAll('.pr-upload-form input[type=file]').forEach(function(input){input.addEventListener('change',function(){var f=input.files&&input.files[0],box=input.closest('form').querySelector('.pr-preview');if(!f)return;if(f.type!=='application/pdf'||f.size>1048576){alert('Selecciona un PDF de máximo 1 MB.');input.value='';return;}box.querySelector('span').textContent=f.name+' · '+Math.ceil(f.size/1024)+' KB';box.querySelector('iframe').src=URL.createObjectURL(f);box.classList.add('is-visible');});});
-})();
-</script>
+<script src="{{ asset_versionado('assets/js/pages/persona-documentos.js') }}"></script>
 @endpush
