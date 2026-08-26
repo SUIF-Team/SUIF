@@ -11,6 +11,7 @@
 <section
     class="admin-preregistro-flujo admin-pago-detalle"
     data-pago-detalle
+    @error('motivo_rechazo') data-rechazo-abierto @enderror
     aria-labelledby="detalle-pago-titulo"
     v-cloak>
     <header class="admin-preregistro-tarjeta admin-preregistro-perfil">
@@ -97,6 +98,9 @@
         @endif
 
         @if($pago['puede_revisarse'])
+            {{-- Sólo la decisión: el motivo se pide después, y aparte, para no
+                 desbalancear la tarjeta con un cuadro de texto que casi nunca
+                 se usa. --}}
             <section id="acciones-pago" class="admin-pago-resolucion" aria-label="Acciones del pago">
                 <p id="acciones-pago-ayuda" class="visually-hidden">
                     Revisa el comprobante antes de validar o rechazar el pago.
@@ -108,18 +112,15 @@
                     </button>
                 </form>
 
-                <form method="POST" action="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}" class="admin-pago-rechazo">
-                    @csrf
-                    <label for="motivo-rechazo">Motivo del rechazo</label>
-                    <textarea id="motivo-rechazo" name="motivo_rechazo" rows="4" maxlength="2000" required aria-describedby="motivo-rechazo-ayuda">{{ old('motivo_rechazo') }}</textarea>
-                    <p id="motivo-rechazo-ayuda">Este mensaje se mostrará a la persona para que pueda subsanar su comprobante.</p>
-                    @error('motivo_rechazo')
-                        <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $message }}</p>
-                    @enderror
-                    <button class="admin-preregistro-boton admin-preregistro-boton--rechazar" type="submit" aria-describedby="acciones-pago-ayuda">
-                        Rechazar pago
-                    </button>
-                </form>
+                <button
+                    class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                    type="button"
+                    aria-describedby="acciones-pago-ayuda"
+                    :aria-expanded="rechazoAbierto ? 'true' : 'false'"
+                    aria-controls="panel-rechazo"
+                    v-on:click="abrirRechazo">
+                    Rechazar pago
+                </button>
             </section>
         @else
             <p class="admin-preregistro-solo-lectura">
@@ -128,15 +129,60 @@
         @endif
     </main>
 
+    @if($pago['puede_revisarse'])
+        <section
+            id="panel-rechazo"
+            class="admin-preregistro-tarjeta admin-pago-rechazo-panel"
+            v-if="rechazoAbierto"
+            aria-labelledby="panel-rechazo-titulo">
+            <h2 id="panel-rechazo-titulo">Motivo del rechazo</h2>
+            <form method="POST" action="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}">
+                @csrf
+                {{-- El valor lo escribe Blade con old(); admin-pago-detalle.js lo
+                     lee del DOM antes de montar para sembrar el v-model. --}}
+                <textarea
+                    id="motivo-rechazo"
+                    name="motivo_rechazo"
+                    rows="4"
+                    maxlength="2000"
+                    required
+                    ref="motivo"
+                    v-model="motivo"
+                    aria-describedby="motivo-rechazo-ayuda">{{ old('motivo_rechazo') }}</textarea>
+                <p id="motivo-rechazo-ayuda">Este mensaje se mostrará a la persona para que pueda subsanar su comprobante.</p>
+                @error('motivo_rechazo')
+                    <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $message }}</p>
+                @enderror
+                <div class="admin-pago-rechazo-panel-acciones">
+                    <button class="admin-preregistro-boton" type="button" v-on:click="cerrarRechazo">
+                        Cancelar
+                    </button>
+                    <button
+                        class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                        type="submit"
+                        :disabled="!motivoValido">
+                        Confirmar rechazo
+                    </button>
+                </div>
+            </form>
+        </section>
+    @endif
+
     <back-navigation
         destino="{{ route('admin.pagos.index') }}"
         etiqueta="Atrás"
         etiqueta-accesible="Atrás"></back-navigation>
 </section>
+
+{{-- Fuera de la raíz Vue: el parcial trae su propio JavaScript llano. --}}
+<div class="admin-preregistro-flujo admin-preregistro-reversion-flujo">
+    @include('partials.admin.acciones-reversion', ['acciones' => $acciones ?? []])
+</div>
 @endsection
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
 <script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
-<script src="{{ asset('assets/js/pages/admin-pago-detalle.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-pago-detalle.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-reversion.js') }}"></script>
 @endsection

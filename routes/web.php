@@ -93,6 +93,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/documentos/{id}', [AdminDocumentoController::class, 'show'])->name('documentos.show');
     Route::post('/documentos/{id}/validar', [AdminDocumentoController::class, 'validar'])->name('documentos.validar');
     Route::post('/documentos/{id}/interrumpir', [AdminDocumentoController::class, 'interrumpir'])->name('documentos.interrumpir');
+    /* Revertir una resolución ya notificada se rige sólo por el rol, no por el
+       privilegio de cada módulo: un Administrador puede reanudar un pago
+       aunque no tenga "Gestionar Pagos". */
+    Route::middleware(['auth', 'can:reanudar-tramite'])->group(function () {
+        Route::post('/pagos/{id}/reanudar', [AdminPagoController::class, 'reanudar'])->name('pagos.reanudar');
+        Route::post('/documentos/{id}/reanudar', [AdminDocumentoController::class, 'reanudar'])->name('documentos.reanudar');
+        Route::post('/documentos/{id}/cancelar', [AdminDocumentoController::class, 'cancelar'])->name('documentos.cancelar');
+    });
     Route::middleware(['auth', 'can:gestionar-sedes'])->group(function () {
         Route::get('/sedes', [AdminSedeController::class, 'index'])->name('sedes.index');
         Route::get('/sedes/crear', [AdminSedeController::class, 'create'])->name('sedes.create');

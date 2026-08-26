@@ -28,15 +28,28 @@ class PagoController extends Controller
         ]);
     }
 
-    public function show(string $id, ConsultaPagos $consulta_pagos)
-    {
+    public function show(
+        string $id,
+        ConsultaPagos $consulta_pagos,
+        NotificacionResultado $notificacion_resultado
+    ) {
         $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
             return $pago;
         }
 
-        return view('admin.pago-detalle', compact('pago'));
+        /* Desde la bandeja, "Ver pago" llega aquí y no a la pantalla de
+           resultado: un pago resuelto también se reanuda desde el detalle. */
+        $acciones = in_array(
+            $pago['estado_persistido'],
+            [ConsultaPagos::COMPLETADO, ConsultaPagos::DECLINADO],
+            true
+        )
+            ? [$notificacion_resultado->accionReanudarPago($pago['id'])]
+            : [];
+
+        return view('admin.pago-detalle', compact('pago', 'acciones'));
     }
 
     /**
@@ -119,6 +132,36 @@ class PagoController extends Controller
         }
 
         return redirect()->route('admin.pagos.resultado', ['id' => $pago['id']]);
+    }
+
+    /**
+     * Devuelve a revisión un pago ya resuelto.
+     *
+     * Termina en la pantalla de detalle, no en la de resultado: el pago dejó
+     * de estar resuelto y lo que sigue es volver a decidirlo.
+     */
+    public function reanudar(
+        string $id,
+        ConsultaPagos $consulta_pagos,
+        RevisionPagos $revision_pagos
+    ): RedirectResponse {
+        $pago = $this->obtenerPago($id, $consulta_pagos);
+
+        if ($pago instanceof RedirectResponse) {
+            return $pago;
+        }
+
+        try {
+            $revision_pagos->reanudar((int) $pago['id']);
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('admin.pagos.show', ['id' => $pago['id']])
+                ->with('warning', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.pagos.show', ['id' => $pago['id']])
+            ->with('success', 'El pago volvió a revisión.');
     }
 
     public function resultado(

@@ -780,3 +780,80 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Acciones que revierten una resolución ya notificada (reanudar / cancelar).
+   Viven aquí porque las cargan tanto la pantalla de resultado como el detalle
+   de pago; el modal de sedes no sirve, su hoja no se carga en ninguna. */
+/* El bloque va en su propio contenedor, hermano del flujo principal: sin
+   quitarle el relleno superior quedaría separado por un hueco enorme. */
+.admin-preregistro-reversion-flujo {
+    padding-top: 0;
+}
+
+.admin-preregistro-reversion {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.admin-preregistro-reversion-ayuda {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.admin-preregistro-reversion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-reversion-modal[hidden] { display: none; }
+
+.admin-reversion-modal {
+    position: fixed;
+    z-index: 1200;
+    inset: 0;
+    padding: 1rem;
+    display: grid;
+    place-items: center;
+}
+
+.admin-reversion-modal-fondo {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 26, 46, 0.58);
+}
+
+.admin-reversion-modal-card {
+    position: relative;
+    width: min(100%, 31rem);
+    padding: 1.75rem;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.admin-reversion-modal-card h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.15rem;
+}
+
+.admin-reversion-modal-card p {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.admin-reversion-modal-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.admin-reversion-modal-abierto { overflow: hidden; }
+
+@media (max-width: 640px) {
+    .admin-preregistro-reversion-acciones,
+    .admin-reversion-modal-acciones { flex-direction: column-reverse; }
+}

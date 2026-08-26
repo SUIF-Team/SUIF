@@ -203,6 +203,111 @@ class RevisionDocumentosTest extends TestCase
         ], []);
     }
 
+    public function test_reanudar_una_solicitud_aprobada_regresa_todos_los_documentos_a_revision(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::APROBADO,
+        ], []);
+
+        $this->assertSame(RevisionDocumentos::REVISION, $revision->reanudar(1));
+        $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
+
+        /* Los dos documentos vuelven a esperar dictamen: reabrir la solicitud
+           sin reabrirlos la dejaría trabada, porque resolver() exige resolver
+           exactamente los que están en revisión. */
+        $this->assertSame(['En revisión', 'En revisión'], $this->ultimosEstadosDocumentos());
+    }
+
+    public function test_reanudar_permite_volver_a_dictaminar_el_expediente_completo(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::APROBADO,
+        ], []);
+        $revision->reanudar(1);
+
+        $resultado = $revision->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::RECHAZADO,
+        ], ['11' => 'El acta está incompleta.'], '2026-09-15');
+
+        $this->assertSame(RevisionDocumentos::REVISION, $resultado);
+        $this->assertDatabaseHas('estado_documento', [
+            'esdo_id_documento' => 11,
+            'esdo_id_c_estado_documento' => 5,
+            'esdo_comentarios' => "El acta está incompleta.\nFecha límite: 2026-09-15",
+        ]);
+    }
+
+    public function test_reanudar_una_solicitud_rechazada_la_devuelve_a_revision(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->interrumpir(1, 'No acreditó el requisito.');
+
+        $this->assertSame(RevisionDocumentos::REVISION, $revision->reanudar(1));
+        $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
+    }
+
+    public function test_no_se_puede_reanudar_una_solicitud_que_sigue_en_revision(): void
+    {
+        $this->crearExpedienteEnRevision();
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('La solicitud no está resuelta');
+
+        app(RevisionDocumentos::class)->reanudar(1);
+    }
+
+    public function test_cancelar_una_solicitud_aprobada_escribe_el_estado_cancelada(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->resolver(1, [
+            '10' => RevisionDocumentos::APROBADO,
+            '11' => RevisionDocumentos::APROBADO,
+        ], []);
+
+        $this->assertSame(RevisionDocumentos::CANCELADO, $revision->cancelar(1));
+        $this->assertSame('Cancelada', $this->ultimoEstadoSolicitud());
+
+        /* Cancelar cierra la solicitud sin tocar el dictamen documental. */
+        $this->assertSame(['Aprobado', 'Aprobado'], $this->ultimosEstadosDocumentos());
+    }
+
+    public function test_no_se_puede_cancelar_una_solicitud_ya_cancelada(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->cancelar(1);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('La solicitud ya está cancelada.');
+
+        $revision->cancelar(1);
+    }
+
+    public function test_una_solicitud_cancelada_se_puede_reanudar(): void
+    {
+        $this->crearExpedienteEnRevision();
+        $revision = app(RevisionDocumentos::class);
+
+        $revision->cancelar(1);
+
+        $this->assertSame(RevisionDocumentos::REVISION, $revision->reanudar(1));
+        $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
+    }
+
     private function crearEsquemaTemporal(): void
     {
         foreach ([
@@ -260,6 +365,7 @@ class RevisionDocumentosTest extends TestCase
             ['esso_id_c_estado_solicitud' => 3, 'esso_estado_solicitud' => 'En revisión'],
             ['esso_id_c_estado_solicitud' => 4, 'esso_estado_solicitud' => 'Aprobada'],
             ['esso_id_c_estado_solicitud' => 5, 'esso_estado_solicitud' => 'Rechazada'],
+            ['esso_id_c_estado_solicitud' => 6, 'esso_estado_solicitud' => 'Cancelada'],
         ]);
 
         DB::table('c_estado_documento')->insert([
@@ -315,6 +421,27 @@ class RevisionDocumentosTest extends TestCase
             'esdo_fecha' => '2026-08-06',
             'esdo_hora' => '12:00:00',
         ]);
+    }
+
+    /**
+     * Estado vigente de cada documento del expediente, ordenado por documento.
+     *
+     * @return array<int, string>
+     */
+    private function ultimosEstadosDocumentos(): array
+    {
+        return DB::table('documento as d')
+            ->join('estado_documento as ed', 'ed.esdo_id_documento', '=', 'd.docu_id_documento')
+            ->join('c_estado_documento as ced', 'ced.esdo_id_c_estado_documento', '=', 'ed.esdo_id_c_estado_documento')
+            ->where('d.soli_id_solicitud', 1)
+            ->whereRaw('ed.esdo_id_estado_documento = (
+                SELECT MAX(ultimo.esdo_id_estado_documento)
+                FROM estado_documento AS ultimo
+                WHERE ultimo.esdo_id_documento = ed.esdo_id_documento
+            )')
+            ->orderBy('d.docu_id_documento')
+            ->pluck('ced.esdo_estado_documento')
+            ->all();
     }
 
     private function ultimoEstadoSolicitud(): string

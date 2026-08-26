@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Usuario;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\RevisionPagos;
+use DomainException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -185,6 +186,74 @@ class PagosPersistentesTest extends TestCase
             ->assertSee('Aprobado')
             ->assertDontSee('Validar pago')
             ->assertDontSee('Rechazar pago');
+    }
+
+    public function test_pago_resuelto_ofrece_reanudar_la_revision(): void
+    {
+        app(RevisionPagos::class)->aprobar(1);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.pagos.show', 1))
+            ->assertOk()
+            ->assertSee('Reanudar revisión del pago');
+    }
+
+    public function test_reanudar_un_pago_aprobado_lo_regresa_a_revision(): void
+    {
+        app(RevisionPagos::class)->aprobar(1);
+        app(RevisionPagos::class)->reanudar(1);
+
+        $this->assertSame('Pendiente', $this->ultimoEstadoPago(1));
+
+        /* La bitácora conserva la aprobación: reanudar agrega un renglón, no
+           borra el anterior. */
+        $this->assertDatabaseHas('estado_pago', [
+            'espa_id_pago' => 1,
+            'espa_id_c_estado_pago' => 2,
+        ]);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.pagos.show', 1))
+            ->assertOk()
+            ->assertSee('Validar pago')
+            ->assertSee('Rechazar pago');
+    }
+
+    public function test_reanudar_un_pago_rechazado_lo_devuelve_a_la_bandeja_de_revision(): void
+    {
+        app(RevisionPagos::class)->rechazar(1, 'El comprobante no es legible.');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.pagos.reanudar', 1))
+            ->assertRedirect(route('admin.pagos.show', ['id' => 1]))
+            ->assertSessionHas('success');
+
+        $this->assertSame('Pendiente', $this->ultimoEstadoPago(1));
+    }
+
+    public function test_no_se_puede_reanudar_un_pago_que_sigue_pendiente(): void
+    {
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('El pago aún no ha sido resuelto');
+
+        app(RevisionPagos::class)->reanudar(1);
+    }
+
+    public function test_reanudar_un_pago_exige_el_rol_de_administrador(): void
+    {
+        app(RevisionPagos::class)->aprobar(1);
+
+        /* El Auditor no tiene rol administrativo y la persona menos: reanudar
+           no se rige por el privilegio de pagos sino por el rol. */
+        $this->actingAs(Usuario::findOrFail(3))
+            ->post(route('admin.pagos.reanudar', 1))
+            ->assertForbidden();
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('admin.pagos.reanudar', 1))
+            ->assertForbidden();
+
+        $this->assertSame('Completado', $this->ultimoEstadoPago(1));
     }
 
     private function crearEsquemaTemporal(): void

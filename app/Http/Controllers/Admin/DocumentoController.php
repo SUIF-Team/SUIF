@@ -67,7 +67,11 @@ class DocumentoController extends Controller
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
         $resultado = $this->resultadoReal($expediente);
 
-        if (in_array($resultado, [RevisionDocumentos::APROBADO, RevisionDocumentos::RECHAZADO], true)) {
+        if (in_array($resultado, [
+            RevisionDocumentos::APROBADO,
+            RevisionDocumentos::RECHAZADO,
+            RevisionDocumentos::CANCELADO,
+        ], true)) {
             return redirect()->route('admin.documentos.resultado', [
                 'id' => $id,
                 'origen' => $contexto_bandeja['origen'],
@@ -219,6 +223,56 @@ class DocumentoController extends Controller
             ->with('success', 'La solicitud se rechazó y el historial fue actualizado.');
     }
 
+    /**
+     * Devuelve a revisión un expediente ya resuelto.
+     *
+     * Termina en la pantalla de revisión, no en la de resultado: el expediente
+     * completo vuelve a esperar dictamen.
+     */
+    public function reanudar(
+        Request $request,
+        string $id,
+        ConsultaPreRegistros $consulta_pre_registros,
+        RevisionDocumentos $revision_documentos,
+        OrigenBandejaAdmin $origen_bandeja
+    )
+    {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $this->expedienteReal($id, $consulta_pre_registros);
+
+        try {
+            $revision_documentos->reanudar((int) $id);
+        } catch (DomainException $exception) {
+            return $this->redirigirResultado($id, $contexto_bandeja)
+                ->with('warning', $exception->getMessage());
+        }
+
+        return $this->redirigirRevision($id, $contexto_bandeja)
+            ->with('success', 'El trámite volvió a revisión y el expediente completo espera dictamen.');
+    }
+
+    public function cancelar(
+        Request $request,
+        string $id,
+        ConsultaPreRegistros $consulta_pre_registros,
+        RevisionDocumentos $revision_documentos,
+        OrigenBandejaAdmin $origen_bandeja
+    )
+    {
+        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $this->expedienteReal($id, $consulta_pre_registros);
+
+        try {
+            $revision_documentos->cancelar((int) $id);
+        } catch (DomainException $exception) {
+            return $this->redirigirResultado($id, $contexto_bandeja)
+                ->with('warning', $exception->getMessage());
+        }
+
+        return $this->redirigirResultado($id, $contexto_bandeja)
+            ->with('success', 'El trámite se canceló y el historial fue actualizado.');
+    }
+
     public function resultado(
         Request $request,
         string $id,
@@ -247,6 +301,9 @@ class DocumentoController extends Controller
         } elseif ($resultado === RevisionDocumentos::REVISION) {
             $estados['preregistro'] = 'Completado';
             $estados['documentacion'] = 'En revisión';
+        } elseif ($resultado === RevisionDocumentos::CANCELADO) {
+            $estados['preregistro'] = 'Completado';
+            $estados['documentacion'] = 'Cancelado';
         }
 
         $notificacion = $notificacion_resultado->paraPreRegistro($expediente['persona'], $estados);
@@ -296,6 +353,7 @@ class DocumentoController extends Controller
         return match ($expediente['estados']['general']) {
             'Aprobada' => RevisionDocumentos::APROBADO,
             'Rechazada' => RevisionDocumentos::RECHAZADO,
+            'Cancelada' => RevisionDocumentos::CANCELADO,
             default => collect($expediente['persona']['documentos'])
                 ->contains(fn (array $documento): bool => $documento['estado'] === 'Rechazado')
                     ? RevisionDocumentos::REVISION

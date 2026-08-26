@@ -112,6 +112,15 @@ class AvancePersona
     }
 
     /**
+     * El trámite terminó sin certificación: da igual si el administrador lo
+     * rechazó en su momento o si lo canceló después de haberlo aprobado.
+     */
+    public function solicitudCerrada()
+    {
+        return in_array($this->estadoSolicitud, ['Rechazada', 'Cancelada'], true);
+    }
+
+    /**
      * Estado global de la documentación:
      * pendiente · en_proceso · revision · rechazado · aprobado
      */

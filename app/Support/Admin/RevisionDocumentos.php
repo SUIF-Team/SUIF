@@ -14,6 +14,11 @@ class RevisionDocumentos
 
     public const RECHAZADO = 'rechazado';
 
+    public const CANCELADO = 'cancelado';
+
+    /** Estados terminales de una solicitud: los que se pueden reanudar. */
+    private const ESTADOS_RESUELTOS = ['Aprobada', 'Rechazada', 'Cancelada'];
+
     /**
      * Registra una resolución histórica para cada documento de la solicitud.
      *
@@ -133,6 +138,45 @@ class RevisionDocumentos
         });
     }
 
+    /**
+     * Devuelve a revisión una solicitud ya resuelta.
+     *
+     * El expediente completo vuelve a dictaminarse: resolver() exige que se
+     * resuelvan exactamente los documentos que esperan revisión, así que
+     * reabrir la solicitud sin reabrir sus documentos la dejaría trabada.
+     */
+    public function reanudar(int $id_solicitud): string
+    {
+        return DB::transaction(function () use ($id_solicitud): string {
+            $estado = $this->estadoVigenteBloqueado($id_solicitud);
+
+            if (!in_array($estado, self::ESTADOS_RESUELTOS, true)) {
+                throw new DomainException('La solicitud no está resuelta: no hay nada que reanudar.');
+            }
+
+            $this->regresarDocumentosARevision($id_solicitud);
+            $this->registrarEstadoSolicitud($id_solicitud, 'En revisión');
+
+            return self::REVISION;
+        });
+    }
+
+    /**
+     * Cierra la solicitud como cancelada, incluso si ya había sido aprobada.
+     */
+    public function cancelar(int $id_solicitud): string
+    {
+        return DB::transaction(function () use ($id_solicitud): string {
+            if ($this->estadoVigenteBloqueado($id_solicitud) === 'Cancelada') {
+                throw new DomainException('La solicitud ya está cancelada.');
+            }
+
+            $this->registrarEstadoSolicitud($id_solicitud, 'Cancelada');
+
+            return self::CANCELADO;
+        });
+    }
+
     private function fechaLimiteValida(?string $fecha_limite): bool
     {
         if (!is_string($fecha_limite)) {
@@ -149,6 +193,20 @@ class RevisionDocumentos
 
     private function bloquearSolicitudEnRevision(int $id_solicitud): void
     {
+        if ($this->estadoVigenteBloqueado($id_solicitud) !== 'En revisión') {
+            throw new DomainException('La solicitud ya fue resuelta o no está disponible para revisión.');
+        }
+    }
+
+    /**
+     * Bloquea la solicitud y devuelve su estado vigente.
+     *
+     * Es el candado que comparten todas las transiciones administrativas: el
+     * lockForUpdate() serializa las decisiones concurrentes sobre el mismo
+     * expediente.
+     */
+    private function estadoVigenteBloqueado(int $id_solicitud): ?string
+    {
         $solicitud = DB::table('solicitud')
             ->where('soli_id_solicitud', $id_solicitud)
             ->lockForUpdate()
@@ -158,15 +216,48 @@ class RevisionDocumentos
             throw new DomainException('La solicitud no existe.');
         }
 
-        $estado = DB::table('estado_solicitud as es')
+        return DB::table('estado_solicitud as es')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->where('es.esso_id_solicitud', $id_solicitud)
             ->orderByDesc('es.esso_id_estado_solicitud')
             ->value('ces.esso_estado_solicitud');
+    }
 
-        if ($estado !== 'En revisión') {
-            throw new DomainException('La solicitud ya fue resuelta o no está disponible para revisión.');
+    /**
+     * Regresa a "En revisión" todos los documentos del expediente.
+     */
+    private function regresarDocumentosARevision(int $id_solicitud): void
+    {
+        $id_estado = DB::table('c_estado_documento')
+            ->where('esdo_estado_documento', 'En revisión')
+            ->value('esdo_id_c_estado_documento');
+
+        if (!$id_estado) {
+            throw new DomainException('El catálogo de estados documentales está incompleto.');
         }
+
+        $documentos = DB::table('documento')
+            ->where('soli_id_solicitud', $id_solicitud)
+            ->lockForUpdate()
+            ->pluck('docu_id_documento');
+
+        if ($documentos->isEmpty()) {
+            throw new DomainException('El expediente no tiene documentos que reanudar.');
+        }
+
+        $ahora = now();
+
+        DB::table('estado_documento')->insert(
+            $documentos
+                ->map(fn (mixed $id_documento): array => [
+                    'esdo_id_c_estado_documento' => $id_estado,
+                    'esdo_id_documento' => (int) $id_documento,
+                    'esdo_comentarios' => null,
+                    'esdo_fecha' => $ahora->toDateString(),
+                    'esdo_hora' => $ahora->toTimeString(),
+                ])
+                ->all()
+        );
     }
 
     /**

@@ -10,7 +10,7 @@ class ConsultaPreRegistros
     private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
     /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
-    private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
+    private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada', 'cancelada'];
 
     /**
      * Obtiene una fila por persona pre-registrada. La clave de acceso confirma
@@ -287,6 +287,13 @@ class ConsultaPreRegistros
                 'preregistro' => 'Rechazado',
                 'documentacion' => 'Pendiente',
             ],
+            /* Cancelar cierra un trámite que ya había avanzado: el pre-registro
+               se conserva completado y lo que se detiene es la documentación. */
+            'Cancelada' => [
+                'general' => 'Cancelada',
+                'preregistro' => 'Completado',
+                'documentacion' => 'Cancelado',
+            ],
             'En revisión', 'En Revisión' => [
                 'general' => 'En revisión',
                 'preregistro' => 'Completado',
@@ -304,7 +311,7 @@ class ConsultaPreRegistros
     {
         return match ($estado_solicitud) {
             'Aprobada' => 'admin-bandeja-preregistros-estado-aceptado',
-            'Rechazada' => 'admin-bandeja-preregistros-estado-rechazado',
+            'Rechazada', 'Cancelada' => 'admin-bandeja-preregistros-estado-rechazado',
             default => 'admin-bandeja-preregistros-estado-revision',
         };
     }

@@ -29,6 +29,12 @@ class AppServiceProvider extends ServiceProvider
             return $usuario->rol?->rol_tipo_rol === 'Administrador';
         });
 
+        /* Revertir una resolución ya notificada es privilegiado: sólo el rol
+           de Administrador puede reanudar o cancelar un trámite. */
+        Gate::define('reanudar-tramite', function (Usuario $usuario): bool {
+            return $usuario->rol?->rol_tipo_rol === 'Administrador';
+        });
+
             /* La barra de avance recibe siempre el avance real de la persona. */
         View::composer('partials.sidebar-progreso', function ($view) {
             $view->with('avance', new AvancePersona(auth()->id()));

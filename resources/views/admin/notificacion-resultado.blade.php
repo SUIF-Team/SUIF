@@ -54,10 +54,16 @@
         etiqueta="{{ $notificacion['etiqueta_regreso'] }}"
         etiqueta-accesible="{{ $notificacion['etiqueta_regreso_accesible'] }}"></back-navigation>
 </section>
+
+{{-- Fuera de la raíz Vue: el parcial trae su propio JavaScript llano. --}}
+<div class="admin-preregistro-flujo admin-preregistro-reversion-flujo">
+    @include('partials.admin.acciones-reversion', ['acciones' => $notificacion['acciones'] ?? []])
+</div>
 @endsection
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
 <script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-preregistro.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-reversion.js') }}"></script>
 @endsection

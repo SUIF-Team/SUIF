@@ -271,7 +271,9 @@ class ConsultaPagos
 
     private function estadoPreRegistro(string $estado_solicitud): string
     {
-        return $estado_solicitud === 'Rechazada' ? 'Rechazado' : 'Completado';
+        return in_array($estado_solicitud, ['Rechazada', 'Cancelada'], true)
+            ? 'Rechazado'
+            : 'Completado';
     }
 
     private function estadoDocumentacion(string $estado_solicitud): string

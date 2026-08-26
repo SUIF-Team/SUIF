@@ -55,7 +55,7 @@ class DashboardController extends Controller
         $capturado = $avance->tieneSolicitud();
         $documentacion = $avance->documentacionEstado();
         $aprobada = $avance->solicitudAprobada();
-        $rechazada = $avance->estadoSolicitud() === 'Rechazada';
+        $rechazada = $avance->solicitudCerrada();
 
         $pasos = [];
 
@@ -207,7 +207,7 @@ class DashboardController extends Controller
 
     private function estadoGeneral(AvancePersona $avance, array $sesion)
     {
-        if ($avance->estadoSolicitud() === 'Rechazada') {
+        if ($avance->solicitudCerrada()) {
             return $this->presentacionEstado('rejected');
         }
 

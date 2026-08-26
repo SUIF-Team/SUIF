@@ -9,20 +9,29 @@ class NotificacionResultado
         $resultado = $estados['resultado'] ?? null;
         $es_rechazo_preregistro = $resultado === 'rechazado'
             && ($estados['preregistro'] ?? null) === 'Rechazado';
-        $es_rechazo = $resultado === 'rechazado';
+        $es_cancelado = $resultado === RevisionDocumentos::CANCELADO;
+        /* Cancelar cierra el trámite igual que un rechazo: comparten títulos
+           en negativo y la paleta roja de la leyenda del tablero. */
+        $es_rechazo = $resultado === 'rechazado' || $es_cancelado;
         $es_aprobado = $resultado === 'aprobado';
 
         return [
             'persona' => $this->persona($persona),
-            'titulo_pagina' => $es_rechazo
-                ? 'SUIF — Solicitud rechazada'
-                : ($es_aprobado ? 'SUIF — Solicitud aprobada' : 'SUIF — Solicitud en revisión'),
-            'titulo' => $es_rechazo
-                ? 'SOLICITUD RECHAZADA'
-                : ($es_aprobado ? 'SOLICITUD APROBADA' : 'SOLICITUD EN REVISIÓN'),
-            'estado_general' => $es_rechazo
-                ? 'Rechazado'
-                : ($es_aprobado ? 'Aprobado' : 'En revisión'),
+            'titulo_pagina' => $es_cancelado
+                ? 'SUIF — Solicitud cancelada'
+                : ($es_rechazo
+                    ? 'SUIF — Solicitud rechazada'
+                    : ($es_aprobado ? 'SUIF — Solicitud aprobada' : 'SUIF — Solicitud en revisión')),
+            'titulo' => $es_cancelado
+                ? 'SOLICITUD CANCELADA'
+                : ($es_rechazo
+                    ? 'SOLICITUD RECHAZADA'
+                    : ($es_aprobado ? 'SOLICITUD APROBADA' : 'SOLICITUD EN REVISIÓN')),
+            'estado_general' => $es_cancelado
+                ? 'Cancelado'
+                : ($es_rechazo
+                    ? 'Rechazado'
+                    : ($es_aprobado ? 'Aprobado' : 'En revisión')),
             'clase_estado' => $es_rechazo
                 ? 'admin-preregistro-estado--rechazado'
                 : ($es_aprobado
@@ -52,6 +61,10 @@ class NotificacionResultado
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => $es_rechazo_preregistro ? 'preregistro' : 'documentacion',
+            'acciones' => $this->accionesDocumentacion(
+                (string) ($persona['id'] ?? ''),
+                $resultado
+            ),
         ];
     }
 
@@ -90,7 +103,69 @@ class NotificacionResultado
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => 'pago',
+            'acciones' => [$this->accionReanudarPago((string) $pago['id'])],
         ];
+    }
+
+    /**
+     * Acción para devolver un pago resuelto a la bandeja de revisión.
+     *
+     * La usan tanto la pantalla de resultado como el detalle en sólo lectura:
+     * desde la bandeja, "Ver pago" lleva al detalle, no al resultado.
+     *
+     * @return array{ruta: string, etiqueta: string, titulo_modal: string, texto_modal: string, id: string}
+     */
+    public function accionReanudarPago(string $id_pago): array
+    {
+        return [
+            'id' => 'reanudar-pago',
+            'ruta' => route('admin.pagos.reanudar', ['id' => $id_pago]),
+            'etiqueta' => 'Reanudar revisión del pago',
+            'titulo_modal' => '¿Reanudar la revisión de este pago?',
+            'texto_modal' => 'El pago volverá a "Por revisar" y podrás validarlo o rechazarlo de nuevo. La resolución anterior se conserva en el historial.',
+        ];
+    }
+
+    /**
+     * Acciones disponibles sobre un expediente según cómo haya quedado.
+     *
+     * @return array<int, array{ruta: string, etiqueta: string, titulo_modal: string, texto_modal: string, id: string}>
+     */
+    private function accionesDocumentacion(string $id_solicitud, ?string $resultado): array
+    {
+        if ($id_solicitud === '') {
+            return [];
+        }
+
+        $acciones = [];
+
+        /* Sólo se reanuda lo que ya está resuelto; mientras el expediente
+           espera subsanación no hay resolución que revertir. */
+        if (in_array($resultado, [
+            RevisionDocumentos::APROBADO,
+            RevisionDocumentos::RECHAZADO,
+            RevisionDocumentos::CANCELADO,
+        ], true)) {
+            $acciones[] = [
+                'id' => 'reanudar-tramite',
+                'ruta' => route('admin.documentos.reanudar', ['id' => $id_solicitud]),
+                'etiqueta' => 'Reanudar trámite',
+                'titulo_modal' => '¿Reanudar este trámite?',
+                'texto_modal' => 'El expediente completo volverá a revisión y tendrás que dictaminar de nuevo cada documento. El historial anterior se conserva.',
+            ];
+        }
+
+        if ($resultado !== RevisionDocumentos::CANCELADO) {
+            $acciones[] = [
+                'id' => 'cancelar-tramite',
+                'ruta' => route('admin.documentos.cancelar', ['id' => $id_solicitud]),
+                'etiqueta' => 'Cancelar trámite',
+                'titulo_modal' => '¿Cancelar este trámite?',
+                'texto_modal' => 'La solicitud quedará cancelada y la persona no podrá continuar. Podrás reanudarla después si hiciera falta.',
+            ];
+        }
+
+        return $acciones;
     }
 
     private function persona(array $persona): array
@@ -120,7 +195,7 @@ class NotificacionResultado
         return match ($estado) {
             'Completado' => 'admin-preregistro-paso--completado',
             'En revisión' => 'admin-preregistro-paso--actual',
-            'Rechazado' => 'admin-preregistro-paso--rechazado',
+            'Rechazado', 'Cancelado' => 'admin-preregistro-paso--rechazado',
             default => 'admin-preregistro-paso--pendiente',
         };
     }
