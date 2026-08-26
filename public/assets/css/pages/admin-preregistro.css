@@ -349,6 +349,18 @@
     background: #fdf5f5;
 }
 
+/* Para el "Cancelar" que acompaña a una decisión: sin el borde a color no
+   compite con el botón que sí resuelve. */
+.admin-preregistro-boton--neutral {
+    border-color: var(--border-light);
+    color: var(--text-muted);
+}
+
+.admin-preregistro-boton--neutral:hover,
+.admin-preregistro-boton--neutral:focus-visible {
+    background: #f6f6f6;
+}
+
 .admin-preregistro-boton:disabled {
     opacity: 0.65;
     cursor: wait;

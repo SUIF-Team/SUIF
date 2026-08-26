@@ -51,7 +51,7 @@
                 <p id="{{ $accion['id'] }}-descripcion">{{ $accion['texto_modal'] }}</p>
                 <form method="POST" action="{{ $accion['ruta'] }}" class="admin-reversion-modal-acciones">
                     @csrf
-                    <button class="admin-preregistro-boton" type="button" data-cerrar-reversion>
+                    <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" data-cerrar-reversion>
                         Cancelar
                     </button>
                     <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit">

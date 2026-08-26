@@ -98,19 +98,17 @@
     gap: 0.75rem;
 }
 
-.admin-pago-rechazo-panel {
-    display: grid;
-    gap: 0.75rem;
-}
-
+/* La tarjeta toma relleno y tamano de titulo de .admin-preregistro-detalle,
+   igual que la tarjeta principal de esta pantalla; aqui solo va el rojo del
+   rechazo y el formulario. */
 .admin-pago-rechazo-panel h2 {
-    margin: 0;
+    margin-bottom: 0.75rem;
     color: #a53630;
 }
 
 .admin-pago-rechazo-panel form {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.4rem;
 }
 
 .admin-pago-rechazo-panel textarea {
@@ -137,13 +135,15 @@
 }
 
 .admin-pago-rechazo-panel-acciones {
-    margin-top: 0.5rem;
+    margin-top: 0.6rem;
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
     justify-content: flex-end;
 }
 
+/* El deshabilitado de la hoja base usa cursor: wait, que aqui enganaria: el
+   boton no espera nada, falta capturar el motivo. */
 .admin-pago-rechazo-panel .admin-preregistro-boton[disabled] {
     opacity: 0.55;
     cursor: not-allowed;

@@ -132,7 +132,7 @@
     @if($pago['puede_revisarse'])
         <section
             id="panel-rechazo"
-            class="admin-preregistro-tarjeta admin-pago-rechazo-panel"
+            class="admin-preregistro-tarjeta admin-preregistro-detalle admin-pago-rechazo-panel"
             v-if="rechazoAbierto"
             aria-labelledby="panel-rechazo-titulo">
             <h2 id="panel-rechazo-titulo">Motivo del rechazo</h2>
@@ -143,7 +143,7 @@
                 <textarea
                     id="motivo-rechazo"
                     name="motivo_rechazo"
-                    rows="4"
+                    rows="3"
                     maxlength="2000"
                     required
                     ref="motivo"
@@ -154,7 +154,7 @@
                     <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $message }}</p>
                 @enderror
                 <div class="admin-pago-rechazo-panel-acciones">
-                    <button class="admin-preregistro-boton" type="button" v-on:click="cerrarRechazo">
+                    <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" v-on:click="cerrarRechazo">
                         Cancelar
                     </button>
                     <button
