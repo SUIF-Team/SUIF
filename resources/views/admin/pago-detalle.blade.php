@@ -168,16 +168,13 @@
         </section>
     @endif
 
+    @include('partials.admin.acciones-reversion', ['acciones' => $acciones ?? []])
+
     <back-navigation
         destino="{{ route('admin.pagos.index') }}"
         etiqueta="Atrás"
         etiqueta-accesible="Atrás"></back-navigation>
 </section>
-
-{{-- Fuera de la raíz Vue: el parcial trae su propio JavaScript llano. --}}
-<div class="admin-preregistro-flujo admin-preregistro-reversion-flujo">
-    @include('partials.admin.acciones-reversion', ['acciones' => $acciones ?? []])
-</div>
 @endsection
 
 @section('scripts')

@@ -7,8 +7,11 @@
     confirma en su propio modal antes de enviar, porque deshacer una decisión
     que la persona ya vio no debería ocurrir por un clic de más.
 
-    Se incluye FUERA de la raíz Vue de cada pantalla: así ninguna de las dos
-    apps (admin-preregistro / admin-pago-detalle) lo compila como plantilla.
+    Va dentro del flujo de cada pantalla para heredar su tarjeta y su
+    separación, así que las apps Vue de esas pantallas lo compilan como
+    plantilla. Es inocuo —aquí sólo hay HTML ya resuelto por Blade—, pero
+    obliga a cargar admin-reversion.js DESPUÉS del script que monta Vue: al
+    montar, Vue reemplaza estos nodos y los escuchadores se perderían.
 
     El @can duplica el middleware de las rutas a propósito: quien no puede
     revertir tampoco debería ver los botones.
@@ -16,10 +19,12 @@
 @can('reanudar-tramite')
 @if(!empty($acciones))
     <section class="admin-preregistro-tarjeta admin-preregistro-reversion" aria-labelledby="acciones-reversion-titulo">
-        <h2 id="acciones-reversion-titulo">Corregir la resolución</h2>
-        <p class="admin-preregistro-reversion-ayuda">
-            El historial conserva cada resolución: reanudar o cancelar agrega un movimiento nuevo, no borra el anterior.
-        </p>
+        <div class="admin-preregistro-reversion-texto">
+            <h2 id="acciones-reversion-titulo">Corregir la resolución</h2>
+            <p class="admin-preregistro-reversion-ayuda">
+                El historial conserva cada resolución: reanudar o cancelar agrega un movimiento nuevo, no borra el anterior.
+            </p>
+        </div>
 
         <div class="admin-preregistro-reversion-acciones">
             @foreach($acciones as $accion)

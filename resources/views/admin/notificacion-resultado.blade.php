@@ -49,16 +49,13 @@
         </div>
     </main>
 
+    @include('partials.admin.acciones-reversion', ['acciones' => $notificacion['acciones'] ?? []])
+
     <back-navigation
         destino="{{ $notificacion['ruta_regreso'] }}"
         etiqueta="{{ $notificacion['etiqueta_regreso'] }}"
         etiqueta-accesible="{{ $notificacion['etiqueta_regreso_accesible'] }}"></back-navigation>
 </section>
-
-{{-- Fuera de la raíz Vue: el parcial trae su propio JavaScript llano. --}}
-<div class="admin-preregistro-flujo admin-preregistro-reversion-flujo">
-    @include('partials.admin.acciones-reversion', ['acciones' => $notificacion['acciones'] ?? []])
-</div>
 @endsection
 
 @section('scripts')

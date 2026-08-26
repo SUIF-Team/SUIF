@@ -19,7 +19,8 @@
 .admin-preregistro-perfil p,
 .admin-preregistro-detalle h2,
 .admin-preregistro-documentos h2,
-.admin-preregistro-acciones-generales h2 {
+.admin-preregistro-acciones-generales h2,
+.admin-preregistro-reversion h2 {
     margin-top: 0;
 }
 
@@ -27,7 +28,8 @@
 .admin-preregistro-perfil h1,
 .admin-preregistro-detalle h2,
 .admin-preregistro-documentos h2,
-.admin-preregistro-acciones-generales h2 {
+.admin-preregistro-acciones-generales h2,
+.admin-preregistro-reversion h2 {
     color: var(--text-dark);
     font-family: var(--font-nav);
     font-weight: 700;
@@ -265,13 +267,15 @@
 
 .admin-preregistro-detalle,
 .admin-preregistro-documentos,
-.admin-preregistro-acciones-generales {
+.admin-preregistro-acciones-generales,
+.admin-preregistro-reversion {
     padding: 1.5rem;
 }
 
 .admin-preregistro-detalle h2,
 .admin-preregistro-documentos h2,
-.admin-preregistro-acciones-generales h2 {
+.admin-preregistro-acciones-generales h2,
+.admin-preregistro-reversion h2 {
     margin-bottom: 1.5rem;
     font-size: 1.125rem;
 }
@@ -784,21 +788,30 @@
 /* Acciones que revierten una resolución ya notificada (reanudar / cancelar).
    Viven aquí porque las cargan tanto la pantalla de resultado como el detalle
    de pago; el modal de sedes no sirve, su hoja no se carga en ninguna. */
-/* El bloque va en su propio contenedor, hermano del flujo principal: sin
-   quitarle el relleno superior quedaría separado por un hueco enorme. */
-.admin-preregistro-reversion-flujo {
-    padding-top: 0;
+/* La tarjeta toma relleno y tipografia de los grupos compartidos de arriba;
+   aqui solo va lo suyo: el titulo pegado a su ayuda y los botones en la misma
+   fila, para que el bloque no se coma media pantalla. */
+.admin-preregistro-reversion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
-.admin-preregistro-reversion {
-    display: grid;
-    gap: 0.75rem;
+.admin-preregistro-reversion h2 {
+    margin-bottom: 0.25rem;
+}
+
+.admin-preregistro-reversion-texto {
+    flex: 1 1 22rem;
 }
 
 .admin-preregistro-reversion-ayuda {
     margin: 0;
     color: var(--text-muted);
-    line-height: 1.6;
+    font-size: 0.8125rem;
+    line-height: 1.5;
 }
 
 .admin-preregistro-reversion-acciones {
@@ -806,7 +819,6 @@
     flex-wrap: wrap;
     gap: 0.75rem;
 }
-
 .admin-reversion-modal[hidden] { display: none; }
 
 .admin-reversion-modal {
