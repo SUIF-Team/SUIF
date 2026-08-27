@@ -13,10 +13,11 @@
     obliga a cargar admin-reversion.js DESPUÉS del script que monta Vue: al
     montar, Vue reemplaza estos nodos y los escuchadores se perderían.
 
-    El @can duplica el middleware de las rutas a propósito: quien no puede
-    revertir tampoco debería ver los botones.
+    Las acciones llegan ya filtradas por permiso: revertir le toca a quien
+    dictó la resolución, así que la documentación la reabre la UIF y el pago la
+    DEC, y no se destapan con el mismo permiso. Cuando no queda ninguna, la
+    sección entera desaparece.
 --}}
-@can('reanudar-tramite')
 @if(!empty($acciones))
     <section class="admin-preregistro-tarjeta admin-preregistro-reversion" aria-labelledby="acciones-reversion-titulo">
         <div class="admin-preregistro-reversion-texto">
@@ -62,4 +63,3 @@
         </div>
     @endforeach
 @endif
-@endcan

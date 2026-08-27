@@ -613,6 +613,8 @@ class GestionSedesTest extends TestCase
             'evaluacion',
             'sede',
             'persona',
+            'privilegio_rol',
+            'privilegio',
             'usuario',
             'rol',
         ] as $tabla) {
@@ -627,6 +629,18 @@ class GestionSedesTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
+            $table->boolean('usua_activo')->default(true);
+        });
+        /* El permiso de sedes se resuelve contra PRIVILEGIO_ROL y ya no contra
+           el nombre del rol: sin estas dos tablas ninguna ruta admin responde. */
+        Schema::create('privilegio', function (Blueprint $table): void {
+            $table->integer('priv_id_privilegio')->primary();
+            $table->string('priv_privilegio', 35);
+        });
+        Schema::create('privilegio_rol', function (Blueprint $table): void {
+            $table->increments('ropr_id_privilegio_rol');
+            $table->integer('ropr_id_privilegio');
+            $table->integer('ropr_id_rol');
         });
         Schema::create('persona', function (Blueprint $table): void {
             $table->integer('pers_id_persona')->primary();
@@ -711,7 +725,15 @@ class GestionSedesTest extends TestCase
     {
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
-            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
+            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Superusuario'],
+        ]);
+        /* Sedes y grupos son del Superusuario: es quien tiene "Gestionar
+           Sedes". El usuario 1 no tiene ninguno, y por eso recibe 403. */
+        DB::table('privilegio')->insert([
+            ['priv_id_privilegio' => 1, 'priv_privilegio' => 'Gestionar Sedes'],
+        ]);
+        DB::table('privilegio_rol')->insert([
+            ['ropr_id_privilegio' => 1, 'ropr_id_rol' => 2],
         ]);
         DB::table('usuario')->insert([
             ['usua_id_usuario' => 1, 'usua_id_rol' => 1, 'usua_clave_acceso' => 'persona'],

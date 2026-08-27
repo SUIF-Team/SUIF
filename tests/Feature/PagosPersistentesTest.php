@@ -239,12 +239,13 @@ class PagosPersistentesTest extends TestCase
         app(RevisionPagos::class)->reanudar(1);
     }
 
-    public function test_reanudar_un_pago_exige_el_rol_de_administrador(): void
+    public function test_reanudar_un_pago_exige_el_privilegio_de_gestionar_pagos(): void
     {
         app(RevisionPagos::class)->aprobar(1);
 
-        /* El Auditor no tiene rol administrativo y la persona menos: reanudar
-           no se rige por el privilegio de pagos sino por el rol. */
+        /* Revertir una resolución le toca a quien la dictó, y el dinero lo
+           resuelve la DEC: reanudar un pago se rige por el mismo privilegio
+           que revisarlo. Ni el Auditor ni la persona lo tienen. */
         $this->actingAs(Usuario::findOrFail(3))
             ->post(route('admin.pagos.reanudar', 1))
             ->assertForbidden();

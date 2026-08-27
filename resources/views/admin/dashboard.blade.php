@@ -1,5 +1,9 @@
 {{--
     Panel principal del administrador.
+
+    Ni los indicadores ni las acciones son fijos: el controlador ya entregó
+    sólo lo que quien mira tiene permiso de abrir, así que aquí se recorren tal
+    cual. Un Admin UIF y un Admin DEC ven tableros distintos.
 --}}
 @extends('layouts.admin')
 
@@ -14,29 +18,18 @@
     <div class="admin-dashboard-contenedor">
         <h1 id="admin-dashboard-titulo" class="admin-dashboard-titulo">Panel administrativo</h1>
 
-        <section class="admin-dashboard-indicadores" aria-label="Resumen administrativo">
-            <article class="admin-dashboard-indicador admin-dashboard-indicador-azul">
-                <h2>Personas registradas</h2>
-                <p>{{ number_format($resumen['personas_registradas']) }}</p>
-            </article>
-
-            <article class="admin-dashboard-indicador admin-dashboard-indicador-naranja">
-                <h2>Solicitudes en revisión</h2>
-                <p>{{ number_format($resumen['solicitudes_en_revision']) }}</p>
-            </article>
-
-            <article class="admin-dashboard-indicador admin-dashboard-indicador-naranja">
-                <h2>Pagos por validar</h2>
-                <p>{{ number_format($resumen['pagos_pendientes']) }}</p>
-            </article>
-
-            <article class="admin-dashboard-indicador admin-dashboard-indicador-verde">
-                <h2>Certificados pendientes</h2>
-                <p class="admin-dashboard-indicador-sin-datos">
-                    {{ is_null($resumen['certificados_pendientes']) ? 'Sin datos persistidos' : number_format($resumen['certificados_pendientes']) }}
-                </p>
-            </article>
-        </section>
+        @if (!empty($indicadores))
+            <section class="admin-dashboard-indicadores" aria-label="Resumen administrativo">
+                @foreach ($indicadores as $indicador)
+                    <article class="admin-dashboard-indicador {{ $indicador['clase'] }}">
+                        <h2>{{ $indicador['titulo'] }}</h2>
+                        <p @class(['admin-dashboard-indicador-sin-datos' => $indicador['sin_datos']])>
+                            {{ $indicador['valor'] }}
+                        </p>
+                    </article>
+                @endforeach
+            </section>
+        @endif
 
         <section class="admin-dashboard-acciones" aria-labelledby="admin-dashboard-acciones-titulo">
             <h2 id="admin-dashboard-acciones-titulo">Acciones</h2>

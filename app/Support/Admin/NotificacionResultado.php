@@ -2,6 +2,8 @@
 
 namespace App\Support\Admin;
 
+use Illuminate\Support\Facades\Gate;
+
 class NotificacionResultado
 {
     public function paraPreRegistro(array $persona, array $estados): array
@@ -61,10 +63,10 @@ class NotificacionResultado
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => $es_rechazo_preregistro ? 'preregistro' : 'documentacion',
-            'acciones' => $this->accionesDocumentacion(
+            'acciones' => $this->permitidas($this->accionesDocumentacion(
                 (string) ($persona['id'] ?? ''),
                 $resultado
-            ),
+            )),
         ];
     }
 
@@ -103,7 +105,7 @@ class NotificacionResultado
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => 'pago',
-            'acciones' => [$this->accionReanudarPago((string) $pago['id'])],
+            'acciones' => $this->permitidas([$this->accionReanudarPago((string) $pago['id'])]),
         ];
     }
 
@@ -119,11 +121,33 @@ class NotificacionResultado
     {
         return [
             'id' => 'reanudar-pago',
+            'permiso' => 'reanudar-pago',
             'ruta' => route('admin.pagos.reanudar', ['id' => $id_pago]),
             'etiqueta' => 'Reanudar revisión del pago',
             'titulo_modal' => '¿Reanudar la revisión de este pago?',
             'texto_modal' => 'El pago volverá a "Por revisar" y podrás validarlo o rechazarlo de nuevo. La resolución anterior se conserva en el historial.',
         ];
+    }
+
+    /**
+     * Deja sólo las acciones que quien mira puede ejecutar.
+     *
+     * Cada acción declara su permiso porque revertir le toca a quien dictó la
+     * resolución: la documentación la reabre la UIF y el pago la DEC. Antes
+     * bastaba un permiso para las dos, cuando había un solo administrador.
+     *
+     * El filtro duplica a propósito el middleware de las rutas: quien no puede
+     * revertir tampoco debería ver el botón.
+     *
+     * @param array<int, array<string, string>> $acciones
+     * @return array<int, array<string, string>>
+     */
+    private function permitidas(array $acciones): array
+    {
+        return array_values(array_filter(
+            $acciones,
+            fn (array $accion): bool => Gate::allows($accion['permiso'])
+        ));
     }
 
     /**
@@ -148,6 +172,7 @@ class NotificacionResultado
         ], true)) {
             $acciones[] = [
                 'id' => 'reanudar-tramite',
+                'permiso' => 'reanudar-tramite',
                 'ruta' => route('admin.documentos.reanudar', ['id' => $id_solicitud]),
                 'etiqueta' => 'Reanudar trámite',
                 'titulo_modal' => '¿Reanudar este trámite?',
@@ -158,6 +183,7 @@ class NotificacionResultado
         if ($resultado !== RevisionDocumentos::CANCELADO) {
             $acciones[] = [
                 'id' => 'cancelar-tramite',
+                'permiso' => 'reanudar-tramite',
                 'ruta' => route('admin.documentos.cancelar', ['id' => $id_solicitud]),
                 'etiqueta' => 'Cancelar trámite',
                 'titulo_modal' => '¿Cancelar este trámite?',

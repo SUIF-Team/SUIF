@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Usuario;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use App\Support\Admin\ConsultaPreRegistros;
@@ -72,6 +73,10 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
     public function test_dashboard_y_bandeja_renderizan_datos_reales_sin_expediente_general(): void
     {
+        /* La zona administrativa exige sesión: sin ella todo /admin redirige
+           al login. El usuario 3 es el Superusuario, que ve el tablero entero. */
+        $this->actingAs(Usuario::findOrFail(3));
+
         $this->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Personas registradas')
@@ -89,6 +94,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
                 'Pagos',
                 'Sedes',
                 'Grupos',
+                'Administradores',
                 'Certificados',
             ]);
 
@@ -121,6 +127,20 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
+            $table->boolean('usua_activo')->default(true);
+        });
+
+        /* Los permisos del tablero se resuelven contra PRIVILEGIO_ROL, así que
+           la zona administrativa no responde sin estas dos tablas. */
+        Schema::create('privilegio', function (Blueprint $table): void {
+            $table->integer('priv_id_privilegio')->primary();
+            $table->string('priv_privilegio', 35);
+        });
+
+        Schema::create('privilegio_rol', function (Blueprint $table): void {
+            $table->increments('ropr_id_privilegio_rol');
+            $table->integer('ropr_id_privilegio');
+            $table->integer('ropr_id_rol');
         });
 
         Schema::create('persona', function (Blueprint $table): void {
@@ -203,8 +223,28 @@ class ConsultaPersonasRegistradasTest extends TestCase
     {
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
-            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
+            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Superusuario'],
             ['rol_id_rol' => 3, 'rol_tipo_rol' => 'Candidato'],
+        ]);
+
+        /* El usuario 3 es el Superusuario con el que se abre el tablero: tiene
+           el catálogo completo, así que ve todas las tarjetas. */
+        DB::table('privilegio')->insert([
+            ['priv_id_privilegio' => 1, 'priv_privilegio' => 'Validación Registro'],
+            ['priv_id_privilegio' => 2, 'priv_privilegio' => 'Gestionar Pagos'],
+            ['priv_id_privilegio' => 3, 'priv_privilegio' => 'Generación Reportes'],
+            ['priv_id_privilegio' => 4, 'priv_privilegio' => 'Gestionar usuarios'],
+            ['priv_id_privilegio' => 5, 'priv_privilegio' => 'Gestionar Referencias'],
+            ['priv_id_privilegio' => 6, 'priv_privilegio' => 'Gestionar Sedes'],
+        ]);
+
+        DB::table('privilegio_rol')->insert([
+            ['ropr_id_privilegio' => 1, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 2, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 3, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 4, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 5, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 6, 'ropr_id_rol' => 2],
         ]);
 
         DB::table('usuario')->insert([

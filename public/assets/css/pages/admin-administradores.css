@@ -1,0 +1,132 @@
+/* Módulo de administradores.
+
+   El grueso del diseño lo aportan admin-preregistro.css y admin-sedes.css, que
+   esta pantalla reutiliza tal cual. Aquí sólo vive lo que no existía: el chip
+   del tipo de administrador, la CURP monoespaciada y el selector de tipo en
+   forma de tarjetas. */
+
+.admin-administradores-curp {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    color: var(--text-dark);
+    background: none;
+    padding: 0;
+}
+
+.admin-administradores-tipo {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Un color por área, para distinguirlas de un vistazo en la tabla. */
+.admin-administradores-tipo--superusuario { background: #ede9fe; color: #5b21b6; }
+.admin-administradores-tipo--admin-uif { background: #dbeafe; color: #1e40af; }
+.admin-administradores-tipo--admin-dec { background: #fef3c7; color: #92400e; }
+
+.admin-administradores-acciones {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.admin-administradores-acciones form {
+    margin: 0;
+}
+
+.admin-administradores-reactivar {
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: #287a45;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.admin-administradores-reactivar:hover,
+.admin-administradores-reactivar:focus-visible {
+    color: #1b5730;
+}
+
+/* Selector de tipo. Tarjetas en vez de un <select> porque cada opción necesita
+   explicar qué abre: es la decisión con más consecuencias del formulario. */
+.admin-administradores-roles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.75rem;
+    border: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+}
+
+.admin-administradores-roles-leyenda {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.admin-administradores-rol {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.65rem;
+    background: var(--surface-white);
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-administradores-rol:hover {
+    border-color: var(--unam-blue);
+}
+
+/* El realce vive en la etiqueta, no en el input, para que la tarjeta entera se
+   vea seleccionada y no sólo el botón de radio. */
+.admin-administradores-rol:has(input:checked) {
+    border-color: var(--unam-blue);
+    box-shadow: 0 0 0 2px rgba(17, 47, 75, 0.15);
+}
+
+.admin-administradores-rol:has(input:focus-visible) {
+    outline: 2px solid var(--unam-gold);
+    outline-offset: 2px;
+}
+
+.admin-administradores-rol input {
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.admin-administradores-rol-cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.admin-administradores-rol-nombre {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.admin-administradores-rol-descripcion {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.admin-administradores-campo-curp {
+    text-transform: uppercase;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.05em;
+}

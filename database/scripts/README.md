@@ -2,13 +2,13 @@
 
 Orden de ejecución en una instalación nueva:
 
-> Atajo: `suif_instalacion_completa.sql` equivale a correr los ocho pasos de
+> Atajo: `suif_instalacion_completa.sql` equivale a correr los nueve pasos de
 > abajo en su orden, en un solo archivo y —a diferencia de `suif.sql`— sin
 > ningún `drop`, así que admite `ON_ERROR_STOP` desde el primer paso:
 >
 >     psql -v ON_ERROR_STOP=1 -h HOST -U suif -d suif -f suif_instalacion_completa.sql
 >
-> Es un archivo GENERADO por concatenación de los ocho: no se edita a mano, y
+> Es un archivo GENERADO por concatenación de los nueve: no se edita a mano, y
 > si el responsable de la base cambia alguno de los fuentes, se regenera.
 > Sólo para bases vacías; sobre una base con datos se siguen usando los
 > scripts numerados, que son idempotentes.
@@ -22,6 +22,7 @@ Orden de ejecución en una instalación nueva:
 6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
 7. `suif_rfc_persona.sql` — RFC de la persona en PERSONA
 8. `suif_referencia_fecha_emision.sql` — fecha de emisión en REFERENCIA_BANCARIA
+9. `suif_roles_administrativos.sql` — roles administrativos y catálogo de privilegios
 
 `suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
 que el banco emitió la referencia. Va DESPUÉS de
@@ -138,13 +139,52 @@ También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
 `suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
 registrar nada.
 
-## Los otros cinco se pueden repetir
+## Los otros seis se pueden repetir
 
 `suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
-`suif_catalogos.sql`, `suif_grupos_multiples.sql` y
-`suif_referencias_bancarias.sql` son idempotentes: volver a ejecutarlos no
-duplica ni destruye nada. Por eso la regla al desplegar es correrlos
-SIEMPRE, sin preguntarse si ya se corrieron.
+`suif_catalogos.sql`, `suif_grupos_multiples.sql`,
+`suif_referencias_bancarias.sql` y `suif_roles_administrativos.sql` son
+idempotentes: volver a ejecutarlos no duplica ni destruye nada. Por eso la
+regla al desplegar es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
+
+## Hay tres tipos de administrador y los permisos salen de PRIVILEGIO_ROL
+
+`suif_roles_administrativos.sql` es **requisito de despliegue** del módulo de
+administradores. Hace cuatro cosas:
+
+- Agrega `USUARIO.USUA_ACTIVO` (`BOOLEAN NOT NULL DEFAULT TRUE`). Dar de baja a
+  un administrador no borra su renglón: le retira el acceso. `PERSONA` y
+  `USUARIO` son el rastro de quién dictaminó cada expediente.
+- Renombra el rol 2 de `Administrador` a `Superusuario`. Era el único
+  administrador y tenía todo el catálogo; ahora es el rol sin límites y su
+  nombre lo dice. Mismo patrón que el refactor «Participante → Persona».
+- Da de alta `Admin UIF` y `Admin DEC`. `ROL_TIPO_ROL` mide 15 caracteres, por
+  eso los nombres son cortos y la columna no se toca.
+- Siembra los seis privilegios y los reparte. **Sin esto nadie tiene acceso a
+  nada**: `suif.sql` crea `PRIVILEGIO` vacío y `suif_catalogos.sql` no lo
+  llena. Hasta ahora lo sembraba en tiempo de ejecución `suif:crear-admin`.
+
+El reparto es:
+
+| Rol | Privilegios |
+|---|---|
+| `Superusuario` | los seis |
+| `Admin UIF` | `Validación Registro` |
+| `Admin DEC` | `Gestionar Pagos`, `Gestionar Referencias` |
+
+Los `setval` van **antes** de los `INSERT`. `suif_catalogos.sql` ya alinea la
+secuencia de `ROL`, así que hoy no corrigen nada; están primero por si la base
+llegó a este punto sin haber corrido catálogos completo, porque entonces un
+alta sin id explícito chocaría con una llave existente.
+
+### suif_revierte_roles_administrativos.sql quedó obsoleto
+
+Deshace el renombre del rol 2 para devolverlo a `Administrador`. Servía cuando
+el módulo se retiró en agosto y el código volvía a comparar el nombre del rol.
+**No lo ejecutes después de `suif_roles_administrativos.sql`**: dejaría al rol
+2 con un nombre que ningún permiso reconoce y la cuenta entraría al sistema sin
+poder abrir nada. Se conserva sólo para quien restaure un dump de aquellas
+fechas.
 
 ## suif_reconstruye_tablas_perdidas.sql: recuperación, no instalación
 
