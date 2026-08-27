@@ -12,8 +12,12 @@ DIAS_RETENCION=14
 FECHA=$(date +%Y-%m-%d_%H%M)
 ARCHIVO="$DESTINO/suif_${FECHA}.dump"
 
-mkdir -p "$DESTINO"
-chmod 700 "$DESTINO"
+# El destino lo crea root en la instalación (install -d -o postgres);
+# aquí solo se comprueba, porque postgres no puede crearlo bajo /var.
+if [ ! -d "$DESTINO" ] || [ ! -w "$DESTINO" ]; then
+    echo "El destino $DESTINO no existe o no es escribible; ver deploy/README.md" >&2
+    exit 1
+fi
 
 # -Fc: formato custom, comprimido y restaurable por partes con pg_restore.
 "$PGDUMP" -Fc --no-password -d "$BASE" -f "$ARCHIVO.parcial"

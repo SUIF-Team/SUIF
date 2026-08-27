@@ -17,6 +17,9 @@ seguridad. Todo lo que sigue se ejecuta en la VM, no en el equipo local.
 ### Instalación (una sola vez)
 
 ```bash
+# El destino se crea como root porque el usuario postgres no puede
+# crear directorios bajo /var; después el dueño es postgres.
+sudo install -d -o postgres -g postgres -m 700 /var/respaldos/suif
 sudo install -m 755 deploy/respaldos/suif-respaldo.sh /usr/local/bin/suif-respaldo.sh
 sudo cp deploy/respaldos/suif-respaldo.service deploy/respaldos/suif-respaldo.timer /etc/systemd/system/
 sudo systemctl daemon-reload
