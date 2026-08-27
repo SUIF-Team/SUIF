@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RecuperacionClaveController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DocumentoController as AdminDocumentoController;
 use App\Http\Controllers\Admin\GrupoController as AdminGrupoController;
@@ -25,6 +26,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+/* Recuperación pública de la clave: la persona escribe su CURP y recibe
+   una clave nueva en su correo principal. */
+Route::get('/recuperar-clave', [RecuperacionClaveController::class, 'formulario'])->name('clave.recuperar');
+Route::post('/recuperar-clave', [RecuperacionClaveController::class, 'restablecer'])->middleware('throttle:recuperar-clave')->name('clave.recuperar.post');
 
 // Ajuste temporal: se eliminó 'middleware' => 'auth' (va al inicio de route::group)
 
@@ -70,6 +76,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::get('/personas-registradas', [AdminPersonaController::class, 'registradas'])->name('personas.registradas.index');
     Route::get('/personas/{solicitud}/documentos/{documento}', [AdminDocumentoController::class, 'ver'])->name('personas.documentos.ver');
     Route::get('/personas/{id}', [AdminPersonaController::class, 'show'])->name('personas.show');
+    /* Restaurar claves toca credenciales: se exige el privilegio del
+       catálogo aunque el resto del módulo de personas siga abierto. */
+    Route::middleware(['auth', 'can:gestionar-usuarios'])->group(function () {
+        Route::post('/personas-registradas/{id}/restaurar-clave', [AdminPersonaController::class, 'restaurarClave'])->name('personas.registradas.restaurar-clave');
+    });
     Route::middleware(['auth', 'can:gestionar-pagos'])->group(function () {
         Route::get('/pagos', [AdminPagoController::class, 'index'])->name('pagos.index');
         Route::get('/pagos/{id}/comprobante', [AdminPagoController::class, 'comprobante'])->name('pagos.comprobante');

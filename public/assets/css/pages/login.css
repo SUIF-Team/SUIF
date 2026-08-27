@@ -212,6 +212,18 @@
     text-underline-offset: 0.18em;
 }
 
+/* El enlace de recuperación acompaña al de pre-registro con menos peso:
+   es la salida de emergencia, no la acción principal. */
+.login-recuperar a {
+    color: #3b4550;
+    font-weight: 400;
+}
+
+.login-recuperar a:hover,
+.login-recuperar a:focus-visible {
+    color: #10161d;
+}
+
 @media (max-width: 991.98px) {
     .login-seccion {
         min-height: 0;

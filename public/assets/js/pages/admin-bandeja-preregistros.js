@@ -35,7 +35,9 @@
                     campo: 'nombre',
                     termino: '',
                     estado: 'Todos'
-                }
+                },
+                persona_seleccionada: null,
+                foco_restaurar: null
             };
         },
         computed: {
@@ -92,6 +94,29 @@
             },
             claseEstado: function (registro) {
                 return registro.clase_estado || '';
+            },
+            /* Confirmación para restaurar la clave. Solo la bandeja de
+               personas registradas renderiza los botones que llaman aquí;
+               en las demás bandejas estos métodos quedan sin uso. */
+            abrirRestaurar: function (persona, evento) {
+                this.persona_seleccionada = persona;
+                this.foco_restaurar = evento ? evento.currentTarget : null;
+                document.body.classList.add('admin-reversion-modal-abierto');
+
+                this.$nextTick(function () {
+                    if (this.$refs.cancelar_restaurar) {
+                        this.$refs.cancelar_restaurar.focus();
+                    }
+                }.bind(this));
+            },
+            cerrarRestaurar: function () {
+                this.persona_seleccionada = null;
+                document.body.classList.remove('admin-reversion-modal-abierto');
+
+                if (this.foco_restaurar) {
+                    this.foco_restaurar.focus();
+                    this.foco_restaurar = null;
+                }
             }
         }
     }).mount(root);

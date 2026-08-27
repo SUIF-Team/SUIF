@@ -35,7 +35,7 @@ class DashboardController extends Controller
             [
                 'titulo' => 'Personas registradas',
                 'ruta' => 'admin.personas.registradas.index',
-                'descripcion' => 'Consulta las personas registradas.',
+                'descripcion' => 'Gestiona las personas registradas.',
             ],
             [
                 'titulo' => 'Subir referencias bancarias',

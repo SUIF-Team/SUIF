@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
 use App\Servicios\AvancePersona;
+use App\Servicios\GestionClaves;
 use App\Servicios\FormatoPreRegistro;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -188,7 +188,7 @@ class PreRegistroController extends Controller
             ->with('success', 'Tus datos fueron actualizados correctamente.');
     }
 
-       public function guardarDatos(Request $request)
+       public function guardarDatos(Request $request, GestionClaves $gestion_claves)
     {
         /* Se normaliza la CURP antes de validar para que la comprobación
            de duplicados no dependa de cómo la haya escrito la persona. */
@@ -237,7 +237,7 @@ class PreRegistroController extends Controller
         $datos['correo_alterno'] = mb_strtolower(trim($datos['correo_alterno']), 'UTF-8');
 
         $estado = $this->estado($request);
-        $clave = empty($estado['clave']) ? $this->generarClave() : $estado['clave'];
+        $clave = empty($estado['clave']) ? $gestion_claves->generar() : $estado['clave'];
 
         /* Alta real de la persona en la base de datos. */
         $idUsuario = $this->registrarPersona($datos, $clave);
@@ -693,11 +693,6 @@ class PreRegistroController extends Controller
             'correo_enviado' => true,
             'documentos' => [],
         ], (array) $request->session()->get('suif.preregistro', []));
-    }
-
-    private function generarClave()
-    {
-        return strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4));
     }
 
     private function enviarClave($correo, $clave): bool

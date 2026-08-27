@@ -38,8 +38,19 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by('preregistro:'.$request->ip());
         });
 
+        /* Recuperar la clave es público, envía correo y revoca la clave
+           vigente: sin freno permite barrer CURPs o bombardear a una
+           persona con restablecimientos. */
+        RateLimiter::for('recuperar-clave', function (Request $request) {
+            return Limit::perMinute(5)->by('recuperar-clave:'.$request->ip());
+        });
+
         Gate::define('gestionar-pagos', function (Usuario $usuario): bool {
             return $usuario->tienePrivilegio('Gestionar Pagos');
+        });
+
+        Gate::define('gestionar-usuarios', function (Usuario $usuario): bool {
+            return $usuario->tienePrivilegio('Gestionar usuarios');
         });
 
         Gate::define('gestionar-sedes', function (Usuario $usuario): bool {

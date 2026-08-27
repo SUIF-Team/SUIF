@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\GestionClaves;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use App\Support\Admin\ConsultaPreRegistros;
 use App\Support\Admin\OrigenBandejaAdmin;
@@ -46,7 +47,15 @@ class PersonaController extends Controller
     {
         // TODO futuro: definir un expediente general antes de enlazar una
         // persona que puede tener varias solicitudes.
-        $personas = $consulta_personas->personas();
+        $personas = collect($consulta_personas->personas())
+            ->map(function (array $persona): array {
+                $persona['ruta_restaurar_clave'] = route('admin.personas.registradas.restaurar-clave', [
+                    'id' => $persona['id'],
+                ]);
+
+                return $persona;
+            })
+            ->all();
 
         return view('admin.personas-registradas', [
             'datos_vista' => [
@@ -54,6 +63,43 @@ class PersonaController extends Controller
                 'estados' => $consulta_personas->estados(),
             ],
         ]);
+    }
+
+    /**
+     * Genera una clave de acceso nueva para una persona de la bandeja y la
+     * envía a su correo principal. La clave solo se muestra al administrador
+     * cuando el correo no pudo salir: ese aviso es la única copia.
+     */
+    public function restaurarClave(
+        string $id,
+        ConsultaPersonasRegistradas $consulta_personas,
+        GestionClaves $gestion_claves
+    )
+    {
+        $persona = ctype_digit($id) ? $consulta_personas->persona((int) $id) : null;
+
+        if (!$persona) {
+            return redirect()->route('admin.personas.registradas.index')
+                ->with('warning', 'La persona solicitada no fue encontrada.');
+        }
+
+        $clave = $gestion_claves->generar();
+        $gestion_claves->actualizar($persona['id_usuario'], $clave);
+
+        $correo = $gestion_claves->correoPrincipal((int) $id);
+
+        if ($correo === null) {
+            return redirect()->route('admin.personas.registradas.index')
+                ->with('warning', 'La clave de '.$persona['nombre_completo'].' fue restaurada, pero no tiene un correo principal registrado. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.');
+        }
+
+        if (!$gestion_claves->enviar($correo, $clave)) {
+            return redirect()->route('admin.personas.registradas.index')
+                ->with('warning', 'La clave de '.$persona['nombre_completo'].' fue restaurada, pero el correo no pudo enviarse. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.');
+        }
+
+        return redirect()->route('admin.personas.registradas.index')
+            ->with('success', 'La clave de '.$persona['nombre_completo'].' fue restaurada y enviada a su correo principal.');
     }
 
     public function show(

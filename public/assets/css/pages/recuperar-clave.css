@@ -1,0 +1,38 @@
+/* Pantalla pública para recuperar la clave de acceso. Reusa la tarjeta y
+   el formulario de login.css; aquí solo vive lo propio de esta página. */
+
+.recuperar-clave-seccion {
+    min-height: 720px;
+    padding: clamp(3rem, 6vw, 6.5rem) clamp(1.25rem, 4vw, 3rem);
+    display: grid;
+    place-items: center;
+    background-color: rgba(248, 249, 250, 0.94);
+    background-image:
+        linear-gradient(rgba(248, 249, 250, 0.88), rgba(248, 249, 250, 0.88)),
+        var(--fondo-sistema);
+    background-position: center;
+    background-size: cover;
+}
+
+.recuperar-clave-seccion .login-titulo-formulario {
+    margin-bottom: 1rem;
+}
+
+.recuperar-clave-descripcion {
+    margin: 0 0 1.75rem;
+    color: #3b4550;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.recuperar-clave-regreso {
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 575.98px) {
+    .recuperar-clave-seccion {
+        min-height: 540px;
+        padding: 3rem 1.25rem;
+    }
+}

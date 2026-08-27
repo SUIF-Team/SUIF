@@ -48,6 +48,28 @@ class ConsultaPersonasRegistradas
             ->all();
     }
 
+    /**
+     * Una persona de la bandeja, con el id de su usuario para operar la
+     * cuenta. Devuelve null si no está en la bandeja: solo se restauran
+     * claves de personas con solicitud aprobada, rol Persona/Candidato y
+     * clave vigente.
+     */
+    public function persona(int $id_persona): ?array
+    {
+        $persona = $this->consultaPersonas()
+            ->addSelect('u.usua_id_usuario')
+            ->where('p.pers_id_persona', $id_persona)
+            ->first();
+
+        if (!$persona) {
+            return null;
+        }
+
+        return $this->normalizarPersona($persona) + [
+            'id_usuario' => (int) $persona->usua_id_usuario,
+        ];
+    }
+
     public function resumenDashboard(): array
     {
         return [

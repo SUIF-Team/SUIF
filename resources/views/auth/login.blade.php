@@ -94,6 +94,9 @@
                 <p class="login-preregistro">
                 <a href="{{ route('persona.preregistro.index') }}">¿Aún no tienes clave? Realiza tu pre-registro.</a>
             </p>
+            <p class="login-preregistro login-recuperar">
+                <a href="{{ route('clave.recuperar') }}">Recuperar contraseña</a>
+            </p>
             </form>
         </div>
     </div>
