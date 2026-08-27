@@ -22,4 +22,16 @@ class RutasPersonaTest extends TestCase
             parse_url(route('admin.personas.registradas.index'), PHP_URL_PATH)
         );
     }
+
+    public function test_las_rutas_de_desarrollo_quedaron_retiradas(): void
+    {
+        /* reiniciar mutaba la sesión por GET y demo apuntaba a un método
+           inexistente: ninguna debe volver a registrarse. */
+        $this->assertFalse(Route::has('persona.preregistro.reiniciar'));
+        $this->assertFalse(Route::has('persona.resultados.demo'));
+
+        /* Sin ruta registrada el 404 se resuelve antes que el middleware auth. */
+        $this->get('/persona/preregistro/reiniciar')->assertNotFound();
+        $this->get('/persona/resultados/demo/aprobado')->assertNotFound();
+    }
 }

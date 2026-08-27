@@ -671,18 +671,6 @@ class PreRegistroController extends Controller
                 : 'Los documentos que corregiste fueron enviados a revisión.');
     }
 
-    public function reiniciar(Request $request)
-    {
-        if (!config('app.debug')) {
-            abort(404);
-        }
-
-        $request->session()->forget('suif.preregistro');
-        $request->session()->forget('suif.persona.estado.preregistro_completo');
-
-        return redirect()->route('persona.preregistro.index');
-    }
-
     private function estado(Request $request)
     {
         return array_merge([
