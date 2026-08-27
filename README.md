@@ -18,24 +18,23 @@ SUIF es una aplicación web de la Facultad de Contaduría y Administración de l
 
 | Capa | Tecnología / versión | Uso |
 |---|---|---|
-| Backend | PHP **8.4.23** | Versión exacta de la imagen Docker y plataforma de Composer. |
+| Backend | PHP **8.4.23** | Versión fijada del entorno y plataforma de Composer. |
 | Framework | Laravel **13.x** (`^13.8`) | Rutas, controladores, Blade y estructura MVC. Configuración vía `bootstrap/app.php` (sin `Kernel.php`). |
-| Servidor web | Apache | El `DocumentRoot` apunta a `public/`. |
-| Dependencias PHP | Composer **2.10.2** | Instalado dentro de la imagen de la aplicación. |
-| Base de datos | PostgreSQL **18.4** | Servicio Docker `db`; el volumen se monta en `/var/lib/postgresql` (formato requerido desde Postgres 18+). |
-| Node.js | **24.18 LTS** | Instalado dentro de la imagen de la aplicación, listo para Vite. |
-| Frontend | Blade, CSS y JavaScript directos | Los assets se sirven desde `public/assets` con `asset()`. Vite/Vue quedan disponibles en el contenedor para adopción futura; hoy no hay paso de compilación obligatorio. |
+| Servidor web | Apache | Nativo; el `DocumentRoot` apunta a `public/`. |
+| Dependencias PHP | Composer **2.10.2** | Gestor de dependencias PHP. |
+| Base de datos | PostgreSQL **18.4** | Servicio nativo; Laravel conecta a `127.0.0.1:5432`. |
+| Node.js | **24.18 LTS** | Disponible para Vite en el futuro; hoy no hay paso de compilación. |
+| Frontend | Blade, CSS y JavaScript directos | Los assets se sirven desde `public/assets` con `asset()`. Vite/Vue quedan disponibles para adopción futura; hoy no hay paso de compilación obligatorio. |
 | Bibliotecas en la interfaz pública | Bootstrap 5.3.3, Font Awesome 6.4.0 y Vue 3 | Se cargan por CDN en las vistas que los usan. |
 
-Todas las versiones anteriores están fijadas de forma exacta (misma imagen Docker, mismo `composer.json`) para que el equipo trabaje en entornos idénticos aunque cada quien use su propia PC. No cambies una versión sin acordarlo con el resto del equipo.
+Todas las versiones anteriores están fijadas de forma exacta (mismo entorno instalado, mismo `composer.json`) para que el equipo trabaje en condiciones idénticas aunque cada quien use su propia PC. No cambies una versión sin acordarlo con el resto del equipo.
 
 ## Estructura relevante
 
 ```text
 app/Http/Controllers/       Controladores HTTP
 config/                     Configuración de Laravel y SUIF
-database/                   Directorios de migraciones, factories y seeders (sin implementación versionada)
-docker/apache/              VirtualHost de Apache (DocumentRoot: public/)
+database/                   Scripts SQL del esquema (database/scripts/) y directorios de migraciones, factories y seeders (sin implementación versionada)
 public/assets/
   css/app.css               Base visual y variables compartidas
   css/partials/             Estilos de componentes comunes (navbar y footer)
@@ -64,49 +63,39 @@ El fondo compartido del login y las pantallas internas del sistema se conserva e
 
 La identidad común también usa `public/assets/img/logos/475_logo.png` en el footer y `public/assets/img/logos/fca-unam-logo.ico` como favicon de todos los layouts.
 
-## Ejecutar con Docker
+## Instalación y ejecución
 
-### Requisitos
+La aplicación se ejecuta directamente sobre el sistema, sin Docker: Apache sirve Laravel desde `public/` y PostgreSQL corre como servicio nativo. No se debe abrir `resources/views` directamente ni añadir `/public` a la URL.
 
-- Docker Desktop con Docker Compose v2.
-- Git para obtener el repositorio.
+### Desarrollo local
 
-El puerto definitivo de la aplicación es **8088**. La aplicación se abre en <http://localhost:8088/> y Apache sirve Laravel desde `public/`; no se debe abrir `resources/views` directamente ni añadir `/public` a la URL.
+Requisitos: PHP 8.4, Composer 2, PostgreSQL 18 y Apache (o servidor equivalente) con el `DocumentRoot` en `public/`. Desde la raíz del repositorio:
 
-### Primera instalación (PowerShell)
-
-Desde la raíz del repositorio:
-
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
+composer install --no-interaction --prefer-dist
+php artisan key:generate
 ```
 
-Antes de iniciar PostgreSQL, abre `.env` y define una contraseña local no vacía en `DB_PASSWORD`. No reutilices esa contraseña fuera del entorno de desarrollo. Después ejecuta:
-
-```powershell
-docker compose up -d --build
-docker compose exec app composer install --no-interaction --prefer-dist
-docker compose exec app php artisan key:generate
-```
-
-`.env.example` y el valor de respaldo de `compose.yaml` fijan el mapeo definitivo `8088:80`. Si ya existe un archivo `.env` anterior, comprueba que contenga `APP_URL=http://localhost:8088` y `APP_PORT=8088`.
+Después crea la base `suif`, define en `.env` los valores reales de `DB_*` (una contraseña local no vacía que no se reutilice fuera de desarrollo) y carga el esquema con los scripts de `database/scripts/` según su `README.md` — para una base vacía basta `suif_instalacion_completa.sql`.
 
 Para comprobar el entorno:
 
-```powershell
-docker compose ps
-docker compose exec app php -v
-docker compose exec app composer --version
-docker compose exec app php artisan --version
+```bash
+php -v
+composer --version
+php artisan --version
 ```
 
-La salida de PHP debe empezar con `PHP 8.4.23` y Composer debe indicar `2.10.2`.
+La salida de PHP debe empezar con `PHP 8.4` y Composer debe indicar una versión 2.x.
 
-En inicios posteriores basta con:
+### Producción (VM AlmaLinux)
 
-```powershell
-docker compose up -d
-```
+El despliegue corre en una VM AlmaLinux con Apache (`httpd`) y PostgreSQL 18 nativos; el `DocumentRoot` es `/var/www/SUIF/public` y Laravel conecta a `127.0.0.1:5432`. El procedimiento completo de instalación está en `docs/SUIF-Instalacion-Entorno-AlmaLinux10.docx` y las reglas operativas en `AGENTS.md` (sección «Entorno y verificación»).
+
+Después de cada `git pull` en la VM ejecuta `php artisan optimize:clear` y vuelve a cachear en orden (`config:cache`, `route:cache`, `view:cache`): un caché de rutas viejo conserva rutas retiradas y deja middleware nuevos sin aplicar.
+
+### Leyenda de estados del dashboard
 
 Los estados visuales del dashboard tienen una única leyenda compartida:
 
@@ -119,26 +108,17 @@ Los estados visuales del dashboard tienen una única leyenda compartida:
 
 Los módulos completados o pendientes muestran únicamente su estado. Los módulos accionables —en proceso o rechazados— muestran un solo botón con la etiqueta `Continuar`.
 
-Para detener los contenedores sin borrar los datos de PostgreSQL:
-
-```powershell
-docker compose down
-```
-
-La base de datos se expone al equipo anfitrión en `localhost:5433` de forma predeterminada. Dentro de Docker, Laravel usa el host `db` y el puerto `5432`.
-
 ### Configuración de base de datos
 
 La configuración inicial está en `.env.example`:
 
 ```dotenv
 DB_CONNECTION=pgsql
-DB_HOST=db
+DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=suif
 DB_USERNAME=suif
 DB_PASSWORD=
-DB_FORWARD_PORT=5433
 ```
 
 Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona. Las demás credenciales de ejemplo son sólo para desarrollo y no se deben reutilizar en un ambiente compartido o de producción.
@@ -156,7 +136,7 @@ Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona.
 
 ## Lineamientos de mantenimiento
 
-- Mantener el stack fijado a PHP 8.4.23 / Laravel ^13.8 / PostgreSQL 18.4 (ver tabla arriba); si el equipo decide actualizar, cambiar `Dockerfile`, `compose.yaml` y `composer.json` juntos y avisar a todo el equipo antes de reconstruir.
+- Mantener el stack fijado a PHP 8.4.23 / Laravel ^13.8 / PostgreSQL 18.4 (ver tabla arriba); si el equipo decide actualizar, cambiar `composer.json` y el entorno instalado a la par, y avisar a todo el equipo antes de hacerlo.
 - No agregar paquetes Composer, npm, bundlers ni frameworks nuevos sin validar su compatibilidad y acordar el cambio.
 - Mantener la separación MVC: las vistas presentan, los controladores coordinan y los modelos/persistencia encapsulan datos.
 - Usar formularios `POST`, protección CSRF con `@csrf` —Laravel 13 renombró el middleware a `PreventRequestForgery`— y validación del lado servidor al implementar flujos.
