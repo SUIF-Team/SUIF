@@ -1,0 +1,5 @@
+# Los scripts y unidades se ejecutan en la VM AlmaLinux: siempre LF,
+# aunque el repositorio se edite en Windows (un CRLF rompe bash).
+*.sh text eol=lf
+*.service text eol=lf
+*.timer text eol=lf

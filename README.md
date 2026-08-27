@@ -35,6 +35,7 @@ Todas las versiones anteriores están fijadas de forma exacta (mismo entorno ins
 app/Http/Controllers/       Controladores HTTP
 config/                     Configuración de Laravel y SUIF
 database/                   Scripts SQL del esquema (database/scripts/) y directorios de migraciones, factories y seeders (sin implementación versionada)
+deploy/                     Respaldo automático de la base y runbook operativo de la VM
 public/assets/
   css/app.css               Base visual y variables compartidas
   css/partials/             Estilos de componentes comunes (navbar y footer)
@@ -146,4 +147,6 @@ Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona.
 
 ## Documentación de referencia
 
-El directorio `docs/` conserva material institucional de referencia, incluido el instructivo, convocatoria, preguntas frecuentes y lineamientos de pago. Esos documentos no sustituyen la implementación de los flujos en la aplicación.
+El directorio `docs/` conserva material institucional de referencia, incluido el instructivo, convocatoria, preguntas frecuentes y lineamientos de pago, además del instructivo de instalación del servidor (`docs/SUIF-Instalacion-Entorno-AlmaLinux10.docx`). Esos documentos no sustituyen la implementación de los flujos en la aplicación.
+
+La operación del servidor —respaldo diario de PostgreSQL y checklist de despliegue— está documentada en [deploy/README.md](deploy/README.md).
