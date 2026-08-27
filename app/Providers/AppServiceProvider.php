@@ -5,7 +5,10 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Servicios\AvancePersona;
 use App\Models\Usuario;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
@@ -17,6 +20,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        /* El login se ataca por CURP: el primer límite frena la fuerza bruta
+           sobre una cuenta y el segundo los barridos de CURPs desde una
+           misma dirección. */
+        RateLimiter::for('login', function (Request $request) {
+            $curp = mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8');
+
+            return [
+                Limit::perMinute(5)->by('login:'.$curp.'|'.$request->ip()),
+                Limit::perMinute(20)->by('login-ip:'.$request->ip()),
+            ];
+        });
+
+        /* El alta de pre-registro es pública, crea cuentas y envía correo:
+           sin freno permite registros masivos. */
+        RateLimiter::for('preregistro', function (Request $request) {
+            return Limit::perMinute(5)->by('preregistro:'.$request->ip());
+        });
+
         Gate::define('gestionar-pagos', function (Usuario $usuario): bool {
             return $usuario->tienePrivilegio('Gestionar Pagos');
         });

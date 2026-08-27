@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Ajuste temporal: se eliminó 'middleware' => 'auth' (va al inicio de route::group)
@@ -31,7 +31,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
     /* Públicas: la persona todavía no tiene cuenta cuando entra aquí. */
     Route::get('/preregistro', [PreRegistroController::class, 'index'])->name('preregistro.index');
-    Route::post('/preregistro/datos', [PreRegistroController::class, 'guardarDatos'])->name('preregistro.datos.store');
+    Route::post('/preregistro/datos', [PreRegistroController::class, 'guardarDatos'])->middleware('throttle:preregistro')->name('preregistro.datos.store');
 
     /* A partir de aquí ya existe la cuenta: se exige sesión iniciada. */
     Route::middleware('auth')->group(function () {

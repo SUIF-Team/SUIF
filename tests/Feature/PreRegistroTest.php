@@ -107,6 +107,17 @@ class PreRegistroTest extends TestCase
         $this->assertNull(session('suif.preregistro')['clave']);
     }
 
+    public function test_el_alta_masiva_topa_con_el_limite_por_ip(): void
+    {
+        /* Payload vacío: la validación corta antes de tocar la base, pero
+           cada intento cuenta para el freno. */
+        for ($i = 0; $i < 5; $i++) {
+            $this->post(route('persona.preregistro.datos.store'), [])->assertRedirect();
+        }
+
+        $this->post(route('persona.preregistro.datos.store'), [])->assertStatus(429);
+    }
+
     private function datosValidos(array $cambios = []): array
     {
         return array_merge([
