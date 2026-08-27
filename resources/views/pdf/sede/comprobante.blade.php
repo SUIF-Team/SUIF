@@ -7,8 +7,7 @@
     enable_remote apagado. public_path() cae dentro del chroot del paquete.
 
     El mapa de la pantalla es un iframe de Google Maps y eso no viaja a un PDF:
-    aquí va un QR con el mismo enlace, y debajo el enlace en texto por si no se
-    puede escanear.
+    aquí va un QR con el mismo enlace, para abrir la ubicación desde el teléfono.
 --}}
 <!DOCTYPE html>
 <html lang="es">
@@ -21,8 +20,7 @@
     <table class="membrete">
         <tr>
             <td class="membrete__escudos">
-                <img src="{{ public_path('assets/img/logos/unam-logo.png') }}" alt="Escudo de la UNAM">
-                <img src="{{ public_path('assets/img/logos/fca-unam-logo.png') }}" alt="Logotipo de la FCA">
+                <img src="{{ public_path('assets/img/logos/fca-unam-azul.png') }}" alt="Escudos de la UNAM y de la FCA">
             </td>
             <td class="membrete__texto">
                 <strong>UNIVERSIDAD NACIONAL AUTÓNOMA DE MÉXICO</strong>
@@ -78,10 +76,7 @@
                 </td>
                 <td class="aplicacion__mapa">
                     <img src="{{ $qr }}" alt="Código QR con la ubicación de la sede">
-                    <p>
-                        Escanea para abrir la ubicación en Google Maps<br>
-                        <span class="aplicacion__enlace">{{ $mapa }}</span>
-                    </p>
+                    <p>Escanea para abrir la ubicación en Google Maps</p>
                 </td>
             </tr>
         </table>

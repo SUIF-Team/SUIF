@@ -91,7 +91,6 @@ class ComprobanteSede
             'direccion' => $sede['direccion'],
             'fecha' => $sede['fecha'],
             'horario' => $sede['horario'],
-            'mapa' => $mapa,
             'qr' => $this->qr->svgDataUri($mapa, 220),
             'recomendaciones' => config('suif.comprobante_sede.recomendaciones', []),
             'emitido' => Carbon::now()->locale('es')->translatedFormat('d \d\e F \d\e Y, H:i'),
