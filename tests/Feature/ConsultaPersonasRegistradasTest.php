@@ -51,12 +51,23 @@ class ConsultaPersonasRegistradasTest extends TestCase
         $this->assertSame(2, app(ConsultaPagos::class)->totalPorValidar());
     }
 
-    public function test_el_filtro_solo_ofrece_los_tres_estados_de_revision(): void
+    /**
+     * Las dos bandejas no ofrecen los mismos filtros, y es a propósito: en
+     * pre-registros se puede cancelar un trámite, así que ese estado tiene que
+     * poder filtrarse. La de personas registradas sólo lista aprobadas y no
+     * tiene nada que hacer con «Cancelada».
+     */
+    public function test_cada_bandeja_ofrece_los_estados_que_le_corresponden(): void
     {
-        $esperados = ['En revisión', 'Aprobada', 'Rechazada'];
+        $this->assertSame(
+            ['En revisión', 'Aprobada', 'Rechazada'],
+            app(ConsultaPersonasRegistradas::class)->estados()
+        );
 
-        $this->assertSame($esperados, app(ConsultaPersonasRegistradas::class)->estados());
-        $this->assertSame($esperados, app(ConsultaPreRegistros::class)->estados());
+        $this->assertSame(
+            ['En revisión', 'Aprobada', 'Rechazada', 'Cancelada'],
+            app(ConsultaPreRegistros::class)->estados()
+        );
     }
 
     public function test_dashboard_y_bandeja_renderizan_datos_reales_sin_expediente_general(): void
