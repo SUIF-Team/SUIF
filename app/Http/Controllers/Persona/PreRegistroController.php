@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Persona;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ClaveAcceso;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -45,6 +46,12 @@ class PreRegistroController extends Controller
         /* Quien ya tiene solicitud ve el resumen de sus datos, no el formulario. */
         if ($this->solicitudActual() && $estado['fase'] !== 'clave') {
             $estado['fase'] = 'registrado';
+
+            /* Sesiones anteriores a que avanzar() limpiara la clave. */
+            if (!empty($estado['clave'])) {
+                $estado['clave'] = null;
+                $request->session()->put('suif.preregistro', $estado);
+            }
         }
 
              return view('persona.preregistro', [
@@ -247,8 +254,10 @@ class PreRegistroController extends Controller
         $estado['datos'] = $datos;
         $estado['clave'] = $clave;
         $estado['fase'] = 'clave';
+        /* Si el correo no salió, la pantalla de la clave lo advierte:
+           esa pantalla pasa a ser el único lugar donde verla. */
+        $estado['correo_enviado'] = $this->enviarClave($datos['correo_principal'], $clave);
         $request->session()->put('suif.preregistro', $estado);
-        $this->enviarClave($datos['correo_principal'], $clave);
 
         return redirect()->route('persona.preregistro.index')
             ->with('success', 'Tus datos fueron guardados correctamente.');
@@ -478,6 +487,10 @@ class PreRegistroController extends Controller
 
         if ($estado['fase'] === 'clave') {
             $estado['fase'] = 'formatos';
+            /* La persona confirmó que guardó su clave: no debe quedar
+               en claro dentro de la sesión. */
+            $estado['clave'] = null;
+            unset($estado['correo_enviado']);
         } elseif ($estado['fase'] === 'formatos') {
             $estado['fase'] = 'documentos';
         }
@@ -677,6 +690,7 @@ class PreRegistroController extends Controller
             'fase' => 'datos',
             'datos' => [],
             'clave' => null,
+            'correo_enviado' => true,
             'documentos' => [],
         ], (array) $request->session()->get('suif.preregistro', []));
     }
@@ -686,14 +700,17 @@ class PreRegistroController extends Controller
         return strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4));
     }
 
-    private function enviarClave($correo, $clave)
+    private function enviarClave($correo, $clave): bool
     {
         try {
-            Mail::raw('Tu clave de acceso SUIF es: '.$clave, function ($mensaje) use ($correo) {
-                $mensaje->to($correo)->subject('Clave de acceso para SUIF');
-            });
+            Mail::to($correo)->send(new ClaveAcceso($clave));
+
+            return true;
         } catch (\Throwable $exception) {
+            /* Solo el motivo del fallo: la clave jamás debe ir al log. */
             Log::warning('No fue posible enviar la clave de pre-registro.', ['error' => $exception->getMessage()]);
+
+            return false;
         }
     }
    

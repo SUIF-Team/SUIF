@@ -35,7 +35,11 @@
                     <span class="pr-clave__icon" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
                     <p class="pr-clave__eyebrow">Pre-registro iniciado</p>
                     <h1 id="pr-clave-titulo">Tus datos fueron registrados correctamente</h1>
-                    <p class="pr-clave__texto">Guarda tu clave de acceso. También la enviamos a tu correo principal para que puedas retomar el proceso.</p>
+                    @if($estado['correo_enviado'] ?? true)
+                        <p class="pr-clave__texto">Guarda tu clave de acceso. También la enviamos a tu correo principal para que puedas retomar el proceso.</p>
+                    @else
+                        <div class="pr-alert pr-error">No pudimos enviar el correo con tu clave. Cópiala y guárdala ahora desde esta pantalla: es el único lugar donde podrás verla.</div>
+                    @endif
 
                     <div class="pr-clave__codigo" aria-label="Clave de acceso generada">
                         <span id="pr-key">{{ $estado['clave'] }}</span>
