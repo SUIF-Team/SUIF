@@ -164,6 +164,35 @@ Los roles nuevos se insertan sin id explícito. En una base de desarrollo que co
 al rol 2, así que el renombre a «Superusuario» no le aplica. No es un problema a
 resolver: los ambientes de prueba se reconstruyen con el orden de arriba.
 
+## suif_reconstruye_tablas_perdidas.sql: recuperación, no instalación
+
+No va en el orden de arriba y no se ejecuta en una instalación nueva. Repone
+ocho tablas —`privilegio`, `privilegio_rol`, `tipo_documento`,
+`c_estado_pago`, `pago`, `estado_pago`, `evaluacion` y
+`referencia_bancaria`— sobre una base a la que le faltan, sin tocar las que
+sigan vivas. Si ya están todas, no hace nada.
+
+Se escribió después de que la suite de pruebas corriera contra la base real:
+con la configuración de Laravel cacheada, `phpunit.xml` no logra imponer
+SQLite en memoria y las pruebas borran su propio esquema donde estén
+apuntando. Ver la nota de `AGENTS.md` sobre `config:clear`.
+
+**No uses `suif.sql` para esto**: empieza con `drop table` de las 36 tablas y
+se llevaría también las que sobrevivieron.
+
+Córrelo con `--single-transaction`, para que un error revierta todo en vez de
+dejar la base a medias, y después vuelve a pasar `suif_catalogos.sql` y
+`suif_roles_administrativos.sql`, que son idempotentes y reponen el resto:
+
+    psql -v ON_ERROR_STOP=1 --single-transaction -h HOST -U suif -d suif \
+         -f suif_reconstruye_tablas_perdidas.sql
+
+Lo que el script no puede devolver son los datos capturados: los pagos, sus
+resoluciones y el catálogo de referencias nacen vacíos. Las referencias se
+recargan desde el CSV de la DEC. Y como `SOLICITUD` conservaba la liga a
+pagos y evaluaciones que ya no existen, esas columnas se ponen en nulo: quien
+ya había elegido sede tendrá que elegirla otra vez.
+
 ## Antes de tocar producción
 
 Respaldar primero, sin excepción:
