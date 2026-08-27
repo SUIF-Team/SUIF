@@ -63,7 +63,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
         $resultado = $this->resultadoReal($expediente);
 
@@ -106,7 +106,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
 
         if ($this->resultadoReal($expediente)) {
@@ -200,7 +200,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
 
         if ($this->resultadoReal($expediente)) {
@@ -237,7 +237,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $this->expedienteReal($id, $consulta_pre_registros);
 
         try {
@@ -259,7 +259,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $this->expedienteReal($id, $consulta_pre_registros);
 
         try {
@@ -281,7 +281,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
         $resultado = $this->resultadoReal($expediente);
 

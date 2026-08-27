@@ -25,7 +25,7 @@ class PersonaController extends Controller
             ->map(function (array $persona) use ($origen_bandeja): array {
                 $persona['ruta_expediente'] = route('admin.personas.show', [
                     'id' => $persona['id'],
-                    'origen' => $origen_bandeja->contexto(OrigenBandejaAdmin::PREREGISTROS)['origen'],
+                    'origen' => $origen_bandeja->contexto()['origen'],
                 ]);
 
                 return $persona;
@@ -63,7 +63,7 @@ class PersonaController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
 
         abort_unless(ctype_digit($id), 404);
 
