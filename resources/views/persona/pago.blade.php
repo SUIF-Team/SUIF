@@ -46,11 +46,20 @@
             <div class="pago-tarjeta">
                 <h1>Pago</h1>
                 <p class="pago-estatus-linea">
-                    El estatus de tu pago es el siguiente: 
+                    El estatus de tu pago es el siguiente:
                     <span class="pago-chip pago-chip--{{ $pagoEstado }}">
                         {{ $pagoEstado === 'revision' ? 'En revisión' : ($pagoEstado === 'validado' ? 'Aprobado' : 'Rechazado') }}
                     </span>
                 </p>
+
+                {{-- El motivo acompaña al estatus, no al formulario: es el
+                     porqué de la decisión, igual que en el expediente. --}}
+                @if($pagoEstado === 'rechazado')
+                    <div class="pago-observacion">
+                        <strong>Motivo del rechazo</strong>
+                        <p>{{ $motivoRechazo ?: 'Tu comprobante fue rechazado porque no cumple con los requisitos necesarios.' }}</p>
+                    </div>
+                @endif
             </div>
 
             <div class="pago-tarjeta">
@@ -62,9 +71,8 @@
                     <h2 class="pago-tarjeta__titulo">Pago validado</h2>
                     <p>Tu comprobante fue aprobado por el equipo administrativo. Ya puedes continuar con la selección de sede.</p>
                 @elseif($pagoEstado === 'rechazado')
-                    <h2 class="pago-tarjeta__titulo pago-tarjeta__titulo--error">Comentarios</h2>
-                    <p>{{ $motivoRechazo ?: 'Tu comprobante fue rechazado porque no cumple con los requisitos necesarios.' }}</p>
-                    <p>Para subsanar esta situación, carga nuevamente un comprobante correcto y legible.</p>
+                    <h2 class="pago-tarjeta__titulo pago-tarjeta__titulo--error">Subsana tu comprobante</h2>
+                    <p>Revisa el motivo del rechazo y carga nuevamente un comprobante correcto y legible.</p>
                     @if($puedeCargar)
                         @include('partials.pago-comprobante-form', [
     'etiquetaBoton' => 'Subsanar',

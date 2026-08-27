@@ -148,6 +148,34 @@
     color: #9b1717;
 }
 
+/* Mismo tratamiento que el motivo del rechazo de un documento en el
+   pre-registro (.pr-observation, persona-preregistro.css): la persona
+   reconoce el aviso sin importar en qué etapa del trámite lo encuentre.
+   Se copia en lugar de reutilizarse porque esa hoja no se carga aquí. */
+.pago-observacion {
+    margin-top: 1.25rem;
+    padding: 1.125rem;
+    border: 1px solid #ebc7c7;
+    border-radius: 12px;
+    background: #fff8f8;
+    color: #8d1117;
+}
+
+.pago-observacion strong {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+}
+
+/* El motivo lo escribe a mano quien revisa: sus saltos de línea se respetan. */
+.pago-observacion p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
 .pago-form {
     display: flex;
     flex-wrap: wrap;
