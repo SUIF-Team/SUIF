@@ -2,20 +2,16 @@
 
 namespace Tests\Feature;
 
-use App\Models\Usuario;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use App\Support\Admin\ConsultaPreRegistros;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
 
 class ConsultaPersonasRegistradasTest extends TestCase
 {
-    use SiembraAdministradores;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -65,11 +61,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
     public function test_dashboard_y_bandeja_renderizan_datos_reales_sin_expediente_general(): void
     {
-        /* El usuario 3 es el Superusuario: es el único que ve el tablero completo. */
-        $superusuario = Usuario::findOrFail(3);
-
-        $this->actingAs($superusuario)
-            ->get(route('admin.dashboard'))
+        $this->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Personas registradas')
             ->assertSee('Solicitudes en revisión')
@@ -86,12 +78,10 @@ class ConsultaPersonasRegistradasTest extends TestCase
                 'Pagos',
                 'Sedes',
                 'Grupos',
-                'Administradores',
                 'Certificados',
             ]);
 
-        $this->actingAs($superusuario)
-            ->get(route('admin.personas.registradas.index'))
+        $this->get(route('admin.personas.registradas.index'))
             ->assertOk()
             ->assertSee('Ada Lovelace')
             ->assertSee('Cuenta Candidata')
@@ -120,9 +110,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
-            $table->boolean('usua_activo')->default(true);
         });
-        $this->crearTablasDePrivilegios();
 
         Schema::create('persona', function (Blueprint $table): void {
             $table->integer('pers_id_persona')->primary();
@@ -204,12 +192,9 @@ class ConsultaPersonasRegistradasTest extends TestCase
     {
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
-            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Superusuario'],
+            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
             ['rol_id_rol' => 3, 'rol_tipo_rol' => 'Candidato'],
         ]);
-
-        /* El tablero sólo pinta lo que el privilegio de quien mira permite. */
-        $this->concederPrivilegiosAlRol(2, $this->privilegiosDeSuperusuario());
 
         DB::table('usuario')->insert([
             ['usua_id_usuario' => 1, 'usua_id_rol' => 1, 'usua_clave_acceso' => 'hash-1'],

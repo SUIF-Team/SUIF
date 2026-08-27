@@ -1,5 +1,4 @@
-/* Pantallas de sedes, grupos y administradores: comparten diseño y modal de
-   baja. El mapa sólo aparece donde hay dirección que ubicar. */
+/* Pantallas de sedes y de grupos: comparten diseño, mapa y modal de baja. */
 (function () {
     'use strict';
 
@@ -12,7 +11,7 @@
         }).mount(navegacion);
     }
 
-    var formulario = document.querySelector('[data-admin-sede-formulario], [data-admin-grupo-formulario], [data-admin-administrador-formulario]');
+    var formulario = document.querySelector('[data-admin-sede-formulario], [data-admin-grupo-formulario]');
     if (!formulario) {
         return;
     }

@@ -2,9 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Servicios\GestionAdministradores;
-use App\Support\Admin\AccesoAdministrativo;
-use DomainException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -12,12 +9,8 @@ use Illuminate\Support\Facades\Hash;
 /**
  * CrearAdministrador
  *
- * Responsabilidad: dar de alta —o promover— una persona con un rol
- * administrativo y dejar su rol con los privilegios que le tocan.
- *
- * Es la única puerta de entrada cuando todavía no hay nadie que administre
- * usuarios: en cuanto existe un Superusuario, las altas se hacen desde el
- * módulo de administradores, que comparte servicio con este comando.
+ * Responsabilidad: dar de alta —o promover— una persona con rol
+ * Administrador y concederle todos los privilegios del catálogo.
  *
  * El acceso se resuelve cruzando PERSONA (CURP) con USUARIO (clave y rol),
  * igual que en AuthController, por eso se escriben ambas tablas.
@@ -25,7 +18,6 @@ use Illuminate\Support\Facades\Hash;
  * Uso:
  *   php artisan suif:crear-admin
  *   php artisan suif:crear-admin --curp=XXXX800101HDFRRN01 --nombre=Ana --paterno=Ruiz --materno=Soto
- *   php artisan suif:crear-admin --rol="Admin UIF" --curp=...
  */
 class CrearAdministrador extends Command
 {
@@ -35,48 +27,22 @@ class CrearAdministrador extends Command
         {--paterno= : Apellido paterno}
         {--materno= : Apellido materno}
         {--inegi=009 : Clave INEGI de la entidad federativa}
-        {--rol=Superusuario : Superusuario, Admin UIF o Admin DEC}
         {--clave= : Clave de acceso; si se omite se pide sin mostrarla en pantalla}';
 
-    protected $description = 'Crea un usuario administrador y concede a su rol los privilegios que le corresponden';
+    protected $description = 'Crea un usuario con rol Administrador y le concede todos los privilegios';
 
     /**
-     * Privilegios de cada rol. Los da de alta si el catálogo todavía no los
-     * tiene, para que el comando deje un administrador operativo aunque
-     * suif_roles_administrativos.sql no se haya corrido.
+     * Catálogo de privilegios del sistema. Los que falten se dan de alta.
      */
-    private const PRIVILEGIOS_POR_ROL = [
-        GestionAdministradores::SUPERUSUARIO => [
-            AccesoAdministrativo::VALIDACION_REGISTRO,
-            AccesoAdministrativo::GESTIONAR_PAGOS,
-            AccesoAdministrativo::GENERAR_REPORTES,
-            AccesoAdministrativo::GESTIONAR_USUARIOS,
-            AccesoAdministrativo::GESTIONAR_REFERENCIAS,
-            AccesoAdministrativo::GESTIONAR_SEDES,
-        ],
-        GestionAdministradores::ADMIN_UIF => [
-            AccesoAdministrativo::VALIDACION_REGISTRO,
-        ],
-        GestionAdministradores::ADMIN_DEC => [
-            AccesoAdministrativo::GESTIONAR_PAGOS,
-            AccesoAdministrativo::GESTIONAR_REFERENCIAS,
-        ],
+    private const PRIVILEGIOS = [
+        'Validación Registro',
+        'Gestionar Pagos',
+        'Generación Reportes',
+        'Gestionar usuarios',
     ];
 
-    public function handle(GestionAdministradores $gestion): int
+    public function handle(): int
     {
-        $nombre_rol = trim((string) $this->option('rol'));
-
-        if (!isset(self::PRIVILEGIOS_POR_ROL[$nombre_rol])) {
-            $this->error(sprintf(
-                'El rol "%s" no existe. Usa uno de: %s.',
-                $nombre_rol,
-                implode(', ', array_keys(self::PRIVILEGIOS_POR_ROL))
-            ));
-
-            return self::FAILURE;
-        }
-
         $curp = strtoupper(trim((string) ($this->option('curp') ?: $this->ask('CURP'))));
 
         if (strlen($curp) !== 18) {
@@ -93,64 +59,150 @@ class CrearAdministrador extends Command
             return self::FAILURE;
         }
 
-        $rol = DB::table('rol')->where('rol_tipo_rol', $nombre_rol)->first();
+        $rol = DB::table('rol')->where('rol_tipo_rol', 'Administrador')->first();
 
         if (!$rol) {
-            $this->error(
-                "No existe el rol \"{$nombre_rol}\". Ejecuta antes database/scripts/suif_roles_administrativos.sql."
-            );
+            $this->error('No existe el rol "Administrador". Ejecuta antes database/scripts/suif_catalogos.sql.');
 
             return self::FAILURE;
         }
 
         $persona = DB::table('persona')->where('pers_curp', $curp)->first();
+
         $inegi = str_pad(trim((string) $this->option('inegi')), 3, '0', STR_PAD_LEFT);
+        $nombre = '';
+        $paterno = '';
+        $materno = '';
 
-        try {
-            $concedidos = $gestion->concederPrivilegios(
-                (int) $rol->rol_id_rol,
-                self::PRIVILEGIOS_POR_ROL[$nombre_rol]
-            );
+        // Los datos personales sólo se piden cuando hay que crear la persona.
+        if (!$persona) {
+            $nombre = trim((string) ($this->option('nombre') ?: $this->ask('Nombre')));
+            $paterno = trim((string) ($this->option('paterno') ?: $this->ask('Apellido paterno')));
+            $materno = trim((string) ($this->option('materno') ?: $this->ask('Apellido materno')));
 
-            /* Una CURP que ya existe no se da de alta otra vez: se promueve al
-               rol pedido y se le repone la clave. Es la vía para recuperar el
-               acceso cuando nadie puede entrar al módulo. */
+            if ($nombre === '' || $materno === '') {
+                $this->error('El nombre y el apellido materno son obligatorios.');
+
+                return self::FAILURE;
+            }
+
+            if (!DB::table('entidad_federativa')->where('enfe_clave_inegi', $inegi)->exists()) {
+                $this->error("La clave INEGI {$inegi} no existe en entidad_federativa.");
+
+                return self::FAILURE;
+            }
+        }
+
+        $creada = false;
+
+        DB::transaction(function () use ($curp, $clave, $rol, $persona, $inegi, $nombre, $paterno, $materno, &$creada) {
+            $privilegios = $this->asegurarPrivilegios();
+            $concedidos = $this->concederPrivilegios((int) $rol->rol_id_rol, $privilegios);
+
             if ($persona) {
                 DB::table('usuario')
                     ->where('usua_id_usuario', $persona->pers_id_usuario)
                     ->update([
                         'usua_id_rol' => $rol->rol_id_rol,
                         'usua_clave_acceso' => Hash::make($clave),
-                        'usua_activo' => true,
                     ]);
             } else {
-                $gestion->crear([
-                    'curp' => $curp,
-                    'nombre' => trim((string) ($this->option('nombre') ?: $this->ask('Nombre'))),
-                    'primer_apellido' => trim((string) ($this->option('paterno') ?: $this->ask('Apellido paterno'))),
-                    'segundo_apellido' => trim((string) ($this->option('materno') ?: $this->ask('Apellido materno'))),
-                    'entidad_federativa' => $inegi,
-                    'rol_id' => (int) $rol->rol_id_rol,
-                    'clave' => $clave,
+                $this->sincronizarSecuencia('usuario', 'usua_id_usuario');
+                $this->sincronizarSecuencia('persona', 'pers_id_persona');
+
+                $idUsuario = DB::table('usuario')->insertGetId([
+                    'usua_id_rol' => $rol->rol_id_rol,
+                    'usua_clave_acceso' => Hash::make($clave),
+                ], 'usua_id_usuario');
+
+                DB::table('persona')->insert([
+                    'pers_clave_inegi' => $inegi,
+                    'pers_id_usuario' => $idUsuario,
+                    'pers_curp' => $curp,
+                    'pers_nombre' => $nombre,
+                    'pers_apellido_paterno' => $paterno,
+                    'pers_apellido_materno' => $materno,
+                    'pers_fecha_registro' => now()->toDateString(),
                 ]);
+
+                $creada = true;
             }
-        } catch (DomainException $exception) {
-            $this->error($exception->getMessage());
 
-            return self::FAILURE;
-        }
+            $this->info(sprintf(
+                'Privilegios del rol Administrador: %d en total (%d concedidos ahora).',
+                count($privilegios),
+                $concedidos
+            ));
+        });
 
-        $this->info(sprintf(
-            'Privilegios del rol %s: %d en total (%d concedidos ahora).',
-            $nombre_rol,
-            count(self::PRIVILEGIOS_POR_ROL[$nombre_rol]),
-            $concedidos
-        ));
-
-        $this->info($persona
-            ? "La CURP {$curp} ya existía: se promovió a {$nombre_rol} y se cambió su clave."
-            : "Administrador creado. Inicia sesión con la CURP {$curp}.");
+        $this->info($creada
+            ? "Administrador creado. Inicia sesión con la CURP {$curp}."
+            : "La CURP {$curp} ya existía: se promovió a Administrador y se cambió su clave.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Da de alta los privilegios del catálogo que aún no existan.
+     *
+     * @return array<int, int> ids de todos los privilegios
+     */
+    private function asegurarPrivilegios(): array
+    {
+        $this->sincronizarSecuencia('privilegio', 'priv_id_privilegio');
+
+        foreach (self::PRIVILEGIOS as $privilegio) {
+            $existe = DB::table('privilegio')
+                ->where('priv_privilegio', $privilegio)
+                ->exists();
+
+            if (!$existe) {
+                DB::table('privilegio')->insert(['priv_privilegio' => $privilegio]);
+            }
+        }
+
+        return DB::table('privilegio')->pluck('priv_id_privilegio')->all();
+    }
+
+    /**
+     * Concede al rol todos los privilegios que le falten. Devuelve cuántos añadió.
+     *
+     * @param array<int, int> $privilegios
+     */
+    private function concederPrivilegios(int $idRol, array $privilegios): int
+    {
+        $this->sincronizarSecuencia('privilegio_rol', 'ropr_id_privilegio_rol');
+
+        $yaTiene = DB::table('privilegio_rol')
+            ->where('ropr_id_rol', $idRol)
+            ->pluck('ropr_id_privilegio')
+            ->all();
+
+        $faltantes = array_diff($privilegios, $yaTiene);
+
+        foreach ($faltantes as $idPrivilegio) {
+            DB::table('privilegio_rol')->insert([
+                'ropr_id_privilegio' => $idPrivilegio,
+                'ropr_id_rol' => $idRol,
+            ]);
+        }
+
+        return count($faltantes);
+    }
+
+    /**
+     * Alinea la secuencia con el máximo real de la tabla.
+     *
+     * Las tablas se cargaron con ids explícitos desde los scripts SQL, así que
+     * la secuencia puede haber quedado atrás y provocar llave duplicada.
+     */
+    private function sincronizarSecuencia(string $tabla, string $columna): void
+    {
+        DB::statement(
+            "SELECT setval(pg_get_serial_sequence(?, ?),
+                    COALESCE((SELECT MAX({$columna}) FROM {$tabla}), 0) + 1,
+                    false)",
+            [$tabla, $columna]
+        );
     }
 }

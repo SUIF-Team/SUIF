@@ -7,13 +7,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
 
 class GestionSedesTest extends TestCase
 {
-    use SiembraAdministradores;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -630,9 +627,7 @@ class GestionSedesTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
-            $table->boolean('usua_activo')->default(true);
         });
-        $this->crearTablasDePrivilegios();
         Schema::create('persona', function (Blueprint $table): void {
             $table->integer('pers_id_persona')->primary();
             $table->integer('pers_id_usuario');
@@ -716,9 +711,8 @@ class GestionSedesTest extends TestCase
     {
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
+            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
         ]);
-        /* El acceso a sedes lo abre el privilegio, no el nombre del rol. */
-        $this->sembrarRolesAdministrativos(['Superusuario' => 2]);
         DB::table('usuario')->insert([
             ['usua_id_usuario' => 1, 'usua_id_rol' => 1, 'usua_clave_acceso' => 'persona'],
             ['usua_id_usuario' => 2, 'usua_id_rol' => 2, 'usua_clave_acceso' => 'admin'],

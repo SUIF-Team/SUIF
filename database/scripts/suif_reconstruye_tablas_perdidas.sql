@@ -1,33 +1,33 @@
-/*==============================================================*/
-/* SUIF — Reconstrucción de las ocho tablas que se perdieron     */
-/*                                                              */
-/* NO es parte de la instalación. Se ejecuta UNA vez sobre una  */
-/* base a la que le faltan estas tablas, y no hace nada si ya   */
-/* están. Puede volver a ejecutarse sin efectos secundarios.    */
-/*==============================================================*/
+--
+-- SUIF — Reconstrucción de las ocho tablas que se perdieron
+--
+-- NO es parte de la instalación. Se ejecuta UNA vez sobre una
+-- base a la que le faltan estas tablas, y no hace nada si ya
+-- están. Puede volver a ejecutarse sin efectos secundarios.
+--
 
-/* Qué pasó: la suite de pruebas corrió con la configuración de Laravel
-   cacheada. Con bootstrap/cache/config.php presente, phpunit.xml no logra
-   imponer SQLite en memoria y las pruebas —que crean y borran su propio
-   esquema con Schema::dropIfExists— se ejecutaron contra la base real.
-   Alcanzaron a borrar ocho tablas antes de detenerse en una llave foránea:
+-- Qué pasó: la suite de pruebas corrió con la configuración de Laravel
+-- cacheada. Con bootstrap/cache/config.php presente, phpunit.xml no logra
+-- imponer SQLite en memoria y las pruebas —que crean y borran su propio
+-- esquema con Schema::dropIfExists— se ejecutaron contra la base real.
+-- Alcanzaron a borrar ocho tablas antes de detenerse en una llave foránea:
+--
+-- privilegio, privilegio_rol, tipo_documento, c_estado_pago,
+-- pago, estado_pago, evaluacion, referencia_bancaria
+--
+-- Las otras 28 sobrevivieron, PERSONA y SOLICITUD incluidas.
+--
+-- Este script NO usa drop en ninguna parte, a propósito: suif.sql sí lo
+-- hace y reconstruiría el esquema entero a costa de lo que quedó vivo.
+--
+-- Deja el mismo esquema que habrían dejado suif.sql, suif_ajustes_esquema.sql,
+-- suif_referencias_bancarias.sql y suif_referencia_fecha_emision.sql juntos.
+-- Después de correrlo hay que ejecutar suif_catalogos.sql, que es
+-- idempotente y repone el resto de los catálogos.
 
-       privilegio, privilegio_rol, tipo_documento, c_estado_pago,
-       pago, estado_pago, evaluacion, referencia_bancaria
-
-   Las otras 28 sobrevivieron, PERSONA y SOLICITUD incluidas.
-
-   Este script NO usa drop en ninguna parte, a propósito: suif.sql sí lo
-   hace y reconstruiría el esquema entero a costa de lo que quedó vivo.
-
-   Deja el mismo esquema que habrían dejado suif.sql, suif_ajustes_esquema.sql,
-   suif_referencias_bancarias.sql y suif_referencia_fecha_emision.sql juntos.
-   Después de correrlo hay que ejecutar suif_catalogos.sql y
-   suif_roles_administrativos.sql, que son idempotentes y reponen el resto. */
-
-/*==============================================================*/
-/* 1. Las tablas                                                */
-/*==============================================================*/
+--
+-- 1. Las tablas
+--
 
 create table if not exists PRIVILEGIO (
    PRIV_ID_PRIVILEGIO   SERIAL               not null,
@@ -42,8 +42,8 @@ create table if not exists PRIVILEGIO_ROL (
    constraint PK_PRIVILEGIO_ROL primary key (ROPR_ID_PRIVILEGIO_ROL)
 );
 
-/* VARCHAR(60) y no (35): "Autorización de la publicación" no cabía, y
-   suif_ajustes_esquema.sql ya la había ampliado. */
+-- VARCHAR(60) y no (35): "Autorización de la publicación" no cabía, y
+-- suif_ajustes_esquema.sql ya la había ampliado.
 create table if not exists TIPO_DOCUMENTO (
    TIDO_ID_TIPO_DOCUMENTO SERIAL               not null,
    TIDO_TIPO_DOCUMENTO  VARCHAR(60)          not null,
@@ -56,9 +56,9 @@ create table if not exists C_ESTADO_PAGO (
    constraint PK_C_ESTADO_PAGO primary key (ESPA_ID_C_ESTADO_PAGO)
 );
 
-/* Cuatro columnas nacen nulas: el renglón de PAGO se crea al asignar la
-   referencia, y en ese momento todavía no hay datos fiscales, ni fecha de
-   pago, ni comprobante. Es lo que hacía suif_referencias_bancarias.sql. */
+-- Cuatro columnas nacen nulas: el renglón de PAGO se crea al asignar la
+-- referencia, y en ese momento todavía no hay datos fiscales, ni fecha de
+-- pago, ni comprobante. Es lo que hacía suif_referencias_bancarias.sql.
 create table if not exists PAGO (
    PAGO_ID_PAGO         SERIAL               not null,
    PAGO_ID_DATO_FISCAL  INT4                 null,
@@ -83,7 +83,7 @@ create table if not exists ESTADO_PAGO (
    constraint PK_ESTADO_PAGO primary key (ESPA_ID_ESTADO_PAGO)
 );
 
-/* EVAL_RESULTADO nace nulo: el resultado se captura después de aplicar. */
+-- EVAL_RESULTADO nace nulo: el resultado se captura después de aplicar.
 create table if not exists EVALUACION (
    EVAL_ID_EVALUACION   SERIAL               not null,
    GRUP_ID_GRUPO        INT4                 not null,
@@ -106,9 +106,9 @@ create table if not exists REFERENCIA_BANCARIA (
    constraint PK_REFERENCIA_BANCARIA primary key (REBA_ID_REFERENCIA_BANCARIA)
 );
 
-/*==============================================================*/
-/* 2. Índices                                                   */
-/*==============================================================*/
+--
+-- 2. Índices
+--
 
 create unique index if not exists PRIVILEGIO_PK on PRIVILEGIO (PRIV_ID_PRIVILEGIO);
 create unique index if not exists PRIVILEGIO_ROL_PK on PRIVILEGIO_ROL (ROPR_ID_PRIVILEGIO_ROL);
@@ -121,21 +121,21 @@ create unique index if not exists ESTADO_PAGO_PK on ESTADO_PAGO (ESPA_ID_ESTADO_
 create unique index if not exists EVALUACION_PK on EVALUACION (EVAL_ID_EVALUACION);
 create unique index if not exists REFERENCIA_BANCARIA_PK on REFERENCIA_BANCARIA (REBA_ID_REFERENCIA_BANCARIA);
 
-/* El número de referencia no se repite dentro del catálogo, y una
-   referencia pertenece a un solo pago. */
+-- El número de referencia no se repite dentro del catálogo, y una
+-- referencia pertenece a un solo pago.
 create unique index if not exists REFERENCIA_BANCARIA_AK on REFERENCIA_BANCARIA (REBA_REFERENCIA);
 create unique index if not exists REFERENCIA_BANCARIA_PAGO_AK on REFERENCIA_BANCARIA (REBA_ID_PAGO);
 
-/*==============================================================*/
-/* 3. Catálogos que vivían en las tablas perdidas               */
-/*==============================================================*/
+--
+-- 3. Catálogos que vivían en las tablas perdidas
+--
 
-/* Van ANTES de las llaves foráneas y no después: DOCUMENTO sobrevivió con
-   sus renglones apuntando a estos identificadores, así que la llave hacia
-   TIPO_DOCUMENTO no se puede validar mientras el catálogo esté vacío.
-
-   Por lo mismo se conservan los números de suif_catalogos.sql: cambiarlos
-   dejaría cada documento cargado con un tipo equivocado. */
+-- Van ANTES de las llaves foráneas y no después: DOCUMENTO sobrevivió con
+-- sus renglones apuntando a estos identificadores, así que la llave hacia
+-- TIPO_DOCUMENTO no se puede validar mientras el catálogo esté vacío.
+--
+-- Por lo mismo se conservan los números de suif_catalogos.sql: cambiarlos
+-- dejaría cada documento cargado con un tipo equivocado.
 INSERT INTO tipo_documento (tido_id_tipo_documento, tido_tipo_documento) VALUES
     (1, 'Solicitud firmada'),
     (2, 'Aceptación de notificaciones'),
@@ -151,27 +151,27 @@ INSERT INTO c_estado_pago (espa_id_c_estado_pago, esta_estado_pago) VALUES
     (3, 'Declinado')
 ON CONFLICT (espa_id_c_estado_pago) DO NOTHING;
 
-/*==============================================================*/
-/* 4. Punteros que quedaron colgando                            */
-/*==============================================================*/
+--
+-- 4. Punteros que quedaron colgando
+--
 
-/* SOLICITUD y CERTIFICACION conservan los identificadores de pagos y
-   evaluaciones que ya no existen. Hay que soltarlos antes de volver a poner
-   las llaves foráneas, o el ALTER falla al validarlas.
-
-   Las tres columnas admiten nulo, así que no se pierde ningún renglón: lo
-   que se pierde es la liga, que de todas formas ya apuntaba al vacío. */
+-- SOLICITUD y CERTIFICACION conservan los identificadores de pagos y
+-- evaluaciones que ya no existen. Hay que soltarlos antes de volver a poner
+-- las llaves foráneas, o el ALTER falla al validarlas.
+--
+-- Las tres columnas admiten nulo, así que no se pierde ningún renglón: lo
+-- que se pierde es la liga, que de todas formas ya apuntaba al vacío.
 UPDATE solicitud SET soli_id_pago = NULL WHERE soli_id_pago IS NOT NULL;
 UPDATE solicitud SET soli_id_evaluacion = NULL WHERE soli_id_evaluacion IS NOT NULL;
 UPDATE certificacion SET eval_id_evaluacion = NULL WHERE eval_id_evaluacion IS NOT NULL;
 
-/*==============================================================*/
-/* 5. Llaves foráneas                                           */
-/*==============================================================*/
+--
+-- 5. Llaves foráneas
+--
 
-/* Se conservan los nombres originales de suif.sql para que el esquema quede
-   indistinguible del que había. Los de referencia_bancaria van en
-   minúsculas porque así los declaró su propio script. */
+-- Se conservan los nombres originales de suif.sql para que el esquema quede
+-- indistinguible del que había. Los de referencia_bancaria van en
+-- minúsculas porque así los declaró su propio script.
 DO $$
 DECLARE
     llave RECORD;
@@ -200,7 +200,7 @@ BEGIN
     END LOOP;
 END $$;
 
-/* Una evaluación por grupo: es contra ella que se cuenta el cupo. */
+-- Una evaluación por grupo: es contra ella que se cuenta el cupo.
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_evaluacion_grupo') THEN
@@ -208,18 +208,18 @@ BEGIN
     END IF;
 END $$;
 
-/*==============================================================*/
-/* 6. La programación de las sedes                              */
-/*==============================================================*/
+--
+-- 6. La programación de las sedes
+--
 
-/* GRUPO sobrevivió con sus fechas y horarios, pero se quedó sin la
-   EVALUACION que le da cupo, y sin ella las dos pantallas de sedes no
-   funcionan. Se repone una por grupo, que es la correspondencia que exige
-   uq_evaluacion_grupo.
-
-   Lo que no vuelve es quién había elegido cada horario: eso vivía en
-   SOLICITUD.SOLI_ID_EVALUACION y quedó en nulo arriba. Las personas que ya
-   habían seleccionado sede tendrán que elegirla de nuevo. */
+-- GRUPO sobrevivió con sus fechas y horarios, pero se quedó sin la
+-- EVALUACION que le da cupo, y sin ella las dos pantallas de sedes no
+-- funcionan. Se repone una por grupo, que es la correspondencia que exige
+-- uq_evaluacion_grupo.
+--
+-- Lo que no vuelve es quién había elegido cada horario: eso vivía en
+-- SOLICITUD.SOLI_ID_EVALUACION y quedó en nulo arriba. Las personas que ya
+-- habían seleccionado sede tendrán que elegirla de nuevo.
 INSERT INTO evaluacion (grup_id_grupo, eval_resultado)
 SELECT g.grup_id_grupo, NULL
   FROM grupo AS g
@@ -227,7 +227,7 @@ SELECT g.grup_id_grupo, NULL
      SELECT 1 FROM evaluacion AS e WHERE e.grup_id_grupo = g.grup_id_grupo
  );
 
-/* Una sede ofrece cupo mientras alguna de sus aplicaciones tenga lugares. */
+-- Una sede ofrece cupo mientras alguna de sus aplicaciones tenga lugares.
 UPDATE sede AS s
 SET sede_estado = EXISTS (
     SELECT 1
@@ -241,12 +241,12 @@ SET sede_estado = EXISTS (
       )
 );
 
-/*==============================================================*/
-/* 7. Secuencias                                                */
-/*==============================================================*/
+--
+-- 7. Secuencias
+--
 
-/* Las tablas nacen vacías o con identificadores explícitos, así que la
-   secuencia tiene que quedar donde corresponde o el primer alta choca. */
+-- Las tablas nacen vacías o con identificadores explícitos, así que la
+-- secuencia tiene que quedar donde corresponde o el primer alta choca.
 DO $$
 DECLARE
     columna RECORD;

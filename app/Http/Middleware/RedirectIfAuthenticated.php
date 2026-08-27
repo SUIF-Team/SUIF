@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Support\Admin\AccesoAdministrativo;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,10 +13,6 @@ use Illuminate\Support\Facades\Auth;
  */
 class RedirectIfAuthenticated
 {
-    public function __construct(private AccesoAdministrativo $acceso)
-    {
-    }
-
     /**
      * Handle an incoming request.
      *
@@ -28,11 +23,8 @@ class RedirectIfAuthenticated
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        /* El destino es el mismo que decide el login: mandar a un
-           administrador al tablero de la persona lo dejaba en una pantalla
-           que no le corresponde. */
         if (Auth::guard($guard)->check()) {
-            return redirect()->route($this->acceso->rutaInicial(Auth::guard($guard)->user()));
+            return redirect('/persona/dashboard');
         }
 
         return $next($request);

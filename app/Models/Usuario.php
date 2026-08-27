@@ -22,15 +22,10 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'usua_id_rol',
         'usua_clave_acceso',
-        'usua_activo',
     ];
 
     protected $hidden = [
         'usua_clave_acceso',
-    ];
-
-    protected $casts = [
-        'usua_activo' => 'boolean',
     ];
 
     /**
@@ -52,31 +47,8 @@ class Usuario extends Authenticatable
         return $this->hasOne(Persona::class, 'pers_id_usuario', 'usua_id_usuario');
     }
 
-    /**
-     * Dar de baja a un administrador no borra su renglón: le retira el acceso.
-     *
-     * La columna se agrega en suif_roles_administrativos.sql con DEFAULT TRUE,
-     * así que una base anterior a ese script deja entrar a todo mundo, que es
-     * como se comportaba hasta ahora.
-     */
-    public function tieneAcceso(): bool
-    {
-        return $this->usua_activo === null || (bool) $this->usua_activo;
-    }
-
-    /**
-     * Quien perdió el acceso no conserva ningún privilegio.
-     *
-     * La comprobación vive aquí y no sólo en el login porque una sesión ya
-     * abierta sobreviviría a la baja: los permisos se evalúan en cada petición,
-     * así que retirarlos aquí cierra la puerta de inmediato.
-     */
     public function tienePrivilegio(string $privilegio): bool
     {
-        if (!$this->tieneAcceso()) {
-            return false;
-        }
-
         return DB::table('privilegio_rol as pr')
             ->join('privilegio as p', 'p.priv_id_privilegio', '=', 'pr.ropr_id_privilegio')
             ->where('pr.ropr_id_rol', $this->usua_id_rol)
