@@ -11,7 +11,7 @@ SUIF es una aplicación web de la Facultad de Contaduría y Administración de l
 - El dashboard de persona (`/persona/dashboard`) consulta en la base el pre-registro, la solicitud y la documentación; los módulos posteriores siguen incompletos.
 - El dashboard administrativo y la bandeja general de personas consultan PostgreSQL. Los indicadores sin persistencia se identifican como tales y no muestran conteos ficticios.
 - Las vistas, rutas y controladores de los módulos de persona y administración están en diferentes etapas de preparación. Varios controladores no tienen acciones implementadas y sus vistas contienen `TODO`; no se deben considerar funcionalidades terminadas.
-- Las rutas administrativas conservan temporalmente el acceso abierto de desarrollo. La autenticación y autorización por rol de administrador siguen pendientes.
+- Toda la zona administrativa exige sesión iniciada y un privilegio del catálogo. Hay tres tipos de administrador: **Admin UIF** (pre-registro y documentación), **Admin DEC** (pagos y referencias bancarias) y **Superusuario** (todos los módulos). Cada quien aterriza en su bandeja al iniciar sesión y el tablero sólo le pinta lo que puede abrir. Las altas se hacen desde `/admin/administradores`; `database/scripts/suif_roles_administrativos.sql` es requisito para que los privilegios existan.
 - No hay migraciones ni seeders de negocio versionados. Las pruebas automatizadas crean un esquema temporal independiente para no modificar la base real.
 
 ## Stack y compatibilidad
@@ -150,7 +150,7 @@ Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona.
 | Pública | `GET /` | Landing disponible. |
 | Autenticación | `GET /login`, `POST /login`, `POST /logout` | Inicio y cierre de sesión integrados con los usuarios persistidos. |
 | Persona | `/persona/dashboard`, pre-registro, pago, referencia, documentos, sede, resultados, certificado y facturación | Rutas declaradas; el dashboard consulta la solicitud y documentación persistidas. Los módulos posteriores continúan pendientes. |
-| Administración | `/admin/dashboard`, personas, pagos, referencias, documentos, sedes y resultados | Dashboard y bandeja general de personas conectados a la base; la autorización por rol y otros módulos continúan pendientes. |
+| Administración | `/admin/dashboard`, personas, pagos, referencias, documentos, sedes, administradores y resultados | Todo el grupo exige `auth` y un privilegio; cada módulo pide el suyo. Dashboard, bandejas y el módulo de administradores conectados a la base; certificados y resultados continúan pendientes. |
 
 `routes/web.php` es la fuente de verdad para el detalle de verbos HTTP y nombres de ruta. No se debe enlazar una pantalla como funcional hasta que su controlador, validaciones, persistencia y autorización estén implementados.
 

@@ -12,10 +12,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
 
 class PagosPersistentesTest extends TestCase
 {
+    use SiembraAdministradores;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -239,12 +242,12 @@ class PagosPersistentesTest extends TestCase
         app(RevisionPagos::class)->reanudar(1);
     }
 
-    public function test_reanudar_un_pago_exige_el_rol_de_administrador(): void
+    public function test_reanudar_un_pago_exige_el_privilegio_de_gestionar_pagos(): void
     {
         app(RevisionPagos::class)->aprobar(1);
 
-        /* El Auditor no tiene rol administrativo y la persona menos: reanudar
-           no se rige por el privilegio de pagos sino por el rol. */
+        /* Revertir una resolución le toca a quien la dictó: sin el privilegio
+           de pagos no se reanuda un pago, ni siendo Auditor ni siendo persona. */
         $this->actingAs(Usuario::findOrFail(3))
             ->post(route('admin.pagos.reanudar', 1))
             ->assertForbidden();
@@ -290,6 +293,7 @@ class PagosPersistentesTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
+            $table->boolean('usua_activo')->default(true);
         });
 
         Schema::create('persona', function (Blueprint $table): void {
@@ -390,23 +394,14 @@ class PagosPersistentesTest extends TestCase
             $table->text('espa_comentario')->nullable();
         });
 
-        Schema::create('privilegio', function (Blueprint $table): void {
-            $table->integer('priv_id_privilegio')->primary();
-            $table->string('priv_privilegio', 35);
-        });
-
-        Schema::create('privilegio_rol', function (Blueprint $table): void {
-            $table->increments('ropr_id_privilegio_rol');
-            $table->integer('ropr_id_privilegio');
-            $table->integer('ropr_id_rol');
-        });
+        $this->crearTablasDePrivilegios();
     }
 
     private function cargarDatos(): void
     {
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Candidato'],
-            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
+            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Admin DEC'],
             ['rol_id_rol' => 3, 'rol_tipo_rol' => 'Auditor'],
         ]);
         DB::table('usuario')->insert([
@@ -496,12 +491,9 @@ class PagosPersistentesTest extends TestCase
                 'espa_comentario' => null,
             ],
         ]);
-        DB::table('privilegio')->insert([
-            ['priv_id_privilegio' => 1, 'priv_privilegio' => 'Gestionar Pagos'],
-        ]);
-        DB::table('privilegio_rol')->insert([
-            ['ropr_id_privilegio' => 1, 'ropr_id_rol' => 2],
-        ]);
+        /* El rol 2 es el Admin DEC: revisa pagos y reanuda los suyos, y no
+           toca ningún otro módulo. */
+        $this->concederPrivilegiosAlRol(2, $this->privilegiosDeAdminDec());
     }
 
     private function ultimoEstadoPago(int $id_pago): string

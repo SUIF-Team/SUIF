@@ -10,6 +10,7 @@ Orden de ejecución en una instalación nueva:
 6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
 7. `suif_rfc_persona.sql` — RFC de la persona en PERSONA
 8. `suif_referencia_fecha_emision.sql` — fecha de emisión en REFERENCIA_BANCARIA
+9. `suif_roles_administrativos.sql` — roles por área y catálogo de privilegios
 
 `suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
 que el banco emitió la referencia. Va DESPUÉS de
@@ -20,6 +21,12 @@ publicar el código: sin esa columna, la carga del catálogo falla con
 `suif_evaluacion_grupo.sql` va ANTES que `suif_ajustes_esquema.sql`, no
 después: es el que crea `EVALUACION.GRUP_ID_GRUPO`, y sin esa columna
 `suif_ajustes_esquema.sql` aborta a media ejecución. Ver más abajo.
+
+`suif_roles_administrativos.sql` es OBLIGATORIO y va al final. Renombra el rol
+`Administrador` a `Superusuario`, agrega `Admin UIF` y `Admin DEC`, siembra el
+catálogo de PRIVILEGIO y lo reparte entre los tres. Sin él, una base recién
+instalada deja a todo mundo fuera: el sistema autoriza por privilegio y
+`suif_catalogos.sql` crea PRIVILEGIO vacío. Ver más abajo.
 
 `suif_lleno.sql` es opcional: datos de prueba para ambientes de desarrollo.
 Nunca se ejecuta en producción.
@@ -133,6 +140,29 @@ registrar nada.
 `suif_referencias_bancarias.sql` son idempotentes: volver a ejecutarlos no
 duplica ni destruye nada. Por eso la regla al desplegar es correrlos
 SIEMPRE, sin preguntarse si ya se corrieron.
+
+## Los privilegios mandan, no el nombre del rol
+
+Cada pantalla administrativa exige un privilegio de `PRIVILEGIO`, no un nombre de
+rol. `suif_roles_administrativos.sql` es quien llena esa tabla y quien decide qué
+le toca a cada quien:
+
+| Privilegio | Superusuario | Admin UIF | Admin DEC |
+|---|:--:|:--:|:--:|
+| Validación Registro | sí | sí | — |
+| Gestionar Pagos | sí | — | sí |
+| Gestionar Referencias | sí | — | sí |
+| Gestionar Sedes | sí | — | — |
+| Gestionar usuarios | sí | — | — |
+| Generación Reportes | sí | — | — |
+
+`ROL_TIPO_ROL` mide 15 caracteres, y por eso los nombres son cortos:
+«Superusuario» son 12 y «Admin UIF» son 9. La columna no se amplía.
+
+Los roles nuevos se insertan sin id explícito. En una base de desarrollo que corrió
+`suif_lleno.sql` los ids 3 y 4 ya están tomados, y esa misma base llama «Validador»
+al rol 2, así que el renombre a «Superusuario» no le aplica. No es un problema a
+resolver: los ambientes de prueba se reconstruyen con el orden de arriba.
 
 ## Antes de tocar producción
 

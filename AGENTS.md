@@ -22,7 +22,7 @@
 ## Seguridad y flujos administrativos
 
 - Usa formularios `POST`, `@csrf` y validación del servidor para operaciones de escritura.
-- Antes de habilitar operaciones administrativas reales, verifica autorización por rol; actualmente las rutas administrativas sólo exigen `auth`.
+- La autorización se resuelve por **privilegio** (`PRIVILEGIO_ROL`), nunca comparando el nombre del rol. Los gates viven en `AppServiceProvider` y el grupo `admin` de `routes/web.php` exige `auth` más el permiso de cada módulo. Toda ruta administrativa nueva se cuelga del gate que le corresponda.
 - Si un flujo aún no tiene persistencia, aísla los datos de demostración para poder reemplazarlos posteriormente.
 - No presentes como terminado un flujo que todavía carezca de controlador, validación, persistencia o autorización.
 

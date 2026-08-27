@@ -2,6 +2,8 @@
 
 namespace App\Support\Admin;
 
+use Illuminate\Support\Facades\Gate;
+
 class NotificacionResultado
 {
     public function paraPreRegistro(array $persona, array $estados): array
@@ -61,10 +63,10 @@ class NotificacionResultado
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => $es_rechazo_preregistro ? 'preregistro' : 'documentacion',
-            'acciones' => $this->accionesDocumentacion(
+            'acciones' => $this->permitidas($this->accionesDocumentacion(
                 (string) ($persona['id'] ?? ''),
                 $resultado
-            ),
+            )),
         ];
     }
 
@@ -103,7 +105,7 @@ class NotificacionResultado
             'etiqueta_regreso' => 'Volver a la bandeja',
             'etiqueta_regreso_accesible' => 'Volver a la bandeja',
             'contexto' => 'pago',
-            'acciones' => [$this->accionReanudarPago((string) $pago['id'])],
+            'acciones' => $this->permitidas([$this->accionReanudarPago((string) $pago['id'])]),
         ];
     }
 
@@ -113,17 +115,38 @@ class NotificacionResultado
      * La usan tanto la pantalla de resultado como el detalle en sólo lectura:
      * desde la bandeja, "Ver pago" lleva al detalle, no al resultado.
      *
-     * @return array{ruta: string, etiqueta: string, titulo_modal: string, texto_modal: string, id: string}
+     * @return array{ruta: string, etiqueta: string, titulo_modal: string, texto_modal: string, id: string, permiso: string}
      */
     public function accionReanudarPago(string $id_pago): array
     {
         return [
             'id' => 'reanudar-pago',
+            'permiso' => 'reanudar-pago',
             'ruta' => route('admin.pagos.reanudar', ['id' => $id_pago]),
             'etiqueta' => 'Reanudar revisión del pago',
             'titulo_modal' => '¿Reanudar la revisión de este pago?',
             'texto_modal' => 'El pago volverá a "Por revisar" y podrás validarlo o rechazarlo de nuevo. La resolución anterior se conserva en el historial.',
         ];
+    }
+
+    /**
+     * Deja sólo las acciones que quien mira puede ejecutar.
+     *
+     * Cada acción declara su permiso porque no todas son del mismo dueño:
+     * reanudar un pago le toca a quien revisa el dinero y reanudar un trámite
+     * a quien valida el registro. Filtrar aquí —y no con un @can envolvente en
+     * la vista— es lo que evita que a un administrador de área se le escondan
+     * sus propios botones junto con los ajenos.
+     *
+     * @param array<int, array> $acciones
+     * @return array<int, array>
+     */
+    public function permitidas(array $acciones): array
+    {
+        return array_values(array_filter(
+            $acciones,
+            fn (array $accion): bool => Gate::allows($accion['permiso'])
+        ));
     }
 
     /**
@@ -148,6 +171,7 @@ class NotificacionResultado
         ], true)) {
             $acciones[] = [
                 'id' => 'reanudar-tramite',
+                'permiso' => 'reanudar-tramite',
                 'ruta' => route('admin.documentos.reanudar', ['id' => $id_solicitud]),
                 'etiqueta' => 'Reanudar trámite',
                 'titulo_modal' => '¿Reanudar este trámite?',
@@ -158,6 +182,7 @@ class NotificacionResultado
         if ($resultado !== RevisionDocumentos::CANCELADO) {
             $acciones[] = [
                 'id' => 'cancelar-tramite',
+                'permiso' => 'reanudar-tramite',
                 'ruta' => route('admin.documentos.cancelar', ['id' => $id_solicitud]),
                 'etiqueta' => 'Cancelar trámite',
                 'titulo_modal' => '¿Cancelar este trámite?',

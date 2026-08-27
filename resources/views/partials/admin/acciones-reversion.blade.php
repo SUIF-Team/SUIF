@@ -2,10 +2,11 @@
     Acciones que revierten una resolución ya notificada: reanudar un trámite o
     un pago resuelto y cancelar una solicitud.
 
-    Recibe $acciones, un arreglo de ['id', 'ruta', 'etiqueta', 'titulo_modal',
-    'texto_modal'] armado por App\Support\Admin\NotificacionResultado. Cada una
-    confirma en su propio modal antes de enviar, porque deshacer una decisión
-    que la persona ya vio no debería ocurrir por un clic de más.
+    Recibe $acciones, un arreglo de ['id', 'permiso', 'ruta', 'etiqueta',
+    'titulo_modal', 'texto_modal'] armado por
+    App\Support\Admin\NotificacionResultado. Cada una confirma en su propio modal
+    antes de enviar, porque deshacer una decisión que la persona ya vio no
+    debería ocurrir por un clic de más.
 
     Va dentro del flujo de cada pantalla para heredar su tarjeta y su
     separación, así que las apps Vue de esas pantallas lo compilan como
@@ -13,10 +14,14 @@
     obliga a cargar admin-reversion.js DESPUÉS del script que monta Vue: al
     montar, Vue reemplaza estos nodos y los escuchadores se perderían.
 
-    El @can duplica el middleware de las rutas a propósito: quien no puede
-    revertir tampoco debería ver los botones.
+    La lista llega ya filtrada por permiso desde NotificacionResultado, que
+    duplica a propósito el middleware de las rutas: quien no puede revertir
+    tampoco debería ver los botones. El filtro vive allá y no en un @can
+    envolvente aquí porque las acciones no son todas del mismo dueño —reanudar
+    un pago le toca a quien revisa el dinero y reanudar un trámite a quien
+    valida el registro—, y un solo @can le escondería a cada área los botones
+    propios junto con los ajenos.
 --}}
-@can('reanudar-tramite')
 @if(!empty($acciones))
     <section class="admin-preregistro-tarjeta admin-preregistro-reversion" aria-labelledby="acciones-reversion-titulo">
         <div class="admin-preregistro-reversion-texto">
@@ -62,4 +67,3 @@
         </div>
     @endforeach
 @endif
-@endcan

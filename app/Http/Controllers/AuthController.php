@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Persona;
+use App\Support\Admin\AccesoAdministrativo;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -34,7 +35,7 @@ class AuthController extends Controller
         /**
      * Valida la CURP y la clave de acceso, y abre la sesión de la persona.
      */
-    public function login(Request $request)
+    public function login(Request $request, AccesoAdministrativo $acceso)
     {
         $datos = $this->validate($request, [
             'curp' => 'required|string|size:18',
@@ -47,8 +48,11 @@ class AuthController extends Controller
 
         $persona = Persona::where('pers_curp', strtoupper($datos['curp']))->first();
 
-        // Un solo mensaje para ambos casos: no se revela si la CURP existe.
+        /* Un solo mensaje para los tres casos: no se revela si la CURP existe,
+           ni si existe pero quedó sin acceso. Una cuenta dada de baja no tiene
+           por qué anunciarse. */
         if (!$persona || !$persona->usuario
+            || !$persona->usuario->tieneAcceso()
             || !Hash::check($datos['clave'], $persona->usuario->usua_clave_acceso)) {
             return back()
                 ->withInput($request->only('curp'))
@@ -58,15 +62,9 @@ class AuthController extends Controller
         Auth::login($persona->usuario);
         $request->session()->regenerate();
 
-        if ($persona->usuario->rol?->rol_tipo_rol === 'Administrador') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($persona->usuario->tienePrivilegio('Gestionar Pagos')) {
-            return redirect()->route('admin.pagos.index');
-        }
-
-        return redirect()->route('persona.dashboard');
+        /* Cada quien entra a lo suyo: quien sólo valida pagos no pasa por un
+           tablero que no puede usar. */
+        return redirect()->route($acceso->rutaInicial($persona->usuario));
     }
 
     /**

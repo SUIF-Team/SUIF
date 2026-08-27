@@ -46,7 +46,7 @@ class PagoController extends Controller
             [ConsultaPagos::COMPLETADO, ConsultaPagos::DECLINADO],
             true
         )
-            ? [$notificacion_resultado->accionReanudarPago($pago['id'])]
+            ? $notificacion_resultado->permitidas([$notificacion_resultado->accionReanudarPago($pago['id'])])
             : [];
 
         return view('admin.pago-detalle', compact('pago', 'acciones'));
