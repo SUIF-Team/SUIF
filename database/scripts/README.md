@@ -2,6 +2,18 @@
 
 Orden de ejecución en una instalación nueva:
 
+> Atajo: `suif_instalacion_completa.sql` equivale a correr los ocho pasos de
+> abajo en su orden, en un solo archivo y —a diferencia de `suif.sql`— sin
+> ningún `drop`, así que admite `ON_ERROR_STOP` desde el primer paso:
+>
+>     psql -v ON_ERROR_STOP=1 -h HOST -U suif -d suif -f suif_instalacion_completa.sql
+>
+> Es un archivo GENERADO por concatenación de los ocho: no se edita a mano, y
+> si el responsable de la base cambia alguno de los fuentes, se regenera.
+> Sólo para bases vacías; sobre una base con datos se siguen usando los
+> scripts numerados, que son idempotentes.
+
+
 1. `suif.sql`               — esquema base (35 tablas)
 2. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
 3. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
