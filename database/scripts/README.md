@@ -13,6 +13,19 @@ Orden de ejecución en una instalación nueva:
 > Sólo para bases vacías; sobre una base con datos se siguen usando los
 > scripts numerados, que son idempotentes.
 
+> Atajo 2: `suif_esquema_final.sql` es ese mismo resultado ya APLANADO. No
+> concatena los nueve, sino que reconstruye el estado al que llegan: cada
+> columna nace con el tipo y la obligatoriedad que tiene hoy y no queda un
+> solo `ALTER` de migración, así que se lee como el retrato del esquema
+> actual. Instala exactamente lo mismo —36 tablas, 35 llaves foráneas, los
+> mismos índices y catálogos— y también es sólo para bases vacías:
+>
+>     psql -v ON_ERROR_STOP=1 --single-transaction -h HOST -U suif -d suif \
+>          -f suif_esquema_final.sql
+>
+> Úsalo para consultar el esquema o entregarlo a quien pida «el script de la
+> base»; para desplegar sobre una base con datos, los scripts numerados.
+
 
 1. `suif.sql`               — esquema base (35 tablas)
 2. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
