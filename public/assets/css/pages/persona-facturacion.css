@@ -3,8 +3,13 @@
     display: none;
 }
 
+/* Mismo respiro que las demas pantallas de persona; el ancho se limita
+   porque un formulario de seis campos estirado a todo un monitor se lee
+   mal, y los margenes automaticos lo centran dentro de .persona-main. */
 .facturacion-shell {
-    max-width: 820px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 5rem);
 }
 
 .facturacion-tarjeta {
