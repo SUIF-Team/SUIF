@@ -343,6 +343,7 @@ class PagosPersistentesTest extends TestCase
             $table->integer('esso_id_solicitud');
             $table->date('esso_fecha');
             $table->time('esso_hora');
+            $table->string('esso_motivo_rechazo', 255)->nullable();
         });
 
         Schema::create('tipo_documento', function (Blueprint $table): void {

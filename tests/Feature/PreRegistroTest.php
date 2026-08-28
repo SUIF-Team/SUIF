@@ -253,6 +253,7 @@ class PreRegistroTest extends TestCase
             $table->integer('esso_id_solicitud');
             $table->date('esso_fecha')->nullable();
             $table->time('esso_hora')->nullable();
+            $table->string('esso_motivo_rechazo', 255)->nullable();
         });
     }
 
