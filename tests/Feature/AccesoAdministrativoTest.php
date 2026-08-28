@@ -168,18 +168,9 @@ class AccesoAdministrativoTest extends TestCase
 
     public function test_la_baja_corta_una_sesion_ya_abierta(): void
     {
-        /* La sesión se abre con un login real y no con actingAs(): actingAs()
-           fija en el guard la instancia que ya está en memoria, de modo que la
-           baja aplicada después sobre la base nunca se vería y la prueba
-           acabaría comprobando un usuario que para el gate sigue activo. Con
-           la sesión de verdad, el guard vuelve a leer al usuario en cada
-           petición, que es justo el comportamiento que se quiere verificar. */
-        $this->post(route('login.post'), [
-            'curp' => 'UIFA900101MDFABC03',
-            'clave' => 'CLAVE-DE-PRUEBA',
-        ])->assertRedirect(route('admin.personas.index'));
-
-        $this->get(route('admin.dashboard'))->assertOk();
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.dashboard'))
+            ->assertOk();
 
         /* La baja la aplica otro Superusuario mientras la sesión sigue viva.
            Los permisos se evalúan en cada petición, así que la siguiente ya no
@@ -190,7 +181,16 @@ class AccesoAdministrativoTest extends TestCase
            entera quedó cerrada, no un módulo suelto. */
         DB::table('usuario')->where('usua_id_usuario', 3)->update(['usua_activo' => false]);
 
-        $this->get(route('admin.dashboard'))->assertForbidden();
+        /* El usuario se relee de la base antes de la segunda petición. El guard
+           conserva la instancia que ya resolvió y no vuelve a consultarla
+           mientras dura la prueba, así que sin recargarla el gate seguiría
+           evaluando una cuenta activa por más que la baja ya esté escrita. En
+           producción cada petición arranca de cero y hace esa lectura sola;
+           recargarla aquí reproduce ese estado en vez de comprobar un objeto
+           que quedó obsoleto. */
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.dashboard'))
+            ->assertForbidden();
     }
 
     public function test_una_cuenta_sin_acceso_no_puede_iniciar_sesion(): void
