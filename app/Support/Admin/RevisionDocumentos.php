@@ -14,6 +14,9 @@ class RevisionDocumentos
 
     public const RECHAZADO = 'rechazado';
 
+    /* Ya no se puede cancelar un trámite: la única forma de cerrarlo es
+       interrumpirlo. La constante sobrevive para leer el historial, que
+       conserva las solicitudes canceladas antes de retirar la acción. */
     public const CANCELADO = 'cancelado';
 
     /** Estados terminales de una solicitud: los que se pueden reanudar. */
@@ -158,22 +161,6 @@ class RevisionDocumentos
             $this->registrarEstadoSolicitud($id_solicitud, 'En revisión');
 
             return self::REVISION;
-        });
-    }
-
-    /**
-     * Cierra la solicitud como cancelada, incluso si ya había sido aprobada.
-     */
-    public function cancelar(int $id_solicitud): string
-    {
-        return DB::transaction(function () use ($id_solicitud): string {
-            if ($this->estadoVigenteBloqueado($id_solicitud) === 'Cancelada') {
-                throw new DomainException('La solicitud ya está cancelada.');
-            }
-
-            $this->registrarEstadoSolicitud($id_solicitud, 'Cancelada');
-
-            return self::CANCELADO;
         });
     }
 

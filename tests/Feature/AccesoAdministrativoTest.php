@@ -95,9 +95,8 @@ class AccesoAdministrativoTest extends TestCase
         /* Reanudar el pago es de la DEC: la UIF no lo resolvió. */
         $this->actingAs($uif)->post(route('admin.pagos.reanudar', 1))->assertForbidden();
 
-        /* Reabrir o cancelar el expediente es de la UIF, por lo mismo. */
+        /* Reabrir el expediente es de la UIF, por lo mismo. */
         $this->actingAs($dec)->post(route('admin.documentos.reanudar', 1))->assertForbidden();
-        $this->actingAs($dec)->post(route('admin.documentos.cancelar', 1))->assertForbidden();
     }
 
     public function test_el_tablero_del_superusuario_los_pinta_todos(): void

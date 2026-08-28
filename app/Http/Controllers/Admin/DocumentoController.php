@@ -208,12 +208,26 @@ class DocumentoController extends Controller
                 ->with('warning', 'La solicitud ya fue resuelta y no puede interrumpirse nuevamente.');
         }
 
-        $datos = $request->validate([
-            'motivo_rechazo' => ['nullable', 'string', 'max:255'],
+        /* El motivo es obligatorio aquí y no en el servicio: la regla es de
+           esta pantalla, que es la que se lo enseña a la persona. Cabe en 255
+           porque ese es el ancho de ESSO_MOTIVO_RECHAZO. */
+        $validador = Validator::make($request->all(), [
+            'motivo_rechazo' => ['required', 'string', 'max:255'],
+        ], [
+            'motivo_rechazo.required' => 'Escribe el motivo por el que se interrumpe el trámite.',
+            'motivo_rechazo.max' => 'El motivo no puede pasar de 255 caracteres.',
         ]);
 
+        /* Vuelve a la revisión con withInput() para no tirar las decisiones
+           documentales que el administrador ya había marcado. */
+        if ($validador->fails()) {
+            return $this->redirigirRevision($id, $contexto_bandeja)
+                ->withErrors($validador)
+                ->withInput();
+        }
+
         try {
-            $revision_documentos->interrumpir((int) $id, $datos['motivo_rechazo'] ?? null);
+            $revision_documentos->interrumpir((int) $id, $validador->validated()['motivo_rechazo']);
         } catch (DomainException $exception) {
             return $this->redirigirRevision($id, $contexto_bandeja)
                 ->with('warning', $exception->getMessage());
@@ -249,28 +263,6 @@ class DocumentoController extends Controller
 
         return $this->redirigirRevision($id, $contexto_bandeja)
             ->with('success', 'El trámite volvió a revisión y el expediente completo espera dictamen.');
-    }
-
-    public function cancelar(
-        Request $request,
-        string $id,
-        ConsultaPreRegistros $consulta_pre_registros,
-        RevisionDocumentos $revision_documentos,
-        OrigenBandejaAdmin $origen_bandeja
-    )
-    {
-        $contexto_bandeja = $origen_bandeja->contexto();
-        $this->expedienteReal($id, $consulta_pre_registros);
-
-        try {
-            $revision_documentos->cancelar((int) $id);
-        } catch (DomainException $exception) {
-            return $this->redirigirResultado($id, $contexto_bandeja)
-                ->with('warning', $exception->getMessage());
-        }
-
-        return $this->redirigirResultado($id, $contexto_bandeja)
-            ->with('success', 'El trámite se canceló y el historial fue actualizado.');
     }
 
     public function resultado(

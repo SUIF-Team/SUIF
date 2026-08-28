@@ -15,6 +15,35 @@
 
             @if($verFormatos)
                 @include('partials.preregistro-formatos', ['soloConsulta' => true])
+            @elseif($solicitudRechazada)
+                {{-- El trámite se cerró durante la revisión: los documentos siguen
+                     "En revisión" en la bitácora, así que en vez de la tabla —que
+                     invitaría a subsanar algo que ya nadie va a revisar— se explica
+                     el porqué. Espeja el bloque .pr-aceptado de abajo. --}}
+                <div class="pr-interrumpido">
+                    <span class="pr-interrumpido__icono" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+                    <h1>Trámite interrumpido</h1>
+                    <p class="pr-muted pr-interrumpido__texto">
+                        El equipo administrativo interrumpió la revisión de tu documentación{{ $fechaEnvio ? ', enviada el '.$fechaEnvio : '' }}.
+                        Tu trámite quedó cerrado en esta etapa.
+                    </p>
+
+                    @if($motivoInterrupcion)
+                        <div class="pr-interrumpido__motivo">
+                            <strong>Motivo</strong>
+                            <p>{{ $motivoInterrupcion }}</p>
+                        </div>
+                    @else
+                        <p class="pr-muted pr-interrumpido__sin-motivo">
+                            No se registró un comentario adicional. Si necesitas más detalles,
+                            comunícate con el equipo administrativo.
+                        </p>
+                    @endif
+
+                    <div class="pr-interrumpido__acciones">
+                        <a href="{{ route('persona.dashboard') }}" class="pr-btn pr-btn--secondary">Volver a mi panel</a>
+                    </div>
+                </div>
             @elseif($estado['fase'] === 'aprobado' && !$solicitudRechazada)
                 {{-- La etapa terminó: en vez de la tabla se confirma el resultado. --}}
                 <div class="pr-aceptado">

@@ -17,6 +17,7 @@ class AvancePersona
     private $idPago = null;
     private $idEvaluacion = null;
     private $estadoSolicitud = null;
+    private $motivoSolicitud = null;
     private $documentos = [];
     private $pago = null;
 
@@ -41,12 +42,18 @@ class AvancePersona
             return;
         }
 
-        /* El estado vigente es el último renglón de la bitácora. */
-        $this->estadoSolicitud = DB::table('estado_solicitud as e')
+        /* El estado vigente es el último renglón de la bitácora; el motivo
+           viaja con él para poder explicarle a la persona por qué se cerró
+           su trámite. */
+        $estado = DB::table('estado_solicitud as e')
             ->join('c_estado_solicitud as c', 'c.esso_id_c_estado_solicitud', '=', 'e.esso_id_c_estado_solicitud')
             ->where('e.esso_id_solicitud', $this->idSolicitud)
             ->orderByDesc('e.esso_id_estado_solicitud')
-            ->value('c.esso_estado_solicitud');
+            ->select('c.esso_estado_solicitud', 'e.esso_motivo_rechazo')
+            ->first();
+
+        $this->estadoSolicitud = $estado ? $estado->esso_estado_solicitud : null;
+        $this->motivoSolicitud = $estado ? $estado->esso_motivo_rechazo : null;
 
         $this->documentos = $this->cargarDocumentos();
         $this->pago = $this->cargarPago();
@@ -112,12 +119,26 @@ class AvancePersona
     }
 
     /**
-     * El trámite terminó sin certificación: da igual si el administrador lo
-     * rechazó en su momento o si lo canceló después de haberlo aprobado.
+     * El trámite terminó sin certificación. Hoy sólo lo cierra una
+     * interrupción; el historial conserva las cancelaciones de cuando esa
+     * acción todavía existía.
      */
     public function solicitudCerrada()
     {
         return in_array($this->estadoSolicitud, ['Rechazada', 'Cancelada'], true);
+    }
+
+    /**
+     * Motivo con el que el administrador cerró el trámite. Puede venir vacío:
+     * los cierres anteriores a esta pantalla no capturaban explicación.
+     */
+    public function motivoSolicitudCerrada()
+    {
+        if (!$this->solicitudCerrada()) {
+            return null;
+        }
+
+        return trim((string) $this->motivoSolicitud) ?: null;
     }
 
     /**

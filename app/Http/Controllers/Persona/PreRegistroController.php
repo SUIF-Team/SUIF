@@ -88,6 +88,7 @@ class PreRegistroController extends Controller
             'verFormatos' => $request->query('ver') === 'formatos',
             'solicitudAprobada' => $avance->solicitudAprobada(),
             'solicitudRechazada' => $avance->solicitudCerrada(),
+            'motivoInterrupcion' => $avance->motivoSolicitudCerrada(),
             'fechaEnvio' => $this->fechaDelEstado($estado['documentos'], 'revision'),
             'fechaAprobacion' => $this->fechaDelEstado($estado['documentos'], 'aprobado'),
         ]);

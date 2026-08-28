@@ -10,7 +10,7 @@ class ConsultaPreRegistros
     private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
     /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
-    private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada', 'cancelada'];
+    private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
 
     /**
      * Obtiene una fila por persona pre-registrada. La clave de acceso confirma
@@ -32,6 +32,9 @@ class ConsultaPreRegistros
      * importan a quien revisa; se toman del catálogo para conservar su
      * escritura exacta y se comparan sin distinguir mayúsculas, porque los
      * scripts de la base no coinciden entre sí («En revisión» / «En Revisión»).
+     *
+     * «Cancelada» quedó fuera: ya no se pueden cancelar trámites, así que
+     * filtrar por ese estado sólo devolvería expedientes históricos.
      */
     public function estados(): array
     {
@@ -287,8 +290,9 @@ class ConsultaPreRegistros
                 'preregistro' => 'Rechazado',
                 'documentacion' => 'Pendiente',
             ],
-            /* Cancelar cierra un trámite que ya había avanzado: el pre-registro
-               se conserva completado y lo que se detiene es la documentación. */
+            /* Ya no se cancelan trámites, pero el historial conserva los que se
+               cancelaron: el pre-registro sigue completado y lo que quedó
+               detenido es la documentación. */
             'Cancelada' => [
                 'general' => 'Cancelada',
                 'preregistro' => 'Completado',

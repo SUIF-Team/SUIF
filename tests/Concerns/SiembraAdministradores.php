@@ -110,6 +110,7 @@ trait SiembraAdministradores
             $table->increments('esso_id_estado_solicitud');
             $table->integer('esso_id_c_estado_solicitud');
             $table->integer('esso_id_solicitud');
+            $table->string('esso_motivo_rechazo', 255)->nullable();
         });
 
         Schema::create('pago', function (Blueprint $table): void {

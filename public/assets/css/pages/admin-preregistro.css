@@ -574,13 +574,38 @@
     align-self: start;
 }
 
-.admin-preregistro-acciones-generales div {
+.admin-preregistro-acciones-generales__botones {
     display: grid;
     gap: 1rem;
 }
 
 .admin-preregistro-acciones-generales .admin-preregistro-boton {
     width: 100%;
+}
+
+/* ─── Panel para interrumpir el trámite ──────────────────────────────── */
+
+/* Toma el grid, la etiqueta y el borde del textarea de
+   .admin-preregistro-campo-observacion; aquí sólo va su separación del
+   bloque de botones. */
+.admin-preregistro-interrupcion {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-light);
+}
+
+/* Se apilan a ancho completo como los dos botones de arriba: la tarjeta vive
+   en la columna lateral y no hay sitio para ponerlos en fila. */
+.admin-preregistro-interrupcion__acciones {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* El deshabilitado de la hoja base usa cursor: wait, que aquí engañaría: el
+   botón no espera nada, falta capturar el motivo. */
+.admin-preregistro-interrupcion .admin-preregistro-boton[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .admin-preregistro-mensaje-validacion {
@@ -797,7 +822,7 @@
     }
 }
 
-/* Acciones que revierten una resolución ya notificada (reanudar / cancelar).
+/* Acciones que revierten una resolución ya notificada (reanudar).
    Viven aquí porque las cargan tanto la pantalla de resultado como el detalle
    de pago; el modal de sedes no sirve, su hoja no se carga en ninguna. */
 /* La tarjeta toma relleno y tipografia de los grupos compartidos de arriba;

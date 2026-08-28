@@ -12,8 +12,8 @@ class NotificacionResultado
         $es_rechazo_preregistro = $resultado === 'rechazado'
             && ($estados['preregistro'] ?? null) === 'Rechazado';
         $es_cancelado = $resultado === RevisionDocumentos::CANCELADO;
-        /* Cancelar cierra el trámite igual que un rechazo: comparten títulos
-           en negativo y la paleta roja de la leyenda del tablero. */
+        /* Una cancelación histórica cierra el trámite igual que un rechazo:
+           comparten títulos en negativo y la paleta roja del tablero. */
         $es_rechazo = $resultado === 'rechazado' || $es_cancelado;
         $es_aprobado = $resultado === 'aprobado';
 
@@ -164,7 +164,9 @@ class NotificacionResultado
         $acciones = [];
 
         /* Sólo se reanuda lo que ya está resuelto; mientras el expediente
-           espera subsanación no hay resolución que revertir. */
+           espera subsanación no hay resolución que revertir. CANCELADO
+           sigue en la lista por el historial: ya no se pueden cancelar
+           trámites, pero los que se cancelaron deben poder reabrirse. */
         if (in_array($resultado, [
             RevisionDocumentos::APROBADO,
             RevisionDocumentos::RECHAZADO,
@@ -177,17 +179,6 @@ class NotificacionResultado
                 'etiqueta' => 'Reanudar trámite',
                 'titulo_modal' => '¿Reanudar este trámite?',
                 'texto_modal' => 'El expediente completo volverá a revisión y tendrás que dictaminar de nuevo cada documento. El historial anterior se conserva.',
-            ];
-        }
-
-        if ($resultado !== RevisionDocumentos::CANCELADO) {
-            $acciones[] = [
-                'id' => 'cancelar-tramite',
-                'permiso' => 'reanudar-tramite',
-                'ruta' => route('admin.documentos.cancelar', ['id' => $id_solicitud]),
-                'etiqueta' => 'Cancelar trámite',
-                'titulo_modal' => '¿Cancelar este trámite?',
-                'texto_modal' => 'La solicitud quedará cancelada y la persona no podrá continuar. Podrás reanudarla después si hiciera falta.',
             ];
         }
 

@@ -136,7 +136,6 @@ Route::middleware(['auth', 'can:acceder-admin'])
            lo reabre la DEC. */
         Route::middleware('can:reanudar-tramite')->group(function () {
             Route::post('/documentos/{id}/reanudar', [AdminDocumentoController::class, 'reanudar'])->name('documentos.reanudar');
-            Route::post('/documentos/{id}/cancelar', [AdminDocumentoController::class, 'cancelar'])->name('documentos.cancelar');
         });
 
         Route::middleware('can:reanudar-pago')->group(function () {

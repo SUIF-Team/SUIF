@@ -53,10 +53,10 @@ class ConsultaPersonasRegistradasTest extends TestCase
     }
 
     /**
-     * Las dos bandejas no ofrecen los mismos filtros, y es a propósito: en
-     * pre-registros se puede cancelar un trámite, así que ese estado tiene que
-     * poder filtrarse. La de personas registradas sólo lista aprobadas y no
-     * tiene nada que hacer con «Cancelada».
+     * Las dos bandejas filtran por los mismos tres estados. El catálogo tiene
+     * seis, pero «Pre-registro» y «Documentación» son etapas de captura que no
+     * llegan a la bandeja, y «Cancelada» dejó de ofrecerse cuando se retiró la
+     * acción de cancelar un trámite: sólo quedan expedientes históricos.
      */
     public function test_cada_bandeja_ofrece_los_estados_que_le_corresponden(): void
     {
@@ -66,7 +66,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
         );
 
         $this->assertSame(
-            ['En revisión', 'Aprobada', 'Rechazada', 'Cancelada'],
+            ['En revisión', 'Aprobada', 'Rechazada'],
             app(ConsultaPreRegistros::class)->estados()
         );
     }
@@ -182,6 +182,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('esso_id_estado_solicitud')->primary();
             $table->integer('esso_id_c_estado_solicitud');
             $table->integer('esso_id_solicitud');
+            $table->string('esso_motivo_rechazo', 255)->nullable();
         });
 
         /* El dashboard cuenta los pagos por validar con ConsultaPagos. */

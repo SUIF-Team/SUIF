@@ -20,6 +20,10 @@
             ])
             ->all(),
         'fecha_limite' => old('fecha_limite', $observaciones_rechazo['fecha_limite'] ?? ''),
+        'motivo_interrupcion' => old('motivo_rechazo', ''),
+        /* Si la validación de servidor falló, el panel vuelve abierto con lo
+           que se había capturado. */
+        'interrupcion_abierta' => $errors->has('motivo_rechazo'),
         'modo_solo_lectura' => $modo_solo_lectura ?? false,
     ];
 @endphp
@@ -90,18 +94,62 @@
         <aside class="admin-preregistro-columna-lateral" aria-label="Acciones y observaciones">
             <section v-if="!modoSoloLectura" class="admin-preregistro-tarjeta admin-preregistro-acciones-generales" aria-labelledby="acciones-generales-titulo">
                 <h2 id="acciones-generales-titulo">Acciones generales</h2>
-                <div>
+                <div class="admin-preregistro-acciones-generales__botones">
+                    {{-- Sólo abre el panel: el envío real vive dentro, para poder
+                         exigir el motivo antes de cerrar el trámite. --}}
                     <button
                         class="admin-preregistro-boton admin-preregistro-boton--rechazar"
-                        type="submit"
-                        formaction="{{ route('admin.documentos.interrumpir', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}"
-                        formmethod="POST"
-                        :disabled="enviando">
-                        @{{ enviando ? 'Procesando...' : 'Interrumpir trámite' }}
+                        type="button"
+                        aria-controls="panel-interrupcion"
+                        :aria-expanded="interrupcionAbierta ? 'true' : 'false'"
+                        :disabled="enviando"
+                        v-on:click="abrirInterrupcion">
+                        Interrumpir trámite
                     </button>
                     <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando || !todosDocumentosResueltos || !comentariosCompletos">
                         @{{ enviando ? 'Guardando...' : 'Guardar' }}
                     </button>
+                </div>
+
+                {{-- El textarea vive dentro del formulario de validar: el botón de
+                     abajo lo redirige con formaction, así que el motivo viaja con
+                     él. Un <form> propio aquí quedaría anidado, que no es válido. --}}
+                <div
+                    id="panel-interrupcion"
+                    v-if="interrupcionAbierta"
+                    class="admin-preregistro-campo-observacion admin-preregistro-interrupcion">
+                    <label for="motivo-interrupcion">Motivo de la interrupción</label>
+                    <textarea
+                        id="motivo-interrupcion"
+                        name="motivo_rechazo"
+                        ref="motivoInterrupcion"
+                        v-model="motivoInterrupcion"
+                        rows="4"
+                        maxlength="255"
+                        aria-describedby="motivo-interrupcion-ayuda"></textarea>
+                    <p id="motivo-interrupcion-ayuda" class="admin-preregistro-ayuda">
+                        Se le mostrará a la persona como explicación del cierre de su trámite. Máximo 255 caracteres.
+                    </p>
+                    @error('motivo_rechazo')
+                        <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $message }}</p>
+                    @enderror
+                    <div class="admin-preregistro-interrupcion__acciones">
+                        <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" v-on:click="cerrarInterrupcion">
+                            Cancelar
+                        </button>
+                        {{-- formnovalidate: el formulario es el de validar y puede
+                             traer campos required —fecha límite, comentarios— que
+                             al interrumpir no aplican. --}}
+                        <button
+                            class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                            type="submit"
+                            formnovalidate
+                            formaction="{{ route('admin.documentos.interrumpir', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}"
+                            formmethod="POST"
+                            :disabled="enviando || !motivoInterrupcionValido">
+                            @{{ enviando ? 'Procesando...' : 'Confirmar interrupción' }}
+                        </button>
+                    </div>
                 </div>
                 <p v-if="!todosDocumentosResueltos" id="estado-documentos-pendientes" class="admin-preregistro-mensaje-validacion" role="status">
                     Resuelve todos los documentos para guardar la revisi&oacute;n.

@@ -28,6 +28,8 @@
                 comentarios: Object.assign({}, datos_vista.comentarios || {}),
                 erroresComentarios: datos_vista.errores_comentarios || {},
                 fechaLimite: datos_vista.fecha_limite || '',
+                motivoInterrupcion: datos_vista.motivo_interrupcion || '',
+                interrupcionAbierta: Boolean(datos_vista.interrupcion_abierta),
                 modoSoloLectura: datos_vista.modo_solo_lectura || false,
                 documentoPrevisualizado: null,
                 activadorDocumento: null
@@ -111,6 +113,9 @@
 
                     return String(comentarios[documento.id] || '').trim() !== '';
                 });
+            },
+            motivoInterrupcionValido: function () {
+                return this.motivoInterrupcion.trim() !== '';
             }
         },
         methods: {
@@ -172,6 +177,19 @@
                     delete this.comentarios[id];
                     delete this.erroresComentarios[id];
                 }
+            },
+            abrirInterrupcion: function () {
+                this.interrupcionAbierta = true;
+
+                this.$nextTick(function () {
+                    if (this.$refs.motivoInterrupcion) {
+                        this.$refs.motivoInterrupcion.focus();
+                    }
+                });
+            },
+            cerrarInterrupcion: function () {
+                this.interrupcionAbierta = false;
+                this.motivoInterrupcion = '';
             },
             abrirDocumento: function (documento, evento) {
                 this.activadorDocumento = evento.currentTarget;

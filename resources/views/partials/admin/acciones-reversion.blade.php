@@ -1,6 +1,6 @@
 {{--
     Acciones que revierten una resolución ya notificada: reanudar un trámite o
-    un pago resuelto y cancelar una solicitud.
+    un pago resueltos.
 
     Recibe $acciones, un arreglo de ['id', 'ruta', 'etiqueta', 'titulo_modal',
     'texto_modal'] armado por App\Support\Admin\NotificacionResultado. Cada una
@@ -23,7 +23,7 @@
         <div class="admin-preregistro-reversion-texto">
             <h2 id="acciones-reversion-titulo">Corregir la resolución</h2>
             <p class="admin-preregistro-reversion-ayuda">
-                El historial conserva cada resolución: reanudar o cancelar agrega un movimiento nuevo, no borra el anterior.
+                El historial conserva cada resolución: reanudar agrega un movimiento nuevo, no borra el anterior.
             </p>
         </div>
 

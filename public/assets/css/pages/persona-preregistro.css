@@ -419,3 +419,73 @@
     gap: 0.6rem;
     text-align: left;
 }
+
+/* ─── Trámite interrumpido ───────────────────────────────────────────── */
+
+.pr-interrumpido {
+    max-width: 640px;
+    margin: 2rem auto 0;
+    text-align: center;
+}
+
+.pr-interrumpido__icono {
+    display: inline-grid;
+    place-items: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    margin-bottom: 1rem;
+    border-radius: 50%;
+    background: #fbe3e3;
+    color: #b5000a;
+    font-size: 1.4rem;
+}
+
+.pr-interrumpido h1 {
+    margin: 0 0 0.3rem;
+    color: #16263f;
+    font-size: 1.5rem;
+}
+
+.pr-interrumpido__texto {
+    margin: 0 auto 1.5rem;
+    max-width: 46ch;
+    line-height: 1.6;
+}
+
+.pr-interrumpido__motivo {
+    margin: 0 0 1.75rem;
+    padding: 18px;
+    border: 1px solid #ebc7c7;
+    border-radius: 12px;
+    background: #fff8f8;
+    color: #8d1117;
+    text-align: left;
+}
+
+.pr-interrumpido__motivo strong {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.85rem;
+}
+
+/* El motivo lo escribe una persona: los saltos de línea que capturó se
+   respetan, igual que en .pr-observation. */
+.pr-interrumpido__motivo p {
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.pr-interrumpido__sin-motivo {
+    margin: 0 auto 1.75rem;
+    max-width: 46ch;
+    font-size: 0.9rem;
+}
+
+.pr-interrumpido__acciones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}

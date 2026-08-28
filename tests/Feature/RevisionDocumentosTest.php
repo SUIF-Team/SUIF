@@ -267,47 +267,6 @@ class RevisionDocumentosTest extends TestCase
         app(RevisionDocumentos::class)->reanudar(1);
     }
 
-    public function test_cancelar_una_solicitud_aprobada_escribe_el_estado_cancelada(): void
-    {
-        $this->crearExpedienteEnRevision();
-        $revision = app(RevisionDocumentos::class);
-
-        $revision->resolver(1, [
-            '10' => RevisionDocumentos::APROBADO,
-            '11' => RevisionDocumentos::APROBADO,
-        ], []);
-
-        $this->assertSame(RevisionDocumentos::CANCELADO, $revision->cancelar(1));
-        $this->assertSame('Cancelada', $this->ultimoEstadoSolicitud());
-
-        /* Cancelar cierra la solicitud sin tocar el dictamen documental. */
-        $this->assertSame(['Aprobado', 'Aprobado'], $this->ultimosEstadosDocumentos());
-    }
-
-    public function test_no_se_puede_cancelar_una_solicitud_ya_cancelada(): void
-    {
-        $this->crearExpedienteEnRevision();
-        $revision = app(RevisionDocumentos::class);
-
-        $revision->cancelar(1);
-
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('La solicitud ya está cancelada.');
-
-        $revision->cancelar(1);
-    }
-
-    public function test_una_solicitud_cancelada_se_puede_reanudar(): void
-    {
-        $this->crearExpedienteEnRevision();
-        $revision = app(RevisionDocumentos::class);
-
-        $revision->cancelar(1);
-
-        $this->assertSame(RevisionDocumentos::REVISION, $revision->reanudar(1));
-        $this->assertSame('En revisión', $this->ultimoEstadoSolicitud());
-    }
-
     private function crearEsquemaTemporal(): void
     {
         foreach ([
