@@ -410,3 +410,12 @@
         flex: 1 1 100%;
     }
 }
+
+/* ─── Aviso de datos no modificables tras el envío ───────────────────── */
+
+.pr-notice--bloqueo {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    text-align: left;
+}

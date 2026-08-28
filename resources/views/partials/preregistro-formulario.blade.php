@@ -5,6 +5,17 @@
 --}}
 <form method="POST" action="{{ $accion }}" id="pr-data-form">
     @csrf
+
+    <p class="pr-notice pr-notice--bloqueo" role="note">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span>
+            Verifica que tus datos sean correctos antes de continuar. Podrás
+            editarlos mientras tu documentación no haya entrado a revisión;
+            una vez que la envíes, tus datos quedan fijos y ya no se podrán
+            modificar.
+        </span>
+    </p>
+
     <div class="pr-grid">
         <div class="pr-field"><label>Nombre *</label><input name="nombre" value="{{ old('nombre', $estado['datos']['nombre'] ?? '') }}" required></div>
         <div class="pr-field"><label>Primer apellido *</label><input name="primer_apellido" value="{{ old('primer_apellido', $estado['datos']['primer_apellido'] ?? '') }}" required></div>

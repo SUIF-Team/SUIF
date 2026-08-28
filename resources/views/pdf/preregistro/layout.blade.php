@@ -16,7 +16,7 @@
     <style>{!! file_get_contents(public_path('assets/css/pdf/preregistro-formato.css')) !!}</style>
 </head>
 <body>
-    <p class="fecha">{{ $lugar }}, a {{ $dia }} de {{ $mes }} de 2024</p>
+    <p class="fecha">{{ $lugar }}, México, a {{ $fecha }}</p>
 
     <p class="asunto"><strong>Asunto:</strong> @yield('asunto')</p>
 
