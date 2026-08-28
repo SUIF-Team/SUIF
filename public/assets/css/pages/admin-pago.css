@@ -179,3 +179,18 @@
         width: 100%;
     }
 }
+
+/* ─── Datos con los que se emitirá el CFDI ───────────────────────────── */
+
+.admin-pago-fiscales {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.admin-pago-fiscales h3 {
+    margin: 0 0 0.5rem;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+    font-weight: 700;
+}

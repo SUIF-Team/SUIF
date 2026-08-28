@@ -54,6 +54,7 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
 
         Route::get('/pago', [PersonaPagoController::class, 'index'])->name('pago.index');
         Route::post('/pago/comprobante', [PersonaPagoController::class, 'subirComprobante'])->name('pago.comprobante');
+        Route::post('/pago/tipo-comprobante', [PersonaPagoController::class, 'elegirComprobante'])->name('pago.tipo-comprobante');
         Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
         Route::get('/referencia/individual', [PersonaReferenciaController::class, 'individual'])->name('referencia.individual');
         Route::post('/referencia', [PersonaReferenciaController::class, 'generar'])->name('referencia.generar');

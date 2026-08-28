@@ -88,7 +88,49 @@
                 <dt>Hora de pago</dt>
                 <dd>{{ $pago['hora_pago'] ? \Illuminate\Support\Carbon::parse($pago['hora_pago'])->translatedFormat('H:i') : 'Sin capturar' }}</dd>
             </div>
+            {{-- Lo que la persona pidió para su pago. Es opcional: no haber
+                 elegido nada es válido y su trámite sigue igual. --}}
+            <div class="admin-preregistro-dato">
+                <dt>Comprobante solicitado</dt>
+                <dd>{{ $pago['comprobante_solicitado'] }}</dd>
+            </div>
         </dl>
+
+        @if($pago['datos_fiscales'])
+            <section class="admin-pago-fiscales" aria-labelledby="datos-fiscales-titulo">
+                <h3 id="datos-fiscales-titulo">Datos para el CFDI</h3>
+                <dl class="admin-preregistro-datos admin-pago-datos">
+                    <div class="admin-preregistro-dato">
+                        <dt>Nombre o razón social</dt>
+                        <dd>{{ $pago['datos_fiscales']['razon_social'] }}</dd>
+                    </div>
+                    <div class="admin-preregistro-dato">
+                        <dt>Tipo de persona</dt>
+                        <dd>{{ $pago['datos_fiscales']['tipo_persona'] }}</dd>
+                    </div>
+                    <div class="admin-preregistro-dato">
+                        <dt>RFC</dt>
+                        <dd>{{ $pago['datos_fiscales']['rfc'] }}</dd>
+                    </div>
+                    <div class="admin-preregistro-dato">
+                        <dt>Régimen fiscal</dt>
+                        <dd>{{ $pago['datos_fiscales']['regimen_fiscal'] }}</dd>
+                    </div>
+                    <div class="admin-preregistro-dato">
+                        <dt>Código postal</dt>
+                        <dd>{{ $pago['datos_fiscales']['codigo_postal'] }}</dd>
+                    </div>
+                    <div class="admin-preregistro-dato">
+                        <dt>Correo para el CFDI</dt>
+                        <dd>{{ $pago['datos_fiscales']['correo'] }}</dd>
+                    </div>
+                </dl>
+            </section>
+        @elseif($pago['comprobante_solicitado'] === 'CFDI')
+            <p class="admin-preregistro-solo-lectura">
+                La persona eligió CFDI y todavía no captura sus datos de facturación.
+            </p>
+        @endif
 
         @if($pago['motivo_rechazo'])
             <section class="admin-pago-motivo" aria-labelledby="motivo-rechazo-titulo">

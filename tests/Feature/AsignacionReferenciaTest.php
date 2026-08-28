@@ -158,6 +158,8 @@ class AsignacionReferenciaTest extends TestCase
             $table->string('pago_referencia_bancaria', 20)->nullable();
             $table->string('pago_referencia_bancaria_path', 200)->nullable();
             $table->decimal('pago_monto_pagado', 10, 4)->nullable();
+            $table->boolean('pago_uso_cfdi')->nullable();
+            $table->integer('pago_id_dato_fiscal')->nullable();
         });
 
         Schema::create('solicitud', function (Blueprint $table): void {

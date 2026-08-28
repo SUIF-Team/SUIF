@@ -18,6 +18,9 @@
     @if(session('success'))
         <div class="pago-alerta">{{ session('success') }}</div>
     @endif
+    @if(session('warning'))
+        <div class="pago-alerta pago-alerta--error">{{ session('warning') }}</div>
+    @endif
     @if($errors->any())
         <div class="pago-alerta pago-alerta--error">
             <strong>Revisa los datos de tu pago:</strong>
@@ -85,6 +88,10 @@
             </div>
         </div>
 
+        @if($comprobanteFiscal['visible'])
+            @include('partials.pago-comprobante-fiscal', ['comprobanteFiscal' => $comprobanteFiscal])
+        @endif
+
         <div class="pago-tracker">
             <p class="pago-tracker__titulo">Estatus de validación</p>
             <div class="pago-tracker__linea">
@@ -105,9 +112,17 @@
 </section>
 @endsection
 
-@if($puedeCargar)
+{{-- El selector de comprobante vive en el estado «validado», donde
+     $puedeCargar es falso: sin esta condición Vue no llegaría a cargarse ahí
+     y la confirmación no aparecería. --}}
+@if($puedeCargar || $comprobanteFiscal['puedeElegir'])
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-    <script src="{{ asset_versionado('assets/js/pages/persona-pago.js') }}"></script>
+    @if($puedeCargar)
+        <script src="{{ asset_versionado('assets/js/pages/persona-pago.js') }}"></script>
+    @endif
+    @if($comprobanteFiscal['puedeElegir'])
+        <script src="{{ asset_versionado('assets/js/pages/persona-comprobante-fiscal.js') }}"></script>
+    @endif
     @endpush
 @endif

@@ -681,6 +681,8 @@ class GestionSedesTest extends TestCase
             $table->integer('pago_id_pago')->primary();
             $table->string('pago_comprobante_path')->nullable();
             $table->decimal('pago_monto_pagado', 10, 2)->nullable();
+            $table->boolean('pago_uso_cfdi')->nullable();
+            $table->integer('pago_id_dato_fiscal')->nullable();
         });
         Schema::create('c_estado_pago', function (Blueprint $table): void {
             $table->integer('espa_id_c_estado_pago')->primary();

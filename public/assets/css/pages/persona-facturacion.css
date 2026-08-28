@@ -1,0 +1,216 @@
+/* Evita el parpadeo de los avisos antes de que monte Vue. */
+[v-cloak] {
+    display: none;
+}
+
+.facturacion-shell {
+    max-width: 820px;
+}
+
+.facturacion-tarjeta {
+    padding: 2rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
+}
+
+.facturacion-tarjeta h1 {
+    margin: 0 0 0.4rem;
+    color: #172a44;
+    font-size: 1.4rem;
+}
+
+.facturacion-muted {
+    margin: 0 0 1.5rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.facturacion-alerta {
+    margin-bottom: 1.25rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 10px;
+    background: #d8ecdf;
+    color: #075b2c;
+    font-size: 0.875rem;
+}
+
+.facturacion-alerta--error {
+    background: #fcdede;
+    color: #9b1717;
+}
+
+.facturacion-alerta ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.facturacion-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.facturacion-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.facturacion-campo label {
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.facturacion-campo input,
+.facturacion-campo select {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #fff;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.facturacion-campo input:focus-visible,
+.facturacion-campo select:focus-visible {
+    outline: 2px solid #172a44;
+    outline-offset: 1px;
+}
+
+/* El RFC se guarda en mayúsculas; que se vea así mientras se escribe evita
+   la sorpresa de verlo cambiar al enviar. */
+.facturacion-campo__rfc {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.facturacion-campo__ayuda {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.78rem;
+}
+
+.facturacion-mensaje-validacion {
+    margin: 0;
+    color: #9b1717;
+    font-size: 0.78rem;
+}
+
+.facturacion-aviso {
+    margin: 1.5rem 0 0;
+    padding: 0.9rem 1.1rem;
+    border-radius: 10px;
+    background: #f7f7f4;
+    color: #6b7280;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.facturacion-aviso strong {
+    color: #172a44;
+}
+
+.facturacion-datos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+}
+
+.facturacion-dato {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.facturacion-dato:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+.facturacion-dato dt {
+    margin-bottom: 0.25rem;
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.facturacion-dato dd {
+    margin: 0;
+    color: #111827;
+    font-size: 0.875rem;
+}
+
+.facturacion-acciones {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.facturacion-boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 150px;
+    padding: 0.65rem 1.25rem;
+    border: 0;
+    border-radius: 8px;
+    background: #111827;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.facturacion-boton:hover,
+.facturacion-boton:focus-visible {
+    background: #1f2937;
+    color: #fff;
+}
+
+.facturacion-boton--secundario {
+    border: 1px solid #d9dee7;
+    background: #fff;
+    color: #172a44;
+}
+
+.facturacion-boton--secundario:hover,
+.facturacion-boton--secundario:focus-visible {
+    background: #f3f4f6;
+    color: #172a44;
+}
+
+.facturacion-boton[disabled] {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.facturacion-boton[disabled]:hover,
+.facturacion-boton[disabled]:focus-visible {
+    background: #e5e7eb;
+}
+
+@media (max-width: 900px) {
+    .facturacion-grid,
+    .facturacion-datos {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .facturacion-dato:nth-last-child(-n + 2) {
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .facturacion-dato:last-child {
+        border-bottom: 0;
+    }
+
+    .facturacion-acciones {
+        flex-direction: column-reverse;
+    }
+}

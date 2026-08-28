@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 class AvancePersona
 {
     private $idSolicitud = null;
+    private $idPersona = null;
     private $idPago = null;
     private $idEvaluacion = null;
     private $estadoSolicitud = null;
@@ -31,10 +32,11 @@ class AvancePersona
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->where('p.pers_id_usuario', $idUsuario)
             ->orderByDesc('s.soli_id_solicitud')
-            ->select('s.soli_id_solicitud', 's.soli_id_pago', 's.soli_id_evaluacion')
+            ->select('s.soli_id_solicitud', 's.soli_id_persona', 's.soli_id_pago', 's.soli_id_evaluacion')
             ->first();
 
         $this->idSolicitud = $solicitud ? $solicitud->soli_id_solicitud : null;
+        $this->idPersona = $solicitud ? $solicitud->soli_id_persona : null;
         $this->idPago = $solicitud ? $solicitud->soli_id_pago : null;
         $this->idEvaluacion = $solicitud ? $solicitud->soli_id_evaluacion : null;
 
@@ -67,6 +69,11 @@ class AvancePersona
     public function idSolicitud()
     {
         return $this->idSolicitud;
+    }
+
+    public function idPersona()
+    {
+        return $this->idPersona;
     }
 
     public function estadoSolicitud()
@@ -107,6 +114,25 @@ class AvancePersona
         return $this->estadoPagoVista() === 'rechazado'
             ? trim((string) $this->pago->espa_comentario)
             : null;
+    }
+
+    /**
+     * Comprobante que la persona pidió de su pago: 'ticket', 'cfdi' o null si
+     * todavía no elige. Null es un estado válido y no bloquea el trámite:
+     * pedir comprobante es opcional.
+     */
+    public function comprobanteElegido()
+    {
+        if (!$this->tienePago()) {
+            return null;
+        }
+
+        return ComprobanteFiscal::tipoDesdeUsoCfdi($this->pago->pago_uso_cfdi);
+    }
+
+    public function tieneDatosFiscales()
+    {
+        return $this->tienePago() && $this->pago->pago_id_dato_fiscal !== null;
     }
 
     /**
@@ -258,6 +284,8 @@ class AvancePersona
             ->select([
                 'p.pago_id_pago',
                 'p.pago_comprobante_path',
+                'p.pago_uso_cfdi',
+                'p.pago_id_dato_fiscal',
                 'cep.esta_estado_pago',
                 'ep.espa_comentario',
             ])

@@ -266,7 +266,11 @@ class PagosPersistentesTest extends TestCase
             'c_estado_pago',
             'referencia_bancaria',
             'convocatoria',
+            'comunicacion',
+            'tipo_comunicacion',
             'pago',
+            'dato_fiscal',
+            'regimen_fiscal',
             'estado_solicitud',
             'c_estado_solicitud',
             'estado_documento',
@@ -368,6 +372,35 @@ class PagosPersistentesTest extends TestCase
             $table->integer('esdo_id_documento');
         });
 
+        /* El detalle del pago muestra el comprobante que la persona pidió y,
+           si fue CFDI, los datos con los que se le factura. */
+        Schema::create('regimen_fiscal', function (Blueprint $table): void {
+            $table->integer('refi_id_regimen_fiscal')->primary();
+            $table->string('refi_regimen_fiscal', 35);
+        });
+
+        Schema::create('dato_fiscal', function (Blueprint $table): void {
+            $table->increments('dafi_id_dato_fiscal');
+            $table->integer('dafi_id_regimen_fiscal');
+            $table->string('dafi_id_codigo_postal', 5);
+            $table->string('dafi_razon_social', 35);
+            $table->string('dafi_rfc', 13);
+            $table->boolean('dafi_persona_moral');
+            $table->boolean('dafi_uso_cfdi');
+        });
+
+        Schema::create('tipo_comunicacion', function (Blueprint $table): void {
+            $table->integer('tico_id_tipo_comunicacion')->primary();
+            $table->string('tico_tipo_comunicacion', 25);
+        });
+
+        Schema::create('comunicacion', function (Blueprint $table): void {
+            $table->increments('comu_id_comunicacion');
+            $table->integer('comu_id_persona');
+            $table->integer('comu_id_tipo_comunicacion');
+            $table->string('comu_descripcion', 65);
+        });
+
         Schema::create('pago', function (Blueprint $table): void {
             $table->integer('pago_id_pago')->primary();
             $table->string('pago_comprobante_path', 200);
@@ -376,6 +409,8 @@ class PagosPersistentesTest extends TestCase
             $table->string('pago_referencia_bancaria_path', 200)->nullable();
             $table->date('pago_fecha_pago');
             $table->time('pago_hora_pago');
+            $table->boolean('pago_uso_cfdi')->nullable();
+            $table->integer('pago_id_dato_fiscal')->nullable();
         });
 
         Schema::create('c_estado_pago', function (Blueprint $table): void {

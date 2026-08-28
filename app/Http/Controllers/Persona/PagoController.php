@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Persona;
 use App\Http\Controllers\Controller;
 use App\Servicios\AvancePersona;
 use App\Servicios\CatalogoReferencias;
+use App\Servicios\ComprobanteFiscal;
 use App\Support\Admin\RevisionPagos;
 use DomainException;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class PagoController extends Controller
             'vistaFormulario' => $this->vistaFormulario($monto_esperado),
             'moneda' => config('suif.moneda', 'MXN'),
             'tracker' => $this->tracker($pago_estado),
+            'comprobanteFiscal' => $this->comprobanteFiscalVista($avance, $pago_estado),
         ]);
     }
 
@@ -93,6 +95,35 @@ class PagoController extends Controller
             ->with('success', 'Tu comprobante fue enviado. El proceso de revisión puede tardar hasta 24 horas.');
     }
 
+    /**
+     * El comprobante que la persona quiere de su pago. Es opcional y
+     * definitivo: si no elige nada, su trámite sigue igual.
+     */
+    public function elegirComprobante(Request $request, ComprobanteFiscal $comprobante_fiscal)
+    {
+        $datos = $request->validate([
+            'tipo' => ['required', 'in:ticket,cfdi'],
+        ], [
+            'tipo.required' => 'Selecciona si quieres ticket o CFDI.',
+            'tipo.in' => 'Selecciona si quieres ticket o CFDI.',
+        ]);
+
+        try {
+            $comprobante_fiscal->registrarEleccion((int) Auth::id(), $datos['tipo']);
+        } catch (DomainException $exception) {
+            return redirect()
+                ->route('persona.pago.index')
+                ->with('warning', $exception->getMessage());
+        }
+
+        return redirect()->route('persona.pago.index')->with(
+            'success',
+            $datos['tipo'] === ComprobanteFiscal::CFDI
+                ? 'Elegiste CFDI. Captura tus datos de facturación para que podamos emitirlo y enviártelo por correo electrónico.'
+                : 'Elegiste ticket. Te lo haremos llegar por correo electrónico.'
+        );
+    }
+
     private function avanceActual(): AvancePersona
     {
         return new AvancePersona(Auth::id());
@@ -147,6 +178,25 @@ class PagoController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Estado del selector de comprobante. Sólo se ofrece con el pago
+     * validado; la elección, una vez hecha, ya no se puede modificar.
+     */
+    private function comprobanteFiscalVista(AvancePersona $avance, string $pago_estado): array
+    {
+        $eleccion = $avance->comprobanteElegido();
+
+        return [
+            'visible' => $pago_estado === 'validado',
+            /* Elegido ya no hay nada que confirmar: sin esto la pantalla
+               descargaría Vue para no hacer nada. */
+            'puedeElegir' => $pago_estado === 'validado' && $eleccion === null,
+            'eleccion' => $eleccion,
+            'tieneDatosFiscales' => $avance->tieneDatosFiscales(),
+            'urlFormulario' => route('persona.facturacion.index'),
+        ];
     }
 
     private function tracker(string $pago_estado): array

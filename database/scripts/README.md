@@ -36,6 +36,7 @@ Orden de ejecución en una instalación nueva:
 7. `suif_rfc_persona.sql` — RFC de la persona en PERSONA
 8. `suif_referencia_fecha_emision.sql` — fecha de emisión en REFERENCIA_BANCARIA
 9. `suif_roles_administrativos.sql` — roles administrativos y catálogo de privilegios
+10. `suif_comprobante_fiscal.sql` — comprobante fiscal del pago (ticket o CFDI)
 
 `suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
 que el banco emitió la referencia. Va DESPUÉS de
@@ -152,13 +153,14 @@ También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
 `suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
 registrar nada.
 
-## Los otros seis se pueden repetir
+## Los otros siete se pueden repetir
 
 `suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
 `suif_catalogos.sql`, `suif_grupos_multiples.sql`,
-`suif_referencias_bancarias.sql` y `suif_roles_administrativos.sql` son
-idempotentes: volver a ejecutarlos no duplica ni destruye nada. Por eso la
-regla al desplegar es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
+`suif_referencias_bancarias.sql`, `suif_roles_administrativos.sql` y
+`suif_comprobante_fiscal.sql` son idempotentes: volver a ejecutarlos no
+duplica ni destruye nada. Por eso la regla al desplegar es correrlos SIEMPRE,
+sin preguntarse si ya se corrieron.
 
 ## Hay tres tipos de administrador y los permisos salen de PRIVILEGIO_ROL
 
@@ -227,6 +229,34 @@ resoluciones y el catálogo de referencias nacen vacíos. Las referencias se
 recargan desde el CSV de la DEC. Y como `SOLICITUD` conservaba la liga a
 pagos y evaluaciones que ya no existen, esas columnas se ponen en nulo: quien
 ya había elegido sede tendrá que elegirla otra vez.
+
+## El comprobante del pago se elige una sola vez
+
+`suif_comprobante_fiscal.sql` es **requisito de despliegue** del selector de
+ticket o CFDI. Va DESPUÉS de `suif.sql`, que es quien crea `PAGO`,
+`DATO_FISCAL`, `REGIMEN_FISCAL` y `TIPO_COMUNICACION`. Hace tres cosas:
+
+- Convierte `PAGO.PAGO_USO_CFDI` de `VARCHAR(25)` a `BOOLEAN`. La columna
+  existía desde el diseño original y ninguna línea de PHP la escribía; ahora
+  guarda la elección de la persona: `NULL` no eligió —pedir comprobante es
+  opcional—, `FALSE` ticket sin efectos fiscales, `TRUE` CFDI de gastos en
+  general. Queda del mismo tipo que `DATO_FISCAL.DAFI_USO_CFDI`, que ya era
+  `BOOL`. La conversión traduce lo que hubiera: los ambientes sembrados con
+  `suif_lleno.sql` traen `'G03'`.
+- Da de alta el tipo de comunicación `Correo facturación`. El correo al que se
+  manda el CFDI puede no ser el de la cuenta de la persona, así que se guarda
+  como un renglón más de `COMUNICACION`.
+- **Siembra `REGIMEN_FISCAL`**, que hasta ahora sólo llenaba `suif_lleno.sql`
+  —el archivo de datos de prueba que nunca se corre en producción—. Sin esas
+  cuatro filas el `<select>` del formulario de facturación sale vacío y nadie
+  puede pedir su CFDI. Es un catálogo del SAT, no datos de prueba.
+
+Córrelo ANTES de publicar el código: sin la conversión, guardar la elección
+falla con `column "pago_uso_cfdi" is of type character varying`.
+
+Como altera el tipo de una columna, aquí el respaldo previo no es una
+formalidad. El procedimiento completo —respaldo, verificación del dump y
+ensayo sobre una base temporal— está en `deploy/README.md`.
 
 ## Antes de tocar producción
 

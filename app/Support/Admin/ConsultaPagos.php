@@ -2,6 +2,7 @@
 
 namespace App\Support\Admin;
 
+use App\Servicios\ComprobanteFiscal;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -34,11 +35,28 @@ class ConsultaPagos
      */
     public function pago(int $id_pago): ?array
     {
+        /* Los datos fiscales sólo se traen aquí: la bandeja serializa cada
+           renglón en el HTML y no tiene por qué llevar el RFC y el correo de
+           todas las personas. Los dos joins son contra llaves primarias, así
+           que no multiplican renglones. */
         $pago = $this->consultaBase()
+            ->leftJoin('dato_fiscal as df', 'df.dafi_id_dato_fiscal', '=', 'pg.pago_id_dato_fiscal')
+            ->leftJoin('regimen_fiscal as rf', 'rf.refi_id_regimen_fiscal', '=', 'df.dafi_id_regimen_fiscal')
+            ->leftJoinSub($this->correosDeFacturacion(), 'cf', function ($join): void {
+                $join->on('cf.comu_id_persona', '=', 'p.pers_id_persona');
+            })
+            ->addSelect([
+                'df.dafi_razon_social',
+                'df.dafi_rfc',
+                'df.dafi_persona_moral',
+                'df.dafi_id_codigo_postal',
+                'rf.refi_regimen_fiscal',
+                'cf.comu_descripcion as correo_facturacion',
+            ])
             ->where('pg.pago_id_pago', $id_pago)
             ->first();
 
-        return $pago ? $this->normalizar($pago) : null;
+        return $pago ? $this->normalizar($pago, true) : null;
     }
 
     /**
@@ -112,7 +130,10 @@ class ConsultaPagos
                 'pg.pago_referencia_bancaria',
                 'pg.pago_fecha_pago',
                 'pg.pago_hora_pago',
+                'pg.pago_uso_cfdi',
+                'pg.pago_id_dato_fiscal',
                 's.soli_id_solicitud',
+                'p.pers_id_persona',
                 'p.pers_nombre',
                 'p.pers_apellido_paterno',
                 'p.pers_apellido_materno',
@@ -151,6 +172,18 @@ class ConsultaPagos
             ->groupBy('esp.espa_id_pago');
     }
 
+    /**
+     * El correo al que va el CFDI. Vive en COMUNICACION con su propio tipo,
+     * porque puede no ser el correo con el que la persona entra al sistema.
+     */
+    private function correosDeFacturacion(): Builder
+    {
+        return DB::table('comunicacion as co')
+            ->join('tipo_comunicacion as tc', 'tc.tico_id_tipo_comunicacion', '=', 'co.comu_id_tipo_comunicacion')
+            ->where('tc.tico_tipo_comunicacion', 'Correo facturación')
+            ->select('co.comu_id_persona', 'co.comu_descripcion');
+    }
+
     private function ultimosEstadosSolicitud(): Builder
     {
         return DB::table('estado_solicitud')
@@ -158,7 +191,7 @@ class ConsultaPagos
             ->groupBy('esso_id_solicitud');
     }
 
-    private function normalizar(object $pago): array
+    private function normalizar(object $pago, bool $con_datos_fiscales = false): array
     {
         $estado_persistido = (string) ($pago->esta_estado_pago ?: self::PENDIENTE);
         $estatus = $this->etiquetaEstado($estado_persistido);
@@ -219,6 +252,10 @@ class ConsultaPagos
             'motivo_rechazo' => $estado_persistido === self::DECLINADO
                 ? trim((string) $pago->espa_comentario)
                 : null,
+            /* Lo que la persona pidió: es opcional, así que no haberlo
+               elegido es un resultado válido y no una omisión. */
+            'comprobante_solicitado' => $this->etiquetaComprobante($pago->pago_uso_cfdi),
+            'datos_fiscales' => $con_datos_fiscales ? $this->datosFiscales($pago) : null,
             'puede_revisarse' => $puede_revisarse,
             'mensaje_revision_no_disponible' => $this->mensajeNoDisponible(
                 $estado_persistido,
@@ -309,6 +346,40 @@ class ConsultaPagos
         }
 
         return null;
+    }
+
+    private function etiquetaComprobante(mixed $uso_cfdi): string
+    {
+        return match (ComprobanteFiscal::normalizarUsoCfdi($uso_cfdi)) {
+            true => 'CFDI',
+            false => 'Ticket',
+            default => 'Sin solicitar',
+        };
+    }
+
+    /**
+     * Los datos con los que se emitirá el CFDI. Null mientras la persona no
+     * los capture, aunque ya haya elegido la opción.
+     */
+    private function datosFiscales(object $pago): ?array
+    {
+        if ($pago->pago_id_dato_fiscal === null) {
+            return null;
+        }
+
+        return [
+            'razon_social' => (string) $pago->dafi_razon_social,
+            /* DAFI_PERSONA_MORAL es BOOL y cada motor lo devuelve a su
+               manera; se lee con el mismo normalizador que el uso de CFDI. */
+            'tipo_persona' => ComprobanteFiscal::normalizarUsoCfdi($pago->dafi_persona_moral)
+                ? 'Moral'
+                : 'Física',
+            'regimen_fiscal' => (string) ($pago->refi_regimen_fiscal ?? 'Sin información'),
+            /* La columna es CHAR(5) y PostgreSQL la devuelve con relleno. */
+            'codigo_postal' => trim((string) $pago->dafi_id_codigo_postal),
+            'rfc' => (string) $pago->dafi_rfc,
+            'correo' => trim((string) $pago->correo_facturacion) ?: 'Sin registro',
+        ];
     }
 
     private function iniciales(?string $nombre, ?string $apellido): string

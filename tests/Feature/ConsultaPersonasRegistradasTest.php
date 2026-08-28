@@ -193,6 +193,8 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->string('pago_referencia_bancaria', 20)->nullable();
             $table->date('pago_fecha_pago')->nullable();
             $table->time('pago_hora_pago')->nullable();
+            $table->boolean('pago_uso_cfdi')->nullable();
+            $table->integer('pago_id_dato_fiscal')->nullable();
         });
 
         /* ConsultaPagos cruza PAGO con el catálogo para mostrar, junto al monto
