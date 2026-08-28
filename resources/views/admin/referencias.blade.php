@@ -32,7 +32,11 @@
             </article>
             <article class="admin-referencias-tarjeta admin-referencias-estadistica">
                 <h2>Disponibles</h2>
-                <p class="admin-referencias-estadistica--verde">{{ number_format($resumen['disponibles']) }}</p>
+                <p class="admin-referencias-estadistica--azul">{{ number_format($resumen['disponibles']) }}</p>
+            </article>
+            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+                <h2>Listas para entregar</h2>
+                <p class="admin-referencias-estadistica--verde">{{ number_format($resumen['entregables']) }}</p>
             </article>
             <article class="admin-referencias-tarjeta admin-referencias-estadistica">
                 <h2>Asignadas</h2>

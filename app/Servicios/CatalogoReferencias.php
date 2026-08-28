@@ -29,6 +29,16 @@ class CatalogoReferencias
     /** Carpeta del disco 'referencias' donde viven los PDF del catálogo. */
     public const CARPETA_FORMATOS = 'catalogo';
 
+    /**
+     * Qué cuenta como «tiene su formato PDF», en SQL.
+     *
+     * Vive en un solo lugar porque de esto depende que una referencia se pueda
+     * entregar: si el contador del tablero y la consulta que reparte usaran
+     * criterios distintos, el administrador vería referencias listas que nadie
+     * puede obtener.
+     */
+    private const TIENE_FORMATO = "reba_path IS NOT NULL AND reba_path <> ''";
+
     /** Encabezados admitidos en el CSV para cada campo. */
     private const ENCABEZADOS = [
         'referencia' => ['referencia', 'referencia_bancaria', 'referenciabancaria', 'numero', 'no_referencia'],
@@ -59,10 +69,13 @@ class CatalogoReferencias
 
     public function resumen(): array
     {
+        $formato = self::TIENE_FORMATO;
+
         $conteos = DB::table('referencia_bancaria')
             ->selectRaw('COUNT(*) AS total')
             ->selectRaw('COUNT(*) FILTER (WHERE reba_id_pago IS NULL) AS disponibles')
-            ->selectRaw('COUNT(*) FILTER (WHERE reba_path IS NOT NULL) AS con_formato')
+            ->selectRaw("COUNT(*) FILTER (WHERE {$formato}) AS con_formato")
+            ->selectRaw("COUNT(*) FILTER (WHERE reba_id_pago IS NULL AND {$formato}) AS entregables")
             ->first();
 
         return [
@@ -70,6 +83,7 @@ class CatalogoReferencias
             'disponibles' => (int) ($conteos->disponibles ?? 0),
             'asignadas' => (int) ($conteos->total ?? 0) - (int) ($conteos->disponibles ?? 0),
             'con_formato' => (int) ($conteos->con_formato ?? 0),
+            'entregables' => (int) ($conteos->entregables ?? 0),
         ];
     }
 
@@ -329,18 +343,29 @@ class CatalogoReferencias
             $this->verificarSolicitudAprobada((int) $solicitud->soli_id_solicitud);
 
             /* SKIP LOCKED deja que dos personas que piden su referencia al
-               mismo tiempo tomen renglones distintos en vez de esperarse. */
+               mismo tiempo tomen renglones distintos en vez de esperarse. Es
+               SQL de PostgreSQL y la suite corre en SQLite, que no lo entiende
+               ni lo necesita: ahí no hay concurrencia que resolver. */
+            $bloqueo = DB::connection()->getDriverName() === 'pgsql'
+                ? ' FOR UPDATE SKIP LOCKED'
+                : '';
+
+            /* Sin su formato PDF la referencia no se entrega: la persona se
+               quedaría con un número y sin con qué pagar en ventanilla, y la
+               entrega no tiene vuelta atrás —REBA_ID_PAGO es único—. La
+               condición va dentro de esta consulta y no en un filtro posterior
+               para no perder la garantía de SKIP LOCKED. */
             $referencia = DB::selectOne(
                 'SELECT reba_id_referencia_bancaria, reba_referencia, reba_path, reba_monto
                    FROM referencia_bancaria
                   WHERE reba_id_pago IS NULL
+                    AND '.self::TIENE_FORMATO.'
                ORDER BY reba_id_referencia_bancaria
-                  LIMIT 1
-                    FOR UPDATE SKIP LOCKED'
+                  LIMIT 1'.$bloqueo
             );
 
             if (!$referencia) {
-                throw new DomainException('No hay referencias bancarias disponibles. Comunícate con el equipo administrativo.');
+                throw new DomainException($this->motivoSinReferencia());
             }
 
             $ahora = Carbon::now();
@@ -714,6 +739,25 @@ class CatalogoReferencias
         $limpio = (float) preg_replace('/[^0-9.\-]/', '', (string) $monto);
 
         return $limpio > 0 ? $limpio : (float) config('suif.cuota_recuperacion', 7000);
+    }
+
+    /**
+     * Por qué no hubo referencia que entregar.
+     *
+     * Se distinguen los dos casos porque no se arreglan igual: si el catálogo
+     * está vacío hay que pedirle más referencias al banco, y si sólo faltan los
+     * PDF basta con subir el ZIP. Un mensaje único mandaría a la persona a
+     * soporte sin que soporte sepa qué hacer.
+     */
+    private function motivoSinReferencia(): string
+    {
+        $hay_libres = DB::table('referencia_bancaria')
+            ->whereNull('reba_id_pago')
+            ->exists();
+
+        return $hay_libres
+            ? 'Las referencias disponibles todavía no tienen su formato de pago. Comunícate con el equipo administrativo.'
+            : 'No hay referencias bancarias disponibles. Comunícate con el equipo administrativo.';
     }
 
     private function verificarSolicitudAprobada(int $id_solicitud): void

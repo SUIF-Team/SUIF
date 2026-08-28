@@ -29,7 +29,7 @@ class ReferenciaController extends Controller
         return view('persona.referencia', [
             'referencia' => $referencia,
             'solicitudAprobada' => $avance->solicitudAprobada(),
-            'hayDisponibles' => $pendiente && $catalogo->resumen()['disponibles'] > 0,
+            'hayDisponibles' => $pendiente && $catalogo->resumen()['entregables'] > 0,
             'cuota' => number_format(
                 (float) ($referencia['monto'] ?? config('suif.cuota_recuperacion', 7000)),
                 2,
