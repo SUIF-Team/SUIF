@@ -27,7 +27,7 @@ class AccesoAdministrativoTest extends TestCase
 
     private const TARJETA_SEDES = 'Gestiona las sedes activas.';
 
-    private const TARJETA_ADMINISTRADORES = 'Da de alta y administra a quienes operan el sistema.';
+    private const TARJETA_USUARIOS = 'Crea, edita y administra las cuentas de quienes operan el sistema.';
 
     protected function setUp(): void
     {
@@ -109,7 +109,7 @@ class AccesoAdministrativoTest extends TestCase
             ->assertSee(self::TARJETA_PAGOS)
             ->assertSee(self::TARJETA_REFERENCIAS)
             ->assertSee(self::TARJETA_SEDES)
-            ->assertSee(self::TARJETA_ADMINISTRADORES)
+            ->assertSee(self::TARJETA_USUARIOS)
             ->assertSee('Personas registradas')
             ->assertSee('Solicitudes en revisión')
             ->assertSee('Pagos por validar')
@@ -125,7 +125,7 @@ class AccesoAdministrativoTest extends TestCase
             ->assertDontSee(self::TARJETA_PAGOS)
             ->assertDontSee(self::TARJETA_REFERENCIAS)
             ->assertDontSee(self::TARJETA_SEDES)
-            ->assertDontSee(self::TARJETA_ADMINISTRADORES)
+            ->assertDontSee(self::TARJETA_USUARIOS)
             /* Cuántos pagos faltan por validar es dato de la DEC. */
             ->assertDontSee('Pagos por validar')
             ->assertDontSee('Certificados pendientes')
@@ -142,7 +142,7 @@ class AccesoAdministrativoTest extends TestCase
             ->assertSee('Pagos por validar')
             ->assertDontSee(self::TARJETA_PREREGISTRO)
             ->assertDontSee(self::TARJETA_SEDES)
-            ->assertDontSee(self::TARJETA_ADMINISTRADORES)
+            ->assertDontSee(self::TARJETA_USUARIOS)
             ->assertDontSee('Solicitudes en revisión')
             ->assertDontSee('Certificados pendientes');
     }
