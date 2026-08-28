@@ -23,6 +23,23 @@ class RutasPersonaTest extends TestCase
         );
     }
 
+    public function test_el_paso_de_referencia_expone_el_selector_y_el_camino_individual(): void
+    {
+        $this->assertTrue(Route::has('persona.referencia.index'));
+        $this->assertTrue(Route::has('persona.referencia.individual'));
+
+        /* El selector se queda con la URI de siempre para que los enlaces ya
+           existentes —barra de avance, tablero, documentación— entren por él. */
+        $this->assertSame('/persona/referencia', parse_url(route('persona.referencia.index'), PHP_URL_PATH));
+        $this->assertSame(
+            '/persona/referencia/individual',
+            parse_url(route('persona.referencia.individual'), PHP_URL_PATH)
+        );
+
+        /* El flujo especial todavía no existe: mientras no exista, no se anuncia. */
+        $this->assertFalse(Route::has('persona.referencia.especial'));
+    }
+
     public function test_las_rutas_de_desarrollo_quedaron_retiradas(): void
     {
         /* reiniciar mutaba la sesión por GET y demo apuntaba a un método

@@ -2,6 +2,8 @@
     persona/referencia.blade.php
     Migrado desde: app/views/persona/referencia.php
     Vista para obtener, consultar y descargar la referencia bancaria de pago.
+    Se llega desde el selector; el controlador ya comprobó que la solicitud
+    está aprobada.
 --}}
 @extends('layouts.persona')
 
@@ -21,16 +23,7 @@
         <div class="referencia-alerta referencia-alerta--error">{{ session('warning') }}</div>
     @endif
 
-    @if(!$solicitudAprobada)
-
-        <div class="referencia-tarjeta referencia-tarjeta--sola">
-            <h1>Referencia bancaria</h1>
-            <p class="referencia-muted">
-                Tu referencia estará disponible cuando el equipo administrativo apruebe tu solicitud y tu documentación.
-            </p>
-        </div>
-
-    @elseif(!$referencia)
+    @if(!$referencia)
 
         <div class="referencia-tarjeta referencia-tarjeta--sola">
             <h1>Obtén tu referencia bancaria</h1>

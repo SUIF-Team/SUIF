@@ -1,0 +1,78 @@
+/* Selector del paso «Obtener referencia»: aviso de pago y las dos opciones.
+   Se carga junto con persona-referencia.css, de donde salen .referencia-shell,
+   .referencia-tarjetas, .referencia-tarjeta, .referencia-boton y .referencia-muted. */
+
+.referencia-aviso {
+    margin-bottom: 1.75rem;
+    padding: 1.75rem 2rem;
+    border-radius: 12px;
+    background: rgba(233, 236, 241, 0.75);
+    color: #4b5563;
+}
+
+.referencia-aviso p {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.referencia-aviso p:last-child {
+    margin-bottom: 0;
+}
+
+.referencia-aviso strong {
+    color: #172a44;
+}
+
+.referencia-seleccion__titulo {
+    margin: 0 0 1.25rem;
+    color: #172a44;
+    font-size: 1.4rem;
+}
+
+/* Las dos opciones se leen en paralelo: misma altura y el botón siempre al pie,
+   para que la tarjeta con más texto no empuje su botón fuera de la línea. */
+.referencia-tarjetas--seleccion {
+    align-items: stretch;
+}
+
+.referencia-tarjeta--opcion {
+    display: flex;
+    flex-direction: column;
+}
+
+.referencia-tarjeta__texto p {
+    margin: 0 0 1rem;
+    color: #4b5563;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.referencia-tarjeta__texto p:last-child {
+    margin-bottom: 0;
+}
+
+.referencia-tarjeta__texto strong {
+    color: #172a44;
+}
+
+.referencia-tarjeta__pie {
+    margin-top: auto;
+    padding-top: 1.75rem;
+    text-align: center;
+}
+
+.referencia-tarjeta__nota {
+    margin: 0.6rem 0 0;
+    font-size: 0.8rem;
+}
+
+.referencia-boton--inhabilitado,
+.referencia-boton--inhabilitado:hover,
+.referencia-boton--inhabilitado:focus-visible {
+    background: #9ca3af;
+    color: #fff;
+    cursor: not-allowed;
+}
