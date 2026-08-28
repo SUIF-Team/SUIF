@@ -168,11 +168,18 @@ class AccesoAdministrativoTest extends TestCase
 
     public function test_la_baja_corta_una_sesion_ya_abierta(): void
     {
-        $uif = Usuario::findOrFail(3);
+        /* La sesión se abre con un login real y no con actingAs(): actingAs()
+           fija en el guard la instancia que ya está en memoria, de modo que la
+           baja aplicada después sobre la base nunca se vería y la prueba
+           acabaría comprobando un usuario que para el gate sigue activo. Con
+           la sesión de verdad, el guard vuelve a leer al usuario en cada
+           petición, que es justo el comportamiento que se quiere verificar. */
+        $this->post(route('login.post'), [
+            'curp' => 'UIFA900101MDFABC03',
+            'clave' => 'CLAVE-DE-PRUEBA',
+        ])->assertRedirect(route('admin.personas.index'));
 
-        $this->actingAs($uif)
-            ->get(route('admin.dashboard'))
-            ->assertOk();
+        $this->get(route('admin.dashboard'))->assertOk();
 
         /* La baja la aplica otro Superusuario mientras la sesión sigue viva.
            Los permisos se evalúan en cada petición, así que la siguiente ya no
@@ -183,9 +190,7 @@ class AccesoAdministrativoTest extends TestCase
            entera quedó cerrada, no un módulo suelto. */
         DB::table('usuario')->where('usua_id_usuario', 3)->update(['usua_activo' => false]);
 
-        $this->actingAs($uif)
-            ->get(route('admin.dashboard'))
-            ->assertForbidden();
+        $this->get(route('admin.dashboard'))->assertForbidden();
     }
 
     public function test_una_cuenta_sin_acceso_no_puede_iniciar_sesion(): void
