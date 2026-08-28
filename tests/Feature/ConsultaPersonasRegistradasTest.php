@@ -94,7 +94,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
                 'Pagos',
                 'Sedes',
                 'Grupos',
-                'Administradores',
+                'Gestión de usuarios',
                 'Certificados',
             ]);
 

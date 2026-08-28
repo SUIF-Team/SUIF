@@ -73,10 +73,10 @@ class DashboardController extends Controller
                 'descripcion' => 'Programa las aplicaciones del examen en cada sede.',
             ],
             [
-                'titulo' => 'Administradores',
+                'titulo' => 'Gestión de usuarios',
                 'ruta' => 'admin.administradores.index',
                 'permiso' => 'gestionar-usuarios',
-                'descripcion' => 'Da de alta y administra a quienes operan el sistema.',
+                'descripcion' => 'Crea, edita y administra las cuentas de quienes operan el sistema.',
             ],
             [
                 'titulo' => 'Certificados',

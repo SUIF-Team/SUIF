@@ -41,7 +41,7 @@ class GestionAdministradoresTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.administradores.index'))
             ->assertOk()
-            ->assertSee('Administradores');
+            ->assertSee('Gestión de usuarios');
     }
 
     public function test_el_alta_crea_usuario_y_persona_con_la_clave_hasheada(): void

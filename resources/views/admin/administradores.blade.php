@@ -7,7 +7,7 @@
 --}}
 @extends('layouts.admin')
 
-@section('title', 'SUIF — Administradores')
+@section('title', 'SUIF — Gestión de usuarios')
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
@@ -20,7 +20,7 @@
     <div class="admin-sedes-contenedor">
         <header class="admin-sedes-encabezado">
             <div>
-                <h1 id="admin-administradores-titulo">Administradores</h1>
+                <h1 id="admin-administradores-titulo">Gestión de usuarios</h1>
                 <p>Da de alta a quienes operan el sistema y define de qué área es cada quien.</p>
             </div>
             <a class="admin-sedes-boton admin-sedes-boton--primario" href="{{ route('admin.administradores.create') }}">
