@@ -40,15 +40,15 @@ class GestionAdministradores
     private const ROLES = [
         self::ADMIN_UIF => [
             'etiqueta' => 'Administrador UIF',
-            'descripcion' => 'Dictamina los pre-registros y revisa la documentación de cada expediente.',
+            'descripcion' => 'Revisa y valida los pre-registros y la documentación de cada expediente.',
         ],
         self::ADMIN_DEC => [
             'etiqueta' => 'Administrador DEC',
-            'descripcion' => 'Resuelve los comprobantes de pago y emite el catálogo de referencias bancarias.',
+            'descripcion' => 'Valida los comprobantes de pago y gestiona el catálogo de referencias bancarias.',
         ],
         self::SUPERUSUARIO => [
             'etiqueta' => 'Superusuario',
-            'descripcion' => 'Abre todos los módulos y es el único que puede administrar estas cuentas.',
+            'descripcion' => 'Acceso total a los módulos, con la capacidad de crear y administrar usuarios.',
         ],
     ];
 
