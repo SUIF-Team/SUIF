@@ -70,6 +70,7 @@ class ConvocatoriaController extends Controller
         return view('admin.convocatoria-formulario', [
             'convocatoria' => $convocatoria,
             'modoEdicion' => true,
+            'transiciones' => $this->transiciones($convocatoria['estado'], $gestion),
         ]);
     }
 
@@ -122,6 +123,50 @@ class ConvocatoriaController extends Controller
         return redirect()
             ->route('admin.convocatorias.index')
             ->with('success', "La convocatoria quedó en estado «{$datos['estado']}».");
+    }
+
+    /**
+     * A qué estados puede pasar la convocatoria desde el que tiene, con el
+     * verbo y el aviso de cada uno.
+     *
+     * Se calcula aquí y no en la vista porque es una decisión de qué se puede
+     * hacer, no de cómo se pinta. El estado actual se excluye: pasar una
+     * convocatoria al estado en que ya está no es un cambio, y el servicio lo
+     * rechaza.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function transiciones(string $actual, GestionConvocatorias $gestion): array
+    {
+        $catalogo = [
+            GestionConvocatorias::VIGENTE => [
+                'verbo' => 'Marcar vigente',
+                'clase' => 'primario',
+                'aviso' => 'Volverá a admitir registro mientras su ventana de fechas siga abierta, y será la convocatoria a la que se sumen las solicitudes nuevas. Sólo puede haber una vigente a la vez.',
+            ],
+            GestionConvocatorias::CERRADA => [
+                'verbo' => 'Cerrar',
+                'clase' => 'secundario',
+                'aviso' => 'Dejará de admitir registro aunque su ventana de fechas siga abierta. Es el cierre normal de una convocatoria que terminó su ciclo.',
+            ],
+            GestionConvocatorias::INTERRUMPIDA => [
+                'verbo' => 'Interrumpir',
+                'clase' => 'eliminar',
+                'aviso' => 'Dejará de admitir registro de inmediato. Se usa cuando la convocatoria se detiene antes de tiempo; quien ya se registró conserva su trámite.',
+            ],
+        ];
+
+        $transiciones = [];
+
+        foreach ($gestion->estados() as $estado) {
+            if ($estado === $actual) {
+                continue;
+            }
+
+            $transiciones[] = ['estado' => $estado] + $catalogo[$estado];
+        }
+
+        return $transiciones;
     }
 
     /**

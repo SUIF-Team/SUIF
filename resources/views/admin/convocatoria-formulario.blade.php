@@ -1,9 +1,11 @@
 {{--
     Alta y edición de una convocatoria.
 
-    El formulario captura los datos y nunca el estado: una convocatoria nace
-    vigente y se cierra o se interrumpe desde la bandeja, donde el cambio queda
-    fechado en la bitácora.
+    El formulario de datos y el cambio de estado son dos decisiones distintas y
+    van en tarjetas distintas: corregir una fecha no es lo mismo que cerrarle el
+    registro a la gente. Guardar nunca toca el estado; cerrar o interrumpir
+    agrega un movimiento a la bitácora, con su fecha y su hora, sin borrar los
+    anteriores.
 --}}
 @extends('layouts.admin')
 
@@ -23,7 +25,7 @@
                 <h1 id="admin-convocatoria-formulario-titulo">{{ $modoEdicion ? 'Editar convocatoria' : 'Crear convocatoria' }}</h1>
                 <p>
                     @if($modoEdicion)
-                        Corrige el calendario y la cuota. Para cerrarla o interrumpirla, usa la bandeja.
+                        Corrige el calendario y la cuota, o cambia el estado que decide si admite registro.
                     @else
                         La convocatoria queda vigente en cuanto se guarda, y sólo puede haber una vigente a la vez.
                     @endif
@@ -40,6 +42,41 @@
                     @endforeach
                 </ul>
             </div>
+        @endif
+
+        @if($modoEdicion)
+            <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" aria-labelledby="admin-convocatoria-estado-titulo">
+                <h2 id="admin-convocatoria-estado-titulo">Estado de la convocatoria</h2>
+
+                <div class="admin-convocatorias-estado-actual">
+                    <span class="admin-sedes-estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
+                        {{ $convocatoria['estado'] }}
+                    </span>
+                    @if($convocatoria['estado_fecha'] !== '')
+                        <span class="admin-convocatorias-estado-sello">
+                            desde el {{ \Illuminate\Support\Carbon::parse($convocatoria['estado_fecha'])->format('d/m/Y') }}
+                            a las {{ $convocatoria['estado_hora'] }} h
+                        </span>
+                    @endif
+                </div>
+
+                <p class="admin-sedes-ayuda">
+                    Es lo que decide si la convocatoria admite registro. El cambio queda
+                    registrado con su fecha y su hora; los movimientos anteriores se conservan.
+                </p>
+
+                <div class="admin-convocatorias-estado-acciones">
+                    @foreach($transiciones as $transicion)
+                        <button
+                            class="admin-sedes-boton admin-sedes-boton--{{ $transicion['clase'] }}"
+                            type="button"
+                            data-abrir-estado
+                            data-estado="{{ $transicion['estado'] }}"
+                            data-verbo="{{ $transicion['verbo'] }}"
+                            data-aviso="{{ $transicion['aviso'] }}">{{ $transicion['verbo'] }}</button>
+                    @endforeach
+                </div>
+            </section>
         @endif
 
         <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta">
@@ -144,6 +181,27 @@
     </div>
 
     @if($modoEdicion)
+        {{-- Un solo modal para los dos botones: el destino y el aviso los pone
+             el que se pulsa. Cerrar o interrumpir le quita el registro a quien
+             venga después, así que no se hace de un clic. --}}
+        <div class="admin-sedes-modal" data-modal-estado hidden>
+            <div class="admin-sedes-modal-fondo" data-cerrar-estado></div>
+            <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="cambiar-estado-titulo" aria-describedby="cambiar-estado-descripcion">
+                <h2 id="cambiar-estado-titulo" data-estado-titulo></h2>
+                <p id="cambiar-estado-descripcion">
+                    <strong>{{ $convocatoria['nombre'] }}</strong> pasará de
+                    «{{ $convocatoria['estado'] }}» a «<span data-estado-destino></span>».
+                    <span data-estado-aviso></span>
+                </p>
+                <form method="POST" action="{{ route('admin.convocatorias.estado', $convocatoria['id']) }}" class="admin-sedes-modal-acciones">
+                    @csrf
+                    <input type="hidden" name="estado" value="" data-estado-valor>
+                    <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" data-cerrar-estado>Cancelar</button>
+                    <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit" data-estado-confirmar></button>
+                </form>
+            </section>
+        </div>
+
         <div class="admin-sedes-modal" data-modal-eliminacion hidden>
             <div class="admin-sedes-modal-fondo" data-cerrar-eliminacion></div>
             <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="eliminar-convocatoria-titulo" aria-describedby="eliminar-convocatoria-descripcion">

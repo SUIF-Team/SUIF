@@ -2,9 +2,9 @@
     Bandeja de convocatorias.
 
     Se listan todas, incluidas las cerradas y las interrumpidas: son el
-    historial de la certificación. El estado no se edita desde el formulario
-    sino desde aquí, porque cambiarlo deja un movimiento en la bitácora que ya
-    no se corrige.
+    historial de la certificación. La tabla informa; cerrar o interrumpir vive
+    en la pantalla de edición, junto al resto de lo que se decide sobre una
+    convocatoria concreta.
 --}}
 @extends('layouts.admin')
 
@@ -17,7 +17,7 @@
 @endsection
 
 @section('content')
-<section class="admin-sedes admin-convocatorias" data-admin-convocatorias aria-labelledby="admin-convocatorias-titulo">
+<section class="admin-sedes admin-convocatorias" aria-labelledby="admin-convocatorias-titulo">
     <div class="admin-sedes-contenedor">
         <header class="admin-sedes-encabezado">
             <div>
@@ -28,20 +28,6 @@
                 <span aria-hidden="true">+</span> Nueva convocatoria
             </a>
         </header>
-
-        {{-- El cambio de estado se valida en el servidor y su formulario vive
-             en el modal; sin este bloque, un destino inválido volvería a una
-             pantalla que no dice nada. --}}
-        @if($errors->any())
-            <div class="admin-sedes-alerta" role="alert">
-                <p>No se pudo registrar el cambio:</p>
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
 
         <section class="admin-sedes-estadisticas" aria-label="Resumen de convocatorias">
             <article class="admin-sedes-tarjeta admin-sedes-estadistica">
@@ -64,7 +50,7 @@
                 </p>
             </article>
             <article class="admin-sedes-tarjeta admin-sedes-estadistica">
-                <h2>Solicitudes de la vigente</h2>
+                <h2>Solicitudes</h2>
                 <p class="admin-sedes-estadistica--verde">{{ number_format($resumen['solicitudes_vigente']) }}</p>
             </article>
         </section>
@@ -122,26 +108,16 @@
                                     al {{ \Illuminate\Support\Carbon::parse($convocatoria['fecha_fin'])->format('d/m/Y') }}
                                 </td>
                                 <td>{{ number_format($convocatoria['solicitudes']) }}</td>
+                                {{-- Sólo el distintivo: desde cuándo lo está se
+                                     lee en la pantalla de edición, que es donde
+                                     además se puede cambiar. --}}
                                 <td>
                                     <span class="admin-sedes-estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
                                         {{ $convocatoria['estado'] }}
                                     </span>
-                                    @if($convocatoria['estado_fecha'] !== '')
-                                        <small class="admin-convocatorias-estado-sello">
-                                            desde el {{ \Illuminate\Support\Carbon::parse($convocatoria['estado_fecha'])->format('d/m/Y') }}
-                                            a las {{ $convocatoria['estado_hora'] }} h
-                                        </small>
-                                    @endif
                                 </td>
-                                <td class="admin-convocatorias-acciones">
+                                <td>
                                     <a class="admin-sedes-editar" href="{{ route('admin.convocatorias.edit', $convocatoria['id']) }}">Editar</a>
-                                    <button
-                                        class="admin-sedes-editar admin-convocatorias-cambiar"
-                                        type="button"
-                                        data-abrir-estado
-                                        data-accion="{{ route('admin.convocatorias.estado', $convocatoria['id']) }}"
-                                        data-nombre="{{ $convocatoria['nombre'] }}"
-                                        data-estado="{{ $convocatoria['estado'] }}">Cambiar estado</button>
                                 </td>
                             </tr>
                         @empty
@@ -162,38 +138,6 @@
         </div>
     </div>
 
-    {{-- Un solo modal para toda la tabla: el destino del formulario y el nombre
-         de la convocatoria los pone el botón que lo abre. Uno por renglón
-         repetiría el mismo cuadro tantas veces como convocatorias haya. --}}
-    <div class="admin-sedes-modal" data-modal-estado hidden>
-        <div class="admin-sedes-modal-fondo" data-cerrar-estado></div>
-        <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="cambiar-estado-titulo" aria-describedby="cambiar-estado-descripcion">
-            <h2 id="cambiar-estado-titulo">Cambiar el estado de la convocatoria</h2>
-            <p id="cambiar-estado-descripcion">
-                <strong data-estado-nombre></strong> está en estado
-                <strong data-estado-actual></strong>. El cambio queda registrado con su fecha y su hora;
-                los movimientos anteriores se conservan.
-            </p>
-            <form method="POST" data-formulario-estado>
-                @csrf
-                <div class="admin-sedes-campo admin-convocatorias-campo-estado">
-                    <label for="estado-destino">Nuevo estado</label>
-                    <select id="estado-destino" name="estado" data-estado-destino required>
-                        @foreach($estados as $opcion)
-                            <option value="{{ $opcion }}">{{ $opcion }}</option>
-                        @endforeach
-                    </select>
-                    <p class="admin-sedes-ayuda">
-                        Sólo una convocatoria puede estar vigente a la vez.
-                    </p>
-                </div>
-                <div class="admin-sedes-modal-acciones">
-                    <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" data-cerrar-estado>Cancelar</button>
-                    <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit">Guardar cambio</button>
-                </div>
-            </form>
-        </section>
-    </div>
 </section>
 @endsection
 

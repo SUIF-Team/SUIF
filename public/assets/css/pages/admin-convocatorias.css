@@ -10,46 +10,20 @@
 .admin-convocatorias-estado--interrumpida { background: #fee2e2; color: #991b1b; }
 .admin-convocatorias-estado--pendiente { background: #fef3c7; color: #92400e; }
 
-.admin-convocatorias-estado-sello {
-    display: block;
-    margin-top: 0.35rem;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-}
+/* El nombre de la convocatoria vigente es texto, no una cifra: no puede heredar
+   los 2rem del indicador numérico o desborda la tarjeta.
 
-/* El nombre de la convocatoria vigente es texto, no una cifra: hereda el
-   tamaño del cuerpo en vez del de los indicadores numéricos. */
-.admin-convocatorias-estadistica-texto {
+   El selector lleva el elemento porque compite con `.admin-sedes-estadistica p`,
+   que ya vale (0,1,1): una clase suelta pierde y el nombre salía enorme. */
+.admin-sedes-estadistica p.admin-convocatorias-estadistica-texto {
     font-size: 1rem;
     font-weight: 700;
     line-height: 1.35;
 }
 
-.admin-convocatorias-sin-datos {
+.admin-sedes-estadistica p.admin-convocatorias-sin-datos {
     color: var(--text-muted);
     font-weight: 600;
-}
-
-.admin-convocatorias-acciones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-}
-
-/* El botón que abre el modal se ve igual que el enlace de editar, porque hace
-   lo mismo desde el punto de vista de quien lo usa. */
-.admin-convocatorias-cambiar {
-    background: none;
-    border: 0;
-    padding: 0;
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.admin-convocatorias-cambiar:hover {
-    text-decoration: underline;
 }
 
 /* Las cinco fechas se leen en dos bloques —vigencia y registro— y cada uno
@@ -64,7 +38,34 @@
     letter-spacing: 0.04em;
 }
 
-.admin-convocatorias-campo-estado {
-    margin-bottom: 1.25rem;
-    text-align: left;
+/* Bloque de estado del formulario. Cerrar o interrumpir no es editar la
+   convocatoria: cambia lo que ve quien intenta registrarse, así que vive en su
+   propia tarjeta y no entre los campos. */
+.admin-convocatorias-estado-actual {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-convocatorias-estado-sello {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.admin-convocatorias-estado-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.admin-convocatorias-estado-acciones form {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .admin-convocatorias-estado-acciones { flex-direction: column; }
+    .admin-convocatorias-estado-acciones .admin-sedes-boton { width: 100%; }
 }

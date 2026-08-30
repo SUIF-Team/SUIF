@@ -132,6 +132,33 @@ class GestionConvocatoriasTest extends TestCase
         $this->assertSame(1, DB::table('estado_convocatoria')->count());
     }
 
+    /**
+     * La pantalla de edición sólo ofrece los estados a los que se puede pasar.
+     * Enseñar un boton que lleva al estado en que ya está sería un clic que
+     * termina en un mensaje de error.
+     */
+    public function test_la_edicion_ofrece_solo_los_estados_a_los_que_se_puede_pasar(): void
+    {
+        $id = $this->crearConvocatoriaVigente();
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.convocatorias.edit', $id))
+            ->assertOk()
+            ->assertSee('Cerrar')
+            ->assertSee('Interrumpir')
+            ->assertDontSee('Marcar vigente');
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.convocatorias.estado', $id), ['estado' => 'Cerrada']);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.convocatorias.edit', $id))
+            ->assertOk()
+            ->assertSee('Marcar vigente')
+            ->assertSee('Interrumpir')
+            ->assertDontSee('>Cerrar<', false);
+    }
+
     public function test_la_edicion_corrige_los_datos_sin_tocar_la_bitacora(): void
     {
         $id = $this->crearConvocatoriaVigente();

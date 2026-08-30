@@ -1,5 +1,6 @@
-/* Pantallas de convocatorias: reutilizan el diseño de sedes y añaden el modal
-   de cambio de estado, que es de la bandeja y no del formulario. */
+/* Pantallas de convocatorias: reutilizan el diseño de sedes y añaden, en el
+   formulario, el modal que confirma el cambio de estado. La bandeja no tiene
+   más comportamiento que el botón de volver. */
 (function () {
     'use strict';
 
@@ -12,11 +13,16 @@
         }).mount(navegacion);
     }
 
+    var formulario = document.querySelector('[data-admin-convocatoria-formulario]');
+    if (!formulario) {
+        return;
+    }
+
     /* Trampa de foco y cierre con Escape. Es la misma que usan las sedes y los
        administradores; aquí se escribe una vez y la comparten los dos modales
        de esta pantalla. */
-    function prepararModal(modal, abrir, alAbrir) {
-        if (!modal || !abrir) {
+    function prepararModal(modal, botones, alAbrir) {
+        if (!modal || !botones.length) {
             return;
         }
 
@@ -32,7 +38,7 @@
             }
         }
 
-        abrir.forEach(function (boton) {
+        botones.forEach(function (boton) {
             boton.addEventListener('click', function () {
                 focoAnterior = document.activeElement;
                 if (alAbrir) {
@@ -58,9 +64,7 @@
                 return;
             }
 
-            var enfocables = Array.from(modal.querySelectorAll(
-                'button:not([disabled]), select:not([disabled]), input:not([disabled])'
-            ));
+            var enfocables = Array.from(modal.querySelectorAll('button:not([disabled])'));
             var primero = enfocables[0];
             var ultimo = enfocables[enfocables.length - 1];
 
@@ -86,49 +90,39 @@
         });
     }
 
-    /* Bandeja: un solo modal para toda la tabla. El destino del formulario y el
-       nombre de la convocatoria los trae el botón que lo abre. */
-    var bandeja = document.querySelector('[data-admin-convocatorias]');
-    if (bandeja) {
-        var modalEstado = bandeja.querySelector('[data-modal-estado]');
-        var formularioEstado = bandeja.querySelector('[data-formulario-estado]');
-        var nombreEstado = bandeja.querySelector('[data-estado-nombre]');
-        var actualEstado = bandeja.querySelector('[data-estado-actual]');
-        var destinoEstado = bandeja.querySelector('[data-estado-destino]');
+    /* Cambio de estado. Cerrar, interrumpir y reabrir comparten modal: el botón
+       que se pulsa trae el destino, el verbo y el aviso de su consecuencia. */
+    var modalEstado = formulario.querySelector('[data-modal-estado]');
+
+    if (modalEstado) {
+        var valorEstado = modalEstado.querySelector('[data-estado-valor]');
+        var tituloEstado = modalEstado.querySelector('[data-estado-titulo]');
+        var destinoEstado = modalEstado.querySelector('[data-estado-destino]');
+        var avisoEstado = modalEstado.querySelector('[data-estado-aviso]');
+        var confirmarEstado = modalEstado.querySelector('[data-estado-confirmar]');
 
         marcarCierres(modalEstado, 'data-cerrar-estado');
 
         prepararModal(
             modalEstado,
-            Array.from(bandeja.querySelectorAll('[data-abrir-estado]')),
+            Array.from(formulario.querySelectorAll('[data-abrir-estado]')),
             function (boton) {
-                formularioEstado.action = boton.dataset.accion;
-                nombreEstado.textContent = boton.dataset.nombre;
-                actualEstado.textContent = boton.dataset.estado;
-
-                /* Se preselecciona un destino distinto al estado actual: pasar
-                   una convocatoria al estado en que ya está no es un cambio y
-                   el servicio lo rechaza. */
-                var opciones = Array.from(destinoEstado.options);
-                var otro = opciones.find(function (opcion) {
-                    return opcion.value !== boton.dataset.estado;
-                });
-                destinoEstado.value = otro ? otro.value : opciones[0].value;
+                valorEstado.value = boton.dataset.estado;
+                tituloEstado.textContent = '¿' + boton.dataset.verbo + ' esta convocatoria?';
+                destinoEstado.textContent = boton.dataset.estado;
+                avisoEstado.textContent = boton.dataset.aviso;
+                confirmarEstado.textContent = 'Sí, ' + boton.dataset.verbo.toLowerCase();
             }
         );
     }
 
-    /* Formulario: sólo el modal de eliminación. */
-    var formulario = document.querySelector('[data-admin-convocatoria-formulario]');
-    if (formulario) {
-        var modalBaja = formulario.querySelector('[data-modal-eliminacion]');
+    var modalBaja = formulario.querySelector('[data-modal-eliminacion]');
 
-        marcarCierres(modalBaja, 'data-cerrar-eliminacion');
+    marcarCierres(modalBaja, 'data-cerrar-eliminacion');
 
-        prepararModal(
-            modalBaja,
-            Array.from(formulario.querySelectorAll('[data-abrir-eliminacion]')),
-            null
-        );
-    }
+    prepararModal(
+        modalBaja,
+        Array.from(formulario.querySelectorAll('[data-abrir-eliminacion]')),
+        null
+    );
 }());
