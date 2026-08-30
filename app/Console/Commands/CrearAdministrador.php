@@ -53,6 +53,7 @@ class CrearAdministrador extends Command
         AccesoAdministrativo::GESTIONAR_USUARIOS,
         AccesoAdministrativo::GESTIONAR_REFERENCIAS,
         AccesoAdministrativo::GESTIONAR_SEDES,
+        AccesoAdministrativo::GESTIONAR_CONVOCATORIAS,
     ];
 
     public function handle(GestionAdministradores $gestion): int

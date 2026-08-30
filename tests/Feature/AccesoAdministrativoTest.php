@@ -29,6 +29,8 @@ class AccesoAdministrativoTest extends TestCase
 
     private const TARJETA_USUARIOS = 'Crea, edita y administra las cuentas de quienes operan el sistema.';
 
+    private const TARJETA_CONVOCATORIAS = 'Define el calendario y la cuota de recuperación de cada convocatoria.';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,6 +55,7 @@ class AccesoAdministrativoTest extends TestCase
             route('admin.documentos.index'),
             route('admin.resultados.index'),
             route('admin.administradores.index'),
+            route('admin.convocatorias.index'),
         ];
 
         foreach ($rutas as $ruta) {
@@ -109,6 +112,7 @@ class AccesoAdministrativoTest extends TestCase
             ->assertSee(self::TARJETA_REFERENCIAS)
             ->assertSee(self::TARJETA_SEDES)
             ->assertSee(self::TARJETA_USUARIOS)
+            ->assertSee(self::TARJETA_CONVOCATORIAS)
             ->assertSee('Personas registradas')
             ->assertSee('Solicitudes en revisión')
             ->assertSee('Pagos por validar')
@@ -125,6 +129,7 @@ class AccesoAdministrativoTest extends TestCase
             ->assertDontSee(self::TARJETA_REFERENCIAS)
             ->assertDontSee(self::TARJETA_SEDES)
             ->assertDontSee(self::TARJETA_USUARIOS)
+            ->assertDontSee(self::TARJETA_CONVOCATORIAS)
             /* Cuántos pagos faltan por validar es dato de la DEC. */
             ->assertDontSee('Pagos por validar')
             ->assertDontSee('Certificados pendientes')
@@ -142,6 +147,7 @@ class AccesoAdministrativoTest extends TestCase
             ->assertDontSee(self::TARJETA_PREREGISTRO)
             ->assertDontSee(self::TARJETA_SEDES)
             ->assertDontSee(self::TARJETA_USUARIOS)
+            ->assertDontSee(self::TARJETA_CONVOCATORIAS)
             ->assertDontSee('Solicitudes en revisión')
             ->assertDontSee('Certificados pendientes');
     }

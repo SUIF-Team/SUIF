@@ -29,6 +29,8 @@ class AccesoAdministrativo
 
     public const GENERAR_REPORTES = 'Generación Reportes';
 
+    public const GESTIONAR_CONVOCATORIAS = 'Gestionar Convocatorias';
+
     /**
      * Privilegio que abre la puerta -> pantalla donde se entra, en orden de
      * precedencia.
@@ -37,6 +39,10 @@ class AccesoAdministrativo
      * le sirve el tablero, porque es donde ve junto todo lo que puede abrir.
      * A un administrador de área el tablero le sobra: se le manda directo a
      * la bandeja a la que viene a trabajar.
+     *
+     * Convocatorias va al final y no antes: hoy sólo lo tiene el Superusuario,
+     * que ya aterriza en el tablero por GESTIONAR_USUARIOS. Moverlo de lugar
+     * cambiaría dónde entra alguien más el día que el privilegio se reparta.
      *
      * @var array<string, string>
      */
@@ -47,6 +53,7 @@ class AccesoAdministrativo
         self::GESTIONAR_REFERENCIAS => 'admin.referencias.index',
         self::GESTIONAR_SEDES => 'admin.sedes.index',
         self::GENERAR_REPORTES => 'admin.resultados.index',
+        self::GESTIONAR_CONVOCATORIAS => 'admin.convocatorias.index',
     ];
 
     /**

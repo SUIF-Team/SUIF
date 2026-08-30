@@ -50,6 +50,34 @@ class PreRegistroTest extends TestCase
             ->assertSee($estado['clave']);
     }
 
+    /**
+     * La convocatoria manda sobre la ventana de fechas: interrumpirla cierra el
+     * registro aunque sus fechas sigan abiertas.
+     *
+     * Sin este corte, SOLICITUD recibiría un nulo en una columna obligatoria y
+     * quien se está registrando vería un error de base de datos.
+     */
+    public function test_sin_convocatoria_vigente_el_alta_se_detiene_sin_crear_nada(): void
+    {
+        Mail::fake();
+
+        DB::table('estado_convocatoria')->insert([
+            'esco_id_c_estado_convocatoria' => 3,
+            'esco_id_convocatoria' => 1,
+            'esco_fecha' => now()->toDateString(),
+            'esco_hora' => now()->toTimeString(),
+        ]);
+
+        $this->post(route('persona.preregistro.datos.store'), $this->datosValidos())
+            ->assertSessionHasErrors('datos');
+
+        $this->assertSame(0, DB::table('usuario')->count());
+        $this->assertSame(0, DB::table('persona')->count());
+        $this->assertSame(0, DB::table('solicitud')->count());
+
+        Mail::assertNothingSent();
+    }
+
     public function test_el_fallo_del_correo_no_revierte_el_alta_y_se_avisa_en_pantalla(): void
     {
         Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP fuera de servicio'));
@@ -142,6 +170,8 @@ class PreRegistroTest extends TestCase
             'estado_solicitud',
             'c_estado_solicitud',
             'solicitud',
+            'estado_convocatoria',
+            'c_estado_convocatoria',
             'convocatoria',
             'documento',
             'tipo_documento',
@@ -236,6 +266,19 @@ class PreRegistroTest extends TestCase
             $table->date('conv_fecha_inicio_registro');
             $table->date('conv_fecha_fin_registro');
         });
+        /* El pre-registro ya no elige la convocatoria sólo por fechas: además
+           exige que su último estado sea "Vigente". */
+        Schema::create('c_estado_convocatoria', function (Blueprint $table): void {
+            $table->increments('esco_id_c_estado_convocatoria');
+            $table->string('esco_estado_convocatoria', 15);
+        });
+        Schema::create('estado_convocatoria', function (Blueprint $table): void {
+            $table->increments('esco_id_estado_convocatoria');
+            $table->integer('esco_id_c_estado_convocatoria');
+            $table->integer('esco_id_convocatoria');
+            $table->date('esco_fecha')->nullable();
+            $table->time('esco_hora')->nullable();
+        });
         Schema::create('solicitud', function (Blueprint $table): void {
             $table->increments('soli_id_solicitud');
             $table->integer('soli_id_persona')->nullable();
@@ -278,8 +321,22 @@ class PreRegistroTest extends TestCase
         ]);
         DB::table('convocatoria')->insert([
             [
+                'conv_id_convocatoria' => 1,
                 'conv_fecha_inicio_registro' => now()->subDay()->toDateString(),
                 'conv_fecha_fin_registro' => now()->addMonth()->toDateString(),
+            ],
+        ]);
+        DB::table('c_estado_convocatoria')->insert([
+            ['esco_id_c_estado_convocatoria' => 1, 'esco_estado_convocatoria' => 'Vigente'],
+            ['esco_id_c_estado_convocatoria' => 2, 'esco_estado_convocatoria' => 'Cerrada'],
+            ['esco_id_c_estado_convocatoria' => 3, 'esco_estado_convocatoria' => 'Interrumpida'],
+        ]);
+        DB::table('estado_convocatoria')->insert([
+            [
+                'esco_id_c_estado_convocatoria' => 1,
+                'esco_id_convocatoria' => 1,
+                'esco_fecha' => now()->subDay()->toDateString(),
+                'esco_hora' => now()->toTimeString(),
             ],
         ]);
     }

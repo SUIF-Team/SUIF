@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RecuperacionClaveController;
 use App\Http\Controllers\Admin\AdministradorController as AdminAdministradorController;
+use App\Http\Controllers\Admin\ConvocatoriaController as AdminConvocatoriaController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DocumentoController as AdminDocumentoController;
 use App\Http\Controllers\Admin\GrupoController as AdminGrupoController;
@@ -157,6 +158,21 @@ Route::middleware(['auth', 'can:acceder-admin'])
             Route::get('/grupos/{id}/editar', [AdminGrupoController::class, 'edit'])->name('grupos.edit');
             Route::put('/grupos/{id}', [AdminGrupoController::class, 'update'])->name('grupos.update');
             Route::delete('/grupos/{id}', [AdminGrupoController::class, 'destroy'])->name('grupos.destroy');
+        });
+
+        /* Las convocatorias marcan el calendario de todo el trámite y el monto
+           que se cobra: hoy sólo las administra el Superusuario. El permiso es
+           propio y no reutiliza el de usuarios, para que el día que la gestión
+           le toque a otra área baste con repartir el privilegio. */
+        Route::middleware('can:gestionar-convocatorias')->group(function () {
+            Route::get('/convocatorias', [AdminConvocatoriaController::class, 'index'])->name('convocatorias.index');
+            Route::get('/convocatorias/crear', [AdminConvocatoriaController::class, 'create'])->name('convocatorias.create');
+            Route::post('/convocatorias', [AdminConvocatoriaController::class, 'store'])->name('convocatorias.store');
+            Route::get('/convocatorias/{id}/editar', [AdminConvocatoriaController::class, 'edit'])->name('convocatorias.edit');
+            Route::put('/convocatorias/{id}', [AdminConvocatoriaController::class, 'update'])->name('convocatorias.update');
+            Route::delete('/convocatorias/{id}', [AdminConvocatoriaController::class, 'destroy'])->name('convocatorias.destroy');
+            /* Cerrar, interrumpir y reabrir: el destino viaja en el formulario. */
+            Route::post('/convocatorias/{id}/estado', [AdminConvocatoriaController::class, 'estado'])->name('convocatorias.estado');
         });
 
         Route::middleware('can:generar-reportes')->group(function () {

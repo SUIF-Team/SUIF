@@ -27,6 +27,8 @@ trait SiembraAdministradores
     protected function crearEsquemaAdministrativo(): void
     {
         foreach ([
+            'estado_convocatoria',
+            'c_estado_convocatoria',
             'estado_pago',
             'c_estado_pago',
             'referencia_bancaria',
@@ -92,6 +94,30 @@ trait SiembraAdministradores
             $table->increments('conv_id_convocatoria');
             $table->date('conv_fecha_inicio_registro');
             $table->date('conv_fecha_fin');
+            /* Las cinco restantes son nulables aquí y obligatorias en
+               PostgreSQL: las pruebas que sólo necesitan una convocatoria para
+               colgarle solicitudes la siembran con dos columnas. */
+            $table->string('conv_nombre', 300)->nullable();
+            $table->string('conv_monto_recuperacion', 25)->nullable();
+            $table->date('conv_fecha_fin_registro')->nullable();
+            $table->date('conv_fin_fecha_entrega_docs')->nullable();
+            $table->date('conv_fecha_inicio')->nullable();
+        });
+
+        /* El estado de la convocatoria es una bitácora, igual que el de la
+           solicitud y el del pago: un renglón por cambio y el vigente es el de
+           identificador más alto. */
+        Schema::create('c_estado_convocatoria', function (Blueprint $table): void {
+            $table->increments('esco_id_c_estado_convocatoria');
+            $table->string('esco_estado_convocatoria', 15);
+        });
+
+        Schema::create('estado_convocatoria', function (Blueprint $table): void {
+            $table->increments('esco_id_estado_convocatoria');
+            $table->integer('esco_id_c_estado_convocatoria');
+            $table->integer('esco_id_convocatoria');
+            $table->date('esco_fecha')->nullable();
+            $table->time('esco_hora')->nullable();
         });
 
         Schema::create('solicitud', function (Blueprint $table): void {
@@ -167,10 +193,11 @@ trait SiembraAdministradores
             ['priv_id_privilegio' => 4, 'priv_privilegio' => 'Gestionar usuarios'],
             ['priv_id_privilegio' => 5, 'priv_privilegio' => 'Gestionar Referencias'],
             ['priv_id_privilegio' => 6, 'priv_privilegio' => 'Gestionar Sedes'],
+            ['priv_id_privilegio' => 7, 'priv_privilegio' => 'Gestionar Convocatorias'],
         ]);
 
         $reparto = [
-            self::ROL_SUPERUSUARIO => [1, 2, 3, 4, 5, 6],
+            self::ROL_SUPERUSUARIO => [1, 2, 3, 4, 5, 6, 7],
             self::ROL_ADMIN_UIF => [1],
             self::ROL_ADMIN_DEC => [2, 5],
         ];

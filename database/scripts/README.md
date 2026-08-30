@@ -37,6 +37,7 @@ Orden de ejecución en una instalación nueva:
 8. `suif_referencia_fecha_emision.sql` — fecha de emisión en REFERENCIA_BANCARIA
 9. `suif_roles_administrativos.sql` — roles administrativos y catálogo de privilegios
 10. `suif_comprobante_fiscal.sql` — comprobante fiscal del pago (ticket o CFDI)
+11. `suif_convocatorias.sql` — catálogo de estados de convocatoria y el privilegio que abre su módulo
 
 `suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
 que el banco emitió la referencia. Va DESPUÉS de
@@ -153,14 +154,14 @@ También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
 `suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
 registrar nada.
 
-## Los otros siete se pueden repetir
+## Los otros ocho se pueden repetir
 
 `suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
 `suif_catalogos.sql`, `suif_grupos_multiples.sql`,
-`suif_referencias_bancarias.sql`, `suif_roles_administrativos.sql` y
-`suif_comprobante_fiscal.sql` son idempotentes: volver a ejecutarlos no
-duplica ni destruye nada. Por eso la regla al desplegar es correrlos SIEMPRE,
-sin preguntarse si ya se corrieron.
+`suif_referencias_bancarias.sql`, `suif_roles_administrativos.sql`,
+`suif_comprobante_fiscal.sql` y `suif_convocatorias.sql` son idempotentes:
+volver a ejecutarlos no duplica ni destruye nada. Por eso la regla al desplegar
+es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
 
 ## Hay tres tipos de administrador y los permisos salen de PRIVILEGIO_ROL
 
@@ -257,6 +258,51 @@ falla con `column "pago_uso_cfdi" is of type character varying`.
 Como altera el tipo de una columna, aquí el respaldo previo no es una
 formalidad. El procedimiento completo —respaldo, verificación del dump y
 ensayo sobre una base temporal— está en `deploy/README.md`.
+
+## La convocatoria se administra desde el sistema
+
+`suif_convocatorias.sql` es **requisito de despliegue** del módulo de
+convocatorias. Va DESPUÉS de `suif_catalogos.sql` —que es quien siembra la
+convocatoria vigente— y de `suif_roles_administrativos.sql`, que crea el rol
+`Superusuario` al que se le reparte el privilegio. Hace tres cosas:
+
+- **Siembra `C_ESTADO_CONVOCATORIA`** con `Vigente`, `Cerrada` e
+  `Interrumpida`. `suif.sql` la crea vacía y `suif_catalogos.sql` la salta, así
+  que en producción se quedaba sin un solo renglón: era, junto con
+  `ESTADO_CONVOCATORIA`, una tabla muerta desde el diseño original. Los tres
+  nombres caben en los 15 caracteres de `ESCO_ESTADO_CONVOCATORIA`, así que la
+  columna no se toca.
+
+  En una base de desarrollo hay que contar con lo que dejó `suif_lleno.sql`, que
+  sí la sembró con otros nombres —`Abierta`, `Cerrada`, `En Evaluación`— e ids
+  explícitos. El script reutiliza `Cerrada`, agrega los dos que faltan y deja
+  los otros dos donde están: son renglones de otro archivo y ningún código los
+  consulta.
+- Da de alta el privilegio `Gestionar Convocatorias` y **se lo reparte sólo al
+  `Superusuario`**. El día que la gestión le toque a otra área basta con un
+  renglón más en `PRIVILEGIO_ROL`: el código autoriza contra el privilegio y
+  nunca contra el nombre del rol.
+- **Le pone estado a las convocatorias que ya existían.** La más reciente de las
+  que no tienen ninguno queda `Vigente` y las demás `Cerrada`, que es la regla
+  del módulo —una sola vigente a la vez—. Sin este relleno la convocatoria que
+  siembra `suif_catalogos.sql` se quedaría sin estado y el pre-registro dejaría
+  de encontrarla, porque a partir de ahora exige `Vigente` además de la ventana
+  de fechas.
+
+  En una base con `suif_lleno.sql` las tres convocatorias de prueba son de 2025
+  y principios de 2026: la 3 queda `Vigente` y las otras dos `Cerrada`, pero
+  ninguna admite registro porque su ventana de fechas ya venció. Eso no lo causa
+  este script —el filtro por fechas ya las descartaba—; para probar el
+  pre-registro ahí hay que dar de alta una convocatoria con fechas vigentes desde
+  la pantalla nueva.
+
+Córrelo ANTES de publicar el código: sin el catálogo, guardar una convocatoria
+falla con «El catálogo de estados de convocatoria está incompleto», y sin el
+privilegio la pantalla responde 403 hasta para el Superusuario.
+
+Volver a ejecutarlo no reabre nada: sólo toca las convocatorias que no tengan
+ningún renglón de estado, y ni siquiera marca vigente a la más reciente si en la
+base ya hay otra convocatoria vigente.
 
 ## Antes de tocar producción
 

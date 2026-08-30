@@ -58,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
             'gestionar-sedes' => AccesoAdministrativo::GESTIONAR_SEDES,
             'gestionar-usuarios' => AccesoAdministrativo::GESTIONAR_USUARIOS,
             'generar-reportes' => AccesoAdministrativo::GENERAR_REPORTES,
+            'gestionar-convocatorias' => AccesoAdministrativo::GESTIONAR_CONVOCATORIAS,
             /* Revertir una resolución ya notificada le toca a quien la dictó:
                la UIF reanuda y cancela lo que dictaminó en documentación, y la
                DEC reanuda los pagos que resolvió. Son permisos con nombre

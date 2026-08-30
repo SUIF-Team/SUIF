@@ -73,6 +73,12 @@ class DashboardController extends Controller
                 'descripcion' => 'Programa las aplicaciones del examen en cada sede.',
             ],
             [
+                'titulo' => 'Convocatorias',
+                'ruta' => 'admin.convocatorias.index',
+                'permiso' => 'gestionar-convocatorias',
+                'descripcion' => 'Define el calendario y la cuota de recuperación de cada convocatoria.',
+            ],
+            [
                 'titulo' => 'Gestión de usuarios',
                 'ruta' => 'admin.administradores.index',
                 'permiso' => 'gestionar-usuarios',

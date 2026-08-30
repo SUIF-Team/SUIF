@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Usuario;
 use App\Servicios\AvancePersona;
 use App\Servicios\GestionClaves;
+use App\Servicios\GestionConvocatorias;
 use App\Servicios\FormatoPreRegistro;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\ValidationException;
 
 class PreRegistroController extends Controller
 {
@@ -273,6 +275,19 @@ class PreRegistroController extends Controller
     private function registrarPersona(array $datos, $clave)
     {
        return DB::transaction(function () use ($datos, $clave) {
+            /* Lo primero, antes de dar de alta a nadie: si no hay convocatoria
+               abierta no hay trámite que iniciar. SOLICITUD la apunta con una
+               columna obligatoria, así que descubrirlo hasta el final dejaría
+               reventar la inserción con un error de base de datos en la cara de
+               quien se está registrando. */
+            $idConvocatoria = app(GestionConvocatorias::class)->idConvocatoriaAbierta();
+
+            if ($idConvocatoria === null) {
+                throw ValidationException::withMessages([
+                    'datos' => 'En este momento no hay una convocatoria abierta a registro.',
+                ]);
+            }
+
             $idRol = DB::table('rol')
                 ->where('rol_tipo_rol', 'Persona')
                 ->value('rol_id_rol');
@@ -340,12 +355,6 @@ class PreRegistroController extends Controller
 
                 /* La SOLICITUD es la que amarra al persona con su trámite:
                convocatoria, pago, documentos, evaluación y certificado. */
-            $idConvocatoria = DB::table('convocatoria')
-                ->whereDate('conv_fecha_inicio_registro', '<=', now()->toDateString())
-                ->whereDate('conv_fecha_fin_registro', '>=', now()->toDateString())
-                ->orderByDesc('conv_id_convocatoria')
-                ->value('conv_id_convocatoria');
-
             $idSolicitud = DB::table('solicitud')->insertGetId([
                 'soli_id_persona' => $idPersona,
                 'soli_id_convocatoria' => $idConvocatoria,
