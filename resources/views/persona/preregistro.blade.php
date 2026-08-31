@@ -27,6 +27,7 @@
                     'textoBoton' => 'Continuar',
                     'mostrarCancelar' => false,
                     'avisoClave' => true,
+                    'mostrarAviso' => true,
                     'botonDeshabilitado' => true,
                 ])
 
@@ -68,6 +69,7 @@
                     'textoBoton' => 'Guardar cambios',
                     'mostrarCancelar' => true,
                     'avisoClave' => false,
+                    'mostrarAviso' => false,
                     'botonDeshabilitado' => false,
                 ])
 

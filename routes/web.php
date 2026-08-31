@@ -25,6 +25,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+/* Aviso de privacidad: documentos públicos sin lógica que justifique un
+   controlador. La versión simplificada también se muestra dentro del
+   pre-registro, que es donde se recaban los datos. */
+Route::view('/aviso-de-privacidad', 'legal.aviso-privacidad')->name('aviso-privacidad');
+Route::view('/aviso-de-privacidad-simplificado', 'legal.aviso-privacidad-simplificado')
+    ->name('aviso-privacidad.simplificado');
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

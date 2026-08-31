@@ -29,14 +29,14 @@
 
             <p>
                 Esta página puede ser reproducida con fines no lucrativos, siempre y cuando no se mutile, se cite la fuente completa y su dirección electrónica. De otra forma requiere permiso previo por escrito de la institución.
-                <a href="{{ config('suif.enlaces.aviso_privacidad') }}" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a>.
+                <a href="{{ route('aviso-privacidad') }}">Aviso de privacidad</a>.
                 Sitio web administrado por el Centro de Informática de la Facultad de Contaduría y Administración
                 (<a href="{{ config('suif.enlaces.cifca') }}" target="_blank" rel="noopener noreferrer">CIFCA</a>).<br>
                 <a href="{{ config('suif.enlaces.documento_seguridad') }}" target="_blank" rel="noopener noreferrer">Documento de seguridad</a>
                 <span aria-hidden="true"> | </span>
                 <a href="{{ config('suif.enlaces.instrumento_juridico') }}" target="_blank" rel="noopener noreferrer">Instrumento jurídico</a>
                 <span aria-hidden="true"> | </span>
-                <a href="{{ config('suif.enlaces.aviso_privacidad_simplificado') }}" target="_blank" rel="noopener noreferrer">Aviso de privacidad simplificado</a>
+                <a href="{{ route('aviso-privacidad.simplificado') }}">Aviso de privacidad simplificado</a>
             </p>
         </div>
     </div>
@@ -45,3 +45,5 @@
 <button type="button" class="back-to-top" data-back-to-top aria-label="Volver al inicio de la página">
     <i class="fas fa-arrow-up" aria-hidden="true"></i>
 </button>
+
+@include('partials.aviso-privacidad-banner')

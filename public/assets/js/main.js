@@ -146,3 +146,53 @@
         });
     };
 }());
+/*
+ * Aviso de privacidad al entrar al sitio.
+ *
+ * El banner se pinta siempre y aquí se oculta cuando ya se cerró: al revés,
+ * quien navegue sin JavaScript no lo vería nunca. localStorage lanza excepción
+ * en algunos modos privados; si falla, el aviso simplemente vuelve a salir.
+ */
+(function () {
+    'use strict';
+
+    var CLAVE = 'suif.aviso-privacidad';
+
+    function yaSeCerro() {
+        try {
+            return window.localStorage.getItem(CLAVE) === '1';
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function recordarCierre() {
+        try {
+            window.localStorage.setItem(CLAVE, '1');
+        } catch (error) {
+            /* Sin almacenamiento disponible el aviso se volverá a mostrar. */
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var banner = document.querySelector('[data-aviso-privacidad]');
+
+        if (!banner) {
+            return;
+        }
+
+        if (yaSeCerro()) {
+            banner.hidden = true;
+            return;
+        }
+
+        var cerrar = banner.querySelector('[data-aviso-privacidad-cerrar]');
+
+        if (cerrar) {
+            cerrar.addEventListener('click', function () {
+                banner.hidden = true;
+                recordarCierre();
+            });
+        }
+    });
+}());

@@ -124,3 +124,85 @@ button:focus-visible {
         background-attachment: scroll;
     }
 }
+/* Aviso de privacidad que aparece al entrar, y el bloque simplificado que se
+   reutiliza en el pre-registro. Viven aqui porque los cuatro layouts cargan
+   este archivo. */
+.aviso-banner {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1080;
+    padding: 0.9rem 1rem;
+    border-top: 3px solid var(--unam-gold);
+    background: var(--unam-blue);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    box-shadow: 0 -6px 20px rgba(11, 26, 46, 0.25);
+}
+
+.aviso-banner[hidden] {
+    display: none;
+}
+
+.aviso-banner__contenido {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.aviso-banner__texto {
+    margin: 0;
+    flex: 1 1 320px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.aviso-banner__texto a {
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.aviso-banner__boton {
+    flex: 0 0 auto;
+    padding: 0.5rem 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--unam-gold);
+    color: var(--unam-blue-dark);
+    font-family: var(--font-nav);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.aviso-banner__boton:hover,
+.aviso-banner__boton:focus-visible {
+    background: #d3a63f;
+}
+
+.aviso-simple {
+    font-family: var(--font-sans);
+    line-height: 1.65;
+}
+
+.aviso-simple__titulo {
+    margin: 0 0 1rem;
+    color: var(--unam-blue);
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+}
+
+.aviso-simple p {
+    margin: 0 0 1rem;
+}
+
+.aviso-simple__enlace {
+    margin-bottom: 0;
+    font-weight: 600;
+}

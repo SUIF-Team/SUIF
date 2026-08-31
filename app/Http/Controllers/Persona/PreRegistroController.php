@@ -215,6 +215,9 @@ class PreRegistroController extends Controller
             'grado_estudios' => 'required|in:'.$grados,
             'actividad_vulnerable' => 'required|in:si,no',
             'responsable_cumplimiento' => 'required|in:si,no',
+            /* Artículo 20 de la LGPDPPSO: el aviso se pone a disposición antes
+               de recabar los datos. La confirmación no se persiste. */
+            'aviso_privacidad' => 'accepted',
         ], [
             'required' => 'El campo :attribute es obligatorio.',
             'email' => 'Escribe un correo válido.',
@@ -228,6 +231,7 @@ class PreRegistroController extends Controller
             'rfc.size' => 'El RFC debe contener exactamente 13 caracteres.',
             'rfc.regex' => 'Escribe tu RFC con homoclave, como aparece en tu constancia fiscal.',
             'rfc.unique' => 'Ese RFC ya tiene un pre-registro. Inicia sesión con tu clave de acceso.',
+            'aviso_privacidad.accepted' => 'Debes confirmar que leíste el aviso de privacidad.',
         ]);
 
         /* Formato uniforme sin importar cómo lo haya escrito la persona. */

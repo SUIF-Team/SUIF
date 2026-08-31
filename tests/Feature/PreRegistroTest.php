@@ -146,6 +146,26 @@ class PreRegistroTest extends TestCase
         $this->post(route('persona.preregistro.datos.store'), [])->assertStatus(429);
     }
 
+    /**
+     * Artículo 20 de la LGPDPPSO: el aviso se pone a disposición antes de
+     * recabar los datos. Sin la confirmación no se da de alta a nadie.
+     */
+    public function test_el_alta_exige_confirmar_el_aviso_de_privacidad(): void
+    {
+        Mail::fake();
+
+        $datos = $this->datosValidos();
+        unset($datos['aviso_privacidad']);
+
+        $this->post(route('persona.preregistro.datos.store'), $datos)
+            ->assertSessionHasErrors('aviso_privacidad');
+
+        $this->assertSame(0, DB::table('usuario')->count());
+        $this->assertSame(0, DB::table('persona')->count());
+
+        Mail::assertNothingSent();
+    }
+
     private function datosValidos(array $cambios = []): array
     {
         return array_merge([
@@ -161,6 +181,7 @@ class PreRegistroTest extends TestCase
             'grado_estudios' => 'licenciatura',
             'actividad_vulnerable' => 'no',
             'responsable_cumplimiento' => 'no',
+            'aviso_privacidad' => '1',
         ], $cambios);
     }
 

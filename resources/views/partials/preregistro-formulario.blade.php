@@ -1,7 +1,8 @@
 {{--
     partials/preregistro-formulario.blade.php
     Formulario de datos personales. Se usa para el alta y para la edición.
-    Variables: $accion, $textoBoton, $mostrarCancelar, $avisoClave, $botonDeshabilitado.
+    Variables: $accion, $textoBoton, $mostrarCancelar, $avisoClave, $botonDeshabilitado,
+    $mostrarAviso (aviso de privacidad y su casilla: solo en el alta).
 --}}
 <form method="POST" action="{{ $accion }}" id="pr-data-form">
     @csrf
@@ -33,6 +34,20 @@
 
     @if($avisoClave)
         <p class="pr-notice">Al continuar, la clave de acceso se enviará al correo principal y podrás continuar el proceso desde la plataforma.</p>
+    @endif
+
+    @if($mostrarAviso)
+        {{-- Artículo 20 de la LGPDPPSO: el aviso se pone a disposición antes
+             de recabar los datos, no después. --}}
+        <div class="pr-aviso">
+            @include('partials.aviso-privacidad-simplificado')
+
+            <label class="pr-aviso__casilla">
+                <input type="checkbox" name="aviso_privacidad" value="1" required
+                       {{ old('aviso_privacidad') ? 'checked' : '' }}>
+                <span>He leído el aviso de privacidad y entiendo cómo se usarán mis datos.</span>
+            </label>
+        </div>
     @endif
 
     <div class="pr-actions">
