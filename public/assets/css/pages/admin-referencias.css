@@ -367,6 +367,36 @@
     text-align: center;
 }
 
+/* Solicitudes de referencia especial. A diferencia del catálogo, cada tarjeta
+   lleva su propio título dentro: sin esto los h2 salen al tamaño que les da el
+   navegador y pesan más que el encabezado de la pantalla. */
+.admin-referencias-seccion {
+    padding: 1.25rem 1.4rem;
+}
+
+.admin-referencias-seccion h2 {
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+    font-family: var(--font-nav);
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+/* Dentro de una tarjeta el aviso ya no es la tarjeta: necesita sus esquinas y
+   separarse de lo que venga debajo. */
+.admin-referencias-seccion .admin-referencias-aviso {
+    margin-bottom: 1rem;
+    border-radius: 0.6rem;
+}
+
+/* Los datos de quien paga son seis renglones cortos: en columna estiran la
+   pantalla sin necesidad. */
+.admin-referencias-formato--columnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1rem;
+}
+
 @media (max-width: 767px) {
     .admin-referencias-encabezado {
         flex-direction: column;

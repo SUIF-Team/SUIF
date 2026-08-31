@@ -27,26 +27,40 @@
         </header>
 
         @error('referencia')
-            <div class="admin-referencias-aviso admin-referencias-aviso--error">{{ $message }}</div>
+            <div class="admin-referencias-tarjeta admin-referencias-aviso admin-referencias-aviso--error">
+                {{ $message }}
+            </div>
         @enderror
 
-        <section class="admin-referencias-tarjeta" aria-label="Datos de quien paga">
+        <section class="admin-referencias-tarjeta admin-referencias-seccion" aria-label="Datos de quien paga">
             <h2>Quien realizará el pago</h2>
-            <dl class="admin-referencias-formato">
-                <dt>Nombre o razón social</dt>
-                <dd>{{ $solicitud['razon_social'] ?: '—' }}</dd>
-                <dt>RFC</dt>
-                <dd>{{ $solicitud['rfc'] ?: '—' }}</dd>
-                <dt>Tipo de persona</dt>
-                <dd>{{ $solicitud['persona_moral'] ? 'Persona moral' : 'Persona física' }}</dd>
-                <dt>Régimen fiscal</dt>
-                <dd>{{ $solicitud['regimen_fiscal'] ?: '—' }}</dd>
-                <dt>Código postal</dt>
-                <dd>{{ $solicitud['codigo_postal'] ?: '—' }}</dd>
+            {{-- Cada par va envuelto: en rejilla, un dt y un dd sueltos caen en
+                 celdas distintas y la etiqueta se separa de su valor. --}}
+            <dl class="admin-referencias-formato admin-referencias-formato--columnas">
+                <div>
+                    <dt>Nombre o razón social</dt>
+                    <dd>{{ $solicitud['razon_social'] ?: '—' }}</dd>
+                </div>
+                <div>
+                    <dt>RFC</dt>
+                    <dd>{{ $solicitud['rfc'] ?: '—' }}</dd>
+                </div>
+                <div>
+                    <dt>Tipo de persona</dt>
+                    <dd>{{ $solicitud['persona_moral'] ? 'Persona moral' : 'Persona física' }}</dd>
+                </div>
+                <div>
+                    <dt>Régimen fiscal</dt>
+                    <dd>{{ $solicitud['regimen_fiscal'] ?: '—' }}</dd>
+                </div>
+                <div>
+                    <dt>Código postal</dt>
+                    <dd>{{ $solicitud['codigo_postal'] ?: '—' }}</dd>
+                </div>
             </dl>
         </section>
 
-        <section class="admin-referencias-tarjeta admin-referencias-tabla-contenedor" aria-label="Participantes">
+        <section class="admin-referencias-tarjeta admin-referencias-seccion" aria-label="Participantes">
             <h2>Participantes que cubre</h2>
             <div class="admin-referencias-tabla-responsive">
                 <table class="admin-referencias-tabla">
@@ -68,7 +82,7 @@
             </div>
         </section>
 
-        <section class="admin-referencias-tarjeta" aria-label="Emisión de la referencia">
+        <section class="admin-referencias-tarjeta admin-referencias-seccion" aria-label="Emisión de la referencia">
             <h2>Referencia por entregar</h2>
 
             @if($solicitud['candidatas'])
@@ -124,4 +138,5 @@
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
 <script src="{{ asset_versionado('assets/js/components/BackNavigation.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-referencias.js') }}"></script>
 @endsection
