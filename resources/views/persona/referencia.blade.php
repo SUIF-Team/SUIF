@@ -45,12 +45,38 @@
             @endif
         </div>
 
+    @elseif($referencia['pendiente'])
+
+        {{-- Camino especial: el pago ya existe y liga a todo el grupo, pero el
+             número lo emite la Dirección. Hasta entonces no hay nada que copiar. --}}
+        <div class="referencia-tarjeta referencia-tarjeta--sola">
+            <h1>Tu referencia especial está en trámite</h1>
+            <p class="referencia-muted">
+                Registramos la solicitud de <strong>{{ $referencia['razon_social'] }}</strong> para
+                <strong>{{ $referencia['participantes'] }}</strong> participantes, por un total de
+                <strong>${{ $cuota }} {{ $moneda }}</strong>.
+            </p>
+            <p class="referencia-muted">
+                La Dirección emitirá la referencia bancaria y te avisaremos por correo en cuanto esté lista.
+                Mientras tanto no tienes nada que hacer: el pago quedará ligado a todos los participantes y
+                bastará con que una sola persona suba el comprobante.
+            </p>
+        </div>
+
     @else
 
         <div class="referencia-tarjetas">
             <div class="referencia-tarjeta">
                 <h1>Tu referencia bancaria</h1>
-                <p class="referencia-muted">Es única y personal: úsala tal cual aparece al realizar tu pago.</p>
+                @if($referencia['participantes'])
+                    <p class="referencia-muted">
+                        La solicitó <strong>{{ $referencia['razon_social'] }}</strong> y cubre a
+                        <strong>{{ $referencia['participantes'] }}</strong> participantes: úsala tal cual aparece
+                        y sube el comprobante una sola vez para todo el grupo.
+                    </p>
+                @else
+                    <p class="referencia-muted">Es única y personal: úsala tal cual aparece al realizar tu pago.</p>
+                @endif
 
                 <div class="referencia-codigo" aria-label="Referencia bancaria asignada">
                     <span id="referencia-numero">{{ $referencia['referencia'] }}</span>

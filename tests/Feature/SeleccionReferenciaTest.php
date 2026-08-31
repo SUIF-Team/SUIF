@@ -63,16 +63,15 @@ class SeleccionReferenciaTest extends TestCase
         $respuesta->assertSee(route('persona.referencia.individual'));
     }
 
-    public function test_el_camino_especial_todavia_no_es_navegable(): void
+    public function test_el_camino_especial_es_navegable(): void
     {
         $this->sembrarSolicitud('Aprobada');
 
         $respuesta = $this->actingAs($this->persona())->get(route('persona.referencia.index'));
 
-        /* La tarjeta se pinta completa para que se lea la descripción, pero su
-           botón va inhabilitado: detrás no hay flujo todavía. */
-        $respuesta->assertSee('referencia-boton--inhabilitado', false);
-        $this->assertFalse(Route::has('persona.referencia.especial'));
+        $respuesta->assertSee(route('persona.referencia.especial'));
+        $respuesta->assertDontSee('referencia-boton--inhabilitado', false);
+        $this->assertTrue(Route::has('persona.referencia.especial'));
     }
 
     public function test_sin_solicitud_aprobada_el_selector_no_ofrece_ningun_camino(): void

@@ -160,6 +160,8 @@ class AsignacionReferenciaTest extends TestCase
             $table->decimal('pago_monto_pagado', 10, 4)->nullable();
             $table->boolean('pago_uso_cfdi')->nullable();
             $table->integer('pago_id_dato_fiscal')->nullable();
+            /* Marca del pago compartido de una referencia especial. */
+            $table->integer('pago_no_empleado')->nullable();
         });
 
         Schema::create('solicitud', function (Blueprint $table): void {

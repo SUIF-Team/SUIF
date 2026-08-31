@@ -409,6 +409,12 @@ class CatalogoReferencias
      * El monto es el que hay que pagar y sale del catálogo —REBA_MONTO—, no de
      * PAGO_MONTO_PAGADO: desde que la persona captura su pago, esa columna
      * guarda lo que declaró haber pagado y las dos cifras pueden no coincidir.
+     * La excepción es el pago compartido de una referencia especial: ahí el
+     * total lo fijó la solicitud y todavía puede no haber renglón de catálogo.
+     *
+     * Un pago compartido nace sin referencia —la emite la DEC más tarde—, así
+     * que el renglón existe con el número vacío y se devuelve marcado como
+     * pendiente; ver App\Servicios\ReferenciaEspecial.
      */
     public function referenciaDePersona(int $id_usuario): ?array
     {
@@ -420,8 +426,11 @@ class CatalogoReferencias
             ->select([
                 's.soli_id_convocatoria',
                 'pg.pago_id_pago',
+                'pg.pago_id_dato_fiscal',
                 'pg.pago_referencia_bancaria',
                 'pg.pago_referencia_bancaria_path',
+                'pg.pago_monto_pagado',
+                'pg.pago_no_empleado',
             ])
             ->first();
 
@@ -434,14 +443,26 @@ class CatalogoReferencias
             ->select('reba_vigencia', 'reba_monto')
             ->first();
 
+        $compartida = $fila->pago_no_empleado === null ? null : (int) $fila->pago_no_empleado;
+
         return [
             'referencia' => (string) $fila->pago_referencia_bancaria,
-            'monto' => $this->montoConvocatoria(
-                (int) $fila->soli_id_convocatoria,
-                $catalogo === null || $catalogo->reba_monto === null
-                    ? null
-                    : (float) $catalogo->reba_monto
-            ),
+            'pendiente' => trim((string) $fila->pago_referencia_bancaria) === '',
+            'participantes' => $compartida,
+            /* Sólo el pago compartido tiene pagador que nombrar, y sólo por eso
+               se consulta DATO_FISCAL: en el camino individual esa tabla puede
+               ni existir todavía. */
+            'razon_social' => $compartida === null ? '' : (string) DB::table('dato_fiscal')
+                ->where('dafi_id_dato_fiscal', $fila->pago_id_dato_fiscal)
+                ->value('dafi_razon_social'),
+            'monto' => $compartida !== null
+                ? (float) $fila->pago_monto_pagado
+                : $this->montoConvocatoria(
+                    (int) $fila->soli_id_convocatoria,
+                    $catalogo === null || $catalogo->reba_monto === null
+                        ? null
+                        : (float) $catalogo->reba_monto
+                ),
             'vigencia' => $catalogo?->reba_vigencia,
             'ruta_formato' => $this->rutaFormatoDisponible($fila->pago_referencia_bancaria_path),
         ];
@@ -725,7 +746,7 @@ class CatalogoReferencias
         return str_ends_with(mb_strtolower($nombre), '.pdf');
     }
 
-    private function montoConvocatoria(int $id_convocatoria, ?float $monto_referencia): float
+    public function montoConvocatoria(int $id_convocatoria, ?float $monto_referencia): float
     {
         if ($monto_referencia !== null && $monto_referencia > 0) {
             return $monto_referencia;

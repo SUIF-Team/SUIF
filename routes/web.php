@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\GrupoController as AdminGrupoController;
 use App\Http\Controllers\Admin\PagoController as AdminPagoController;
 use App\Http\Controllers\Admin\PersonaController as AdminPersonaController;
 use App\Http\Controllers\Admin\ReferenciaController as AdminReferenciaController;
+use App\Http\Controllers\Admin\ReferenciaEspecialController as AdminReferenciaEspecialController;
 use App\Http\Controllers\Admin\ResultadoController as AdminResultadoController;
 use App\Http\Controllers\Admin\SedeController as AdminSedeController;
 use App\Http\Controllers\Persona\CertificadoController;
@@ -65,6 +66,10 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
         Route::post('/pago/tipo-comprobante', [PersonaPagoController::class, 'elegirComprobante'])->name('pago.tipo-comprobante');
         Route::get('/referencia', [PersonaReferenciaController::class, 'index'])->name('referencia.index');
         Route::get('/referencia/individual', [PersonaReferenciaController::class, 'individual'])->name('referencia.individual');
+        /* Camino especial: un tercero paga por varias personas con una sola
+           referencia. Se captura aquí y la emite la DEC. */
+        Route::get('/referencia/especial', [PersonaReferenciaController::class, 'especial'])->name('referencia.especial');
+        Route::post('/referencia/especial', [PersonaReferenciaController::class, 'solicitarEspecial'])->name('referencia.especial.store');
         Route::post('/referencia', [PersonaReferenciaController::class, 'generar'])->name('referencia.generar');
         Route::get('/referencia/formato', [PersonaReferenciaController::class, 'formato'])->name('referencia.formato');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');
@@ -134,6 +139,12 @@ Route::middleware(['auth', 'can:acceder-admin'])
         /* El catálogo de referencias asigna dinero y archivos: lo emite la DEC. */
         Route::middleware('can:gestionar-referencias')->group(function () {
             Route::get('/referencias', [AdminReferenciaController::class, 'index'])->name('referencias.index');
+            /* Las referencias especiales se piden desde el trámite y las emite
+               la DEC: van antes que '/referencias/{id}/formato' para que
+               'especiales' no se lea como un identificador. */
+            Route::get('/referencias/especiales', [AdminReferenciaEspecialController::class, 'index'])->name('referencias.especiales.index');
+            Route::get('/referencias/especiales/{id}', [AdminReferenciaEspecialController::class, 'show'])->name('referencias.especiales.show');
+            Route::post('/referencias/especiales/{id}/emitir', [AdminReferenciaEspecialController::class, 'emitir'])->name('referencias.especiales.emitir');
             Route::get('/referencias/carga', [AdminReferenciaController::class, 'carga'])->name('referencias.carga');
             Route::post('/referencias/catalogo', [AdminReferenciaController::class, 'guardarCatalogo'])->name('referencias.catalogo.store');
             Route::post('/referencias/formatos', [AdminReferenciaController::class, 'guardarFormatos'])->name('referencias.formatos.store');

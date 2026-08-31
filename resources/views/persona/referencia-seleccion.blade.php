@@ -91,19 +91,19 @@
                     <p>
                         La <strong>referencia especial</strong> está dirigida a <strong>empresas</strong> que desean
                         realizar el pago de <strong>varios participantes</strong> mediante una sola referencia
-                        bancaria. Para generar esta referencia, el responsable deberá indicar únicamente el número
-                        total de empleados que participarán en el proceso de certificación.
+                        bancaria. Para solicitarla, el responsable captura el <strong>nombre o razón social</strong>
+                        de quien pagará y los datos de <strong>cada participante</strong>: CURP, nombre y apellidos.
                     </p>
                     <p>
-                        Con base en la cantidad de participantes registrada, el sistema generará
-                        <strong>una única referencia bancaria</strong> por el monto total correspondiente. Esta
-                        referencia deberá ser compartida con los <strong>empleados de la empresa</strong>, ya que
-                        cada uno deberá ingresarla posteriormente para continuar con su
-                        <strong>registro individual</strong>.
+                        La Dirección emitirá <strong>una única referencia bancaria</strong> por el monto total
+                        correspondiente y te avisaremos por correo en cuanto esté lista. Como el pago queda ligado
+                        a todos los participantes, basta con que <strong>una sola persona</strong> suba el
+                        comprobante.
                     </p>
                     <p>
-                        La referencia bancaria solo podrá ser utilizada por el número de participantes indicado al
-                        momento de generarla.
+                        Cada participante debe tener su <strong>solicitud aprobada</strong> y todavía sin referencia
+                        asignada. El pago deberá provenir de la <strong>cuenta de la empresa</strong>: el
+                        comprobante fiscal se emite a nombre de quien paga y no puede facturarse a terceros.
                     </p>
                     <p>
                         Si la empresa requiere una referencia bancaria individual para cada empleado, deberá
@@ -112,12 +112,12 @@
                 </div>
 
                 <div class="referencia-tarjeta__pie">
-                    <button type="button" class="referencia-boton referencia-boton--inhabilitado"
-                            disabled aria-describedby="referencia-especial-nota">
+                    <a class="referencia-boton" href="{{ route('persona.referencia.especial') }}"
+                       aria-describedby="referencia-especial-nota">
                         Referencia Especial
-                    </button>
+                    </a>
                     <p class="referencia-muted referencia-tarjeta__nota" id="referencia-especial-nota">
-                        Disponible próximamente.
+                        Todos los participantes deben tener su solicitud aprobada y aún sin referencia.
                     </p>
                 </div>
             </article>

@@ -86,6 +86,19 @@ class AvancePersona
         return $this->pago !== null;
     }
 
+    /**
+     * El pago ya trae su número de referencia.
+     *
+     * No es lo mismo que tenerlo: el pago compartido de una referencia especial
+     * nace en cuanto la empresa captura a sus participantes, pero la referencia
+     * la emite la DEC después. Entre un momento y el otro hay pago y no hay con
+     * qué pagar, así que el paso sigue abierto y el de Pago sigue cerrado.
+     */
+    public function referenciaAsignada()
+    {
+        return $this->tienePago() && trim((string) $this->pago->pago_referencia_bancaria) !== '';
+    }
+
     public function tieneSedeSeleccionada()
     {
         return $this->idEvaluacion !== null;
@@ -284,6 +297,7 @@ class AvancePersona
             ->select([
                 'p.pago_id_pago',
                 'p.pago_comprobante_path',
+                'p.pago_referencia_bancaria',
                 'p.pago_uso_cfdi',
                 'p.pago_id_dato_fiscal',
                 'cep.esta_estado_pago',

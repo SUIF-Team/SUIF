@@ -33,7 +33,10 @@ class DashboardController extends Controller
         if (!$avance->solicitudAprobada()) {
             $sesion = $this->normalizarEstado([]);
         } else {
-            $sesion['referencia_generada'] = $avance->tienePago();
+            /* La referencia cuenta cuando ya trae número: el pago compartido de
+               una referencia especial existe desde que la empresa captura, pero
+               hasta que la DEC no la emite no hay con qué pagar. */
+            $sesion['referencia_generada'] = $avance->referenciaAsignada();
             $sesion['pago_estado'] = $avance->estadoPagoVista();
             $sesion = $this->normalizarEstado($sesion);
         }

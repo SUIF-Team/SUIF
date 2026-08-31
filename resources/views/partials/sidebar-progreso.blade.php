@@ -5,8 +5,11 @@
     Un paso solo es navegable si todos los anteriores están completos.
 --}}
 <?php
-    /* Pre-registro, documentación, pago y sede salen de la base. */
-    $ref = $avance->tienePago();
+    /* Pre-registro, documentación, pago y sede salen de la base.
+       El paso se cierra con la referencia YA emitida: el pago compartido de una
+       referencia especial existe desde que la empresa captura, pero hasta que la
+       DEC no emite el número no hay con qué pagar. */
+    $ref = $avance->referenciaAsignada();
     $pagoEstado = $avance->estadoPagoVista();
     $sede = $avance->tieneSedeSeleccionada();
     $aprobada = $avance->solicitudAprobada();

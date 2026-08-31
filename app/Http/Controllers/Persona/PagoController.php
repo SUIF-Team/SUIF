@@ -20,7 +20,7 @@ class PagoController extends Controller
         $avance = $this->avanceActual();
         $pago_estado = $avance->estadoPagoVista();
         $puede_cargar = $avance->solicitudAprobada()
-            && $avance->tienePago()
+            && $avance->referenciaAsignada()
             && in_array($pago_estado, ['sin_cargar', 'rechazado'], true);
 
         $monto_esperado = $this->montoEsperado($avance, $catalogo);
@@ -43,7 +43,7 @@ class PagoController extends Controller
         $avance = $this->avanceActual();
         $pago_estado = $avance->estadoPagoVista();
 
-        if (!$avance->solicitudAprobada() || !$avance->tienePago()
+        if (!$avance->solicitudAprobada() || !$avance->referenciaAsignada()
             || !in_array($pago_estado, ['sin_cargar', 'rechazado'], true)) {
             return redirect()
                 ->route('persona.pago.index')
@@ -165,8 +165,12 @@ class PagoController extends Controller
             return 'El pago estará disponible cuando se apruebe tu solicitud y documentación.';
         }
 
-        if (!$avance->tienePago()) {
-            return 'Aún no existe una referencia de pago ligada a tu solicitud.';
+        if (!$avance->referenciaAsignada()) {
+            /* El pago compartido existe desde que la empresa capturó a sus
+               participantes; el número lo emite la DEC después. */
+            return $avance->tienePago()
+                ? 'Tu referencia especial todavía no ha sido emitida. Te avisaremos por correo en cuanto esté lista.'
+                : 'Aún no existe una referencia de pago ligada a tu solicitud.';
         }
 
         if ($pago_estado === 'revision') {

@@ -411,6 +411,8 @@ class PagosPersistentesTest extends TestCase
             $table->time('pago_hora_pago');
             $table->boolean('pago_uso_cfdi')->nullable();
             $table->integer('pago_id_dato_fiscal')->nullable();
+            /* Marca del pago compartido de una referencia especial. */
+            $table->integer('pago_no_empleado')->nullable();
         });
 
         Schema::create('c_estado_pago', function (Blueprint $table): void {

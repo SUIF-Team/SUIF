@@ -1,0 +1,329 @@
+/* Captura de la referencia especial: pagador y participantes.
+   Se apoya en persona-referencia.css —tarjeta, botones y avisos— y sólo agrega
+   lo que esta pantalla no tenía: la rejilla del pagador, los renglones de
+   participantes, el contador y el diálogo de confirmación. */
+
+[v-cloak] {
+    display: none;
+}
+
+.refesp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.refesp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1rem 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.refesp-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.refesp-campo--ancho {
+    grid-column: 1 / -1;
+}
+
+.refesp-campo label {
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.refesp-campo input,
+.refesp-campo select {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #fff;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.refesp-campo input:focus-visible,
+.refesp-campo select:focus-visible {
+    outline: 2px solid #172a44;
+    outline-offset: 1px;
+}
+
+.refesp-campo input[readonly] {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.refesp-ayuda {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.78rem;
+}
+
+.refesp-error {
+    margin: 0;
+    color: #9b1717;
+    font-size: 0.78rem;
+}
+
+.refesp-subtitulo {
+    margin: 0 0 0.75rem;
+    color: #172a44;
+    font-size: 1rem;
+}
+
+.refesp-contador {
+    display: inline-flex;
+    align-items: stretch;
+    margin-bottom: 1.25rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.refesp-contador__boton {
+    width: 2.25rem;
+    border: 0;
+    background: #f7f8fa;
+    color: #172a44;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.refesp-contador__boton:hover:not([disabled]),
+.refesp-contador__boton:focus-visible:not([disabled]) {
+    background: #eceff4;
+}
+
+.refesp-contador__boton[disabled] {
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.refesp-contador__valor {
+    min-width: 3rem;
+    padding: 0.5rem 0.75rem;
+    border-inline: 1px solid #d9dee7;
+    color: #111827;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.refesp-personas {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.refesp-persona {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.75rem 1rem;
+    margin: 0;
+    padding: 1rem 2.5rem 1rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.refesp-persona__legend {
+    padding: 0 0.35rem;
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.refesp-persona .refesp-error {
+    grid-column: 1 / -1;
+}
+
+.refesp-persona__quitar {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid #e0d0d0;
+    border-radius: 50%;
+    background: #fff;
+    color: #9b1717;
+    cursor: pointer;
+}
+
+.refesp-persona__quitar:hover,
+.refesp-persona__quitar:focus-visible {
+    background: #fff0f0;
+}
+
+.refesp-agregar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px dashed #d9dee7;
+    border-radius: 10px;
+}
+
+.refesp-agregar__label {
+    color: #6b7280;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.refesp-agregar input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.refesp-agregar__boton {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #f7f8fa;
+    color: #172a44;
+    cursor: pointer;
+}
+
+.refesp-agregar__boton:hover:not([disabled]),
+.refesp-agregar__boton:focus-visible:not([disabled]) {
+    background: #eceff4;
+}
+
+.refesp-agregar__boton[disabled] {
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.refesp-total {
+    margin: 1.5rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px dashed #d7dce5;
+}
+
+.refesp-barra {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
+}
+
+.refesp-barra .referencia-boton[disabled] {
+    background: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+/* Confirmación irreversible. Mismo diálogo accesible que el resto del trámite;
+   vive aquí porque los estilos de una pantalla no salen de su hoja. */
+.refesp-modal {
+    position: fixed;
+    z-index: 1200;
+    inset: 0;
+    padding: 1rem;
+    display: grid;
+    place-items: center;
+}
+
+.refesp-modal__fondo {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 26, 46, 0.58);
+}
+
+.refesp-modal__card {
+    position: relative;
+    width: min(100%, 32rem);
+    max-height: 90vh;
+    padding: 1.75rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    overflow-y: auto;
+    text-align: center;
+}
+
+.refesp-modal__card h2 {
+    margin: 0 0 0.6rem;
+    color: #16263f;
+    font-size: 1.15rem;
+}
+
+.refesp-modal__card p {
+    margin: 0 0 1.25rem;
+    color: #6b6b66;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.refesp-modal__card strong {
+    color: #16263f;
+}
+
+.refesp-resumen {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    text-align: left;
+}
+
+.refesp-resumen dt {
+    color: #6b7280;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.refesp-resumen dd {
+    margin: 0;
+    color: #16263f;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.refesp-resumen__curps {
+    margin: 0 0 1.25rem;
+    padding: 0;
+    list-style: none;
+    color: #16263f;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    text-align: left;
+}
+
+.refesp-modal__acciones {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+}
+
+.refesp-modal-abierto {
+    overflow: hidden;
+}
+
+@media (max-width: 700px) {
+    .refesp-barra,
+    .refesp-modal__acciones {
+        flex-direction: column-reverse;
+    }
+
+    .refesp-barra .referencia-boton {
+        width: 100%;
+    }
+}

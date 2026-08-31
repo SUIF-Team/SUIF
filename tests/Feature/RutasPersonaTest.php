@@ -23,7 +23,7 @@ class RutasPersonaTest extends TestCase
         );
     }
 
-    public function test_el_paso_de_referencia_expone_el_selector_y_el_camino_individual(): void
+    public function test_el_paso_de_referencia_expone_el_selector_y_los_dos_caminos(): void
     {
         $this->assertTrue(Route::has('persona.referencia.index'));
         $this->assertTrue(Route::has('persona.referencia.individual'));
@@ -36,8 +36,13 @@ class RutasPersonaTest extends TestCase
             parse_url(route('persona.referencia.individual'), PHP_URL_PATH)
         );
 
-        /* El flujo especial todavía no existe: mientras no exista, no se anuncia. */
-        $this->assertFalse(Route::has('persona.referencia.especial'));
+        /* El camino especial se captura y se envía en la misma URI. */
+        $this->assertTrue(Route::has('persona.referencia.especial'));
+        $this->assertTrue(Route::has('persona.referencia.especial.store'));
+        $this->assertSame(
+            '/persona/referencia/especial',
+            parse_url(route('persona.referencia.especial'), PHP_URL_PATH)
+        );
     }
 
     public function test_las_rutas_de_desarrollo_quedaron_retiradas(): void

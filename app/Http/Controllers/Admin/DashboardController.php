@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\ReferenciaEspecial;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use Illuminate\Support\Facades\Gate;
@@ -22,7 +23,8 @@ class DashboardController extends Controller
 {
     public function index(
         ConsultaPersonasRegistradas $consulta_personas,
-        ConsultaPagos $consulta_pagos
+        ConsultaPagos $consulta_pagos,
+        ReferenciaEspecial $referencias_especiales
     ) {
         /*
          * Los accesos siguen el orden del trámite. Certificados va al final
@@ -53,6 +55,12 @@ class DashboardController extends Controller
                 'ruta' => 'admin.referencias.index',
                 'permiso' => 'gestionar-referencias',
                 'descripcion' => 'Consulta la correspondencia de referencias bancarias.',
+            ],
+            [
+                'titulo' => 'Referencias especiales',
+                'ruta' => 'admin.referencias.especiales.index',
+                'permiso' => 'gestionar-referencias',
+                'descripcion' => 'Emite las referencias con las que un tercero paga a varios participantes.',
             ],
             [
                 'titulo' => 'Pagos',
@@ -92,7 +100,7 @@ class DashboardController extends Controller
         ];
 
         return view('admin.dashboard', [
-            'indicadores' => $this->indicadores($consulta_personas, $consulta_pagos),
+            'indicadores' => $this->indicadores($consulta_personas, $consulta_pagos, $referencias_especiales),
             'acciones' => $this->permitidas($acciones),
         ]);
     }
@@ -108,7 +116,8 @@ class DashboardController extends Controller
      */
     private function indicadores(
         ConsultaPersonasRegistradas $consulta_personas,
-        ConsultaPagos $consulta_pagos
+        ConsultaPagos $consulta_pagos,
+        ReferenciaEspecial $referencias_especiales
     ): array {
         $indicadores = [];
         $resumen = null;
@@ -139,6 +148,17 @@ class DashboardController extends Controller
             $indicadores[] = [
                 'titulo' => 'Pagos por validar',
                 'valor' => number_format($consulta_pagos->totalPorValidar()),
+                'clase' => 'admin-dashboard-indicador-naranja',
+                'sin_datos' => false,
+            ];
+        }
+
+        /* La solicitud de una referencia especial no llega por ningún otro
+           lado: si el tablero no la anuncia, la empresa se queda esperando. */
+        if (Gate::allows('gestionar-referencias')) {
+            $indicadores[] = [
+                'titulo' => 'Referencias especiales por emitir',
+                'valor' => number_format($referencias_especiales->totalPendientes()),
                 'clase' => 'admin-dashboard-indicador-naranja',
                 'sin_datos' => false,
             ];

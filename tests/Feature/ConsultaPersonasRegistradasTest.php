@@ -195,6 +195,8 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->time('pago_hora_pago')->nullable();
             $table->boolean('pago_uso_cfdi')->nullable();
             $table->integer('pago_id_dato_fiscal')->nullable();
+            /* Marca del pago compartido de una referencia especial. */
+            $table->integer('pago_no_empleado')->nullable();
         });
 
         /* ConsultaPagos cruza PAGO con el catálogo para mostrar, junto al monto
