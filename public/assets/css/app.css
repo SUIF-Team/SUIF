@@ -14,8 +14,20 @@
     --text-dark: #1a1a1a;
     --text-muted: #555555;
     --font-sans: 'Open Sans', Arial, sans-serif;
+    /* Solo la landing publica (partials/navbar.css). El sistema no la usa. */
     --font-nav: 'Raleway', Arial, sans-serif;
     --font-serif: 'Merriweather', Georgia, serif;
+
+    /* Escala tipografica del sistema. Un token por papel; ver
+       docs/superpowers/specs/2026-09-01-identidad-tipografica-design.md */
+    --fs-cifra: 2rem;
+    --fs-pagina: 1.5rem;
+    --fs-seccion: 1.125rem;
+    --fs-subtitulo: 1rem;
+    --fs-cuerpo: 0.9375rem;
+    --fs-ui: 0.875rem;
+    --fs-auxiliar: 0.8125rem;
+    --fs-micro: 0.75rem;
     --navbar-height: 120px;
     --alto-navbar: var(--navbar-height);
     --fondo-sistema: url('/assets/img/backgrounds/fondo-sistema.jpg');
@@ -56,6 +68,70 @@ body.pagina-sistema {
     background-attachment: fixed;
     color: var(--text-dark);
     font-family: var(--font-sans);
+    font-size: var(--fs-cuerpo);
+    line-height: 1.5;
+}
+
+/* Base tipografica del sistema.
+   Va con :where() a proposito: deja la especificidad en (0,1,0), asi gana a
+   Bootstrap —que se carga antes— y pierde ante cualquier regla de pagina. La
+   norma queda en una frase: la base vence a Bootstrap, la pagina vence a la
+   base. Sin esto, una clase de boton usada a la vez en <a> y en <button> se
+   veria distinta en cada etiqueta. La landing no entra: nada de esto cuelga
+   de .pagina-sistema por casualidad. */
+.pagina-sistema :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.pagina-sistema :where(h1) {
+    font-size: var(--fs-pagina);
+}
+
+.pagina-sistema :where(h2) {
+    font-size: var(--fs-seccion);
+}
+
+.pagina-sistema :where(h3, h4, h5, h6) {
+    font-size: var(--fs-subtitulo);
+}
+
+/* La etiqueta nunca es menor que su campo: ambos miden --fs-ui y la jerarquia
+   la marca el peso. */
+.pagina-sistema :where(label, legend) {
+    font-size: var(--fs-ui);
+    font-weight: 600;
+}
+
+.pagina-sistema :where(input, select, textarea, button, .btn, .form-control, .form-select) {
+    font-size: var(--fs-ui);
+    font-weight: 400;
+}
+
+.pagina-sistema :where(button, .btn) {
+    font-weight: 600;
+}
+
+.pagina-sistema :where(th, td) {
+    font-size: var(--fs-ui);
+}
+
+.pagina-sistema :where(th) {
+    font-weight: 600;
+}
+
+.pagina-sistema :where(dt) {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+}
+
+.pagina-sistema :where(small, .small, .form-text, .invalid-feedback) {
+    font-size: var(--fs-auxiliar);
+}
+
+.pagina-sistema :where(strong, b) {
+    font-weight: 600;
 }
 
 /* Interacción compartida por los logotipos de ambos encabezados. */
@@ -175,8 +251,7 @@ button:focus-visible {
     border-radius: 999px;
     background: var(--unam-gold);
     color: var(--unam-blue-dark);
-    font-family: var(--font-nav);
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
