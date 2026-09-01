@@ -8,12 +8,11 @@
     <h2 id="aviso-simple-titulo" class="aviso-simple__titulo">Aviso de privacidad simplificado</h2>
 
     <p>
-        La <strong>Facultad de Contaduría y Administración de la UNAM</strong>, con domicilio en
-        Circuito Exterior s/n, Ciudad Universitaria, C.P. 04510, Ciudad de México, es la responsable
-        del tratamiento de los datos personales que recabas en este sistema.
+        Autorizo a la Facultad de Contaduría y Administación - UNAM, consultar y validar mi CURP a través del RENAPO; así como le permito usar mis datos personales, que de ahí se obtengan, para el registro al Sistema de la Unidad de Inteligencia Financiera - SUIF.
+        También acepto que en caso de utilizar una CURP que no fuera la propia, no se tendrá como válido dicho registro, además de poder ser acreedor(a) a las sanciones correspondientes en materia penal local y federal en tema de robo, usurpación o suplantación de identidad.
     </p>
 
-    <p>
+    {{-- <p>
         <strong>Se usan</strong> para identificarte, integrar y revisar tu expediente, asignarte
         referencia de pago, sede y horario, notificarte el estado de tu trámite y su resultado, y
         gestionar tu certificado. <strong>Sólo con tu consentimiento</strong> se publica tu nombre en
@@ -32,10 +31,10 @@
         Unidad de Transparencia de la UNAM en
         <a href="http://www.plataformadetransparencia.org.mx/" target="_blank" rel="noopener noreferrer">plataformadetransparencia.org.mx</a>
         o en <a href="mailto:unidaddetransparencia@unam.mx">unidaddetransparencia@unam.mx</a>.
-    </p>
+    </p>--}}
 
     <p class="aviso-simple__enlace">
         Consulta el <a href="{{ route('aviso-privacidad') }}" target="_blank" rel="noopener noreferrer">aviso de privacidad integral</a>
         para el detalle completo de datos, finalidades, fundamento y plazos.
-    </p>
+    </p> 
 </section>

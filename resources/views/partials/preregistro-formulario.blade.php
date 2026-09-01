@@ -45,7 +45,7 @@
             <label class="pr-aviso__casilla">
                 <input type="checkbox" name="aviso_privacidad" value="1" required
                        {{ old('aviso_privacidad') ? 'checked' : '' }}>
-                <span>He leído el aviso de privacidad y entiendo cómo se usarán mis datos.</span>
+                <span>He leído el aviso de privacidad, por cual, autorizo y acepto.</span>
             </label>
         </div>
     @endif
