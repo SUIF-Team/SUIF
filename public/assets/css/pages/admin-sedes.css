@@ -27,16 +27,12 @@
 .admin-sedes-encabezado h1 {
     margin-bottom: 0.4rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
-    font-weight: 700;
 }
 
 .admin-sedes-encabezado p,
 .admin-sedes-mapa > p {
     margin-bottom: 0;
     color: var(--text-muted);
-    font-size: 0.875rem;
 }
 
 .admin-sedes-tarjeta {
@@ -65,13 +61,16 @@
 .admin-sedes-estadistica h2 {
     margin-bottom: 0.5rem;
     color: var(--text-muted);
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .admin-sedes-estadistica p {
     margin-bottom: 0;
-    font-size: 2rem;
+    font-size: var(--fs-cifra);
     font-weight: 700;
     line-height: 1;
 }
@@ -110,8 +109,6 @@
 
 .admin-sedes-campo label {
     color: #334155;
-    font-size: 0.82rem;
-    font-weight: 700;
 }
 
 .admin-sedes-campo input,
@@ -124,8 +121,6 @@
     border-radius: 0.5rem;
     background: #fff;
     color: var(--text-dark);
-    font: inherit;
-    font-size: 0.875rem;
 }
 
 .admin-sedes-campo textarea {
@@ -150,9 +145,8 @@
     gap: 0.4rem;
     border: 1px solid transparent;
     border-radius: 0.5rem;
-    font: inherit;
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
@@ -209,7 +203,6 @@
 .admin-sedes-tabla td {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--border-light);
-    font-size: 0.82rem;
     text-align: left;
     vertical-align: middle;
 }
@@ -217,13 +210,11 @@
 .admin-sedes-tabla th {
     background: #f8fafc;
     color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
 }
 
 .admin-sedes-tabla tbody tr:last-child td { border-bottom: 0; }
 .admin-sedes-tabla tbody tr:hover { background: #f8fafc; }
-.admin-sedes-tabla-nombre { color: var(--text-dark); font-weight: 700; }
+.admin-sedes-tabla-nombre { color: var(--text-dark); font-weight: 600; }
 
 .admin-sedes-tabla td small {
     margin-top: 0.2rem;
@@ -235,8 +226,8 @@
     display: inline-flex;
     padding: 0.3rem 0.7rem;
     border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -247,7 +238,8 @@
 
 .admin-sedes-editar {
     color: var(--unam-blue);
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
 }
 
 .admin-sedes-vacio {
@@ -264,7 +256,7 @@
     color: #991b1b;
 }
 
-.admin-sedes-alerta p { margin: 0 0 0.5rem; font-weight: 700; }
+.admin-sedes-alerta p { margin: 0 0 0.5rem; font-weight: 600; }
 .admin-sedes-alerta ul { margin: 0; padding-left: 1.25rem; }
 
 .admin-sedes-formulario-layout {
@@ -284,9 +276,6 @@
 .admin-sedes-modal-card h2 {
     margin-bottom: 0.75rem;
     color: var(--unam-blue);
-    font-family: var(--font-nav);
-    font-size: 1.1rem;
-    font-weight: 700;
 }
 
 .admin-sedes-mapa-marco {
@@ -320,14 +309,14 @@
 .admin-sedes-subtitulo {
     margin: 0.5rem 0 0.25rem;
     color: var(--text-dark);
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: var(--fs-subtitulo);
+    font-weight: 600;
 }
 
 .admin-sedes-ayuda {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
 }
 
 /* Los datos de aplicación de un grupo viven en un bloque con borde. */
@@ -348,8 +337,6 @@
     margin-bottom: 0;
     padding: 0 0.35rem;
     color: var(--text-dark);
-    font-size: 0.8125rem;
-    font-weight: 700;
 }
 
 .admin-sedes-formulario-acciones {
@@ -390,7 +377,6 @@
 .admin-sedes-modal-card p {
     margin: 0 0 1.5rem;
     color: var(--text-muted);
-    line-height: 1.6;
 }
 
 .admin-sedes-modal-acciones { justify-content: flex-end; }

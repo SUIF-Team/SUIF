@@ -20,8 +20,8 @@
 .admin-dashboard-titulo {
     margin: 0 0 1.8rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-family: var(--font-serif);
+    font-size: var(--fs-pagina);
     font-weight: 700;
 }
 
@@ -44,22 +44,23 @@
 .admin-dashboard-indicador h2 {
     margin: 0 0 0.75rem;
     color: var(--text-dark);
-    font-size: 0.95rem;
-    font-weight: 700;
-    line-height: 1.4;
+    font-family: var(--font-sans);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .admin-dashboard-indicador p {
     margin: 0;
-    font-size: 2.25rem;
+    font-size: var(--fs-cifra);
     font-weight: 700;
     line-height: 1;
 }
 
 .admin-dashboard-indicador .admin-dashboard-indicador-sin-datos {
     max-width: 13rem;
-    font-size: 1rem;
-    line-height: 1.35;
+    font-size: var(--fs-cuerpo);
 }
 
 .admin-dashboard-indicador-azul p {
@@ -86,9 +87,6 @@
 .admin-dashboard-acciones > h2 {
     margin: 0 0 1.5rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: 1.2rem;
-    font-weight: 700;
 }
 
 .admin-dashboard-acciones-grid {
@@ -112,15 +110,12 @@
 .admin-dashboard-accion h3 {
     margin: 0 0 0.3rem;
     color: var(--text-dark);
-    font-size: 0.98rem;
-    font-weight: 700;
 }
 
 .admin-dashboard-accion p {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-dashboard-accion-pendiente {
@@ -130,8 +125,8 @@
     background: #e2e2e2;
     color: #656565;
     cursor: not-allowed;
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     line-height: 1;
     user-select: none;
 }
@@ -142,8 +137,8 @@
     border-radius: 999px;
     background: var(--unam-blue);
     color: #ffffff;
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     line-height: 1;
     text-decoration: none;
     transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;

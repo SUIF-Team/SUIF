@@ -16,8 +16,8 @@
    El selector lleva el elemento porque compite con `.admin-sedes-estadistica p`,
    que ya vale (0,1,1): una clase suelta pierde y el nombre salía enorme. */
 .admin-sedes-estadistica p.admin-convocatorias-estadistica-texto {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--fs-cuerpo);
+    font-weight: 600;
     line-height: 1.35;
 }
 
@@ -31,8 +31,8 @@
 .admin-convocatorias-subtitulo {
     grid-column: 1 / -1;
     margin: 0.5rem 0 0;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -51,7 +51,7 @@
 
 .admin-convocatorias-estado-sello {
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: var(--fs-ui);
 }
 
 .admin-convocatorias-estado-acciones {

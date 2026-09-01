@@ -26,14 +26,12 @@
 
 .admin-pago-comprobante h3 {
     color: var(--text-dark);
-    font-size: 0.875rem;
-    font-weight: 700;
 }
 
 .admin-pago-comprobante p {
     margin-top: 0.25rem;
     color: var(--text-muted);
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-pago-enlace-comprobante,
@@ -63,8 +61,8 @@
 .admin-pago-archivo-no-disponible {
     padding: 0.5rem 0.75rem;
     color: var(--text-muted);
-    font-size: 0.8125rem;
-    font-weight: 700;
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
 }
 
 .admin-pago-motivo {
@@ -79,7 +77,6 @@
 
 .admin-pago-motivo h3 {
     color: #a53630;
-    font-size: 0.875rem;
 }
 
 .admin-pago-motivo p {
@@ -118,7 +115,6 @@
     border-radius: 0.5rem;
     background: var(--surface-white);
     color: var(--text-dark);
-    font: inherit;
     resize: vertical;
 }
 
@@ -131,7 +127,7 @@
 .admin-pago-rechazo-panel p {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-pago-rechazo-panel-acciones {
@@ -191,6 +187,4 @@
 .admin-pago-fiscales h3 {
     margin: 0 0 0.5rem;
     color: var(--text-dark);
-    font-size: 0.875rem;
-    font-weight: 700;
 }

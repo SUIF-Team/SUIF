@@ -29,15 +29,11 @@
 .admin-referencias-encabezado h1 {
     margin-bottom: 0.4rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
-    font-weight: 700;
 }
 
 .admin-referencias-encabezado p {
     margin-bottom: 0;
     color: var(--text-muted);
-    font-size: 0.875rem;
 }
 
 .admin-referencias-tarjeta {
@@ -60,13 +56,16 @@
 .admin-referencias-estadistica h2 {
     margin-bottom: 0.5rem;
     color: var(--text-muted);
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .admin-referencias-estadistica p {
     margin-bottom: 0;
-    font-size: 2rem;
+    font-size: var(--fs-cifra);
     font-weight: 700;
     line-height: 1;
 }
@@ -78,7 +77,6 @@
 .admin-referencias-aviso {
     padding: 1.1rem 1.4rem;
     color: var(--text-dark);
-    font-size: 0.875rem;
 }
 
 .admin-referencias-aviso ul {
@@ -108,14 +106,11 @@
 .admin-referencias-carga h2 {
     margin-bottom: 0.4rem;
     color: var(--text-dark);
-    font-size: 1.1rem;
-    font-weight: 700;
 }
 
 .admin-referencias-carga > p {
     margin-bottom: 1.1rem;
     color: var(--text-muted);
-    font-size: 0.875rem;
 }
 
 .admin-referencias-formato {
@@ -126,12 +121,11 @@
     gap: 0.7rem;
     border-radius: 0.6rem;
     background: #f7f8fa;
-    font-size: 0.82rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-referencias-formato dt {
     color: var(--text-dark);
-    font-weight: 700;
 }
 
 .admin-referencias-formato dd {
@@ -162,7 +156,7 @@
     border-radius: 0.5rem;
     background: #f7f8fa;
     color: var(--text-dark);
-    font-size: 0.85rem;
+    font-size: var(--fs-ui);
     cursor: pointer;
 }
 
@@ -188,7 +182,7 @@
     align-items: center;
     border: 1px solid transparent;
     border-radius: 0.5rem;
-    font-size: 0.85rem;
+    font-size: var(--fs-ui);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
@@ -269,8 +263,6 @@
 
 .admin-referencias-campo label {
     color: var(--text-muted);
-    font-size: 0.8rem;
-    font-weight: 700;
 }
 
 .admin-referencias-campo input,
@@ -280,7 +272,6 @@
     border-radius: 0.5rem;
     background: #fff;
     color: var(--text-dark);
-    font-size: 0.875rem;
 }
 
 .admin-referencias-tabla-contenedor {
@@ -294,7 +285,6 @@
 .admin-referencias-tabla {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
 }
 
 .admin-referencias-tabla th,
@@ -307,10 +297,6 @@
 
 .admin-referencias-tabla th {
     color: var(--text-muted);
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 .admin-referencias-tabla tbody tr:last-child td {
@@ -321,12 +307,11 @@
     display: block;
     margin-top: 0.2rem;
     color: var(--text-muted);
-    font-size: 0.76rem;
 }
 
 .admin-referencias-tabla-numero {
     color: var(--text-dark);
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.04em;
 }
 
@@ -343,8 +328,8 @@
     padding: 0.28rem 0.75rem;
     display: inline-block;
     border-radius: 999px;
-    font-size: 0.76rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
 }
 
 .admin-referencias-estado--disponible {
@@ -373,9 +358,6 @@
 .admin-referencias-seccion h2 {
     margin-bottom: 1rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: 1.05rem;
-    font-weight: 700;
 }
 
 /* Dentro de una tarjeta el aviso ya no es la tarjeta: necesita sus esquinas y
