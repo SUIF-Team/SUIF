@@ -26,11 +26,11 @@
     display: grid;
     gap: 0.35rem;
     border-top: 1px solid #405064;
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .persona-soporte strong {
-    font-size: 0.9rem;
+    font-size: var(--fs-ui);
 }
 
 .persona-soporte a {
@@ -80,7 +80,6 @@
         padding: 0 0 0 1.5rem;
         border-top: 0;
         border-left: 1px solid #405064;
-        text-align: right;
     }
 }
 
@@ -100,7 +99,6 @@
         padding: 1rem 0 0;
         border-top: 1px solid #405064;
         border-left: 0;
-        text-align: left;
     }
 }
 
@@ -137,8 +135,8 @@
     border-radius: 50%;
     background: #3a4457;
     color: #cbd5e1;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
 }
 
 .progreso-paso__texto {
@@ -148,13 +146,11 @@
 }
 
 .progreso-paso__texto strong {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-ui);
 }
 
 .progreso-paso__texto small {
     color: #9ca3af;
-    font-size: 12px;
 }
 
 .progreso-paso--activo {
@@ -201,7 +197,7 @@
     border-radius: 8px;
     background: #ffffff;
     color: #112f4b;
-    font-size: 0.88rem;
+    font-size: var(--fs-ui);
     font-weight: 600;
     text-decoration: none;
     transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -234,5 +230,5 @@
 .progreso-paso--bloqueado .progreso-paso__numero {
     background: #2b3444;
     color: #8b95a5;
-    font-size: 11px;
+    font-size: var(--fs-micro);
 }

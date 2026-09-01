@@ -113,17 +113,18 @@ body.pagina-sistema {
     font-weight: 600;
 }
 
-.pagina-sistema :where(th, td) {
+.pagina-sistema :where(td) {
     font-size: var(--fs-ui);
 }
 
-.pagina-sistema :where(th) {
-    font-weight: 600;
-}
-
-.pagina-sistema :where(dt) {
+/* Encabezado de tabla y rotulo de lista de datos son el mismo papel: el rotulo
+   micro que titula un valor. Van juntos para que ninguna pantalla los invente
+   por su cuenta, que es como acabaron con seis tamanos distintos. */
+.pagina-sistema :where(th, dt) {
     font-size: var(--fs-micro);
     font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .pagina-sistema :where(small, .small, .form-text, .invalid-feedback) {
