@@ -8,7 +8,7 @@
     <h2 id="aviso-simple-titulo" class="aviso-simple__titulo">Aviso de privacidad simplificado</h2>
 
     <p>
-        Autorizo a la Facultad de Contaduría y Administación - UNAM, consultar y validar mi CURP; así como le permito usar mis datos personales, que de ahí se obtengan, para el registro al Sistema de la Unidad de Inteligencia Financiera - SUIF.
+        Autorizo a la FCA a usar mis datos personales, que de ahí se obtengan, para el registro al Sistema de la Unidad de Inteligencia Financiera - SUIF.
         También acepto que en caso de utilizar una CURP que no fuera la propia, no se tendrá como válido dicho registro, además de poder ser acreedor(a) a las sanciones correspondientes en materia penal local y federal en tema de robo, usurpación o suplantación de identidad.
     </p>
 
