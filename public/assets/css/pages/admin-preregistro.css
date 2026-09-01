@@ -31,13 +31,10 @@
 .admin-preregistro-acciones-generales h2,
 .admin-preregistro-reversion h2 {
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-weight: 700;
 }
 
 .admin-preregistro-encabezado h1 {
     margin-bottom: 0.35rem;
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
 }
 
 .admin-preregistro-encabezado p,
@@ -48,9 +45,9 @@
 .admin-preregistro-sobretitulo {
     margin-bottom: 0.35rem;
     color: var(--unam-gold) !important;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
@@ -99,14 +96,13 @@
 .admin-preregistro-persona h2 {
     margin: 0 0 0.15rem;
     color: var(--text-dark);
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: var(--fs-subtitulo);
 }
 
 .admin-preregistro-persona p {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-avatar {
@@ -120,15 +116,15 @@
     border-radius: 50%;
     background: #f0f0f0;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
 }
 
 .admin-preregistro-estado {
     padding: 0.25rem 0.75rem;
     display: inline-block;
     border-radius: 0.25rem;
-    font-size: 0.8125rem;
+    font-size: var(--fs-micro);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -153,8 +149,7 @@
 .admin-preregistro-icono,
 .admin-preregistro-boton {
     border-radius: 0.25rem;
-    font: inherit;
-    font-size: 0.875rem;
+    font-size: var(--fs-ui);
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
@@ -191,12 +186,12 @@
 
 .admin-preregistro-perfil h1 {
     margin-bottom: 0.15rem;
-    font-size: 1.125rem;
+    font-size: var(--fs-seccion);
 }
 
 .admin-preregistro-perfil p {
     margin-bottom: 0;
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-progreso {
@@ -220,12 +215,12 @@
 
 .admin-preregistro-paso-titulo {
     color: var(--text-dark);
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
 }
 
 .admin-preregistro-paso-estado {
-    font-size: 0.75rem;
+    font-size: var(--fs-micro);
     font-weight: 600;
 }
 
@@ -277,7 +272,6 @@
 .admin-preregistro-acciones-generales h2,
 .admin-preregistro-reversion h2 {
     margin-bottom: 1.5rem;
-    font-size: 1.125rem;
 }
 
 .admin-preregistro-datos {
@@ -299,14 +293,11 @@
 .admin-preregistro-dato dt {
     margin-bottom: 0.25rem;
     color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
 }
 
 .admin-preregistro-dato dd {
     margin: 0;
     color: var(--text-dark);
-    font-size: 0.875rem;
 }
 
 .admin-preregistro-acciones {
@@ -319,7 +310,6 @@
 .admin-preregistro-solo-lectura {
     margin: 1.25rem 0 0;
     color: var(--text-muted);
-    font-size: 0.875rem;
 }
 
 .admin-preregistro-boton {
@@ -400,8 +390,8 @@
     border-radius: 999px;
     background: var(--border-light);
     color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -437,15 +427,13 @@
 .admin-preregistro-documento-titulo {
     margin: 0 0 0.35rem;
     color: var(--text-dark);
-    font-size: 0.875rem;
-    font-weight: 700;
 }
 
 .admin-preregistro-documento-meta,
 .admin-preregistro-documentos-vacio {
     margin: 0.25rem 0 0;
     color: var(--text-muted);
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-icono {
@@ -536,14 +524,13 @@
 
 .admin-preregistro-modal-encabezado h2 {
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: 1rem;
+    font-size: var(--fs-subtitulo);
 }
 
 .admin-preregistro-modal-encabezado p {
     margin-top: 0.25rem;
     color: var(--text-muted);
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-modal-cerrar {
@@ -553,9 +540,6 @@
     border-radius: 0.25rem;
     background: var(--surface-white);
     color: var(--text-dark);
-    font: inherit;
-    font-size: 0.8125rem;
-    font-weight: 700;
     cursor: pointer;
 }
 
@@ -611,7 +595,7 @@
 .admin-preregistro-mensaje-validacion {
     margin: 1rem 0 0;
     color: #a53630;
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-observaciones {
@@ -621,9 +605,6 @@
 .admin-preregistro-observaciones h2 {
     margin: 0 0 1rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: 1.125rem;
-    font-weight: 700;
 }
 
 .admin-preregistro-campo-observacion {
@@ -635,7 +616,7 @@
 .admin-preregistro-ayuda {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-campo-observacion:first-of-type {
@@ -644,7 +625,6 @@
 
 .admin-preregistro-campo-observacion label {
     color: #b3261e;
-    font-size: 0.875rem;
 }
 
 .admin-preregistro-campo-observacion input,
@@ -654,7 +634,6 @@
     border-radius: 0.5rem;
     background: #fcfbf9;
     color: var(--text-dark);
-    font: inherit;
 }
 
 .admin-preregistro-campo-observacion input {
@@ -685,8 +664,8 @@
     gap: 0.5rem;
     border-radius: 0.25rem;
     color: var(--text-dark);
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -750,12 +729,9 @@
 
 .admin-preregistro-resultado-mensaje h2 {
     margin: 0;
-    font-family: var(--font-nav);
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    font-size: var(--fs-pagina);
+    letter-spacing: 0.04em;
     text-align: center;
-    text-transform: uppercase;
 }
 
 .admin-preregistro-resultado-mensaje.admin-preregistro-paso--completado h2 {
@@ -847,8 +823,7 @@
 .admin-preregistro-reversion-ayuda {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.8125rem;
-    line-height: 1.5;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-reversion-acciones {
@@ -884,13 +859,12 @@
 
 .admin-reversion-modal-card h2 {
     margin: 0 0 0.75rem;
-    font-size: 1.15rem;
+    font-size: var(--fs-subtitulo);
 }
 
 .admin-reversion-modal-card p {
     margin: 0 0 1.5rem;
     color: var(--text-muted);
-    line-height: 1.6;
 }
 
 .admin-reversion-modal-acciones {

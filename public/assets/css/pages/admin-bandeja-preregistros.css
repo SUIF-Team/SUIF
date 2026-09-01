@@ -22,12 +22,6 @@
 .admin-bandeja-preregistros-solicitudes h2 {
     margin-bottom: 0.4rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-weight: 700;
-}
-
-.admin-bandeja-preregistros-encabezado h1 {
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
 }
 
 .admin-bandeja-preregistros-encabezado p,
@@ -69,8 +63,6 @@
 
 .admin-bandeja-preregistros-campo label {
     color: #334155;
-    font-size: 0.875rem;
-    font-weight: 700;
 }
 
 .admin-bandeja-preregistros-campo input,
@@ -82,7 +74,6 @@
     border-radius: 0.5rem;
     background: var(--surface-white);
     color: var(--text-dark);
-    font: inherit;
 }
 
 .admin-bandeja-preregistros-campo input:focus,
@@ -103,9 +94,8 @@
     padding: 0.55rem 1rem;
     border: 1px solid transparent;
     border-radius: 0.5rem;
-    font: inherit;
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
@@ -138,7 +128,6 @@
 
 .admin-bandeja-preregistros-solicitudes h2 {
     margin-bottom: 1.5rem;
-    font-size: 1.125rem;
 }
 
 .admin-bandeja-preregistros-lista {
@@ -178,8 +167,10 @@
     border-radius: 0.5rem;
     background: #f8fafc;
     color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .admin-bandeja-preregistros-encabezados span:nth-child(n + 2) {
@@ -216,19 +207,17 @@
     border-radius: 50%;
     background: #f1f5f9;
     color: #475569;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
 }
 
 .admin-bandeja-preregistros-solicitud h3 {
     margin-bottom: 0.2rem;
     color: var(--text-dark);
-    font-size: 0.9rem;
-    font-weight: 700;
 }
 
 .admin-bandeja-preregistros-solicitud p {
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-bandeja-preregistros-estado-contenedor,
@@ -244,8 +233,8 @@
     min-width: 7.5rem;
     padding: 0.3rem 0.8rem;
     border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     text-align: center;
 }
 
@@ -283,7 +272,7 @@
 
 .admin-bandeja-preregistros-accion-no-disponible {
     color: var(--text-muted);
-    font-size: 0.8125rem;
+    font-size: var(--fs-auxiliar);
     font-weight: 600;
 }
 
