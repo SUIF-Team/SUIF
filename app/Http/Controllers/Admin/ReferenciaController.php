@@ -35,7 +35,7 @@ class ReferenciaController extends Controller
     }
 
     /**
-     * Pantalla de carga: catálogo en CSV y formatos PDF en ZIP.
+     * Pantalla de carga del paquete con el catálogo y sus formatos.
      */
     public function carga(CatalogoReferencias $catalogo)
     {
@@ -45,54 +45,35 @@ class ReferenciaController extends Controller
         ]);
     }
 
-    public function guardarCatalogo(Request $request, CatalogoReferencias $catalogo): RedirectResponse
+    /**
+     * Recibe el ZIP con el catálogo y sus formatos.
+     *
+     * El paquete se carga completo o no se carga: el servicio lanza
+     * DomainException con lo que hay que corregir y no deja nada a medias.
+     */
+    public function guardarPaquete(Request $request, CatalogoReferencias $catalogo): RedirectResponse
     {
         $request->validate([
-            'catalogo' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+            'paquete' => ['required', 'file', 'mimes:zip', 'max:51200'],
         ], [
-            'catalogo.required' => 'Selecciona el archivo CSV con las referencias.',
-            'catalogo.mimes' => 'El catálogo debe ser un archivo CSV.',
-            'catalogo.max' => 'El archivo CSV no debe exceder los 2048 KB.',
+            'paquete.required' => 'Selecciona el archivo ZIP con el catálogo y sus formatos.',
+            'paquete.mimes' => 'El paquete debe ser un archivo ZIP.',
+            'paquete.max' => 'El archivo ZIP no debe exceder los 50 MB.',
         ]);
 
         try {
-            $resultado = $catalogo->importarCatalogo($request->file('catalogo'));
+            $resultado = $catalogo->importarPaquete($request->file('paquete'));
         } catch (DomainException $exception) {
             return back()->with('error', $exception->getMessage());
         } catch (Throwable $exception) {
-            Log::error('No fue posible importar el catálogo de referencias.', ['error' => $exception->getMessage()]);
-
-            return back()->with('error', 'No fue posible procesar el archivo CSV.');
-        }
-
-        return back()
-            ->with('success', 'El catálogo de referencias se procesó correctamente.')
-            ->with('importacion', ['tipo' => 'catalogo'] + $resultado);
-    }
-
-    public function guardarFormatos(Request $request, CatalogoReferencias $catalogo): RedirectResponse
-    {
-        $request->validate([
-            'formatos' => ['required', 'file', 'mimes:zip', 'max:51200'],
-        ], [
-            'formatos.required' => 'Selecciona el archivo ZIP con los formatos PDF.',
-            'formatos.mimes' => 'Los formatos deben venir en un archivo ZIP.',
-            'formatos.max' => 'El archivo ZIP no debe exceder los 50 MB.',
-        ]);
-
-        try {
-            $resultado = $catalogo->importarFormatos($request->file('formatos'));
-        } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
-        } catch (Throwable $exception) {
-            Log::error('No fue posible importar los formatos de referencia.', ['error' => $exception->getMessage()]);
+            Log::error('No fue posible importar el paquete de referencias.', ['error' => $exception->getMessage()]);
 
             return back()->with('error', 'No fue posible procesar el archivo ZIP.');
         }
 
         return back()
-            ->with('success', 'Los formatos PDF se extrajeron correctamente.')
-            ->with('importacion', ['tipo' => 'formatos'] + $resultado);
+            ->with('success', 'Las referencias y sus formatos se cargaron correctamente.')
+            ->with('importacion', $resultado);
     }
 
     /**

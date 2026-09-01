@@ -8,15 +8,19 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+use ZipArchive;
 
 /**
  * CatalogoReferenciasTest
  *
- * La DEC manda las referencias en un Excel con membrete institucional encima
- * de la tabla, así que el encabezado no es el primer renglón. Estas pruebas
- * cubren que se encuentre solo, que el archivo se rechace completo cuando le
- * falta una columna, y que nada de eso rompa la carga que ya funcionaba.
+ * Las referencias entran en un solo paquete ZIP: el CSV que manda la DEC —con
+ * su membrete institucional encima de la tabla, así que el encabezado no es el
+ * primer renglón— y un PDF por referencia. Estas pruebas cubren que el
+ * encabezado se encuentre solo, que el paquete se rechace entero cuando el CSV
+ * y los formatos no cuadran uno a uno, y que un rechazo no deje nada escrito ni
+ * en la base ni en el disco.
  */
 class CatalogoReferenciasTest extends TestCase
 {
@@ -31,9 +35,14 @@ class CatalogoReferenciasTest extends TestCase
         'Listado de referencias UIF,,,',
     ];
 
+    /** Lo mínimo que el servicio acepta como PDF: la firma y algo de cuerpo. */
+    private const PDF = "%PDF-1.4\nformato de pago de prueba\n%%EOF\n";
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        Storage::fake('referencias');
 
         Schema::dropIfExists('referencia_bancaria');
 
@@ -57,15 +66,32 @@ class CatalogoReferenciasTest extends TestCase
         $resultado = $this->importar($this->archivoOficial());
 
         $this->assertSame(10, $resultado['nuevas']);
-        $this->assertSame(0, $resultado['omitidas']);
-        $this->assertSame([], $resultado['errores']);
+        $this->assertSame(0, $resultado['actualizadas']);
+        $this->assertSame(10, $resultado['total']);
         $this->assertSame(10, DB::table('referencia_bancaria')->count());
 
         $this->assertDatabaseHas('referencia_bancaria', [
             'reba_referencia' => '4130326001856RJ30299',
             'reba_vigencia' => '2026-09-20',
             'reba_fecha_emision' => '2026-08-20',
+            'reba_path' => 'catalogo/4130326001856RJ30299.pdf',
         ]);
+
+        Storage::disk('referencias')->assertExists('catalogo/4130326001856RJ30299.pdf');
+    }
+
+    public function test_ninguna_referencia_queda_sin_su_formato(): void
+    {
+        $this->importar($this->archivoOficial());
+
+        $this->assertSame(
+            0,
+            DB::table('referencia_bancaria')->whereNull('reba_path')->count()
+        );
+
+        foreach (DB::table('referencia_bancaria')->pluck('reba_path') as $ruta) {
+            Storage::disk('referencias')->assertExists($ruta);
+        }
     }
 
     public function test_el_encabezado_se_reacomoda_si_la_dec_agrega_un_renglon_al_membrete(): void
@@ -96,6 +122,7 @@ class CatalogoReferenciasTest extends TestCase
         }
 
         $this->assertSame(0, DB::table('referencia_bancaria')->count());
+        Storage::disk('referencias')->assertDirectoryEmpty('/');
     }
 
     public function test_reclama_de_una_vez_todas_las_columnas_que_faltan(): void
@@ -161,21 +188,44 @@ class CatalogoReferenciasTest extends TestCase
         $this->importar($renglones);
     }
 
-    public function test_recargar_el_mismo_archivo_actualiza_sin_duplicar_ni_tocar_las_asignadas(): void
+    public function test_recargar_el_mismo_paquete_actualiza_sin_duplicar(): void
     {
         $this->importar($this->archivoOficial());
 
-        /* La primera ya se entregó a una persona: su renglón no se toca. */
         DB::table('referencia_bancaria')
             ->where('reba_referencia', '4130326001856RJ30299')
-            ->update(['reba_id_pago' => 77, 'reba_monto' => 7000]);
+            ->update(['reba_monto' => 1]);
 
         $resultado = $this->importar($this->archivoOficial());
 
         $this->assertSame(0, $resultado['nuevas']);
-        $this->assertSame(9, $resultado['actualizadas']);
-        $this->assertSame(1, $resultado['omitidas']);
+        $this->assertSame(10, $resultado['actualizadas']);
         $this->assertSame(10, DB::table('referencia_bancaria')->count());
+
+        $this->assertSame(
+            100.0,
+            (float) DB::table('referencia_bancaria')
+                ->where('reba_referencia', '4130326001856RJ30299')
+                ->value('reba_monto')
+        );
+    }
+
+    public function test_rechaza_el_paquete_que_incluye_una_referencia_ya_entregada(): void
+    {
+        $this->importar($this->archivoOficial());
+
+        /* La primera ya se entregó a una persona: su formato es el que trae en
+           la mano para pagar en ventanilla y el paquete no lo puede pisar. */
+        DB::table('referencia_bancaria')
+            ->where('reba_referencia', '4130326001856RJ30299')
+            ->update(['reba_id_pago' => 77, 'reba_monto' => 7000]);
+
+        try {
+            $this->importar($this->archivoOficial());
+            $this->fail('Se esperaba que el paquete con una referencia entregada fuera rechazado.');
+        } catch (DomainException $excepcion) {
+            $this->assertStringContainsString('4130326001856RJ30299', $excepcion->getMessage());
+        }
 
         $this->assertSame(
             7000.0,
@@ -183,6 +233,100 @@ class CatalogoReferenciasTest extends TestCase
                 ->where('reba_referencia', '4130326001856RJ30299')
                 ->value('reba_monto')
         );
+    }
+
+    public function test_rechaza_el_paquete_al_que_le_falta_un_pdf(): void
+    {
+        $renglones = $this->archivoOficial();
+        $formatos = $this->referenciasDe($renglones);
+        array_pop($formatos);
+
+        try {
+            $this->importar($renglones, $formatos);
+            $this->fail('Se esperaba que el paquete sin uno de los PDF fuera rechazado.');
+        } catch (DomainException $excepcion) {
+            $this->assertStringContainsString('faltan los PDF', $excepcion->getMessage());
+            $this->assertStringContainsString('4130326001865RJ30201', $excepcion->getMessage());
+        }
+
+        $this->assertSame(0, DB::table('referencia_bancaria')->count());
+        Storage::disk('referencias')->assertDirectoryEmpty('/');
+    }
+
+    public function test_rechaza_el_paquete_con_un_pdf_que_el_csv_no_menciona(): void
+    {
+        $renglones = $this->archivoOficial();
+        $formatos = $this->referenciasDe($renglones);
+        $formatos[] = '4130326001899RJ30288';
+
+        try {
+            $this->importar($renglones, $formatos);
+            $this->fail('Se esperaba que el PDF de sobra fuera rechazado.');
+        } catch (DomainException $excepcion) {
+            $this->assertStringContainsString('sobran los PDF', $excepcion->getMessage());
+            $this->assertStringContainsString('4130326001899RJ30288', $excepcion->getMessage());
+        }
+
+        $this->assertSame(0, DB::table('referencia_bancaria')->count());
+        Storage::disk('referencias')->assertDirectoryEmpty('/');
+    }
+
+    public function test_rechaza_el_csv_que_repite_una_referencia(): void
+    {
+        $renglones = $this->archivoOficial();
+        $renglones[] = '20/08/2026,4130326001856RJ30299,100,20/09/2026';
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('repite');
+
+        $this->importar($renglones);
+    }
+
+    public function test_rechaza_el_paquete_sin_csv(): void
+    {
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('no trae el archivo CSV');
+
+        $this->importarEntradas(['4130326001856RJ30299.pdf' => self::PDF]);
+    }
+
+    public function test_rechaza_el_paquete_con_dos_csv(): void
+    {
+        $csv = implode("\r\n", $this->archivoOficial())."\r\n";
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('más de un archivo CSV');
+
+        $this->importarEntradas([
+            'referencias.csv' => $csv,
+            'referencias-corregido.csv' => $csv,
+            '4130326001856RJ30299.pdf' => self::PDF,
+        ]);
+    }
+
+    public function test_un_pdf_falso_aborta_y_no_deja_los_formatos_ya_escritos(): void
+    {
+        /* El primero es un PDF de verdad y alcanza a escribirse; el segundo no,
+           y al abortar tiene que llevarse al primero por delante. */
+        $renglones = array_merge(self::MEMBRETE, [
+            'Fecha,Referencia,Importe,Vigencia',
+            '20/08/2026,4130326001856RJ30299,100,20/09/2026',
+            '20/08/2026,4130326001857RJ30210,100,20/09/2026',
+        ]);
+
+        try {
+            $this->importarEntradas([
+                'referencias.csv' => implode("\r\n", $renglones)."\r\n",
+                '4130326001856RJ30299.pdf' => self::PDF,
+                '4130326001857RJ30210.pdf' => 'esto no es un PDF',
+            ]);
+            $this->fail('Se esperaba que el archivo que no es PDF fuera rechazado.');
+        } catch (DomainException $excepcion) {
+            $this->assertStringContainsString('no es un archivo PDF', $excepcion->getMessage());
+        }
+
+        $this->assertSame(0, DB::table('referencia_bancaria')->count());
+        Storage::disk('referencias')->assertDirectoryEmpty('/');
     }
 
     public function test_acepta_la_fecha_como_numero_de_serie_de_excel(): void
@@ -218,7 +362,7 @@ class CatalogoReferenciasTest extends TestCase
     /**
      * El archivo real de la DEC —membrete, encabezado en la fila 8 y las diez
      * referencias— con la columna de vigencia que el sistema ahora exige. Las
-     * fechas son las que imprimen los PDF del ZIP.
+     * fechas son las que imprimen los PDF del paquete.
      *
      * @return array<int, string>
      */
@@ -239,19 +383,61 @@ class CatalogoReferenciasTest extends TestCase
     }
 
     /**
+     * Arma el paquete con el CSV y un PDF por referencia.
+     *
+     * Por omisión los formatos son los que nombra el propio CSV, que es el
+     * paquete bien hecho; se pasan a mano cuando la prueba necesita que falte o
+     * sobre alguno.
+     *
      * @param  array<int, string>  $renglones
+     * @param  array<int, string>|null  $formatos
      */
-    private function importar(array $renglones): array
+    private function importar(array $renglones, ?array $formatos = null): array
     {
-        $ruta = tempnam(sys_get_temp_dir(), 'suif').'.csv';
-        file_put_contents($ruta, implode("\r\n", $renglones)."\r\n");
+        $entradas = ['referencias.csv' => implode("\r\n", $renglones)."\r\n"];
+
+        foreach ($formatos ?? $this->referenciasDe($renglones) as $referencia) {
+            $entradas[$referencia.'.pdf'] = self::PDF;
+        }
+
+        return $this->importarEntradas($entradas);
+    }
+
+    /**
+     * @param  array<string, string>  $entradas
+     */
+    private function importarEntradas(array $entradas): array
+    {
+        $ruta = tempnam(sys_get_temp_dir(), 'suif').'.zip';
+
+        $zip = new ZipArchive();
+        $zip->open($ruta, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        foreach ($entradas as $nombre => $contenido) {
+            $zip->addFromString($nombre, $contenido);
+        }
+
+        $zip->close();
 
         try {
-            return app(CatalogoReferencias::class)->importarCatalogo(
-                new UploadedFile($ruta, 'referencias.csv', 'text/csv', null, true)
+            return app(CatalogoReferencias::class)->importarPaquete(
+                new UploadedFile($ruta, 'referencias.zip', 'application/zip', null, true)
             );
         } finally {
             @unlink($ruta);
         }
+    }
+
+    /**
+     * Las referencias que nombra el CSV, para generarles su PDF.
+     *
+     * @param  array<int, string>  $renglones
+     * @return array<int, string>
+     */
+    private function referenciasDe(array $renglones): array
+    {
+        preg_match_all('/\b\d{13}[A-Z]{2}\d{5}\b/', implode("\n", $renglones), $coincidencias);
+
+        return array_values(array_unique($coincidencias[0]));
     }
 }

@@ -1,6 +1,7 @@
 {{--
     admin/referencias-carga.blade.php
-    Carga del catálogo de referencias bancarias (CSV) y de sus formatos PDF (ZIP).
+    Carga del paquete ZIP con el catálogo de referencias bancarias (CSV) y sus
+    formatos de pago (un PDF por referencia).
 --}}
 @extends('layouts.admin')
 
@@ -17,7 +18,7 @@
         <header class="admin-referencias-encabezado">
             <div>
                 <h1 id="admin-referencias-carga-titulo">Subir referencias bancarias</h1>
-                <p>Carga el catálogo de referencias disponibles y los formatos con los que se paga en ventanilla.</p>
+                <p>Carga en un solo archivo ZIP las referencias disponibles y los formatos con los que se paga en ventanilla.</p>
             </div>
             <a class="admin-referencias-boton admin-referencias-boton--secundario" href="{{ route('admin.referencias.index') }}">
                 Ver catálogo
@@ -33,26 +34,12 @@
 
         @if($importacion)
             <div class="admin-referencias-tarjeta admin-referencias-aviso">
-                @if($importacion['tipo'] === 'catalogo')
-                    <strong>Resultado de la carga del catálogo</strong>
-                    <ul>
-                        <li>{{ $importacion['nuevas'] }} referencias nuevas.</li>
-                        <li>{{ $importacion['actualizadas'] }} referencias actualizadas.</li>
-                        <li>{{ $importacion['omitidas'] }} referencias omitidas.</li>
-                    </ul>
-                @else
-                    <strong>Resultado de la extracción del ZIP</strong>
-                    <ul>
-                        <li>{{ $importacion['extraidos'] }} PDF extraídos.</li>
-                        <li>{{ $importacion['ligados'] }} formatos ligados a una referencia.</li>
-                        <li>{{ $importacion['sin_referencia'] }} archivos sin referencia en el catálogo.</li>
-                    </ul>
-                @endif
-
-                @if(!empty($importacion['errores']))
-                    <p class="admin-referencias-aviso-detalle">Observaciones:</p>
-                    <ul>@foreach($importacion['errores'] as $detalle)<li>{{ $detalle }}</li>@endforeach</ul>
-                @endif
+                <strong>Resultado de la carga</strong>
+                <ul>
+                    <li>{{ $importacion['nuevas'] }} referencias nuevas.</li>
+                    <li>{{ $importacion['actualizadas'] }} referencias actualizadas.</li>
+                    <li>{{ $importacion['total'] }} referencias en total, todas con su formato PDF.</li>
+                </ul>
             </div>
         @endif
 
@@ -76,58 +63,43 @@
         </section>
 
         <div class="admin-referencias-cargas">
-            <section class="admin-referencias-tarjeta admin-referencias-carga" aria-labelledby="admin-referencias-csv-titulo">
-                <h2 id="admin-referencias-csv-titulo">1. Catálogo de referencias (CSV)</h2>
-                <p>Lista de las referencias que el sistema podrá asignar. Cada renglón se entrega a una sola persona.</p>
+            <section class="admin-referencias-tarjeta admin-referencias-carga" aria-labelledby="admin-referencias-paquete-titulo">
+                <h2 id="admin-referencias-paquete-titulo">Paquete de referencias (ZIP)</h2>
+                <p>
+                    Un solo comprimido con el catálogo y los formatos que la persona imprime para
+                    pagar en ventanilla. Se carga completo o no se carga: así ninguna referencia
+                    queda sin su PDF.
+                </p>
 
                 <dl class="admin-referencias-formato">
                     <div>
-                        <dt>Columnas</dt>
+                        <dt>Qué va dentro</dt>
+                        <dd>
+                            El archivo CSV del catálogo y un PDF por cada referencia. No importa si
+                            están en carpetas.
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Nombre de cada PDF</dt>
+                        <dd>El número de referencia: <code>1234567890.pdf</code> es el formato de la referencia <code>1234567890</code>.</dd>
+                    </div>
+                    <div>
+                        <dt>Columnas del CSV</dt>
                         <dd>
                             Las cuatro son obligatorias: <code>fecha</code> (de emisión),
                             <code>referencia</code>, <code>importe</code> y <code>vigencia</code>.
-                            Si falta alguna no se carga ninguna referencia, y el aviso te dice cuál.
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>Membrete</dt>
-                        <dd>
                             No recortes el archivo: los renglones del membrete institucional que van
-                            arriba de la tabla se ignoran solos.
+                            arriba de la tabla se ignoran solos, y el separador puede ser coma o
+                            punto y coma.
                         </dd>
                     </div>
                     <div>
-                        <dt>Separador</dt>
-                        <dd>Coma o punto y coma. Las fechas se aceptan como <code>AAAA-MM-DD</code> o <code>DD/MM/AAAA</code>.</dd>
-                    </div>
-                    <div>
-                        <dt>Repeticiones</dt>
-                        <dd>Volver a subir el mismo archivo no duplica: las referencias ya asignadas no se modifican.</dd>
-                    </div>
-                </dl>
-
-                <form method="POST" action="{{ route('admin.referencias.catalogo.store') }}" enctype="multipart/form-data" class="admin-referencias-formulario">
-                    @csrf
-                    <label class="admin-referencias-archivo">
-                        <span>Seleccionar CSV</span>
-                        <input type="file" name="catalogo" accept=".csv,text/csv" required>
-                    </label>
-                    <button type="submit" class="admin-referencias-boton admin-referencias-boton--primario">Cargar catálogo</button>
-                </form>
-            </section>
-
-            <section class="admin-referencias-tarjeta admin-referencias-carga" aria-labelledby="admin-referencias-zip-titulo">
-                <h2 id="admin-referencias-zip-titulo">2. Formatos para ventanilla (ZIP)</h2>
-                <p>Comprimido con los PDF que la persona imprime para pagar de manera presencial. Los archivos se extraen automáticamente.</p>
-
-                <dl class="admin-referencias-formato">
-                    <div>
-                        <dt>Nombre de cada PDF</dt>
-                        <dd>El número de referencia: <code>1234567890.pdf</code> se liga a la referencia <code>1234567890</code>.</dd>
-                    </div>
-                    <div>
-                        <dt>Orden</dt>
-                        <dd>Sube primero el CSV: un PDF sin referencia en el catálogo no se liga a nadie.</dd>
+                        <dt>Si algo no cuadra</dt>
+                        <dd>
+                            Si a una referencia le falta su PDF, si sobra un PDF que el CSV no
+                            menciona o si el catálogo incluye una referencia ya entregada, no se
+                            carga nada y el aviso te dice cuáles corregir.
+                        </dd>
                     </div>
                     <div>
                         <dt>Tamaño</dt>
@@ -135,13 +107,13 @@
                     </div>
                 </dl>
 
-                <form method="POST" action="{{ route('admin.referencias.formatos.store') }}" enctype="multipart/form-data" class="admin-referencias-formulario">
+                <form method="POST" action="{{ route('admin.referencias.paquete.store') }}" enctype="multipart/form-data" class="admin-referencias-formulario">
                     @csrf
                     <label class="admin-referencias-archivo">
                         <span>Seleccionar ZIP</span>
-                        <input type="file" name="formatos" accept=".zip,application/zip" required>
+                        <input type="file" name="paquete" accept=".zip,application/zip" required>
                     </label>
-                    <button type="submit" class="admin-referencias-boton admin-referencias-boton--primario">Cargar formatos</button>
+                    <button type="submit" class="admin-referencias-boton admin-referencias-boton--primario">Cargar referencias</button>
                 </form>
             </section>
         </div>

@@ -8,7 +8,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 use Throwable;
 use ZipArchive;
 
@@ -16,8 +15,8 @@ use ZipArchive;
  * CatalogoReferencias
  *
  * Responsabilidad: administrar el catálogo de referencias bancarias que el
- * área administrativa carga por CSV, los formatos PDF que vienen dentro de un
- * ZIP y la entrega de una referencia a una persona.
+ * área administrativa carga en un solo paquete ZIP —el CSV de la DEC y un PDF
+ * por referencia— y la entrega de una referencia a una persona.
  *
  * Una referencia se entrega una sola vez: al asignarse nace el PAGO de la
  * solicitud con la referencia y su PDF, y el renglón del catálogo queda ligado
@@ -28,6 +27,15 @@ class CatalogoReferencias
 {
     /** Carpeta del disco 'referencias' donde viven los PDF del catálogo. */
     public const CARPETA_FORMATOS = 'catalogo';
+
+    /**
+     * Tope de lo que puede pesar el paquete ya descomprimido.
+     *
+     * Un ZIP de 50 MB puede descomprimir a varios gigabytes, y esto corre
+     * dentro del request. El tamaño se consulta en la tabla del ZIP, antes de
+     * leer un solo byte.
+     */
+    private const MAX_DESCOMPRIMIDO = 300 * 1024 * 1024;
 
     /**
      * Qué cuenta como «tiene su formato PDF», en SQL.
@@ -154,94 +162,22 @@ class CatalogoReferencias
     }
 
     /**
-     * Carga el CSV con las referencias disponibles.
+     * Carga el paquete con el catálogo y sus formatos de pago.
      *
-     * Volver a subir el mismo archivo no duplica: las referencias ya
-     * registradas sólo actualizan sus datos, y las ya entregadas a una persona
-     * no se tocan.
+     * El ZIP trae el CSV de la DEC y un PDF por referencia, nombrado con el
+     * número: 1234567890.pdf es el formato de la referencia 1234567890.
      *
-     * Si al archivo le falta una columna, leerCsv() revienta antes de esta
-     * transacción: o entra el catálogo completo o no entra nada.
+     * Los dos van juntos y emparejados uno a uno a propósito. Cuando el
+     * catálogo y los formatos se cargaban por separado, entre un paso y otro
+     * —o para siempre, si el segundo nunca ocurría— quedaban referencias sin
+     * PDF: asignar() no las entrega, así que ocupaban el catálogo sin servirle
+     * a nadie y la persona veía que no había referencias disponibles. Ahora o
+     * entra el paquete completo o no entra nada.
      */
-    public function importarCatalogo(UploadedFile $archivo): array
-    {
-        $renglones = $this->leerCsv($archivo);
-
-        if ($renglones === []) {
-            throw new DomainException('El archivo CSV no contiene referencias.');
-        }
-
-        $ahora = Carbon::now();
-        $resultado = ['nuevas' => 0, 'actualizadas' => 0, 'omitidas' => 0, 'errores' => []];
-        $vistas = [];
-
-        DB::transaction(function () use ($renglones, $ahora, &$resultado, &$vistas): void {
-            foreach ($renglones as $renglon) {
-                $referencia = $renglon['referencia'];
-
-                if (isset($vistas[$referencia])) {
-                    $resultado['omitidas']++;
-                    $this->anotarError($resultado, 'La referencia '.$referencia.' viene repetida en el archivo.');
-
-                    continue;
-                }
-
-                $vistas[$referencia] = true;
-
-                $existente = DB::table('referencia_bancaria')
-                    ->where('reba_referencia', $referencia)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$existente) {
-                    DB::table('referencia_bancaria')->insert([
-                        'reba_referencia' => $referencia,
-                        'reba_monto' => $renglon['monto'],
-                        'reba_vigencia' => $renglon['vigencia'],
-                        'reba_fecha_emision' => $renglon['emision'],
-                        'reba_fecha_carga' => $ahora->toDateString(),
-                        'reba_hora_carga' => $ahora->toTimeString(),
-                    ]);
-
-                    $resultado['nuevas']++;
-
-                    continue;
-                }
-
-                if ($existente->reba_id_pago !== null) {
-                    $resultado['omitidas']++;
-                    $this->anotarError($resultado, 'La referencia '.$referencia.' ya está asignada y no se modificó.');
-
-                    continue;
-                }
-
-                DB::table('referencia_bancaria')
-                    ->where('reba_id_referencia_bancaria', $existente->reba_id_referencia_bancaria)
-                    ->update([
-                        'reba_monto' => $renglon['monto'],
-                        'reba_vigencia' => $renglon['vigencia'],
-                        'reba_fecha_emision' => $renglon['emision'],
-                        'reba_fecha_carga' => $ahora->toDateString(),
-                        'reba_hora_carga' => $ahora->toTimeString(),
-                    ]);
-
-                $resultado['actualizadas']++;
-            }
-        });
-
-        return $resultado;
-    }
-
-    /**
-     * Extrae los PDF del ZIP y los liga a la referencia que nombra el archivo.
-     *
-     * El nombre de cada PDF es el número de referencia: 1234567890.pdf queda
-     * ligado a la referencia 1234567890.
-     */
-    public function importarFormatos(UploadedFile $archivo): array
+    public function importarPaquete(UploadedFile $archivo): array
     {
         if (!class_exists(ZipArchive::class)) {
-            throw new DomainException('El servidor no tiene habilitada la extensión ZIP de PHP y no puede extraer el archivo.');
+            throw new DomainException('El servidor no tiene habilitada la extensión ZIP de PHP y no puede abrir el paquete.');
         }
 
         $zip = new ZipArchive();
@@ -250,68 +186,289 @@ class CatalogoReferencias
             throw new DomainException('El archivo ZIP no pudo abrirse. Verifica que no esté dañado ni protegido con contraseña.');
         }
 
-        $disco = Storage::disk('referencias');
-        $resultado = ['extraidos' => 0, 'ligados' => 0, 'sin_referencia' => 0, 'errores' => []];
-
         try {
-            for ($posicion = 0; $posicion < $zip->numFiles; $posicion++) {
-                $nombre_interno = (string) $zip->getNameIndex($posicion);
+            [$csv, $pdfs] = $this->inventariar($zip);
 
-                if ($nombre_interno === '' || str_ends_with($nombre_interno, '/')) {
-                    continue;
-                }
+            $renglones = $this->leerCsv($this->contenidoDelZip($zip, $csv, 'el archivo CSV'));
 
-                $nombre = basename(str_replace('\\', '/', $nombre_interno));
-
-                if (str_starts_with($nombre, '.') || !$this->esPdf($nombre)) {
-                    continue;
-                }
-
-                $contenido = $zip->getFromIndex($posicion);
-
-                if ($contenido === false || $contenido === '') {
-                    $this->anotarError($resultado, 'No se pudo leer "'.$nombre.'" dentro del ZIP.');
-
-                    continue;
-                }
-
-                $referencia = $this->referenciaDeNombre($nombre);
-
-                $fila = $referencia === ''
-                    ? null
-                    : DB::table('referencia_bancaria')->where('reba_referencia', $referencia)->first();
-
-                if (!$fila) {
-                    $resultado['sin_referencia']++;
-                    $this->anotarError($resultado, '"'.$nombre.'" no corresponde a ninguna referencia del catálogo.');
-
-                    continue;
-                }
-
-                $ruta = self::CARPETA_FORMATOS.'/'.$referencia.'.pdf';
-                $disco->put($ruta, $contenido);
-                $resultado['extraidos']++;
-
-                DB::table('referencia_bancaria')
-                    ->where('reba_id_referencia_bancaria', $fila->reba_id_referencia_bancaria)
-                    ->update(['reba_path' => $ruta]);
-
-                /* La referencia ya entregada conserva su PDF: se actualiza
-                   también en PAGO para que la persona vea el archivo nuevo. */
-                if ($fila->reba_id_pago !== null) {
-                    DB::table('pago')
-                        ->where('pago_id_pago', $fila->reba_id_pago)
-                        ->update(['pago_referencia_bancaria_path' => $ruta]);
-                }
-
-                $resultado['ligados']++;
+            if ($renglones === []) {
+                throw new DomainException('El archivo CSV no contiene referencias.');
             }
+
+            $this->verificarEmparejamiento($renglones, $pdfs);
+            $this->verificarQueNingunaEsteAsignada($renglones);
+
+            $nuevas = $this->escribirFormatos($zip, $pdfs);
         } finally {
             $zip->close();
         }
 
-        if ($resultado['extraidos'] === 0 && $resultado['sin_referencia'] === 0) {
-            throw new DomainException('El archivo ZIP no contiene documentos PDF.');
+        return $this->guardarRenglones($renglones, $nuevas);
+    }
+
+    /**
+     * Recorre la tabla del ZIP sin leer contenido y devuelve dónde está el CSV
+     * y en qué posición está el PDF de cada referencia.
+     *
+     * @return array{0: int, 1: array<string, int>}
+     */
+    private function inventariar(ZipArchive $zip): array
+    {
+        $csv = null;
+        $pdfs = [];
+        $bytes = 0;
+
+        for ($posicion = 0; $posicion < $zip->numFiles; $posicion++) {
+            $nombre_interno = (string) $zip->getNameIndex($posicion);
+
+            if ($nombre_interno === '' || str_ends_with($nombre_interno, '/')) {
+                continue;
+            }
+
+            /* basename() anula el zip-slip: una entrada que se llame
+               '../../config/app.php' se queda en 'app.php' y ni siquiera es
+               PDF. No importa en qué carpeta del ZIP venga cada archivo. */
+            $nombre = basename(str_replace('\\', '/', $nombre_interno));
+
+            if (str_starts_with($nombre, '.')) {
+                continue;
+            }
+
+            $bytes += (int) ($zip->statIndex($posicion)['size'] ?? 0);
+
+            if ($bytes > self::MAX_DESCOMPRIMIDO) {
+                throw new DomainException('El contenido del paquete es demasiado grande para procesarse.');
+            }
+
+            if ($this->esCsv($nombre)) {
+                if ($csv !== null) {
+                    throw new DomainException('El paquete trae más de un archivo CSV y no se sabe cuál es el catálogo. Deja sólo uno.');
+                }
+
+                $csv = $posicion;
+
+                continue;
+            }
+
+            if (!$this->esPdf($nombre)) {
+                continue;
+            }
+
+            $referencia = $this->referenciaDeNombre($nombre);
+
+            if ($referencia === '') {
+                throw new DomainException('El archivo "'.$nombre.'" no lleva por nombre un número de referencia.');
+            }
+
+            if (isset($pdfs[$referencia])) {
+                throw new DomainException('El paquete trae dos formatos para la referencia '.$referencia.'.');
+            }
+
+            $pdfs[$referencia] = $posicion;
+        }
+
+        if ($csv === null) {
+            throw new DomainException('El paquete no trae el archivo CSV con el catálogo de referencias.');
+        }
+
+        return [$csv, $pdfs];
+    }
+
+    private function contenidoDelZip(ZipArchive $zip, int $posicion, string $nombre): string
+    {
+        $contenido = $zip->getFromIndex($posicion);
+
+        if ($contenido === false || $contenido === '') {
+            throw new DomainException('No se pudo leer '.$nombre.' dentro del paquete.');
+        }
+
+        return $contenido;
+    }
+
+    /**
+     * Las referencias del CSV y los PDF del paquete tienen que ser exactamente
+     * las mismas.
+     *
+     * Las dos diferencias se reclaman juntas para que el administrador corrija
+     * el paquete de una vez en lugar de descubrir los faltantes de a uno.
+     *
+     * @param  array<int, array{referencia: string, monto: float, vigencia: string, emision: string}>  $renglones
+     * @param  array<string, int>  $pdfs
+     */
+    private function verificarEmparejamiento(array $renglones, array $pdfs): void
+    {
+        $referencias = array_column($renglones, 'referencia');
+        $repetidas = array_diff_assoc($referencias, array_unique($referencias));
+
+        if ($repetidas !== []) {
+            throw new DomainException(
+                'El CSV repite estas referencias y no se cargó ninguna: '.$this->listar($repetidas).'.'
+            );
+        }
+
+        $reclamos = [];
+        $sin_formato = array_diff($referencias, array_keys($pdfs));
+        $sin_renglon = array_diff(array_keys($pdfs), $referencias);
+
+        if ($sin_formato !== []) {
+            $reclamos[] = 'faltan los PDF de '.$this->listar($sin_formato);
+        }
+
+        if ($sin_renglon !== []) {
+            $reclamos[] = 'sobran los PDF de '.$this->listar($sin_renglon);
+        }
+
+        if ($reclamos !== []) {
+            throw new DomainException(
+                'El paquete no está completo y no se cargó ninguna referencia: '.implode('; ', $reclamos).'.'
+            );
+        }
+    }
+
+    /**
+     * Una referencia ya entregada no se recarga.
+     *
+     * Su PDF es el que la persona tiene en la mano para pagar en ventanilla y
+     * REBA_ID_PAGO no se deshace, así que un paquete que la incluye está mal
+     * armado y se devuelve entero.
+     *
+     * @param  array<int, array{referencia: string, monto: float, vigencia: string, emision: string}>  $renglones
+     */
+    private function verificarQueNingunaEsteAsignada(array $renglones): void
+    {
+        $asignadas = DB::table('referencia_bancaria')
+            ->whereIn('reba_referencia', array_column($renglones, 'referencia'))
+            ->whereNotNull('reba_id_pago')
+            ->pluck('reba_referencia')
+            ->all();
+
+        if ($asignadas !== []) {
+            throw new DomainException(
+                'El paquete incluye referencias que ya se entregaron a una persona y no se cargó '
+                .'ninguna: '.$this->listar($asignadas).'. Quítalas del archivo.'
+            );
+        }
+    }
+
+    /**
+     * Guarda los PDF y devuelve las rutas que este paquete creó.
+     *
+     * Los archivos se escriben antes de tocar la base a propósito: un PDF
+     * huérfano en el disco no le hace daño a nadie, pero un renglón con
+     * REBA_PATH apuntando a un archivo que no existe sí se entrega —
+     * TIENE_FORMATO mira la columna, no el disco— y la persona se queda con un
+     * número y sin con qué pagar.
+     *
+     * @param  array<string, int>  $pdfs
+     * @return array<int, string>
+     */
+    private function escribirFormatos(ZipArchive $zip, array $pdfs): array
+    {
+        $disco = Storage::disk('referencias');
+        $nuevas = [];
+
+        try {
+            foreach ($pdfs as $referencia => $posicion) {
+                /* PHP convierte a entero la clave de un arreglo cuando el texto
+                   es sólo dígitos, y hay referencias sin letras. */
+                $referencia = (string) $referencia;
+
+                $contenido = $this->contenidoDelZip($zip, $posicion, 'el formato de la referencia '.$referencia);
+
+                /* La extensión no prueba nada: el archivo se sirve después con
+                   Content-Type de PDF y basta con renombrar cualquier cosa. */
+                if (!str_starts_with($contenido, '%PDF-')) {
+                    throw new DomainException('El formato de la referencia '.$referencia.' no es un archivo PDF.');
+                }
+
+                $ruta = $this->rutaFormato($referencia);
+                $existia = $disco->exists($ruta);
+
+                /* ponytail: recargar un paquete pisa el PDF que ya tenía una
+                   referencia libre, y eso no se deshace. Es el mismo formato de
+                   la misma referencia, así que no hay nada que perder; si algún
+                   día importara, habría que escribir a un nombre temporal y
+                   renombrar al confirmar la transacción. */
+                $disco->put($ruta, $contenido);
+
+                if (!$existia) {
+                    $nuevas[] = $ruta;
+                }
+            }
+        } catch (Throwable $error) {
+            $disco->delete($nuevas);
+
+            throw $error;
+        }
+
+        return $nuevas;
+    }
+
+    /**
+     * Escribe el catálogo con sus formatos ya puestos en el disco.
+     *
+     * Si la transacción falla se borran los PDF que este paquete creó. Los que
+     * ya estaban se quedan: son de referencias que siguen en el catálogo.
+     *
+     * @param  array<int, array{referencia: string, monto: float, vigencia: string, emision: string}>  $renglones
+     * @param  array<int, string>  $nuevas
+     */
+    private function guardarRenglones(array $renglones, array $nuevas): array
+    {
+        $ahora = Carbon::now();
+        $resultado = ['nuevas' => 0, 'actualizadas' => 0, 'total' => count($renglones)];
+
+        try {
+            DB::transaction(function () use ($renglones, $ahora, &$resultado): void {
+                foreach ($renglones as $renglon) {
+                    $referencia = $renglon['referencia'];
+
+                    $columnas = [
+                        'reba_path' => $this->rutaFormato($referencia),
+                        'reba_monto' => $renglon['monto'],
+                        'reba_vigencia' => $renglon['vigencia'],
+                        'reba_fecha_emision' => $renglon['emision'],
+                        'reba_fecha_carga' => $ahora->toDateString(),
+                        'reba_hora_carga' => $ahora->toTimeString(),
+                    ];
+
+                    $existente = DB::table('referencia_bancaria')
+                        ->where('reba_referencia', $referencia)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$existente) {
+                        DB::table('referencia_bancaria')->insert(
+                            ['reba_referencia' => $referencia] + $columnas
+                        );
+
+                        $resultado['nuevas']++;
+
+                        continue;
+                    }
+
+                    /* verificarQueNingunaEsteAsignada() corre antes de la
+                       transacción, así que entre aquella consulta y este
+                       bloqueo alguien pudo pedir su referencia. Se comprueba
+                       otra vez con el renglón ya bloqueado. */
+                    if ($existente->reba_id_pago !== null) {
+                        throw new DomainException(
+                            'La referencia '.$referencia.' se entregó a una persona mientras se cargaba el '
+                            .'paquete, así que no se cargó ninguna. Vuelve a intentarlo sin ella.'
+                        );
+                    }
+
+                    DB::table('referencia_bancaria')
+                        ->where('reba_id_referencia_bancaria', $existente->reba_id_referencia_bancaria)
+                        ->update($columnas);
+
+                    $resultado['actualizadas']++;
+                }
+            });
+        } catch (Throwable $error) {
+            Storage::disk('referencias')->delete($nuevas);
+
+            throw $error;
         }
 
         return $resultado;
@@ -494,9 +651,9 @@ class CatalogoReferencias
      *
      * @return array<int, array{referencia: string, monto: float, vigencia: string, emision: string}>
      */
-    private function leerCsv(UploadedFile $archivo): array
+    private function leerCsv(string $contenido): array
     {
-        $crudos = $this->renglonesDelArchivo($archivo);
+        $crudos = $this->renglonesDelArchivo($contenido);
 
         if ($crudos === []) {
             return [];
@@ -521,13 +678,15 @@ class CatalogoReferencias
      *
      * @return array<int, array{numero: int, campos: array<int, string>}>
      */
-    private function renglonesDelArchivo(UploadedFile $archivo): array
+    private function renglonesDelArchivo(string $contenido): array
     {
-        $manejador = @fopen($archivo->getRealPath(), 'r');
-
-        if ($manejador === false) {
-            throw new RuntimeException('No fue posible leer el archivo CSV.');
-        }
+        /* El CSV viene del ZIP, no del disco. php://temp acepta rewind(), que
+           es lo que hace falta para volver al principio después de espiar la
+           primera línea en busca del separador; el archivo pesa dos megas como
+           mucho, así que cabe de sobra. */
+        $manejador = fopen('php://temp', 'r+');
+        fwrite($manejador, $contenido);
+        rewind($manejador);
 
         try {
             $primera = fgets($manejador);
@@ -746,6 +905,31 @@ class CatalogoReferencias
         return str_ends_with(mb_strtolower($nombre), '.pdf');
     }
 
+    private function esCsv(string $nombre): bool
+    {
+        return str_ends_with(mb_strtolower($nombre), '.csv');
+    }
+
+    private function rutaFormato(string $referencia): string
+    {
+        return self::CARPETA_FORMATOS.'/'.$referencia.'.pdf';
+    }
+
+    /**
+     * Hasta cinco referencias por mensaje: la lista es para reconocer el
+     * problema, no para enumerarlo entero.
+     *
+     * @param  array<int|string, string>  $referencias
+     */
+    private function listar(array $referencias): string
+    {
+        $referencias = array_values(array_unique($referencias));
+        $muestra = array_slice($referencias, 0, 5);
+        $resto = count($referencias) - count($muestra);
+
+        return implode(', ', $muestra).($resto > 0 ? ' y '.$resto.' más' : '');
+    }
+
     public function montoConvocatoria(int $id_convocatoria, ?float $monto_referencia): float
     {
         if ($monto_referencia !== null && $monto_referencia > 0) {
@@ -767,8 +951,9 @@ class CatalogoReferencias
      *
      * Se distinguen los dos casos porque no se arreglan igual: si el catálogo
      * está vacío hay que pedirle más referencias al banco, y si sólo faltan los
-     * PDF basta con subir el ZIP. Un mensaje único mandaría a la persona a
-     * soporte sin que soporte sepa qué hacer.
+     * PDF son renglones viejos, de cuando el catálogo y los formatos se
+     * cargaban por separado. Un mensaje único mandaría a la persona a soporte
+     * sin que soporte sepa qué hacer.
      */
     private function motivoSinReferencia(): string
     {
@@ -791,13 +976,6 @@ class CatalogoReferencias
 
         if ($estado !== 'Aprobada') {
             throw new DomainException('Tu referencia estará disponible cuando el equipo administrativo apruebe tu solicitud.');
-        }
-    }
-
-    private function anotarError(array &$resultado, string $mensaje): void
-    {
-        if (count($resultado['errores']) < 20) {
-            $resultado['errores'][] = $mensaje;
         }
     }
 }

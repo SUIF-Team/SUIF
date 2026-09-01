@@ -86,12 +86,6 @@
     padding-left: 1.2rem;
 }
 
-.admin-referencias-aviso-detalle {
-    margin: 0.9rem 0 0;
-    color: var(--text-muted);
-    font-weight: 700;
-}
-
 .admin-referencias-aviso--error {
     border-color: #e7b7b7;
     background: #fff5f5;
@@ -103,6 +97,8 @@
     grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
     gap: 1.5rem;
     align-items: start;
+    /* Con una sola tarjeta, auto-fit la estiraría a todo el ancho. */
+    max-width: 46rem;
 }
 
 .admin-referencias-carga {

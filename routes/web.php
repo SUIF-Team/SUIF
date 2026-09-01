@@ -146,8 +146,9 @@ Route::middleware(['auth', 'can:acceder-admin'])
             Route::get('/referencias/especiales/{id}', [AdminReferenciaEspecialController::class, 'show'])->name('referencias.especiales.show');
             Route::post('/referencias/especiales/{id}/emitir', [AdminReferenciaEspecialController::class, 'emitir'])->name('referencias.especiales.emitir');
             Route::get('/referencias/carga', [AdminReferenciaController::class, 'carga'])->name('referencias.carga');
-            Route::post('/referencias/catalogo', [AdminReferenciaController::class, 'guardarCatalogo'])->name('referencias.catalogo.store');
-            Route::post('/referencias/formatos', [AdminReferenciaController::class, 'guardarFormatos'])->name('referencias.formatos.store');
+            /* El catálogo y sus formatos entran juntos en un solo ZIP: cargarlos
+               por separado dejaba referencias sin PDF, que nadie puede recibir. */
+            Route::post('/referencias/paquete', [AdminReferenciaController::class, 'guardarPaquete'])->name('referencias.paquete.store');
             Route::get('/referencias/{id}/formato', [AdminReferenciaController::class, 'formato'])->name('referencias.formato');
         });
 
