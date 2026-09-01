@@ -38,7 +38,7 @@
 
             <div class="sede-resumen">
                 <p class="sede-resumen__etiqueta">Sede seleccionada</p>
-                <p class="sede-resumen__nombre">{{ $sede['nombre'] }}</p>
+                <h3 class="sede-resumen__nombre">{{ $sede['nombre'] }}</h3>
                 <dl class="sede-resumen__datos">
                     <dt>Dirección</dt><dd>{{ $sede['direccion'] }}</dd>
                     <dt>Fecha</dt><dd>{{ $sede['fecha'] }}</dd>

@@ -25,22 +25,18 @@
 .persona-dashboard__header h1 {
     margin: 0 0 0.25rem;
     color: #16263f;
-    font-family: var(--font-nav);
-    font-size: clamp(1.35rem, 2.5vw, 1.5rem);
-    font-weight: 600;
 }
 
 .persona-dashboard__header p {
     margin: 0;
     color: #6b6b66;
-    font-size: 0.875rem;
 }
 
 .dashboard-status,
 .process-badge {
     border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     line-height: 1.2;
     white-space: nowrap;
 }
@@ -119,8 +115,8 @@
     border-radius: 50%;
     background: #dbdbd4;
     color: #6b6b66;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: var(--fs-ui);
+    font-weight: 600;
 }
 
 .process-card--completed .process-card__number {
@@ -145,16 +141,13 @@
 .process-card__content h2 {
     margin: 0 0 0.2rem;
     color: #16263f;
-    font-family: var(--font-nav);
-    font-size: 1.0625rem;
-    font-weight: 500;
+    font-size: var(--fs-subtitulo);
 }
 
 .process-card__content p {
     margin: 0;
     color: #6b6b66;
-    font-size: 0.8125rem;
-    line-height: 1.45;
+    font-size: var(--fs-auxiliar);
 }
 
 .process-card__actions {
@@ -200,8 +193,8 @@
     border-radius: 8px;
     background: #16263f;
     color: #ffffff;
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-decoration: none;
     transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
@@ -266,9 +259,8 @@
         gap: 0.65rem;
     }
 
-    .process-badge,
-    .process-button {
-        font-size: 0.72rem;
+    .process-badge {
+        font-size: var(--fs-micro);
     }
 }
 

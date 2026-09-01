@@ -22,14 +22,11 @@
 .facturacion-tarjeta h1 {
     margin: 0 0 0.4rem;
     color: #172a44;
-    font-size: 1.4rem;
 }
 
 .facturacion-muted {
     margin: 0 0 1.5rem;
     color: #6b7280;
-    font-size: 0.9rem;
-    line-height: 1.6;
 }
 
 .facturacion-alerta {
@@ -38,7 +35,6 @@
     border-radius: 10px;
     background: #d8ecdf;
     color: #075b2c;
-    font-size: 0.875rem;
 }
 
 .facturacion-alerta--error {
@@ -65,8 +61,6 @@
 
 .facturacion-campo label {
     color: #374151;
-    font-size: 0.8rem;
-    font-weight: 700;
 }
 
 .facturacion-campo input,
@@ -77,7 +71,6 @@
     border-radius: 8px;
     background: #fff;
     color: #111827;
-    font-size: 0.9rem;
 }
 
 .facturacion-campo input:focus-visible,
@@ -96,13 +89,13 @@
 .facturacion-campo__ayuda {
     margin: 0;
     color: #6b7280;
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .facturacion-mensaje-validacion {
     margin: 0;
     color: #9b1717;
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .facturacion-aviso {
@@ -111,8 +104,7 @@
     border-radius: 10px;
     background: #f7f7f4;
     color: #6b7280;
-    font-size: 0.85rem;
-    line-height: 1.6;
+    font-size: var(--fs-auxiliar);
 }
 
 .facturacion-aviso strong {
@@ -138,14 +130,11 @@
 .facturacion-dato dt {
     margin-bottom: 0.25rem;
     color: #6b7280;
-    font-size: 0.75rem;
-    font-weight: 700;
 }
 
 .facturacion-dato dd {
     margin: 0;
     color: #111827;
-    font-size: 0.875rem;
 }
 
 .facturacion-acciones {
@@ -165,8 +154,8 @@
     border-radius: 8px;
     background: #111827;
     color: #fff;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-decoration: none;
     cursor: pointer;
     transition: background-color 0.2s ease;

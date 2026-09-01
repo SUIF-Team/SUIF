@@ -39,20 +39,16 @@
 .referencia-tarjeta h1 {
     margin: 0 0 0.4rem;
     color: #172a44;
-    font-size: 1.4rem;
 }
 
 .referencia-tarjeta__titulo {
     margin: 0 0 0.6rem;
     color: #b38612;
-    font-size: 1rem;
-    font-style: italic;
 }
 
 .referencia-muted {
     margin: 0 0 1.25rem;
     color: #6b7280;
-    font-size: 0.9rem;
 }
 
 .referencia-codigo {
@@ -69,8 +65,8 @@
 
 .referencia-codigo > span {
     color: #172a44;
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: var(--fs-seccion);
+    font-weight: 600;
     letter-spacing: 0.08em;
     word-break: break-all;
 }
@@ -85,9 +81,8 @@
     border-radius: 0.45rem;
     background: #fff;
     color: #6f4d00;
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -111,16 +106,11 @@
 
 .referencia-datos dt {
     color: #6b7280;
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 .referencia-datos dd {
     margin: 0.25rem 0 0;
     color: #172a44;
-    font-size: 1rem;
     font-weight: 600;
 }
 
@@ -142,8 +132,8 @@
     border-radius: 8px;
     background: #111827;
     color: #fff;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-decoration: none;
     cursor: pointer;
     transition: background-color 0.2s ease;

@@ -5,33 +5,6 @@
     display: none;
 }
 
-.sede-paso {
-    margin-bottom: auto;
-    padding: 14px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    border-radius: 8px;
-    background: #1f2937;
-    color: #fff;
-}
-
-.sede-paso span {
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #b38612;
-    font-size: 13px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.sede-paso strong, .sede-paso small { display: block; }
-.sede-paso strong { font-size: 14px; }
-.sede-paso small { color: #9ca3af; font-size: 12px; }
-
 .sede-shell {
     padding: clamp(2rem, 5vw, 2.5rem) clamp(1.5rem, 5vw, 3.5rem) clamp(3rem, 8vw, 5rem);
 }
@@ -39,13 +12,11 @@
 .sede-shell h1 {
     margin: 0 0 0.4rem;
     color: #16263f;
-    font-size: 1.5rem;
 }
 
 .sede-muted {
     margin: 0 0 1.25rem;
     color: #6b6b66;
-    font-size: 0.9rem;
 }
 
 .sede-alerta--error {
@@ -69,7 +40,6 @@
     padding: 10px 14px;
     border: 1px solid #e2e2da;
     border-radius: 8px;
-    font-size: 0.8rem;
     color: #6b6b66;
     background: #fff;
 }
@@ -82,8 +52,8 @@
 .sede-contador {
     margin: 0 0 0.75rem;
     color: #6b6b66;
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
 }
 
 .sede-lista {
@@ -110,14 +80,13 @@
 .sede-tarjeta__nombre {
     margin: 0 0 0.2rem;
     color: #16263f;
-    font-size: 0.95rem;
-    font-weight: 500;
+    font-size: var(--fs-subtitulo);
 }
 
 .sede-tarjeta__direccion {
     margin: 0 0 0.4rem;
     color: #6b6b66;
-    font-size: 0.8rem;
+    font-size: var(--fs-auxiliar);
 }
 
 /* Una sede aplica el examen en uno o más horarios y la persona elige uno. */
@@ -139,8 +108,6 @@
 .sede-horarios__titulo {
     padding: 0;
     color: #6b6b66;
-    font-size: 0.75rem;
-    font-weight: 500;
 }
 
 .sede-horario {
@@ -185,7 +152,7 @@
 
 .sede-horario__cupo small {
     color: #6b6b66;
-    font-size: 0.7rem;
+    font-size: var(--fs-micro);
 }
 
 .sede-chip {
@@ -193,20 +160,20 @@
     border-radius: 8px;
     background: #e8edf7;
     color: #16263f;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--fs-micro);
+    font-weight: 600;
 }
 
 .sede-fecha {
     color: #6b6b66;
-    font-size: 0.75rem;
+    font-size: var(--fs-micro);
 }
 
 .sede-cupo {
     padding: 4px 10px;
     border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -223,8 +190,8 @@
     border-radius: 8px;
     background: #16263f;
     color: #fff;
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
@@ -261,13 +228,12 @@
     border-radius: 50%;
     background: #d8f0e0;
     color: #0f6e56;
-    font-size: 1.4rem;
+    font-size: var(--fs-pagina);
 }
 
 .sede-confirmada h1 {
     margin: 0 0 0.3rem;
     color: #16263f;
-    font-size: 1.5rem;
 }
 
 .sede-resumen {
@@ -282,14 +248,15 @@
 .sede-resumen__etiqueta {
     margin: 0 0 0.2rem;
     color: #6b6b66;
-    font-size: 0.75rem;
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .sede-resumen__nombre {
     margin: 0 0 1rem;
     color: #16263f;
-    font-size: 1.1rem;
-    font-weight: 500;
 }
 
 .sede-resumen__datos {
@@ -301,15 +268,12 @@
 
 .sede-resumen__datos dt {
     color: #6b6b66;
-    font-size: 0.8rem;
 }
 
 .sede-resumen__datos dd {
     margin: 0;
     color: #16263f;
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-align: right;
+    font-weight: 600;
 }
 
 .sede-acciones {
@@ -318,10 +282,6 @@
     gap: 0.75rem;
 }
 
-.sede-demo {
-    margin-top: 1.5rem;
-    font-size: 0.8rem;
-}
 
 @media (max-width: 700px) {
     .sede-tarjeta {
@@ -332,9 +292,6 @@
         grid-template-columns: 1fr;
     }
 
-    .sede-resumen__datos dd {
-        text-align: left;
-    }
 
     .sede-tarjeta__seleccion,
     .sede-tarjeta__seleccion .sede-boton {
@@ -375,14 +332,12 @@
 .sede-mapa h2 {
     margin: 0 0 0.2rem;
     color: #16263f;
-    font-size: 1.1rem;
-    font-weight: 500;
 }
 
 .sede-mapa__ayuda {
     margin: 0 0 1rem;
     color: #6b6b66;
-    font-size: 0.75rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .sede-mapa__marco {
@@ -433,14 +388,12 @@
 .sede-modal__card h2 {
     margin: 0 0 0.6rem;
     color: #16263f;
-    font-size: 1.15rem;
+    font-size: var(--fs-subtitulo);
 }
 
 .sede-modal__card p {
     margin: 0 0 1.25rem;
     color: #6b6b66;
-    font-size: 0.875rem;
-    line-height: 1.6;
 }
 
 .sede-modal__card strong {
@@ -459,15 +412,12 @@
 
 .sede-modal__datos dt {
     color: #6b6b66;
-    font-size: 0.8rem;
 }
 
 .sede-modal__datos dd {
     margin: 0;
     color: #16263f;
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-align: right;
+    font-weight: 600;
 }
 
 .sede-modal__acciones {
@@ -491,9 +441,6 @@
         grid-template-columns: 1fr;
     }
 
-    .sede-modal__datos dd {
-        text-align: left;
-    }
 
     .sede-modal__acciones {
         flex-direction: column-reverse;

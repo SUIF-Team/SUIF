@@ -32,8 +32,6 @@
 
 .refesp-campo label {
     color: #374151;
-    font-size: 0.8rem;
-    font-weight: 700;
 }
 
 .refesp-campo input,
@@ -44,7 +42,6 @@
     border-radius: 8px;
     background: #fff;
     color: #111827;
-    font-size: 0.9rem;
 }
 
 .refesp-campo input:focus-visible,
@@ -61,19 +58,19 @@
 .refesp-ayuda {
     margin: 0;
     color: #6b7280;
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .refesp-error {
     margin: 0;
     color: #9b1717;
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .refesp-subtitulo {
     margin: 0 0 0.75rem;
     color: #172a44;
-    font-size: 1rem;
+    font-size: var(--fs-subtitulo);
 }
 
 .refesp-contador {
@@ -90,8 +87,8 @@
     border: 0;
     background: #f7f8fa;
     color: #172a44;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--fs-subtitulo);
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -110,7 +107,7 @@
     padding: 0.5rem 0.75rem;
     border-inline: 1px solid #d9dee7;
     color: #111827;
-    font-size: 0.95rem;
+    font-size: var(--fs-ui);
     font-weight: 600;
     text-align: center;
 }
@@ -135,8 +132,8 @@
 .refesp-persona__legend {
     padding: 0 0.35rem;
     color: #6b7280;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--fs-micro);
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -174,8 +171,6 @@
 
 .refesp-agregar__label {
     color: #6b7280;
-    font-size: 0.8rem;
-    font-weight: 700;
 }
 
 .refesp-agregar input {
@@ -184,7 +179,6 @@
     padding: 0.55rem 0.75rem;
     border: 1px solid #d9dee7;
     border-radius: 8px;
-    font-size: 0.9rem;
 }
 
 .refesp-agregar__boton {
@@ -263,14 +257,12 @@
 .refesp-modal__card h2 {
     margin: 0 0 0.6rem;
     color: #16263f;
-    font-size: 1.15rem;
+    font-size: var(--fs-subtitulo);
 }
 
 .refesp-modal__card p {
     margin: 0 0 1.25rem;
     color: #6b6b66;
-    font-size: 0.875rem;
-    line-height: 1.6;
 }
 
 .refesp-modal__card strong {
@@ -286,14 +278,11 @@
 
 .refesp-resumen dt {
     color: #6b7280;
-    font-size: 0.78rem;
-    font-weight: 700;
 }
 
 .refesp-resumen dd {
     margin: 0;
     color: #16263f;
-    font-size: 0.95rem;
     font-weight: 600;
 }
 
@@ -302,7 +291,7 @@
     padding: 0;
     list-style: none;
     color: #16263f;
-    font-size: 0.85rem;
+    font-size: var(--fs-ui);
     letter-spacing: 0.04em;
     text-align: left;
 }

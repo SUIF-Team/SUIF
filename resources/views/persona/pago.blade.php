@@ -93,7 +93,7 @@
         @endif
 
         <div class="pago-tracker">
-            <p class="pago-tracker__titulo">Estatus de validación</p>
+            <h3 class="pago-tracker__titulo">Estatus de validación</h3>
             <div class="pago-tracker__linea">
                 @foreach(['Comprobante enviado', 'En revisión', 'Decisión'] as $indice => $etiqueta)
                     @if($indice > 0)

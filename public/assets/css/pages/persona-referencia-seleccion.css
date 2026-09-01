@@ -12,9 +12,6 @@
 
 .referencia-aviso p {
     margin: 0 0 1rem;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    text-align: justify;
 }
 
 .referencia-aviso p:last-child {
@@ -28,7 +25,6 @@
 .referencia-seleccion__titulo {
     margin: 0 0 1.25rem;
     color: #172a44;
-    font-size: 1.4rem;
 }
 
 /* Las dos opciones se leen en paralelo: misma altura y el botón siempre al pie,
@@ -45,9 +41,6 @@
 .referencia-tarjeta__texto p {
     margin: 0 0 1rem;
     color: #4b5563;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    text-align: justify;
 }
 
 .referencia-tarjeta__texto p:last-child {
@@ -66,7 +59,7 @@
 
 .referencia-tarjeta__nota {
     margin: 0.6rem 0 0;
-    font-size: 0.8rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .referencia-boton--inhabilitado,
