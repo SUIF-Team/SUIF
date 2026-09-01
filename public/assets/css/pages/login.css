@@ -41,22 +41,22 @@
 .login-bienvenida,
 .login-titulo-proceso {
     margin: 0;
-    font-family: var(--font-nav);
-    font-style: italic;
-    letter-spacing: -0.035em;
+    font-family: var(--font-serif);
+    line-height: 1.15;
 }
 
+/* Unica excepcion de escala del sistema: el saludo del panel izquierdo es
+   una pieza de presentacion, no un titulo de pantalla, y con --fs-pagina el
+   panel se queda vacio. Sin cursiva: Merriweather no se carga en cursiva y
+   el navegador la falsearia. */
 .login-bienvenida {
-    font-size: clamp(2.25rem, 4.25vw, 3.65rem);
-    font-weight: 700;
-    line-height: 1.05;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 400;
 }
 
 .login-titulo-proceso {
     color: #e1e5e8;
-    font-size: clamp(2.25rem, 4.25vw, 3.65rem);
-    font-weight: 300;
-    line-height: 1.12;
+    font-size: clamp(2rem, 3.5vw, 3rem);
 }
 
 .login-divisor {
@@ -71,9 +71,6 @@
 .login-lista,
 .login-indicacion {
     color: #f0f2f4;
-    font-size: clamp(1rem, 1.25vw, 1.15rem);
-    font-weight: 300;
-    line-height: 1.65;
 }
 
 .login-descripcion {
@@ -122,8 +119,7 @@
 .login-titulo-formulario {
     margin: 0 0 2.5rem;
     color: #2a333f;
-    font-size: 1.65rem;
-    font-weight: 700;
+    font-size: var(--fs-pagina);
     text-align: center;
 }
 
@@ -140,8 +136,6 @@
 .login-etiqueta {
     margin: 0;
     color: #3b4550;
-    font-size: 0.86rem;
-    font-weight: 700;
 }
 
 .login-campo {
@@ -151,7 +145,6 @@
     border-radius: 0.55rem;
     background: #ffffff;
     color: #2b3138;
-    font-size: 0.96rem;
     box-shadow: 0 0.25rem 0.75rem rgba(2, 16, 36, 0.06);
 }
 
@@ -166,7 +159,7 @@
 
 .login-ayuda {
     color: #69727c;
-    font-size: 0.75rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .login-acciones {
@@ -181,7 +174,6 @@
     border-radius: 0.45rem;
     background: var(--unam-blue-dark);
     color: #ffffff;
-    font-weight: 700;
     transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
@@ -200,8 +192,8 @@
 
 .login-preregistro a {
     color: var(--unam-gold-dark);
-    font-size: 0.88rem;
-    font-weight: 700;
+    font-size: var(--fs-ui);
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -216,6 +208,7 @@
    es la salida de emergencia, no la acción principal. */
 .login-recuperar a {
     color: #3b4550;
+    font-size: var(--fs-ui);
     font-weight: 400;
 }
 

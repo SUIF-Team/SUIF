@@ -23,24 +23,20 @@
 .error-codigo {
     margin: 0 0 0.75rem;
     color: #b38612;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
 .error-titulo {
     margin: 0 0 1rem;
     color: #112f4b;
-    font-size: clamp(1.4rem, 3vw, 1.9rem);
-    line-height: 1.25;
 }
 
 .error-mensaje {
     margin: 0 0 1.75rem;
     color: #4b5563;
-    font-size: 1rem;
-    line-height: 1.6;
 }
 
 .error-acciones {
@@ -54,6 +50,7 @@
     border-radius: 8px;
     background: #112f4b;
     color: #ffffff;
+    font-size: var(--fs-ui);
     font-weight: 600;
     text-decoration: none;
     transition: background-color 0.2s ease;
@@ -70,7 +67,7 @@
     padding-top: 1.5rem;
     border-top: 1px solid #e5e7eb;
     color: #6b7280;
-    font-size: 0.88rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .error-soporte a {
