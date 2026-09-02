@@ -100,7 +100,7 @@ class DashboardController extends Controller
                 'titulo' => 'Reportes',
                 'ruta' => 'admin.reportes.index',
                 'permiso' => 'ver-reportes',
-                'descripcion' => 'Descarga en Excel los pagos, los registros, las listas de grupo y los datos de facturación.',
+                'descripcion' => 'Descarga los pagos, registros, listas de grupo y datos de facturación.',
             ],
             [
                 'titulo' => 'Certificados',
