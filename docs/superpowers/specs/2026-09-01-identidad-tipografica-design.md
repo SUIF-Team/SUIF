@@ -21,9 +21,9 @@ más pequeña que el texto del campo que rotula.
   serif. Si se lee, se llena o se pulsa, es sans.
 - **Raleway** (`--font-nav`, peso 700) tiene un solo uso en el sistema: el nombre
   del sistema en el encabezado (`.navbar-sistema-titulo`). Es la firma de la
-  aplicación, no un título de contenido, y por eso conserva su propia familia. La
-  navbar de la landing pública también la usa. Ninguna otra regla del sistema
-  puede recurrir a ella.
+  aplicación, no un título de contenido, y por eso conserva familia y tamaño
+  propios. La navbar de la landing pública también la usa. Ninguna otra regla del
+  sistema puede recurrir a ella.
 - Única excepción de familia: la CURP en `admin-administradores.css` usa
   `'Courier New'` por ser un identificador de ancho fijo.
 
@@ -37,14 +37,17 @@ de `body.pagina-sistema`.
 | `--fs-cifra` | 2 | 32 | Número grande de un indicador. Sans 700, `line-height: 1`. |
 | `--fs-pagina` | 1.5 | 24 | Título de pantalla (`h1`), uno por pantalla. También el letrero de resultado y los iconos circulares de cierre de flujo. |
 | `--fs-seccion` | 1.125 | 18 | Título de sección o tarjeta (`h2`), nombre de la persona en el detalle admin, códigos destacados. |
-| `--fs-subtitulo` | 1 | 16 | Subtítulo (`h3`), título de modal, nombre de tarjeta pequeña, nombre del sistema en el encabezado. |
+| `--fs-subtitulo` | 1 | 16 | Subtítulo (`h3`), título de modal, nombre de tarjeta pequeña. |
 | `--fs-cuerpo` | 0.9375 | 15 | Texto corrido: párrafos, `dd`, avisos, descripciones. |
 | `--fs-ui` | 0.875 | 14 | Etiquetas y `legend`, campos y `select`, botones, celdas, enlaces «volver/atrás/salir», iniciales de avatar. |
 | `--fs-auxiliar` | 0.8125 | 13 | Ayuda bajo un campo, mensajes de validación, notas, `small`, soporte del sidebar. |
 | `--fs-micro` | 0.75 | 12 | Chips de estado, encabezados de tabla, sobretítulos, `dt`, código de error, título de navbar en móvil. |
 
-Excepción documentada: el saludo del panel izquierdo del login
-(`.login-bienvenida`) conserva un `clamp()` propio como pieza de presentación.
+Dos excepciones documentadas, ambas con `clamp()` propio porque son piezas de
+presentación y no escalones de la escala: el saludo del panel izquierdo del login
+(`.login-bienvenida`) y el nombre del sistema en el encabezado
+(`.navbar-sistema-titulo`, `clamp(1rem, 1.35vw, 1.3rem)` en peso 400, que baja a
+`--fs-micro` en móvil porque el ancho junto a los logotipos no da para más).
 
 ### Pesos, interlineado y espaciado
 

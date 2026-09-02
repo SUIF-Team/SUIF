@@ -60,15 +60,18 @@
     background: rgba(255, 255, 255, 0.9);
 }
 
-/* El nombre del sistema conserva Raleway: es la firma del encabezado, no un
-   titulo de contenido. Por eso el layout del sistema tambien la descarga. */
+/* El nombre del sistema es la firma del encabezado, no un titulo de contenido:
+   conserva Raleway y su tamano propio, que crece con la pantalla en lugar de
+   quedarse en un escalon de la escala. Por eso el layout del sistema descarga
+   tambien esta familia. En movil baja a --fs-micro (regla de mas abajo), donde
+   el ancho disponible junto a los logotipos no da para mas. */
 .navbar-sistema-titulo {
     margin: 0;
     color: #ffffff;
     font-family: var(--font-nav);
-    font-size: var(--fs-subtitulo);
-    font-weight: 700;
-    line-height: 1.25;
+    font-size: clamp(1rem, 1.35vw, 1.3rem);
+    font-weight: 400;
+    line-height: 1.45;
 }
 
 .navbar-sistema-logo-uif {
