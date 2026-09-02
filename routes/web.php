@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PagoController as AdminPagoController;
 use App\Http\Controllers\Admin\PersonaController as AdminPersonaController;
 use App\Http\Controllers\Admin\ReferenciaController as AdminReferenciaController;
 use App\Http\Controllers\Admin\ReferenciaEspecialController as AdminReferenciaEspecialController;
+use App\Http\Controllers\Admin\ReporteController as AdminReporteController;
 use App\Http\Controllers\Admin\ResultadoController as AdminResultadoController;
 use App\Http\Controllers\Admin\SedeController as AdminSedeController;
 use App\Http\Controllers\Persona\CertificadoController;
@@ -192,6 +193,34 @@ Route::middleware(['auth', 'can:acceder-admin'])
             Route::delete('/convocatorias/{id}', [AdminConvocatoriaController::class, 'destroy'])->name('convocatorias.destroy');
             /* Cerrar, interrumpir y reabrir: el destino viaja en el formulario. */
             Route::post('/convocatorias/{id}/estado', [AdminConvocatoriaController::class, 'estado'])->name('convocatorias.estado');
+        });
+
+        /* Reportes descargables. La pantalla la abre cualquier área, pero cada
+           archivo lleva los datos de un módulo y exige su permiso: el índice
+           sólo pinta las tarjetas que quien mira puede descargar, y aun así
+           cada descarga se vuelve a comprobar aquí, porque la URL se puede
+           escribir a mano. */
+        Route::middleware('can:ver-reportes')->group(function () {
+            Route::get('/reportes', [AdminReporteController::class, 'index'])->name('reportes.index');
+        });
+
+        Route::middleware('can:gestionar-pagos')->group(function () {
+            Route::get('/reportes/pagos', [AdminReporteController::class, 'pagos'])->name('reportes.pagos');
+            Route::get('/reportes/cfdi', [AdminReporteController::class, 'cfdi'])->name('reportes.cfdi');
+        });
+
+        Route::middleware('can:validar-registro')->group(function () {
+            Route::get('/reportes/registros', [AdminReporteController::class, 'registros'])->name('reportes.registros');
+        });
+
+        /* La lista de un grupo es la programación de una sede: mismo permiso
+           que grupos y sedes. El grupo viaja como parámetro de consulta y no
+           como segmento de la ruta porque la pantalla lo elige con un <select>
+           dentro de un formulario GET: un segmento obligaría a armar la URL
+           con JavaScript para algo que el navegador ya hace solo. */
+        Route::middleware('can:gestionar-sedes')->group(function () {
+            Route::get('/reportes/grupos', [AdminReporteController::class, 'grupo'])->name('reportes.grupos');
+            Route::get('/reportes/grupos/lista', [AdminReporteController::class, 'listaFirmas'])->name('reportes.grupos.lista');
         });
 
         Route::middleware('can:generar-reportes')->group(function () {

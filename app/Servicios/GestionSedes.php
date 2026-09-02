@@ -205,6 +205,53 @@ class GestionSedes
         return $grupo;
     }
 
+    /**
+     * Las personas citadas a un grupo, para pasar lista el día del examen.
+     *
+     * Nadie se inscribe a un grupo directamente: la persona elige un horario y
+     * eso escribe SOLICITUD.SOLI_ID_EVALUACION, así que la lista se arma
+     * recorriendo esa cadena al revés. Es el mismo camino que
+     * sedeSeleccionadaPorUsuario(), sólo que partiendo del grupo.
+     *
+     * No filtra por estado de pago: seleccionarParaUsuario() no deja elegir
+     * horario sin el pago validado, de modo que estar en esta lista ya implica
+     * haber pagado.
+     *
+     * @return array{grupo: array<string, mixed>, personas: array<int, array<string, string>>}
+     */
+    public function listaDeGrupo(int $idGrupo): array
+    {
+        $grupo = $this->grupo($idGrupo);
+
+        $personas = DB::table('solicitud as so')
+            ->join('evaluacion as e', 'e.eval_id_evaluacion', '=', 'so.soli_id_evaluacion')
+            ->join('persona as p', 'p.pers_id_persona', '=', 'so.soli_id_persona')
+            ->where('e.grup_id_grupo', $idGrupo)
+            ->orderBy('p.pers_apellido_paterno')
+            ->orderBy('p.pers_apellido_materno')
+            ->orderBy('p.pers_nombre')
+            ->select([
+                'p.pers_curp',
+                'p.pers_nombre',
+                'p.pers_apellido_paterno',
+                'p.pers_apellido_materno',
+            ])
+            ->get()
+            ->values()
+            ->map(fn (object $fila, int $indice): array => [
+                'numero' => (string) ($indice + 1),
+                'curp' => (string) $fila->pers_curp,
+                'nombre_completo' => trim(implode(' ', array_filter([
+                    $fila->pers_nombre,
+                    $fila->pers_apellido_paterno,
+                    $fila->pers_apellido_materno,
+                ]))),
+            ])
+            ->all();
+
+        return ['grupo' => $grupo, 'personas' => $personas];
+    }
+
     public function crearGrupo(array $datos): Grupo
     {
         return DB::transaction(function () use ($datos): Grupo {

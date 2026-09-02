@@ -28,6 +28,75 @@ class ConsultaPreRegistros
     }
 
     /**
+     * Reporte de todos los registros al sistema: un renglón por solicitud.
+     *
+     * La unidad es la solicitud y no la persona porque quien participa en dos
+     * convocatorias se registró dos veces, y el reporte cuenta registros. Por
+     * eso no pasa por ultimasSolicitudes(), que es justo lo contrario: deja
+     * una sola solicitud por persona para la bandeja de revisión.
+     *
+     * Tampoco lleva el estado vigente, así que se ahorra las dos subconsultas
+     * de bitácora que arrastra consultaBase(): es un censo, no una bandeja de
+     * trabajo. Y no se limita a convocatorias vigentes: es histórico.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function todasLasSolicitudes(?int $id_convocatoria = null): array
+    {
+        return DB::table('solicitud as s')
+            ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
+            ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
+            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
+            ->join('convocatoria as cv', 'cv.conv_id_convocatoria', '=', 's.soli_id_convocatoria')
+            ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
+            /* La sede se elige al final del trámite: la mayoría de los
+               renglones no la tendrá, y eso es un dato del reporte. */
+            ->leftJoin('evaluacion as ev', 'ev.eval_id_evaluacion', '=', 's.soli_id_evaluacion')
+            ->leftJoin('grupo as gr', 'gr.grup_id_grupo', '=', 'ev.grup_id_grupo')
+            ->leftJoin('sede as sd', 'sd.sede_id_sede', '=', 'gr.sede_id_sede')
+            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotNull('u.usua_clave_acceso')
+            ->when(
+                $id_convocatoria,
+                fn (Builder $consulta): Builder => $consulta
+                    ->where('s.soli_id_convocatoria', $id_convocatoria)
+            )
+            ->orderByDesc('p.pers_fecha_registro')
+            ->orderByDesc('s.soli_id_solicitud')
+            ->select([
+                's.soli_id_solicitud',
+                'p.pers_nombre',
+                'p.pers_apellido_paterno',
+                'p.pers_apellido_materno',
+                'p.pers_curp',
+                'p.pers_rfc',
+                'p.pers_fecha_registro',
+                'ef.enfe_entidad_federativa',
+                'cv.conv_nombre',
+                'sd.sede_nombre',
+                'gr.grup_fecha_inicio',
+                'gr.grup_hora_inicio',
+                'gr.grup_hora_fin',
+            ])
+            ->get()
+            ->map(fn (object $fila): array => [
+                'folio' => (string) $fila->soli_id_solicitud,
+                'curp' => (string) $fila->pers_curp,
+                'nombre_completo' => $this->nombreCompleto($fila),
+                'rfc' => trim((string) ($fila->pers_rfc ?? '')),
+                'entidad_federativa' => (string) ($fila->enfe_entidad_federativa ?? ''),
+                'fecha_registro' => (string) $fila->pers_fecha_registro,
+                'convocatoria' => (string) ($fila->conv_nombre ?? ''),
+                'sede' => (string) ($fila->sede_nombre ?? ''),
+                'fecha_grupo' => (string) ($fila->grup_fecha_inicio ?? ''),
+                'horario' => $fila->grup_hora_inicio
+                    ? trim((string) $fila->grup_hora_inicio).' a '.trim((string) $fila->grup_hora_fin)
+                    : '',
+            ])
+            ->all();
+    }
+
+    /**
      * Estados con los que se puede filtrar la bandeja. Son los tres que le
      * importan a quien revisa; se toman del catálogo para conservar su
      * escritura exacta y se comparan sin distinguir mayúsculas, porque los

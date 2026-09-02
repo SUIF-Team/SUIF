@@ -60,6 +60,157 @@ class ConsultaPagos
     }
 
     /**
+     * Reporte de quienes ya pagaron su referencia bancaria.
+     *
+     * Pagado significa que el último renglón de la bitácora es «Completado»,
+     * es decir, que la DEC revisó el comprobante y lo aprobó. Un comprobante
+     * enviado y todavía en revisión no es dinero confirmado y no entra.
+     *
+     * Vive aquí y no en un servicio de reportes aparte porque consultaBase()
+     * ya une pago, persona, rol, entidad, referencia y las tres bitácoras que
+     * hacen falta; repetir esos joins en otra clase sería copiarlos.
+     *
+     * No reutiliza normalizar(): ese método pregunta al disco por el archivo
+     * de cada comprobante, y en un reporte de cientos de renglones eso son
+     * cientos de accesos a disco para un dato que aquí no se usa.
+     *
+     * @return array<int, array<string, string|float|null>>
+     */
+    public function pagadas(?int $id_convocatoria = null): array
+    {
+        $consulta = $this->consultaBase()
+            ->where('cep.esta_estado_pago', self::COMPLETADO);
+
+        return $this->conConvocatoriaYSede($consulta, $id_convocatoria)
+            ->addSelect([
+                'ep.espa_fecha as fecha_validacion',
+                'ep.espa_hora as hora_validacion',
+            ])
+            ->get()
+            ->map(fn (object $fila): array => $this->normalizarPersonaDeReporte($fila) + [
+                'referencia_bancaria' => (string) $fila->pago_referencia_bancaria,
+                /* Dos cifras distintas a propósito: lo que se cobró contra lo
+                   que la persona declaró haber pagado. Su diferencia es justo
+                   lo que se revisa al cortar caja, así que van las dos y como
+                   número, para que se puedan sumar en la hoja. */
+                'monto_cobrado' => $fila->reba_monto === null ? null : (float) $fila->reba_monto,
+                'monto_declarado' => (float) $fila->pago_monto_pagado,
+                'fecha_pago' => (string) $fila->pago_fecha_pago,
+                'fecha_validacion' => trim(
+                    (string) $fila->fecha_validacion.' '.(string) $fila->hora_validacion
+                ),
+            ])
+            ->all();
+    }
+
+    /**
+     * Reporte de quienes pidieron CFDI, con los datos con que se les factura.
+     *
+     * Elegir CFDI y capturar los datos fiscales son dos pasos separados, así
+     * que quien eligió y todavía no captura aparece igual, con las columnas
+     * fiscales vacías: el reporte sirve para saber a quién le falta completar
+     * antes de poder facturarle. De ahí que los joins fiscales sean todos
+     * leftJoin y no join.
+     *
+     * @return array<int, array<string, string|float|null>>
+     */
+    public function solicitudesCfdi(?int $id_convocatoria = null): array
+    {
+        $consulta = $this->consultaBase()
+            ->where('pg.pago_uso_cfdi', true)
+            ->leftJoin('dato_fiscal as df', 'df.dafi_id_dato_fiscal', '=', 'pg.pago_id_dato_fiscal')
+            ->leftJoin('regimen_fiscal as rf', 'rf.refi_id_regimen_fiscal', '=', 'df.dafi_id_regimen_fiscal')
+            ->leftJoinSub($this->correosDeFacturacion(), 'cf', function ($join): void {
+                $join->on('cf.comu_id_persona', '=', 'p.pers_id_persona');
+            })
+            ->addSelect([
+                'df.dafi_razon_social',
+                'df.dafi_rfc',
+                'df.dafi_persona_moral',
+                'df.dafi_id_codigo_postal',
+                'rf.refi_regimen_fiscal',
+                'cf.comu_descripcion as correo_facturacion',
+            ]);
+
+        return $this->conConvocatoriaYSede($consulta, $id_convocatoria)
+            ->get()
+            ->map(function (object $fila): array {
+                $fiscales = $this->datosFiscales($fila);
+
+                return $this->normalizarPersonaDeReporte($fila) + [
+                    'referencia_bancaria' => (string) $fila->pago_referencia_bancaria,
+                    'monto_declarado' => (float) $fila->pago_monto_pagado,
+                    'fecha_pago' => (string) $fila->pago_fecha_pago,
+                    'razon_social' => $fiscales['razon_social'] ?? '',
+                    'rfc_fiscal' => $fiscales['rfc'] ?? '',
+                    'tipo_persona' => $fiscales['tipo_persona'] ?? '',
+                    'regimen_fiscal' => $fiscales['regimen_fiscal'] ?? '',
+                    'codigo_postal' => $fiscales['codigo_postal'] ?? '',
+                    'correo_facturacion' => $fiscales['correo'] ?? '',
+                    'captura' => $fiscales === null ? 'Pendiente de capturar' : 'Completa',
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * Convocatoria, sede y horario: lo que los dos reportes necesitan y la
+     * bandeja no, más el filtro opcional por convocatoria.
+     *
+     * La sede va con leftJoin porque se elige después de pagar: quien acaba de
+     * pagar todavía no tiene grupo y debe aparecer en el reporte igual.
+     */
+    private function conConvocatoriaYSede(Builder $consulta, ?int $id_convocatoria): Builder
+    {
+        return $consulta
+            ->join('convocatoria as cv', 'cv.conv_id_convocatoria', '=', 's.soli_id_convocatoria')
+            ->leftJoin('evaluacion as ev', 'ev.eval_id_evaluacion', '=', 's.soli_id_evaluacion')
+            ->leftJoin('grupo as gr', 'gr.grup_id_grupo', '=', 'ev.grup_id_grupo')
+            ->leftJoin('sede as sd', 'sd.sede_id_sede', '=', 'gr.sede_id_sede')
+            ->when(
+                $id_convocatoria,
+                fn (Builder $filtrada): Builder => $filtrada
+                    ->where('s.soli_id_convocatoria', $id_convocatoria)
+            )
+            ->addSelect([
+                'cv.conv_nombre',
+                'sd.sede_nombre',
+                'gr.grup_fecha_inicio',
+                'gr.grup_hora_inicio',
+                'gr.grup_hora_fin',
+            ])
+            ->orderBy('p.pers_apellido_paterno')
+            ->orderBy('p.pers_apellido_materno')
+            ->orderBy('p.pers_nombre');
+    }
+
+    /**
+     * Las columnas que comparten los dos reportes de pagos.
+     *
+     * @return array<string, string>
+     */
+    private function normalizarPersonaDeReporte(object $fila): array
+    {
+        $horario = $fila->grup_hora_inicio
+            ? trim((string) $fila->grup_hora_inicio).' a '.trim((string) $fila->grup_hora_fin)
+            : '';
+
+        return [
+            'curp' => (string) $fila->pers_curp,
+            'nombre_completo' => trim(implode(' ', array_filter([
+                $fila->pers_nombre,
+                $fila->pers_apellido_paterno,
+                $fila->pers_apellido_materno,
+            ]))),
+            'entidad_federativa' => (string) ($fila->enfe_entidad_federativa ?? ''),
+            'convocatoria' => (string) ($fila->conv_nombre ?? ''),
+            'sede' => (string) ($fila->sede_nombre ?? ''),
+            'fecha_grupo' => (string) ($fila->grup_fecha_inicio ?? ''),
+            'horario' => $horario,
+        ];
+    }
+
+    /**
      * Comprobantes enviados que siguen esperando decisión. Se cuenta sobre la
      * misma consulta de la bandeja para que el indicador del dashboard y lo
      * que ahí se ve como «Por revisar» no se puedan desincronizar; se resuelve

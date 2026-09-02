@@ -176,6 +176,96 @@ trait SiembraAdministradores
     }
 
     /**
+     * Las tablas que los reportes necesitan y la bandeja administrativa no.
+     *
+     * Va aparte de crearEsquemaAdministrativo() y no dentro: sólo las pruebas
+     * de reportes las usan, y agregarlas al esquema común haría más lentas las
+     * otras siete pruebas que comparten el trait sin darles nada a cambio.
+     *
+     * Se invoca después de crearEsquemaAdministrativo().
+     */
+    protected function crearEsquemaDeReportes(): void
+    {
+        foreach ([
+            'comunicacion',
+            'tipo_comunicacion',
+            'dato_fiscal',
+            'regimen_fiscal',
+            'codigo_postal',
+            'evaluacion',
+            'grupo',
+            'sede',
+        ] as $tabla) {
+            Schema::dropIfExists($tabla);
+        }
+
+        Schema::create('sede', function (Blueprint $table): void {
+            $table->increments('sede_id_sede');
+            $table->string('sede_nombre', 150);
+            $table->text('sede_direccion');
+            $table->integer('sede_cupo');
+            $table->boolean('sede_estado')->default(true);
+        });
+
+        /* Un grupo es cada aplicación del examen en una sede, con su horario.
+           Una sede puede tener varias: no hay único sobre sede_id_sede. */
+        Schema::create('grupo', function (Blueprint $table): void {
+            $table->increments('grup_id_grupo');
+            $table->integer('sede_id_sede');
+            $table->date('grup_fecha_inicio');
+            $table->date('grup_fecha_fin');
+            $table->time('grup_hora_inicio');
+            $table->time('grup_hora_fin');
+        });
+
+        /* Una evaluación por grupo: es contra ella que las solicitudes se
+           inscriben, a través de solicitud.soli_id_evaluacion. */
+        Schema::create('evaluacion', function (Blueprint $table): void {
+            $table->increments('eval_id_evaluacion');
+            $table->integer('grup_id_grupo');
+            $table->integer('eval_resultado')->nullable();
+        });
+
+        Schema::create('codigo_postal', function (Blueprint $table): void {
+            $table->string('copo_id_codigo_postal', 5)->primary();
+        });
+
+        Schema::create('regimen_fiscal', function (Blueprint $table): void {
+            $table->increments('refi_id_regimen_fiscal');
+            $table->string('refi_regimen_fiscal', 35);
+        });
+
+        Schema::create('dato_fiscal', function (Blueprint $table): void {
+            $table->increments('dafi_id_dato_fiscal');
+            $table->integer('dafi_id_regimen_fiscal');
+            $table->string('dafi_id_codigo_postal', 5);
+            $table->string('dafi_razon_social', 35);
+            $table->string('dafi_rfc', 13);
+            $table->boolean('dafi_persona_moral');
+            $table->boolean('dafi_uso_cfdi');
+        });
+
+        Schema::create('tipo_comunicacion', function (Blueprint $table): void {
+            $table->increments('tico_id_tipo_comunicacion');
+            $table->string('tico_tipo_comunicacion', 25);
+        });
+
+        Schema::create('comunicacion', function (Blueprint $table): void {
+            $table->increments('comu_id_comunicacion');
+            $table->integer('comu_id_persona');
+            $table->integer('comu_id_tipo_comunicacion');
+            $table->string('comu_descripcion', 65);
+        });
+
+        /* La inscripción a un grupo se escribe en SOLICITUD y no en una tabla
+           pivote. La columna se agrega aquí en vez de en el esquema común
+           porque sólo estos reportes recorren esa cadena. */
+        Schema::table('solicitud', function (Blueprint $table): void {
+            $table->integer('soli_id_evaluacion')->nullable();
+        });
+    }
+
+    /**
      * Los cuatro roles y el reparto de privilegios, igual que
      * database/scripts/suif_roles_administrativos.sql.
      */

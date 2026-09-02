@@ -1,0 +1,169 @@
+/* Pantalla de descarga de reportes administrativos. */
+
+.admin-reportes {
+    width: min(100%, 1200px);
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
+}
+
+.admin-reportes-contenedor {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin-reportes-encabezado h1,
+.admin-reportes-encabezado p,
+.admin-reportes-reporte h2,
+.admin-reportes-reporte p {
+    margin-top: 0;
+}
+
+.admin-reportes-encabezado h1 {
+    margin-bottom: 0.4rem;
+    color: var(--text-dark);
+}
+
+.admin-reportes-encabezado p {
+    margin-bottom: 0;
+    color: var(--text-muted);
+}
+
+.admin-reportes-tarjeta {
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
+}
+
+.admin-reportes-aviso {
+    padding: 1rem 1.25rem;
+    color: var(--text-muted);
+}
+
+.admin-reportes-aviso--error {
+    border-color: #d8a3a3;
+    background: #fdf3f3;
+    color: #8c2f2f;
+}
+
+/* Un reporte por renglón: cada uno tiene su propio filtro y su botón, y
+   ponerlos en columnas estrechas apretaría los selectores. */
+.admin-reportes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-reportes-reporte {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 1.25rem 1.5rem;
+}
+
+.admin-reportes-reporte h2 {
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+    color: var(--text-dark);
+}
+
+.admin-reportes-reporte p {
+    margin-bottom: 0;
+    max-width: 46ch;
+    color: var(--text-muted);
+}
+
+.admin-reportes-formulario {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.admin-reportes-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.admin-reportes-campo span {
+    font-size: var(--fs-ui);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.admin-reportes-campo select {
+    min-width: 16rem;
+    max-width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: #fff;
+    font-size: var(--fs-ui);
+    color: var(--text-dark);
+}
+
+.admin-reportes-acciones {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.admin-reportes-boton {
+    padding: 0.6rem 1.15rem;
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    font-size: var(--fs-ui);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-reportes-boton--primario {
+    background: var(--unam-blue);
+    color: #fff;
+}
+
+.admin-reportes-boton--primario:hover,
+.admin-reportes-boton--primario:focus-visible {
+    background: var(--unam-blue-dark);
+    color: #fff;
+}
+
+.admin-reportes-boton--secundario {
+    border-color: var(--border-light);
+    background: #fff;
+    color: var(--text-dark);
+}
+
+.admin-reportes-boton--secundario:hover,
+.admin-reportes-boton--secundario:focus-visible {
+    background: #f2f4f7;
+    color: var(--text-dark);
+}
+
+/* En pantallas angostas el formulario deja de caber al lado de la descripción
+   y pasa debajo, ocupando el ancho completo. */
+@media (max-width: 860px) {
+    .admin-reportes-reporte {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-reportes-formulario,
+    .admin-reportes-campo,
+    .admin-reportes-campo select {
+        width: 100%;
+    }
+
+    .admin-reportes-campo select {
+        min-width: 0;
+    }
+}

@@ -60,6 +60,69 @@ sudo -u postgres dropdb suif_verifica
   otro host o almacenamiento institucional queda a cargo del responsable de
   infraestructura.
 
+## Dependencias nuevas de Composer
+
+Cuando un `git pull` trae un `composer.json` con un paquete que la VM todavía
+no tiene —hoy `phpoffice/phpspreadsheet`, que genera los reportes en Excel—
+hay que instalarlo antes de tocar los cachés.
+
+**Todo esto se corre dentro de `/var/www/SUIF`.** Ejecutarlo desde `/root` es
+el error más fácil de cometer: Composer busca el `composer.json` del
+directorio actual, no encuentra ninguno y responde *«Composer could not find a
+composer.json file in /root»*. El proyecto no está roto; sólo estabas parado en
+otro lado.
+
+```bash
+cd /var/www/SUIF
+```
+
+PhpSpreadsheet exige extensiones que dompdf no pedía. Conviene comprobarlas
+antes, porque si falta alguna el `composer update` aborta a la mitad y deja el
+`composer.json` modificado con `vendor/` a medias:
+
+```bash
+php -m | grep -ixE 'gd|zip|xml|xmlreader|xmlwriter|simplexml|mbstring|iconv|fileinfo|ctype'
+```
+
+Deben aparecer las diez. En AlmaLinux las que suelen faltar se instalan con
+`sudo dnf install php-gd php-xml php-pecl-zip` y requieren reiniciar `httpd`.
+
+### Por qué no como root
+
+Composer avisa *«Do not run Composer as root/super user!»* y en este caso el
+aviso importa: lo que escriba quedaría con dueño `root` dentro de `vendor/`, y
+el usuario con el que corre Apache dejaría de poder leerlo. Primero hay que ver
+de quién son los archivos:
+
+```bash
+stat -c '%U:%G' /var/www/SUIF /var/www/SUIF/vendor
+```
+
+Con ese dueño —normalmente `apache`— la instalación va así:
+
+```bash
+sudo -u apache composer update phpoffice/phpspreadsheet
+```
+
+Si `apache` tiene la shell en `nologin` y ese comando no arranca, la salida es
+correr como root y devolver el dueño inmediatamente después, sin dejar el
+estado a medias:
+
+```bash
+composer update phpoffice/phpspreadsheet && chown -R apache:apache vendor composer.lock
+```
+
+Se actualiza **sólo ese paquete**, sin `--with-dependencies`: sus dependencias
+(`markbaker/complex`, `markbaker/matrix`, `maennchen/zipstream-php`,
+`composer/pcre`, `psr/simple-cache`) son todas nuevas y entran igual, mientras
+que la bandera además movería versiones de paquetes que hoy funcionan. Sólo si
+Composer se queja de un conflicto conviene reintentar con `-W`.
+
+Después de instalar, el orden de cachés de la sección siguiente sigue siendo
+obligatorio: `php artisan optimize:clear` antes de recachear. Las rutas nuevas
+de `/admin/reportes` no existen para la aplicación mientras el caché viejo esté
+puesto, y sus middleware `can:` tampoco se aplicarían.
+
 ## Checklist de despliegue de las correcciones de seguridad
 
 En orden, después del `git pull` que traiga esta serie de cambios:

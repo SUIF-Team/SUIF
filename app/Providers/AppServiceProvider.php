@@ -82,6 +82,27 @@ class AppServiceProvider extends ServiceProvider
             return app(AccesoAdministrativo::class)->esAdministrador($usuario);
         });
 
+        /* La pantalla de reportes es de todas las áreas y de ninguna: cada
+           reporte lleva dentro los datos de un módulo distinto y exige el
+           permiso de ese módulo. Este permiso sólo abre la puerta; lo que se
+           ve una vez dentro lo decide otra vez el permiso de cada reporte.
+
+           No reutiliza 'generar-reportes' porque ese privilegio es el de
+           certificados y resultados de examen, que no aparecen aquí. */
+        Gate::define('ver-reportes', function (Usuario $usuario): bool {
+            foreach ([
+                AccesoAdministrativo::VALIDACION_REGISTRO,
+                AccesoAdministrativo::GESTIONAR_PAGOS,
+                AccesoAdministrativo::GESTIONAR_SEDES,
+            ] as $privilegio) {
+                if ($usuario->tienePrivilegio($privilegio)) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
             /* La barra de avance recibe siempre el avance real de la persona. */
         View::composer('partials.sidebar-progreso', function ($view) {
             $view->with('avance', new AvancePersona(auth()->id()));

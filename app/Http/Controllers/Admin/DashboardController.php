@@ -92,6 +92,16 @@ class DashboardController extends Controller
                 'permiso' => 'gestionar-usuarios',
                 'descripcion' => 'Crea, edita y administra las cuentas de quienes operan el sistema.',
             ],
+            /* Reportes va junto a Certificados y no antes: se descarga cuando
+               el trámite ya ocurrió, no mientras se opera. Su permiso es una
+               unión —basta poder descargar un reporte para ver la pantalla—
+               porque dentro cada tarjeta se filtra otra vez. */
+            [
+                'titulo' => 'Reportes',
+                'ruta' => 'admin.reportes.index',
+                'permiso' => 'ver-reportes',
+                'descripcion' => 'Descarga en Excel los pagos, los registros, las listas de grupo y los datos de facturación.',
+            ],
             [
                 'titulo' => 'Certificados',
                 'permiso' => 'generar-reportes',
