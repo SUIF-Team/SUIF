@@ -6,14 +6,20 @@
     mira tiene permiso de descargar, así que aquí se recorren tal cual. Un
     Admin UIF y un Admin DEC ven pantallas distintas.
 
-    Cada tarjeta es un formulario GET con su selector; no hay estado que
-    guardar ni nada que validar en el navegador, así que no monta una app Vue.
+    Cada tarjeta es un formulario GET con su selector: no hay estado que
+    guardar ni nada que validar en el navegador. Lo único que necesita Vue es
+    el botón de regreso, que es un componente compartido.
 --}}
 @extends('layouts.admin')
 
 @section('title', 'SUIF — Reportes')
 
 @section('styles')
+{{-- admin-preregistro.css es la hoja base de la zona administrativa: de ahí
+     salen las clases del componente <back-navigation>. Sin ella el icono de
+     regreso se dibuja como un triángulo negro, porque el path se rellena por
+     omisión y el svg no tiene medidas propias. --}}
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-reportes.css') }}">
 @endsection
 

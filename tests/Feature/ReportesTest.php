@@ -97,6 +97,21 @@ class ReportesTest extends TestCase
             ->assertDontSee('Registros totales al sistema');
     }
 
+    /**
+     * El botón de regreso es un componente compartido y sus clases viven en la
+     * hoja base de la zona administrativa. Sin ella el icono se dibujaba como
+     * un triángulo negro que ocupaba media pantalla: el path se rellena por
+     * omisión y el svg no trae medidas propias.
+     */
+    public function test_la_pantalla_carga_la_hoja_base_de_la_zona_administrativa(): void
+    {
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.reportes.index'))
+            ->assertOk()
+            ->assertSee('assets/css/pages/admin-preregistro.css', false)
+            ->assertSee('assets/css/pages/admin-reportes.css', false);
+    }
+
     public function test_el_tablero_anuncia_los_reportes_a_quien_puede_abrirlos(): void
     {
         $this->actingAs(Usuario::findOrFail(2))
