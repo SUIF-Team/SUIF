@@ -13,16 +13,17 @@ más pequeña que el texto del campo que rotula.
 ### Familias
 
 - **Merriweather** (`--font-serif`, peso 700) para títulos: `h1`–`h6` y las clases
-  que hacen de título de pantalla, sección, tarjeta o modal, más el nombre del
-  sistema en la navbar.
+  que hacen de título de pantalla, sección, tarjeta o modal.
 - **Open Sans** (`--font-sans`, pesos 400/600/700) para todo lo demás: cuerpo,
   etiquetas, `legend`, campos, botones, tablas, chips, sobretítulos, cifras,
   navbar, footer, sidebar y avisos.
 - Criterio: si el elemento contesta «¿de qué trata esta pantalla o sección?», es
   serif. Si se lee, se llena o se pulsa, es sans.
-- `--font-nav` (Raleway) queda definida solo para la landing pública
-  (`partials/navbar.css`). Ninguna hoja del sistema la usa; se elimina cuando la
-  landing migre.
+- **Raleway** (`--font-nav`, peso 700) tiene un solo uso en el sistema: el nombre
+  del sistema en el encabezado (`.navbar-sistema-titulo`). Es la firma de la
+  aplicación, no un título de contenido, y por eso conserva su propia familia. La
+  navbar de la landing pública también la usa. Ninguna otra regla del sistema
+  puede recurrir a ella.
 - Única excepción de familia: la CURP en `admin-administradores.css` usa
   `'Courier New'` por ser un identificador de ancho fijo.
 
@@ -36,7 +37,7 @@ de `body.pagina-sistema`.
 | `--fs-cifra` | 2 | 32 | Número grande de un indicador. Sans 700, `line-height: 1`. |
 | `--fs-pagina` | 1.5 | 24 | Título de pantalla (`h1`), uno por pantalla. También el letrero de resultado y los iconos circulares de cierre de flujo. |
 | `--fs-seccion` | 1.125 | 18 | Título de sección o tarjeta (`h2`), nombre de la persona en el detalle admin, códigos destacados. |
-| `--fs-subtitulo` | 1 | 16 | Subtítulo (`h3`), título de modal, nombre de tarjeta pequeña, nombre del sistema en la navbar. |
+| `--fs-subtitulo` | 1 | 16 | Subtítulo (`h3`), título de modal, nombre de tarjeta pequeña, nombre del sistema en el encabezado. |
 | `--fs-cuerpo` | 0.9375 | 15 | Texto corrido: párrafos, `dd`, avisos, descripciones. |
 | `--fs-ui` | 0.875 | 14 | Etiquetas y `legend`, campos y `select`, botones, celdas, enlaces «volver/atrás/salir», iniciales de avatar. |
 | `--fs-auxiliar` | 0.8125 | 13 | Ayuda bajo un campo, mensajes de validación, notas, `small`, soporte del sidebar. |
@@ -94,9 +95,10 @@ tocan colores, espaciados, radios ni la duplicación de componentes.
 
 ## Verificación
 
-Auditoría estática sobre las hojas del sistema: sin `Raleway` ni `--font-nav`, sin
-tamaños literales en px o rem, sin pesos 300/500/800, sin `font:` abreviado, sin
-`!important` tipográfico, y solo `0.04em` y `0.08em` como espaciado de letra.
+Auditoría estática sobre las hojas del sistema: `--font-nav` solo en
+`.navbar-sistema-titulo`, sin tamaños literales en px o rem, sin pesos
+300/500/800, sin `font:` abreviado, sin `!important` tipográfico, y solo `0.04em`
+y `0.08em` como espaciado de letra.
 
 En la máquina virtual, `php artisan view:cache` y `php artisan test` para confirmar
 que las vistas compilan, más una revisión visual de las pantallas de pre-registro,

@@ -60,10 +60,12 @@
     background: rgba(255, 255, 255, 0.9);
 }
 
+/* El nombre del sistema conserva Raleway: es la firma del encabezado, no un
+   titulo de contenido. Por eso el layout del sistema tambien la descarga. */
 .navbar-sistema-titulo {
     margin: 0;
     color: #ffffff;
-    font-family: var(--font-serif);
+    font-family: var(--font-nav);
     font-size: var(--fs-subtitulo);
     font-weight: 700;
     line-height: 1.25;

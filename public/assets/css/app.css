@@ -14,7 +14,7 @@
     --text-dark: #1a1a1a;
     --text-muted: #555555;
     --font-sans: 'Open Sans', Arial, sans-serif;
-    /* Solo la landing publica (partials/navbar.css). El sistema no la usa. */
+    /* El nombre del sistema en el encabezado y la navbar de la landing. */
     --font-nav: 'Raleway', Arial, sans-serif;
     --font-serif: 'Merriweather', Georgia, serif;
 
