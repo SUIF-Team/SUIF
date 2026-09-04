@@ -77,7 +77,7 @@ class GestionAdministradoresTest extends TestCase
             ->assertSee('Registro Prueba Ulises')
             ->assertSee('Pagos Prueba Delia')
             /* La bandeja administra cuentas de operación, no expedientes. */
-            ->assertDontSee('Persona Solicitante Prueba');
+            ->assertDontSee('Solicitante Prueba Persona');
     }
 
     public function test_rechaza_una_curp_ya_registrada(): void
@@ -240,12 +240,12 @@ class GestionAdministradoresTest extends TestCase
             ->get(route('admin.administradores.index', ['rol' => 'Admin DEC']))
             ->assertOk()
             ->assertSee('Pagos Prueba Delia')
-            ->assertDontSee('Ulises Registro Prueba');
+            ->assertDontSee('Registro Prueba Ulises');
 
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.administradores.index', ['buscar' => 'UIFA900101']))
             ->assertOk()
             ->assertSee('Registro Prueba Ulises')
-            ->assertDontSee('Delia Pagos Prueba');
+            ->assertDontSee('Pagos Prueba Delia');
     }
 }

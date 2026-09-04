@@ -162,9 +162,9 @@ class SeleccionReferenciaTest extends TestCase
             $table->string('reba_path', 200)->nullable();
         });
 
-        Schema::table('convocatoria', function (Blueprint $table): void {
-            $table->string('conv_monto_recuperacion', 20)->nullable();
-        });
+        /* CONV_MONTO_RECUPERACION la crea el esquema común desde que existe el
+           módulo de convocatorias. Volver a declararla aquí revienta la tabla. */
+
 
         foreach (['estado_documento', 'c_estado_documento', 'documento', 'tipo_documento'] as $tabla) {
             Schema::dropIfExists($tabla);
