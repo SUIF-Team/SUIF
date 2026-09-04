@@ -55,8 +55,8 @@
             <div class="convocation-panel">
                 <div class="col-12 col-lg-7 convocation-copy">
                     <span class="period-label">Periodo vigente [2026-1]</span>
-                    <h2 id="convocation-title">Certificación en<br>Materia de Prevención de Operaciones con Recursos de Procedencia Ilícita</h2>
-                    <p>
+                    <h3 id="convocation-title">Certificación en Materia de Prevención de Operaciones con Recursos de Procedencia Ilícita</h3>
+                    <p class="text-justify">
                         Te invitamos a consultar el documento normativo completo donde encontrarás los requisitos detallados, fechas límite, sedes de aplicación disponibles y toda la información oficial necesaria para participar en este ciclo.
                     </p>
                 </div>
