@@ -262,6 +262,7 @@
     margin: 0;
     opacity: 0.92;
     font-size: 0.94rem;
+    text-align: justify;
 }
 
 .document-button {
@@ -404,6 +405,7 @@
 .faq-accordion .accordion-body {
     padding: 0 0 1.5rem;
     color: var(--text-muted);
+    text-align: justify;
 }
 
 @media (max-width: 1199.98px) {
