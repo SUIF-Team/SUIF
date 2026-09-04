@@ -16,15 +16,15 @@
                     <span class="home-eyebrow">Plataforma oficial</span>
                     <h1 id="home-title" class="hero-title">
                         SUIF
-                        <span>Certificaciones FCA UNAM</span>
+                        {{-- <span>Certificaciones FCA UNAM</span> --}}
                     </h1>
                     <p class="hero-description">
-                        El espacio digital diseñado para gestionar tu desarrollo profesional. Consulta convocatorias, realiza pre-registros, genera pagos y da seguimiento a tu certificación institucional en un solo lugar.
+                        Certificado en materia de Prevención de Operaciones con Recursos de Procedencia Ilícita. Consulta convocatorias, realiza pre-registros, genera pagos y da seguimiento a tu certificación institucional en un solo lugar.
                     </p>
-                    <div class="d-flex flex-wrap gap-3">
+                    {{-- <div class="d-flex flex-wrap gap-3">
                         <a href="#convocatoria" class="btn btn-pill btn-gold">Descubrir convocatoria</a>
                         <a href="#proceso" class="btn btn-pill btn-outline-institutional">Conoce el proceso</a>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
