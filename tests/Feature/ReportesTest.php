@@ -284,8 +284,8 @@ class ReportesTest extends TestCase
         $this->assertSame(6500.0, $fila['monto_declarado']);
         $this->assertSame('PAGA900101MDFABC05', $fila['curp']);
         /* Apellido paterno, materno y nombre(s), como en toda la zona
-           administrativa: la persona se sembró como Ana Alvarez Prueba. */
-        $this->assertSame('Alvarez Prueba Ana', $fila['nombre_completo']);
+           administrativa: la persona se sembró como Ana Alvarez Pagada. */
+        $this->assertSame('Alvarez Pagada Ana', $fila['nombre_completo']);
         $this->assertSame('Convocatoria 2026', $fila['convocatoria']);
         $this->assertSame('2026-02-10', $fila['fecha_pago']);
         /* La fecha de validación es la del renglón Completado de la bitácora,

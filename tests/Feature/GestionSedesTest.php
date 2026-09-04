@@ -681,6 +681,10 @@ class GestionSedesTest extends TestCase
             $table->integer('pago_id_pago')->primary();
             $table->string('pago_comprobante_path')->nullable();
             $table->decimal('pago_monto_pagado', 10, 2)->nullable();
+            /* AvancePersona::cargarPago() la selecciona, y ese avance se arma en
+               cuanto la solicitud tiene pago: sin la columna, las pantallas del
+               participante —las únicas que llegan ahí— revientan. */
+            $table->string('pago_referencia_bancaria', 20)->nullable();
             $table->boolean('pago_uso_cfdi')->nullable();
             $table->integer('pago_id_dato_fiscal')->nullable();
             /* Marca del pago compartido de una referencia especial. */

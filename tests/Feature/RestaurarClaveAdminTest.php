@@ -45,7 +45,7 @@ class RestaurarClaveAdminTest extends TestCase
         $this->actingAs(Usuario::find(2))
             ->post(route('admin.personas.registradas.restaurar-clave', ['id' => 1]))
             ->assertRedirect(route('admin.personas.registradas.index'))
-            ->assertSessionHas('success', 'La clave de Ada Lovelace Byron fue restaurada y enviada a su correo principal.');
+            ->assertSessionHas('success', 'La clave de Lovelace Byron Ada fue restaurada y enviada a su correo principal.');
 
         $hash = $this->hashDe(1);
 

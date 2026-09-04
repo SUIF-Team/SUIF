@@ -102,9 +102,13 @@ class ConsultaPersonasRegistradasTest extends TestCase
             ->assertOk()
             /* Apellido paterno, materno y nombre(s): el orden de toda la zona
                administrativa. La bandeja sigue llegando con lo más reciente
-               arriba y el alfabético se elige en el selector de orden. */
+               arriba y el alfabético se elige en el selector de orden.
+               La segunda persona se busca por CURP y no por su nombre porque
+               el renglón lo pinta Vue: el nombre sólo llega al HTML dentro del
+               @json de data-vista, y ahí «Histórica» se escribe Hist\u00f3rica.
+               Un assertSee con el acento no lo encontraría. */
             ->assertSee('Lovelace Byron Ada')
-            ->assertSee('Candidata Histórica Cuenta')
+            ->assertSee('LEGA900101MDFABC05')
             ->assertSee('id="bandeja-personas-registradas-orden"', false)
             ->assertSee('Aprobada')
             ->assertDontSee('Hopper Murray Grace')
