@@ -225,6 +225,8 @@ class ReportesTest extends TestCase
             'referencia'
         );
 
+        /* El orden importa y por eso se compara con assertSame: el reporte sale
+           por número de referencia ascendente, que es como se lee el catálogo. */
         $this->assertSame([
             '1000000001' => 'Validada',
             /* Comprobante enviado y sin resolver, aunque la vigencia ya pasó. */
@@ -234,9 +236,9 @@ class ReportesTest extends TestCase
             '1000000005' => 'Validada',
             '1000000006' => 'Sin pagar',
             '1000000007' => 'Vencida',
+            '2000000001' => 'Sin asignar',
             /* Nadie la tomó y caducó: también es una referencia vencida. */
             '2000000002' => 'Vencida',
-            '2000000001' => 'Sin asignar',
             '3000000001' => 'Validada',
         ], $estados);
     }
