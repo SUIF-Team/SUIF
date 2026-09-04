@@ -231,6 +231,46 @@ recargan desde el CSV de la DEC. Y como `SOLICITUD` conservaba la liga a
 pagos y evaluaciones que ya no existen, esas columnas se ponen en nulo: quien
 ya había elegido sede tendrá que elegirla otra vez.
 
+## suif_limpia_datos.sql: reiniciar el padrón sin reinstalar
+
+No va en el orden de arriba y no se ejecuta en una instalación nueva. Vacía los
+datos capturados —personas participantes, solicitudes, documentos, pagos,
+evaluaciones— y deja en pie los doce catálogos, las convocatorias con su
+bitácora y las cuentas administrativas, para no tener que volver a levantar la
+base desde cero cuando se decide arrancar un padrón limpio.
+
+    psql -v ON_ERROR_STOP=1 -h HOST -U suif -d suif -f suif_limpia_datos.sql
+
+Va **sin** `--single-transaction`, al revés que los demás: éste trae su propio
+`BEGIN`/`COMMIT` y la bandera abriría una transacción de más, con dos avisos de
+psql. Con `ON_ERROR_STOP=1` basta —un error corta la sesión antes del `COMMIT`
+y la base se revierte sola—.
+
+Dos decisiones que conviene tener presentes antes de correrlo:
+
+- **`SEDE` y `REFERENCIA_BANCARIA` se borran.** Las sedes se recapturan desde la
+  pantalla y las referencias se recargan del CSV de la DEC. Hasta entonces nadie
+  puede elegir horario ni recibir su referencia de pago.
+- **Los administradores sobreviven.** Se borra sólo lo que cuelga del rol
+  `Persona`, así que no hay que volver a correr `suif:crear-admin`. Por eso
+  `PERSONA` y `USUARIO` se limpian con `DELETE` y no con `TRUNCATE`, y sus
+  secuencias no se reinician.
+
+`CONVOCATORIA` y `ESTADO_CONVOCATORIA` se conservan a propósito: el pre-registro
+exige convocatoria `Vigente` dentro de su ventana de fechas, y vaciar la bitácora
+lo rompería en silencio. Si las fechas de la convocatoria ya vencieron, se da de
+alta una nueva desde la pantalla del módulo.
+
+El script no borra archivos. Los que subió la gente quedan huérfanos en
+`storage/app/private/` (`documentos`, `comprobantes`, `referencias`,
+`certificados`, `facturas`, `legacy`), `storage/app/preregistro` y
+`storage/app/referencias`. Limpiarlos es un paso manual aparte.
+
+Termina con un `SELECT` de conteos —`BORRADO` debe quedar en cero, `CONSERVA`
+con renglones— para leer de un vistazo que hizo lo que debía. Y como todo lo que
+toca producción: respaldo con `pg_dump` primero y ensayo sobre una base temporal
+restaurada de ese dump, según `deploy/README.md`.
+
 ## El comprobante del pago se elige una sola vez
 
 `suif_comprobante_fiscal.sql` es **requisito de despliegue** del selector de
