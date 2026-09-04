@@ -5,6 +5,7 @@ namespace App\Servicios;
 use DomainException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Throwable;
@@ -40,12 +41,14 @@ class LibroExcel
      * @param  array<int, string>  $encabezados
      * @param  array<int, array<int, string|int|float|null>>  $filas
      * @param  array<int, float|int>  $anchos  Número de columna (base 1) => ancho.
+     * @param  array<int, int>  $ajustar  Columnas (base 1) que envuelven el texto.
      */
     public function descarga(
         string $nombre_archivo,
         array $encabezados,
         array $filas,
-        array $anchos = []
+        array $anchos = [],
+        array $ajustar = []
     ): Response {
         if (count($filas) > self::MAX_FILAS) {
             throw new DomainException(
@@ -57,7 +60,7 @@ class LibroExcel
         $libro = new Spreadsheet();
 
         try {
-            $contenido = $this->escribir($libro, $encabezados, $filas, $anchos);
+            $contenido = $this->escribir($libro, $encabezados, $filas, $anchos, $ajustar);
         } finally {
             /* Sin esto las hojas quedan enlazadas al libro por referencias
                circulares y el recolector no las suelta: en un worker que
@@ -78,12 +81,14 @@ class LibroExcel
      * @param  array<int, string>  $encabezados
      * @param  array<int, array<int, string|int|float|null>>  $filas
      * @param  array<int, float|int>  $anchos
+     * @param  array<int, int>  $ajustar
      */
     private function escribir(
         Spreadsheet $libro,
         array $encabezados,
         array $filas,
-        array $anchos
+        array $anchos,
+        array $ajustar
     ): string {
         $hoja = $libro->getActiveSheet();
         $hoja->setTitle('Reporte');
@@ -103,6 +108,21 @@ class LibroExcel
            través de GD y es, con diferencia, lo más caro de generar el libro. */
         foreach ($anchos as $columna => $ancho) {
             $hoja->getColumnDimensionByColumn($columna)->setWidth($ancho);
+        }
+
+        /* Una celda sin ajuste de texto se derrama sobre las columnas de la
+           derecha y tapa lo que tengan; el nombre de una convocatoria pasa de
+           cien caracteres y se come tres columnas. Envolverla la deja dentro de
+           su ancho. El alto de la fila no se toca a propósito: mientras no se
+           fije, Excel lo calcula solo para el texto envuelto. */
+        $ultima_fila = $hoja->getHighestRow();
+
+        foreach ($ajustar as $columna) {
+            $letra = Coordinate::stringFromColumnIndex($columna);
+
+            $hoja->getStyle($letra.'1:'.$letra.$ultima_fila)
+                ->getAlignment()
+                ->setWrapText(true);
         }
 
         /* Con el encabezado congelado la tabla se lee sin perder de vista qué

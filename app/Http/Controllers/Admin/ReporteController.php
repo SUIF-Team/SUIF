@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\CatalogoReferencias;
 use App\Servicios\GestionConvocatorias;
 use App\Servicios\GestionSedes;
 use App\Servicios\LibroExcel;
@@ -40,27 +41,31 @@ class ReporteController extends Controller
         $tarjetas = array_values(array_filter([
             [
                 'clave' => 'pagos',
-                'titulo' => 'Referencias bancarias pagadas',
-                'descripcion' => 'Quiénes ya pagaron su referencia, con el monto cobrado y el declarado.',
+                'titulo' => 'Referencias bancarias',
+                'descripcion' => 'El catálogo completo con el estado de cada referencia. '
+                    .'Acotar por convocatoria deja fuera las que aún no se asignan: '
+                    .'todavía no pertenecen a ninguna.',
                 'ruta' => 'admin.reportes.pagos',
                 'permiso' => 'gestionar-pagos',
-                'filtro' => 'convocatoria',
+                'filtros' => ['convocatoria', 'estado'],
             ],
             [
                 'clave' => 'cfdi',
                 'titulo' => 'Solicitudes de CFDI',
-                'descripcion' => 'Quiénes pidieron factura y con qué datos fiscales se les emite.',
+                'descripcion' => 'Un renglón por factura a emitir: quién la pide y con qué datos fiscales. '
+                    .'Una empresa que inscribió a varias personas paga una sola vez y se le factura una sola vez.',
                 'ruta' => 'admin.reportes.cfdi',
                 'permiso' => 'gestionar-pagos',
-                'filtro' => 'convocatoria',
+                'filtros' => ['convocatoria', 'mes'],
             ],
             [
                 'clave' => 'registros',
                 'titulo' => 'Registros totales al sistema',
-                'descripcion' => 'Un renglón por solicitud registrada, con los datos de identificación y del trámite.',
+                'descripcion' => 'Un renglón por solicitud resuelta, en orden de folio, '
+                    .'con los datos de identificación, del trámite y su estado.',
                 'ruta' => 'admin.reportes.registros',
                 'permiso' => 'validar-registro',
-                'filtro' => 'convocatoria',
+                'filtros' => ['convocatoria'],
             ],
             [
                 'clave' => 'grupos',
@@ -68,7 +73,7 @@ class ReporteController extends Controller
                 'descripcion' => 'Las personas citadas a una aplicación, con espacio para su firma.',
                 'ruta' => 'admin.reportes.grupos',
                 'permiso' => 'gestionar-sedes',
-                'filtro' => 'grupo',
+                'filtros' => ['grupo'],
             ],
         ], fn (array $tarjeta): bool => Gate::allows($tarjeta['permiso'])));
 
@@ -82,28 +87,35 @@ class ReporteController extends Controller
             'grupos' => $this->necesita($tarjetas, 'grupo')
                 ? $sedes->bandejaGrupos()['grupos']
                 : collect(),
+            /* «Todas» al frente: el reporte sin filtro es el catálogo entero. */
+            'estados' => ['' => 'Todas'] + CatalogoReferencias::ESTADOS_REPORTE,
         ]);
     }
 
-    public function pagos(Request $request, ConsultaPagos $consulta, LibroExcel $excel)
+    public function pagos(Request $request, CatalogoReferencias $catalogo, LibroExcel $excel)
     {
-        $filas = $consulta->pagadas($this->convocatoriaFiltrada($request));
+        $estado = $this->estadoFiltrado($request);
+        $filas = $catalogo->reporte($this->convocatoriaFiltrada($request), $estado);
 
         return $this->entregar(
             $excel,
-            $this->nombre('referencias-pagadas'),
+            $this->nombre('referencias-'.($estado ?: 'todas')),
             [
+                'Referencia bancaria', 'Estado', 'Monto cobrado', 'Vigencia', 'Fecha de asignación',
                 'CURP', 'Nombre completo', 'Entidad federativa', 'Convocatoria',
-                'Referencia bancaria', 'Monto cobrado', 'Monto declarado',
-                'Fecha de pago', 'Fecha de validación', 'Sede', 'Fecha del grupo', 'Horario',
+                'Monto declarado', 'Fecha de pago', 'Fecha de validación',
+                'Sede', 'Fecha del grupo', 'Horario',
             ],
             array_map(fn (array $fila): array => [
+                $fila['referencia'],
+                $fila['estado'],
+                $fila['monto_cobrado'],
+                $fila['vigencia'],
+                $fila['fecha_asignacion'],
                 $fila['curp'],
                 $fila['nombre_completo'],
                 $fila['entidad_federativa'],
                 $fila['convocatoria'],
-                $fila['referencia_bancaria'],
-                $fila['monto_cobrado'],
                 $fila['monto_declarado'],
                 $fila['fecha_pago'],
                 $fila['fecha_validacion'],
@@ -111,38 +123,45 @@ class ReporteController extends Controller
                 $fila['fecha_grupo'],
                 $fila['horario'],
             ], $filas),
-            [1 => 20, 2 => 34, 3 => 20, 4 => 30, 5 => 20, 6 => 15, 7 => 15, 8 => 14, 9 => 20, 10 => 28, 11 => 15, 12 => 18]
+            [1 => 20, 2 => 14, 3 => 15, 4 => 14, 5 => 18, 6 => 20, 7 => 34, 8 => 20, 9 => 30,
+                10 => 15, 11 => 14, 12 => 20, 13 => 28, 14 => 15, 15 => 18],
+            /* El nombre de la convocatoria no cabe en su ancho y taparía a las
+               columnas de la derecha si se derramara. */
+            [9]
         );
     }
 
     public function cfdi(Request $request, ConsultaPagos $consulta, LibroExcel $excel)
     {
-        $filas = $consulta->solicitudesCfdi($this->convocatoriaFiltrada($request));
+        $filas = $consulta->solicitudesCfdi(
+            $this->convocatoriaFiltrada($request),
+            $this->mesFiltrado($request)
+        );
 
         return $this->entregar(
             $excel,
             $this->nombre('solicitudes-cfdi'),
             [
-                'CURP', 'Nombre completo', 'Convocatoria', 'Referencia bancaria',
-                'Monto pagado', 'Fecha de pago', 'Razón social', 'RFC', 'Tipo de persona',
-                'Régimen fiscal', 'Código postal', 'Correo de facturación', 'Datos fiscales',
+                'Razón social', 'RFC', 'Tipo de persona', 'Régimen fiscal', 'Código postal',
+                'Correo de facturación', 'Convocatoria', 'Referencia bancaria',
+                'Monto pagado', 'Fecha de pago', 'Datos fiscales',
             ],
             array_map(fn (array $fila): array => [
-                $fila['curp'],
-                $fila['nombre_completo'],
-                $fila['convocatoria'],
-                $fila['referencia_bancaria'],
-                $fila['monto_declarado'],
-                $fila['fecha_pago'],
                 $fila['razon_social'],
                 $fila['rfc_fiscal'],
                 $fila['tipo_persona'],
                 $fila['regimen_fiscal'],
                 $fila['codigo_postal'],
                 $fila['correo_facturacion'],
+                $fila['convocatoria'],
+                $fila['referencia_bancaria'],
+                $fila['monto_declarado'],
+                $fila['fecha_pago'],
                 $fila['captura'],
             ], $filas),
-            [1 => 20, 2 => 34, 3 => 30, 4 => 20, 5 => 14, 6 => 14, 7 => 34, 8 => 16, 9 => 16, 10 => 30, 11 => 14, 12 => 32, 13 => 22]
+            [1 => 34, 2 => 16, 3 => 16, 4 => 30, 5 => 14, 6 => 32, 7 => 30, 8 => 20,
+                9 => 14, 10 => 14, 11 => 22],
+            [7]
         );
     }
 
@@ -155,7 +174,7 @@ class ReporteController extends Controller
             $this->nombre('registros-totales'),
             [
                 'Folio de solicitud', 'CURP', 'Nombre completo', 'RFC', 'Entidad federativa',
-                'Fecha de registro', 'Convocatoria', 'Sede', 'Fecha del grupo', 'Horario',
+                'Fecha de registro', 'Convocatoria', 'Sede', 'Fecha del grupo', 'Horario', 'Estado',
             ],
             array_map(fn (array $fila): array => [
                 $fila['folio'],
@@ -168,8 +187,11 @@ class ReporteController extends Controller
                 $fila['sede'],
                 $fila['fecha_grupo'],
                 $fila['horario'],
+                $fila['estado'],
             ], $filas),
-            [1 => 18, 2 => 20, 3 => 34, 4 => 16, 5 => 20, 6 => 18, 7 => 30, 8 => 28, 9 => 15, 10 => 18]
+            [1 => 18, 2 => 20, 3 => 34, 4 => 16, 5 => 20, 6 => 18, 7 => 30, 8 => 28, 9 => 15,
+                10 => 18, 11 => 16],
+            [7]
         );
     }
 
@@ -230,16 +252,18 @@ class ReporteController extends Controller
      * @param  array<int, string>  $encabezados
      * @param  array<int, array<int, string|int|float|null>>  $filas
      * @param  array<int, float|int>  $anchos
+     * @param  array<int, int>  $ajustar
      */
     private function entregar(
         LibroExcel $excel,
         string $nombre,
         array $encabezados,
         array $filas,
-        array $anchos
+        array $anchos,
+        array $ajustar = []
     ) {
         try {
-            return $excel->descarga($nombre, $encabezados, $filas, $anchos);
+            return $excel->descarga($nombre, $encabezados, $filas, $anchos, $ajustar);
         } catch (DomainException $error) {
             return redirect()
                 ->route('admin.reportes.index')
@@ -280,6 +304,29 @@ class ReporteController extends Controller
     }
 
     /**
+     * Estado con el que se acota el reporte de referencias. Un valor que no
+     * esté en el catálogo se ignora y devuelve el catálogo entero, que es lo
+     * mismo que no filtrar: la URL se puede escribir a mano.
+     */
+    private function estadoFiltrado(Request $request): string
+    {
+        $estado = (string) $request->query('estado', '');
+
+        return array_key_exists($estado, CatalogoReferencias::ESTADOS_REPORTE) ? $estado : '';
+    }
+
+    /**
+     * Mes calendario del pago, en 'YYYY-MM'. Es lo que devuelve
+     * <input type="month">; cualquier otra cosa se descarta y trae todo.
+     */
+    private function mesFiltrado(Request $request): string
+    {
+        $mes = (string) $request->query('mes', '');
+
+        return preg_match('/^\d{4}-\d{2}$/', $mes) === 1 ? $mes : '';
+    }
+
+    /**
      * Nombre del archivo con la fecha de emisión, para que dos descargas del
      * mismo reporte no se pisen en la carpeta de descargas.
      */
@@ -289,12 +336,12 @@ class ReporteController extends Controller
     }
 
     /**
-     * @param  array<int, array<string, string>>  $tarjetas
+     * @param  array<int, array<string, mixed>>  $tarjetas
      */
     private function necesita(array $tarjetas, string $filtro): bool
     {
         foreach ($tarjetas as $tarjeta) {
-            if ($tarjeta['filtro'] === $filtro) {
+            if (in_array($filtro, $tarjeta['filtros'], true)) {
                 return true;
             }
         }

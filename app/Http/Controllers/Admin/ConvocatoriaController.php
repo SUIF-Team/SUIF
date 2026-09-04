@@ -36,8 +36,20 @@ class ConvocatoriaController extends Controller
         ]);
     }
 
-    public function create()
+    /**
+     * La convocatoria nace vigente y sólo puede haber una a la vez, así que con
+     * otra abierta el formulario no tiene salida: store() la rechazaría después
+     * de capturarla entera. La bandeja apaga el botón, pero la URL se puede
+     * escribir a mano y el aviso tiene que darse aquí también.
+     */
+    public function create(GestionConvocatorias $gestion)
     {
+        if ($gestion->bandeja()['resumen']['vigente'] !== null) {
+            return redirect()
+                ->route('admin.convocatorias.index')
+                ->with('error', 'Ya hay una convocatoria vigente. Ciérrala o interrúmpela para poder crear otra.');
+        }
+
         return view('admin.convocatoria-formulario', [
             'convocatoria' => null,
             'modoEdicion' => false,

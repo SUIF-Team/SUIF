@@ -97,6 +97,31 @@ class GestionConvocatoriasTest extends TestCase
         $this->assertSame(1, DB::table('convocatoria')->count());
     }
 
+    /**
+     * El alta se rechaza al guardar, así que con otra vigente el formulario no
+     * tiene salida: la bandeja apaga el botón y la ruta cierra la puerta de
+     * atrás, para no hacer capturar una convocatoria entera en balde.
+     */
+    public function test_con_una_vigente_no_se_ofrece_ni_se_abre_el_alta(): void
+    {
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.convocatorias.index'))
+            ->assertOk()
+            ->assertSee(route('admin.convocatorias.create'));
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->post(route('admin.convocatorias.store'), $this->datosConvocatoria());
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.convocatorias.index'))
+            ->assertOk()
+            ->assertDontSee(route('admin.convocatorias.create'));
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.convocatorias.create'))
+            ->assertRedirect(route('admin.convocatorias.index'));
+    }
+
     public function test_cerrar_agrega_un_movimiento_y_conserva_el_anterior(): void
     {
         $id = $this->crearConvocatoriaVigente();

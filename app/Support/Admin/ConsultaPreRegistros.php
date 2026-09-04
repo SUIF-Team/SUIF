@@ -13,6 +13,15 @@ class ConsultaPreRegistros
     private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
 
     /**
+     * Los desenlaces de un trámite: los únicos que trae el reporte de registros.
+     *
+     * Se escriben como en el catálogo porque estos tres no tienen variantes de
+     * mayúsculas entre los scripts de la base; la que sí las tiene, «En
+     * revisión», no está en la lista.
+     */
+    private const ESTADOS_RESUELTOS = ['Aprobada', 'Rechazada', 'Cancelada'];
+
+    /**
      * Obtiene una fila por persona pre-registrada. La clave de acceso confirma
      * que concluyó la captura inicial, aunque la convocatoria haya terminado o
      * todavía no haya enviado su documentación a revisión.
@@ -28,16 +37,18 @@ class ConsultaPreRegistros
     }
 
     /**
-     * Reporte de todos los registros al sistema: un renglón por solicitud.
+     * Reporte de los registros al sistema: un renglón por solicitud resuelta.
      *
      * La unidad es la solicitud y no la persona porque quien participa en dos
      * convocatorias se registró dos veces, y el reporte cuenta registros. Por
      * eso no pasa por ultimasSolicitudes(), que es justo lo contrario: deja
      * una sola solicitud por persona para la bandeja de revisión.
      *
-     * Tampoco lleva el estado vigente, así que se ahorra las dos subconsultas
-     * de bitácora que arrastra consultaBase(): es un censo, no una bandeja de
-     * trabajo. Y no se limita a convocatorias vigentes: es histórico.
+     * Sólo trae los trámites que llegaron a un desenlace —Aprobada, Rechazada
+     * o Cancelada—; quien sigue en Pre-registro o En revisión no aparece. El
+     * reporte se lee en orden ascendente de folio, que es como se revisa un
+     * expediente: el primer registro arriba. No se limita a convocatorias
+     * vigentes: es histórico.
      *
      * @return array<int, array<string, string>>
      */
@@ -54,15 +65,23 @@ class ConsultaPreRegistros
             ->leftJoin('evaluacion as ev', 'ev.eval_id_evaluacion', '=', 's.soli_id_evaluacion')
             ->leftJoin('grupo as gr', 'gr.grup_id_grupo', '=', 'ev.grup_id_grupo')
             ->leftJoin('sede as sd', 'sd.sede_id_sede', '=', 'gr.sede_id_sede')
+            /* El estado vigente es el último renglón de la bitácora. La misma
+               subconsulta que usa la bandeja: aquí sirve para publicarlo en la
+               última columna y para dejar fuera los trámites sin resolver. */
+            ->joinSub($this->ultimosEstados(), 'ultimo_estado', function ($join): void {
+                $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
+            })
+            ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
+            ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
             ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
             ->whereNotNull('u.usua_clave_acceso')
+            ->whereIn('ces.esso_estado_solicitud', self::ESTADOS_RESUELTOS)
             ->when(
                 $id_convocatoria,
                 fn (Builder $consulta): Builder => $consulta
                     ->where('s.soli_id_convocatoria', $id_convocatoria)
             )
-            ->orderByDesc('p.pers_fecha_registro')
-            ->orderByDesc('s.soli_id_solicitud')
+            ->orderBy('s.soli_id_solicitud')
             ->select([
                 's.soli_id_solicitud',
                 'p.pers_nombre',
@@ -77,6 +96,7 @@ class ConsultaPreRegistros
                 'gr.grup_fecha_inicio',
                 'gr.grup_hora_inicio',
                 'gr.grup_hora_fin',
+                'ces.esso_estado_solicitud as estado',
             ])
             ->get()
             ->map(fn (object $fila): array => [
@@ -92,6 +112,7 @@ class ConsultaPreRegistros
                 'horario' => $fila->grup_hora_inicio
                     ? trim((string) $fila->grup_hora_inicio).' a '.trim((string) $fila->grup_hora_fin)
                     : '',
+                'estado' => (string) $fila->estado,
             ])
             ->all();
     }

@@ -24,9 +24,22 @@
                 <h1 id="admin-convocatorias-titulo">Gestión de convocatorias</h1>
                 <p>Administra el calendario y la cuota de recuperación de cada convocatoria.</p>
             </div>
-            <a class="admin-sedes-boton admin-sedes-boton--primario" href="{{ route('admin.convocatorias.create') }}">
-                <span aria-hidden="true">+</span> Nueva convocatoria
-            </a>
+            {{-- Sólo puede haber una convocatoria vigente a la vez, y el alta lo
+                 hace cumplir hasta el momento de guardar: sin este aviso alguien
+                 llena el formulario entero para que lo rechacen al final. Es un
+                 <span> y no un <a> deshabilitado, que en HTML no existe: un
+                 enlace inerte seguiría navegando con el teclado. --}}
+            @if ($resumen['vigente'] === null)
+                <a class="admin-sedes-boton admin-sedes-boton--primario" href="{{ route('admin.convocatorias.create') }}">
+                    <span aria-hidden="true">+</span> Nueva convocatoria
+                </a>
+            @else
+                <span class="admin-sedes-boton admin-sedes-boton--deshabilitado"
+                      aria-disabled="true"
+                      title="Ya hay una convocatoria vigente. Ciérrala o interrúmpela para poder crear otra.">
+                    <span aria-hidden="true">+</span> Nueva convocatoria
+                </span>
+            @endif
         </header>
 
         <section class="admin-sedes-estadisticas" aria-label="Resumen de convocatorias">

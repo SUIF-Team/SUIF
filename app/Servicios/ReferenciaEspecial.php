@@ -92,6 +92,13 @@ class ReferenciaEspecial
                 'pago_id_dato_fiscal' => $this->altaDatosFiscales($pagador),
                 'pago_no_empleado' => count($solicitudes),
                 'pago_monto_pagado' => $monto,
+                /* Quien paga por varios siempre pide CFDI: la factura se emite
+                   a nombre del pagador, no de cada participante. La elección
+                   nace hecha —igual que DAFI_USO_CFDI en altaDatosFiscales()—
+                   para que ninguno de los N participantes pueda entrar después
+                   al paso del comprobante y cambiarla por un ticket, que es
+                   definitivo y dejaría a la empresa sin su factura. */
+                'pago_uso_cfdi' => true,
                 /* Vacías hasta que la DEC emita la referencia. */
                 'pago_referencia_bancaria' => '',
                 'pago_referencia_bancaria_path' => '',

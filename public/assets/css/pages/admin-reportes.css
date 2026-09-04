@@ -95,7 +95,8 @@
     color: var(--text-dark);
 }
 
-.admin-reportes-campo select {
+.admin-reportes-campo select,
+.admin-reportes-campo input {
     min-width: 16rem;
     max-width: 100%;
     padding: 0.55rem 0.75rem;
@@ -159,11 +160,13 @@
 
     .admin-reportes-formulario,
     .admin-reportes-campo,
-    .admin-reportes-campo select {
+    .admin-reportes-campo select,
+    .admin-reportes-campo input {
         width: 100%;
     }
 
-    .admin-reportes-campo select {
+    .admin-reportes-campo select,
+    .admin-reportes-campo input {
         min-width: 0;
     }
 }

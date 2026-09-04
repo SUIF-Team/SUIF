@@ -48,17 +48,41 @@
                         <p>{{ $tarjeta['descripcion'] }}</p>
                     </div>
 
-                    @if ($tarjeta['filtro'] === 'convocatoria')
+                    @if (! in_array('grupo', $tarjeta['filtros'], true))
                         <form method="GET" action="{{ route($tarjeta['ruta']) }}" class="admin-reportes-formulario">
-                            <label class="admin-reportes-campo" for="convocatoria-{{ $tarjeta['clave'] }}">
-                                <span>Convocatoria</span>
-                                <select id="convocatoria-{{ $tarjeta['clave'] }}" name="convocatoria">
-                                    <option value="">Todas</option>
-                                    @foreach ($convocatorias as $convocatoria)
-                                        <option value="{{ $convocatoria['id'] }}">{{ $convocatoria['nombre'] }}</option>
-                                    @endforeach
-                                </select>
-                            </label>
+                            @if (in_array('convocatoria', $tarjeta['filtros'], true))
+                                <label class="admin-reportes-campo" for="convocatoria-{{ $tarjeta['clave'] }}">
+                                    <span>Convocatoria</span>
+                                    <select id="convocatoria-{{ $tarjeta['clave'] }}" name="convocatoria">
+                                        <option value="">Todas</option>
+                                        @foreach ($convocatorias as $convocatoria)
+                                            <option value="{{ $convocatoria['id'] }}">{{ $convocatoria['nombre'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                            @endif
+
+                            @if (in_array('estado', $tarjeta['filtros'], true))
+                                <label class="admin-reportes-campo" for="estado-{{ $tarjeta['clave'] }}">
+                                    <span>Estado</span>
+                                    <select id="estado-{{ $tarjeta['clave'] }}" name="estado">
+                                        @foreach ($estados as $clave => $etiqueta)
+                                            <option value="{{ $clave }}">{{ $etiqueta }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                            @endif
+
+                            @if (in_array('mes', $tarjeta['filtros'], true))
+                                {{-- Un control nativo del navegador: entrega 'YYYY-MM' sin
+                                     JavaScript ni catálogo de meses que mantener. Vacío trae
+                                     todos los meses. --}}
+                                <label class="admin-reportes-campo" for="mes-{{ $tarjeta['clave'] }}">
+                                    <span>Mes del pago</span>
+                                    <input id="mes-{{ $tarjeta['clave'] }}" name="mes" type="month">
+                                </label>
+                            @endif
+
                             <button type="submit" class="admin-reportes-boton admin-reportes-boton--primario">
                                 Descargar Excel
                             </button>

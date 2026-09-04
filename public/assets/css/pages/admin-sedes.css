@@ -184,6 +184,15 @@
     color: var(--unam-blue);
 }
 
+/* Una acción que existe pero hoy no procede. Mismo gris que
+   .sede-boton--deshabilitado en persona-sede.css: el sistema tiene un solo
+   apagado. No lleva :hover porque no hay nada que anticipar. */
+.admin-sedes-boton--deshabilitado {
+    background: #edede8;
+    color: #6b6b66;
+    cursor: not-allowed;
+}
+
 .admin-sedes-tabla-contenedor {
     overflow: hidden;
 }

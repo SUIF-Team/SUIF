@@ -4,6 +4,7 @@ namespace App\Support\Admin;
 
 use App\Servicios\ComprobanteFiscal;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -60,51 +61,12 @@ class ConsultaPagos
     }
 
     /**
-     * Reporte de quienes ya pagaron su referencia bancaria.
-     *
-     * Pagado significa que el último renglón de la bitácora es «Completado»,
-     * es decir, que la DEC revisó el comprobante y lo aprobó. Un comprobante
-     * enviado y todavía en revisión no es dinero confirmado y no entra.
-     *
-     * Vive aquí y no en un servicio de reportes aparte porque consultaBase()
-     * ya une pago, persona, rol, entidad, referencia y las tres bitácoras que
-     * hacen falta; repetir esos joins en otra clase sería copiarlos.
-     *
-     * No reutiliza normalizar(): ese método pregunta al disco por el archivo
-     * de cada comprobante, y en un reporte de cientos de renglones eso son
-     * cientos de accesos a disco para un dato que aquí no se usa.
-     *
-     * @return array<int, array<string, string|float|null>>
-     */
-    public function pagadas(?int $id_convocatoria = null): array
-    {
-        $consulta = $this->consultaBase()
-            ->where('cep.esta_estado_pago', self::COMPLETADO);
-
-        return $this->conConvocatoriaYSede($consulta, $id_convocatoria)
-            ->addSelect([
-                'ep.espa_fecha as fecha_validacion',
-                'ep.espa_hora as hora_validacion',
-            ])
-            ->get()
-            ->map(fn (object $fila): array => $this->normalizarPersonaDeReporte($fila) + [
-                'referencia_bancaria' => (string) $fila->pago_referencia_bancaria,
-                /* Dos cifras distintas a propósito: lo que se cobró contra lo
-                   que la persona declaró haber pagado. Su diferencia es justo
-                   lo que se revisa al cortar caja, así que van las dos y como
-                   número, para que se puedan sumar en la hoja. */
-                'monto_cobrado' => $fila->reba_monto === null ? null : (float) $fila->reba_monto,
-                'monto_declarado' => (float) $fila->pago_monto_pagado,
-                'fecha_pago' => (string) $fila->pago_fecha_pago,
-                'fecha_validacion' => trim(
-                    (string) $fila->fecha_validacion.' '.(string) $fila->hora_validacion
-                ),
-            ])
-            ->all();
-    }
-
-    /**
      * Reporte de quienes pidieron CFDI, con los datos con que se les factura.
+     *
+     * Un renglón por pago y no por solicitud: la referencia especial cuelga N
+     * solicitudes del mismo PAGO, y a la empresa que inscribió a diez empleados
+     * se le emite una factura, no diez. El monto del renglón ya es el total
+     * —PAGO_MONTO_PAGADO lo guarda así— y la referencia bancaria es una sola.
      *
      * Elegir CFDI y capturar los datos fiscales son dos pasos separados, así
      * que quien eligió y todavía no captura aparece igual, con las columnas
@@ -112,12 +74,32 @@ class ConsultaPagos
      * antes de poder facturarle. De ahí que los joins fiscales sean todos
      * leftJoin y no join.
      *
+     * @param  string  $mes  'YYYY-MM'; vacío trae todos los meses.
      * @return array<int, array<string, string|float|null>>
      */
-    public function solicitudesCfdi(?int $id_convocatoria = null): array
+    public function solicitudesCfdi(?int $id_convocatoria = null, string $mes = ''): array
     {
         $consulta = $this->consultaBase()
-            ->where('pg.pago_uso_cfdi', true)
+            /* PAGO_USO_CFDI es la elección de la persona. El pago compartido de
+               una referencia especial nace con ella puesta —se factura a quien
+               paga, no a los participantes—, pero los que se crearon antes de
+               esa regla no la tienen: se reconocen por PAGO_NO_EMPLEADO y
+               entran igual, sin necesidad de tocar la base. */
+            ->where(function (Builder $consulta): void {
+                $consulta->where('pg.pago_uso_cfdi', true)
+                    ->orWhereNotNull('pg.pago_no_empleado');
+            })
+            /* consultaBase() une SOLICITUD por SOLI_ID_PAGO, y de un pago
+               compartido cuelgan N solicitudes: sin este recorte la empresa
+               saldría una vez por participante. Se conserva la más antigua como
+               representante; en el pago individual es la única que hay. El
+               recorte va aquí y no en consultaBase() para no alterar la bandeja
+               de revisión de pagos, que no es parte de este cambio. */
+            ->whereRaw('s.soli_id_solicitud = (
+                SELECT MIN(representante.soli_id_solicitud)
+                FROM solicitud AS representante
+                WHERE representante.soli_id_pago = pg.pago_id_pago
+            )')
             ->leftJoin('dato_fiscal as df', 'df.dafi_id_dato_fiscal', '=', 'pg.pago_id_dato_fiscal')
             ->leftJoin('regimen_fiscal as rf', 'rf.refi_id_regimen_fiscal', '=', 'df.dafi_id_regimen_fiscal')
             ->leftJoinSub($this->correosDeFacturacion(), 'cf', function ($join): void {
@@ -132,21 +114,31 @@ class ConsultaPagos
                 'cf.comu_descripcion as correo_facturacion',
             ]);
 
+        /* El CFDI se emite en el mismo mes calendario en que se pagó, así que
+           el corte es por PAGO_FECHA_PAGO y no por la fecha de validación. */
+        if (preg_match('/^\d{4}-\d{2}$/', $mes) === 1) {
+            $consulta->whereBetween('pg.pago_fecha_pago', [
+                $mes.'-01',
+                Carbon::createFromFormat('Y-m-d', $mes.'-01')->endOfMonth()->toDateString(),
+            ]);
+        }
+
         return $this->conConvocatoriaYSede($consulta, $id_convocatoria)
             ->get()
             ->map(function (object $fila): array {
                 $fiscales = $this->datosFiscales($fila);
 
-                return $this->normalizarPersonaDeReporte($fila) + [
-                    'referencia_bancaria' => (string) $fila->pago_referencia_bancaria,
-                    'monto_declarado' => (float) $fila->pago_monto_pagado,
-                    'fecha_pago' => (string) $fila->pago_fecha_pago,
+                return [
                     'razon_social' => $fiscales['razon_social'] ?? '',
                     'rfc_fiscal' => $fiscales['rfc'] ?? '',
                     'tipo_persona' => $fiscales['tipo_persona'] ?? '',
                     'regimen_fiscal' => $fiscales['regimen_fiscal'] ?? '',
                     'codigo_postal' => $fiscales['codigo_postal'] ?? '',
                     'correo_facturacion' => $fiscales['correo'] ?? '',
+                    'convocatoria' => (string) ($fila->conv_nombre ?? ''),
+                    'referencia_bancaria' => (string) $fila->pago_referencia_bancaria,
+                    'monto_declarado' => (float) $fila->pago_monto_pagado,
+                    'fecha_pago' => (string) $fila->pago_fecha_pago,
                     'captura' => $fiscales === null ? 'Pendiente de capturar' : 'Completa',
                 ];
             })
@@ -154,8 +146,7 @@ class ConsultaPagos
     }
 
     /**
-     * Convocatoria, sede y horario: lo que los dos reportes necesitan y la
-     * bandeja no, más el filtro opcional por convocatoria.
+     * Convocatoria, sede y horario, más el filtro opcional por convocatoria.
      *
      * La sede va con leftJoin porque se elige después de pagar: quien acaba de
      * pagar todavía no tiene grupo y debe aparecer en el reporte igual.
@@ -182,32 +173,6 @@ class ConsultaPagos
             ->orderBy('p.pers_apellido_paterno')
             ->orderBy('p.pers_apellido_materno')
             ->orderBy('p.pers_nombre');
-    }
-
-    /**
-     * Las columnas que comparten los dos reportes de pagos.
-     *
-     * @return array<string, string>
-     */
-    private function normalizarPersonaDeReporte(object $fila): array
-    {
-        $horario = $fila->grup_hora_inicio
-            ? trim((string) $fila->grup_hora_inicio).' a '.trim((string) $fila->grup_hora_fin)
-            : '';
-
-        return [
-            'curp' => (string) $fila->pers_curp,
-            'nombre_completo' => trim(implode(' ', array_filter([
-                $fila->pers_nombre,
-                $fila->pers_apellido_paterno,
-                $fila->pers_apellido_materno,
-            ]))),
-            'entidad_federativa' => (string) ($fila->enfe_entidad_federativa ?? ''),
-            'convocatoria' => (string) ($fila->conv_nombre ?? ''),
-            'sede' => (string) ($fila->sede_nombre ?? ''),
-            'fecha_grupo' => (string) ($fila->grup_fecha_inicio ?? ''),
-            'horario' => $horario,
-        ];
     }
 
     /**

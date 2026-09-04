@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\ReferenciaEspecialEmitida;
 use App\Models\Usuario;
+use App\Servicios\ComprobanteFiscal;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -123,6 +124,26 @@ class ReferenciaEspecialTest extends TestCase
 
         $this->assertSame('Empresa de Ejemplo S.A.', $fiscal->dafi_razon_social);
         $this->assertSame((int) $fiscal->dafi_id_dato_fiscal, (int) $pago->pago_id_dato_fiscal);
+    }
+
+    /**
+     * Quien paga por varios siempre pide CFDI: la factura se emite a nombre del
+     * pagador. La elección nace hecha para que ninguno de los participantes
+     * pueda entrar después al paso del comprobante y cambiarla por un ticket,
+     * que es definitivo y dejaría a la empresa sin su factura.
+     */
+    public function test_el_pago_compartido_nace_con_el_cfdi_elegido(): void
+    {
+        $this->actingAs($this->usuario(self::SOLICITANTE))
+            ->post(route('persona.referencia.especial.store'), $this->formulario());
+
+        $pago = DB::table('pago')->first();
+
+        $this->assertTrue(ComprobanteFiscal::normalizarUsoCfdi($pago->pago_uso_cfdi));
+        $this->assertSame(
+            ComprobanteFiscal::CFDI,
+            ComprobanteFiscal::tipoDesdeUsoCfdi($pago->pago_uso_cfdi)
+        );
     }
 
     public function test_los_acentos_no_impiden_reconocer_a_un_participante(): void

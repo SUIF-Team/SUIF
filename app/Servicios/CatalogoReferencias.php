@@ -3,6 +3,7 @@
 namespace App\Servicios;
 
 use DomainException;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -46,6 +47,46 @@ class CatalogoReferencias
      * puede obtener.
      */
     private const TIENE_FORMATO = "reba_path IS NOT NULL AND reba_path <> ''";
+
+    /**
+     * En qué estado está cada referencia, en SQL.
+     *
+     * Vive en una sola constante por el mismo motivo que TIENE_FORMATO: la
+     * expresión se usa dos veces —como columna del reporte y como filtro— y dos
+     * copias acabarían discrepando, de modo que el selector diría una cosa y la
+     * columna Estado otra.
+     *
+     * El orden de los WHEN es la regla de negocio: el comprobante manda sobre
+     * la vigencia, así que quien ya pagó no sale como vencido aunque el sello
+     * del banco llegue tarde. «Vencida» recoge también las que nadie tomó y
+     * caducaron; «Sin asignar» se queda con las libres que siguen vigentes.
+     *
+     * CURRENT_DATE en lugar de un parámetro porque la expresión se interpola en
+     * dos cláusulas distintas y duplicar el binding es más frágil que confiar en
+     * una función que PostgreSQL y el SQLite de las pruebas entienden igual.
+     */
+    private const ESTADO = "CASE
+            WHEN cep.esta_estado_pago = 'Completado' THEN 'Validada'
+            WHEN cep.esta_estado_pago = 'Declinado' THEN 'Rechazada'
+            WHEN pg.pago_comprobante_path IS NOT NULL AND pg.pago_comprobante_path <> '' THEN 'Pagada'
+            WHEN rb.reba_vigencia IS NOT NULL AND rb.reba_vigencia < CURRENT_DATE THEN 'Vencida'
+            WHEN rb.reba_id_pago IS NOT NULL THEN 'Sin pagar'
+            ELSE 'Sin asignar'
+        END";
+
+    /**
+     * Los estados con los que se acota el reporte: valor de la URL => etiqueta
+     * que imprime ESTADO. La misma etiqueta se ofrece en el selector, de modo
+     * que lo que se elige y lo que sale en la columna se escriben igual.
+     */
+    public const ESTADOS_REPORTE = [
+        'validadas' => 'Validada',
+        'pagadas' => 'Pagada',
+        'rechazadas' => 'Rechazada',
+        'sin-pagar' => 'Sin pagar',
+        'vencidas' => 'Vencida',
+        'sin-asignar' => 'Sin asignar',
+    ];
 
     /** Encabezados admitidos en el CSV para cada campo. */
     private const ENCABEZADOS = [
@@ -159,6 +200,134 @@ class CatalogoReferencias
                 'curp' => (string) ($fila->pers_curp ?? ''),
             ];
         });
+    }
+
+    /**
+     * El catálogo completo para descargarlo, con el estado de cada referencia.
+     *
+     * Arranca de REFERENCIA_BANCARIA y no de PAGO —como hacía el reporte al que
+     * sustituye— porque una referencia que nadie tomó no tiene renglón de pago
+     * del que colgar: consultada desde PAGO sería invisible, y es justo la que
+     * hay que ver para saber cuántas quedan.
+     *
+     * Todos los joins hacia la persona son leftJoin por lo mismo: media tabla
+     * no tiene dueño todavía y sus columnas van vacías, que es el dato.
+     *
+     * @return array<int, array<string, string|float|null>>
+     */
+    public function reporte(?int $id_convocatoria = null, string $estado = ''): array
+    {
+        $consulta = DB::table('referencia_bancaria as rb')
+            ->leftJoin('pago as pg', 'pg.pago_id_pago', '=', 'rb.reba_id_pago')
+            /* Una referencia especial cubre a varias personas con un solo pago;
+               sin esta subconsulta el reporte repetiría el mismo renglón una vez
+               por participante. Se toma la solicitud más antigua como
+               representante: en el pago individual es la única que hay. */
+            ->leftJoinSub($this->solicitudesRepresentantes(), 'representante', function ($join): void {
+                $join->on('representante.soli_id_pago', '=', 'rb.reba_id_pago');
+            })
+            ->leftJoin('solicitud as s', 's.soli_id_solicitud', '=', 'representante.id_solicitud')
+            ->leftJoin('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
+            ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
+            ->leftJoin('convocatoria as cv', 'cv.conv_id_convocatoria', '=', 's.soli_id_convocatoria')
+            ->leftJoin('evaluacion as ev', 'ev.eval_id_evaluacion', '=', 's.soli_id_evaluacion')
+            ->leftJoin('grupo as gr', 'gr.grup_id_grupo', '=', 'ev.grup_id_grupo')
+            ->leftJoin('sede as sd', 'sd.sede_id_sede', '=', 'gr.sede_id_sede')
+            /* El estado vigente del pago es el último renglón de la bitácora. */
+            ->leftJoinSub($this->ultimosEstadosPago(), 'estado_actual', function ($join): void {
+                $join->on('estado_actual.espa_id_pago', '=', 'rb.reba_id_pago');
+            })
+            ->leftJoin('estado_pago as ep', 'ep.espa_id_estado_pago', '=', 'estado_actual.id_estado')
+            ->leftJoin('c_estado_pago as cep', 'cep.espa_id_c_estado_pago', '=', 'ep.espa_id_c_estado_pago')
+            ->orderBy('rb.reba_referencia')
+            ->select([
+                'rb.reba_referencia',
+                'rb.reba_monto',
+                'rb.reba_vigencia',
+                'rb.reba_fecha_asignacion',
+                'pg.pago_monto_pagado',
+                'pg.pago_fecha_pago',
+                'ep.espa_fecha as fecha_resolucion',
+                'ep.espa_hora as hora_resolucion',
+                'p.pers_curp',
+                'p.pers_nombre',
+                'p.pers_apellido_paterno',
+                'p.pers_apellido_materno',
+                'ef.enfe_entidad_federativa',
+                'cv.conv_nombre',
+                'sd.sede_nombre',
+                'gr.grup_fecha_inicio',
+                'gr.grup_hora_inicio',
+                'gr.grup_hora_fin',
+            ])
+            ->selectRaw(self::ESTADO.' as estado');
+
+        $etiqueta = self::ESTADOS_REPORTE[$estado] ?? null;
+
+        if ($etiqueta !== null) {
+            $consulta->whereRaw(self::ESTADO.' = ?', [$etiqueta]);
+        }
+
+        /* Acotar por convocatoria deja fuera a las referencias sin asignar: no
+           pertenecen a ninguna todavía. Es correcto y la pantalla lo advierte. */
+        if ($id_convocatoria) {
+            $consulta->where('s.soli_id_convocatoria', $id_convocatoria);
+        }
+
+        return $consulta->get()
+            ->map(fn (object $fila): array => [
+                'referencia' => (string) $fila->reba_referencia,
+                'estado' => (string) $fila->estado,
+                /* Lo que se cobró sale del catálogo y lo que la persona declaró
+                   haber pagado, de PAGO. Las dos cifras van como número para
+                   poder sumarlas en la hoja. */
+                'monto_cobrado' => $fila->reba_monto === null ? null : (float) $fila->reba_monto,
+                'vigencia' => (string) ($fila->reba_vigencia ?? ''),
+                'fecha_asignacion' => (string) ($fila->reba_fecha_asignacion ?? ''),
+                'curp' => (string) ($fila->pers_curp ?? ''),
+                'nombre_completo' => trim(implode(' ', array_filter([
+                    $fila->pers_nombre,
+                    $fila->pers_apellido_paterno,
+                    $fila->pers_apellido_materno,
+                ]))),
+                'entidad_federativa' => (string) ($fila->enfe_entidad_federativa ?? ''),
+                'convocatoria' => (string) ($fila->conv_nombre ?? ''),
+                'monto_declarado' => $fila->pago_monto_pagado === null
+                    ? null
+                    : (float) $fila->pago_monto_pagado,
+                'fecha_pago' => (string) ($fila->pago_fecha_pago ?? ''),
+                /* La bitácora guarda la fecha de la última resolución, sea cual
+                   sea: sólo se publica cuando esa resolución fue validar, para
+                   que la columna no feche rechazos como si fueran validaciones. */
+                'fecha_validacion' => $fila->estado === 'Validada'
+                    ? trim((string) $fila->fecha_resolucion.' '.(string) $fila->hora_resolucion)
+                    : '',
+                'sede' => (string) ($fila->sede_nombre ?? ''),
+                'fecha_grupo' => (string) ($fila->grup_fecha_inicio ?? ''),
+                'horario' => $fila->grup_hora_inicio
+                    ? trim((string) $fila->grup_hora_inicio).' a '.trim((string) $fila->grup_hora_fin)
+                    : '',
+            ])
+            ->all();
+    }
+
+    /**
+     * La solicitud más antigua de cada pago. Es lo que convierte el pago
+     * compartido de una referencia especial en un solo renglón.
+     */
+    private function solicitudesRepresentantes(): Builder
+    {
+        return DB::table('solicitud')
+            ->whereNotNull('soli_id_pago')
+            ->selectRaw('soli_id_pago, MIN(soli_id_solicitud) as id_solicitud')
+            ->groupBy('soli_id_pago');
+    }
+
+    private function ultimosEstadosPago(): Builder
+    {
+        return DB::table('estado_pago')
+            ->selectRaw('espa_id_pago, MAX(espa_id_estado_pago) as id_estado')
+            ->groupBy('espa_id_pago');
     }
 
     /**

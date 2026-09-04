@@ -158,6 +158,7 @@ trait SiembraAdministradores
             $table->string('reba_referencia', 20);
             $table->decimal('reba_monto', 10, 4)->nullable();
             $table->date('reba_vigencia')->nullable();
+            $table->date('reba_fecha_asignacion')->nullable();
         });
 
         Schema::create('c_estado_pago', function (Blueprint $table): void {
