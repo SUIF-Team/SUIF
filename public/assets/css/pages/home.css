@@ -67,6 +67,7 @@
     margin-bottom: 2.5rem;
     color: var(--text-muted);
     font-size: 1.06rem;
+    text-align: justify;
 }
 
 .btn-outline-institutional {
