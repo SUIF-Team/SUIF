@@ -73,9 +73,9 @@ class GestionAdministradoresTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.administradores.index'))
             ->assertOk()
-            ->assertSee('Sofía Superusuaria Prueba')
-            ->assertSee('Ulises Registro Prueba')
-            ->assertSee('Delia Pagos Prueba')
+            ->assertSee('Superusuaria Prueba Sofía')
+            ->assertSee('Registro Prueba Ulises')
+            ->assertSee('Pagos Prueba Delia')
             /* La bandeja administra cuentas de operación, no expedientes. */
             ->assertDontSee('Persona Solicitante Prueba');
     }
@@ -239,13 +239,13 @@ class GestionAdministradoresTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.administradores.index', ['rol' => 'Admin DEC']))
             ->assertOk()
-            ->assertSee('Delia Pagos Prueba')
+            ->assertSee('Pagos Prueba Delia')
             ->assertDontSee('Ulises Registro Prueba');
 
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.administradores.index', ['buscar' => 'UIFA900101']))
             ->assertOk()
-            ->assertSee('Ulises Registro Prueba')
+            ->assertSee('Registro Prueba Ulises')
             ->assertDontSee('Delia Pagos Prueba');
     }
 }

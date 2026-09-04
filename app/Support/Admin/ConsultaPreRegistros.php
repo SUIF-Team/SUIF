@@ -2,6 +2,7 @@
 
 namespace App\Support\Admin;
 
+use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -306,11 +307,11 @@ class ConsultaPreRegistros
      */
     private function nombreCompleto(object $solicitud): string
     {
-        return trim(implode(' ', array_filter([
-            $solicitud->pers_nombre,
+        return NombrePersona::administrativo(
             $solicitud->pers_apellido_paterno,
             $solicitud->pers_apellido_materno,
-        ])));
+            $solicitud->pers_nombre
+        );
     }
 
     private function normalizarBandeja(object $solicitud): array

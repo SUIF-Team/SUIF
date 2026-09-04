@@ -68,6 +68,13 @@
                         <option value="inactivos" @selected(($filtros['estatus'] ?? '') === 'inactivos')>Sin acceso</option>
                     </select>
                 </div>
+                <div class="admin-sedes-campo">
+                    <label for="orden">Ordenar por</label>
+                    <select id="orden" name="orden">
+                        <option value="">Nombre (A-Z)</option>
+                        <option value="za" @selected(($filtros['orden'] ?? '') === 'za')>Nombre (Z-A)</option>
+                    </select>
+                </div>
                 <div class="admin-sedes-filtros-acciones">
                     <button class="admin-sedes-boton admin-sedes-boton--filtrar" type="submit">Filtrar</button>
                     <a class="admin-sedes-boton admin-sedes-boton--limpiar" href="{{ route('admin.administradores.index') }}">Limpiar</a>

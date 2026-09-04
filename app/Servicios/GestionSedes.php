@@ -5,6 +5,7 @@ namespace App\Servicios;
 use App\Models\Evaluacion;
 use App\Models\Grupo;
 use App\Models\Sede;
+use App\Support\NombrePersona;
 use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -241,11 +242,11 @@ class GestionSedes
             ->map(fn (object $fila, int $indice): array => [
                 'numero' => (string) ($indice + 1),
                 'curp' => (string) $fila->pers_curp,
-                'nombre_completo' => trim(implode(' ', array_filter([
-                    $fila->pers_nombre,
+                'nombre_completo' => NombrePersona::administrativo(
                     $fila->pers_apellido_paterno,
                     $fila->pers_apellido_materno,
-                ]))),
+                    $fila->pers_nombre
+                ),
             ])
             ->all();
 

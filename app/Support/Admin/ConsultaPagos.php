@@ -3,6 +3,7 @@
 namespace App\Support\Admin;
 
 use App\Servicios\ComprobanteFiscal;
+use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -326,11 +327,11 @@ class ConsultaPagos
             $pago->pago_hora_pago
         );
 
-        $nombre = trim(implode(' ', array_filter([
-            $pago->pers_nombre,
+        $nombre = NombrePersona::administrativo(
             $pago->pers_apellido_paterno,
             $pago->pers_apellido_materno,
-        ])));
+            $pago->pers_nombre
+        );
 
         return [
             'id' => (string) $pago->pago_id_pago,

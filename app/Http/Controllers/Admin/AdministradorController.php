@@ -23,7 +23,7 @@ class AdministradorController extends Controller
 {
     public function index(Request $request, GestionAdministradores $gestion)
     {
-        $filtros = $request->only(['buscar', 'rol', 'estatus']);
+        $filtros = $request->only(['buscar', 'rol', 'estatus', 'orden']);
         $datos = $gestion->bandeja($filtros);
 
         return view('admin.administradores', [

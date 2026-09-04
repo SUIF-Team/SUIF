@@ -2,6 +2,7 @@
 
 namespace App\Servicios;
 
+use App\Support\NombrePersona;
 use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -65,6 +66,7 @@ class GestionAdministradores
         $buscar = mb_strtolower(trim((string) ($filtros['buscar'] ?? '')), 'UTF-8');
         $rol = trim((string) ($filtros['rol'] ?? ''));
         $estatus = trim((string) ($filtros['estatus'] ?? ''));
+        $orden = trim((string) ($filtros['orden'] ?? ''));
 
         $filtrados = $todos->filter(function (array $fila) use ($buscar, $rol, $estatus): bool {
             if ($buscar !== '') {
@@ -89,6 +91,13 @@ class GestionAdministradores
 
             return true;
         })->values();
+
+        /* filas() ya llega A-Z desde la base; sólo hay que darle la vuelta. La
+           comparación la hace PostgreSQL con su intercalación, así que invertir
+           la colección conserva ese criterio en lugar de imponer otro. */
+        if ($orden === 'za') {
+            $filtrados = $filtrados->reverse()->values();
+        }
 
         return [
             'administradores' => $filtrados,
@@ -392,12 +401,11 @@ class GestionAdministradores
                     'rol' => $rol,
                     'rol_etiqueta' => self::ROLES[$rol]['etiqueta'] ?? $rol,
                     'curp' => (string) $fila->pers_curp,
-                    'nombre' => trim(sprintf(
-                        '%s %s %s',
-                        $fila->pers_nombre,
-                        (string) $fila->pers_apellido_paterno,
-                        (string) $fila->pers_apellido_materno
-                    )),
+                    'nombre' => NombrePersona::administrativo(
+                        $fila->pers_apellido_paterno,
+                        $fila->pers_apellido_materno,
+                        $fila->pers_nombre
+                    ),
                     'nombre_pila' => (string) $fila->pers_nombre,
                     'primer_apellido' => (string) $fila->pers_apellido_paterno,
                     'segundo_apellido' => (string) $fila->pers_apellido_materno,

@@ -3,6 +3,7 @@
 namespace App\Servicios;
 
 use App\Mail\ReferenciaEspecialEmitida;
+use App\Support\NombrePersona;
 use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -314,11 +315,11 @@ class ReferenciaEspecial
             ->map(fn (object $fila): array => [
                 'id_persona' => (int) $fila->pers_id_persona,
                 'curp' => (string) $fila->pers_curp,
-                'nombre' => trim(implode(' ', array_filter([
-                    $fila->pers_nombre,
+                'nombre' => NombrePersona::administrativo(
                     $fila->pers_apellido_paterno,
                     $fila->pers_apellido_materno,
-                ]))),
+                    $fila->pers_nombre
+                ),
             ])
             ->all();
     }

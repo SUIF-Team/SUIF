@@ -29,12 +29,14 @@
                 filtros: {
                     campo: 'nombre',
                     termino: '',
-                    estado: 'Todos'
+                    estado: 'Todos',
+                    orden: 'reciente'
                 },
                 filtros_aplicados: {
                     campo: 'nombre',
                     termino: '',
-                    estado: 'Todos'
+                    estado: 'Todos',
+                    orden: 'reciente'
                 },
                 persona_seleccionada: null,
                 foco_restaurar: null
@@ -45,12 +47,14 @@
                 var filtros = this.filtros_aplicados;
                 var termino = this.normalizar(filtros.termino);
 
-                return this.personas.filter(function (registro) {
+                var visibles = this.personas.filter(function (registro) {
                     var coincide_termino = !termino || this.normalizar(registro[filtros.campo]).includes(termino);
                     var coincide_estado = filtros.estado === 'Todos' || registro[campo_estado] === filtros.estado;
 
                     return coincide_termino && coincide_estado;
                 }, this);
+
+                return this.ordenar(visibles, filtros.orden);
             }
         },
         methods: {
@@ -58,20 +62,44 @@
                 this.filtros_aplicados = {
                     campo: this.filtros.campo,
                     termino: this.filtros.termino.trim(),
-                    estado: this.filtros.estado
+                    estado: this.filtros.estado,
+                    orden: this.filtros.orden
                 };
             },
             limpiar: function () {
                 this.filtros = {
                     campo: 'nombre',
                     termino: '',
-                    estado: 'Todos'
+                    estado: 'Todos',
+                    orden: 'reciente'
                 };
                 this.filtros_aplicados = {
                     campo: 'nombre',
                     termino: '',
-                    estado: 'Todos'
+                    estado: 'Todos',
+                    orden: 'reciente'
                 };
+            },
+            /* 'reciente' es el orden con el que llega la bandeja desde el
+               servidor, así que devolver la lista tal cual ya es esa opción.
+               El alfabético usa localeCompare con la configuración regional:
+               ordenar con < dejaría a Ñ después de Z y a los acentuados al
+               final. La lista que se ordena es la que devolvió filter(), un
+               arreglo nuevo, así que ordenarla no altera el original. */
+            ordenar: function (registros, orden) {
+                if (orden !== 'az' && orden !== 'za') {
+                    return registros;
+                }
+
+                var direccion = orden === 'az' ? 1 : -1;
+
+                return registros.sort(function (uno, otro) {
+                    return direccion * String(uno.nombre_completo || '').localeCompare(
+                        String(otro.nombre_completo || ''),
+                        'es-MX',
+                        { sensitivity: 'base', numeric: true }
+                    );
+                });
             },
             normalizar: function (valor) {
                 return String(valor || '').trim().toLocaleLowerCase('es-MX');

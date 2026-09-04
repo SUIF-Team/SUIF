@@ -39,12 +39,18 @@
             iniciales: function () {
                 return this.persona.nombre.charAt(0) + this.persona.primer_apellido.charAt(0);
             },
+            /* Apellido paterno, materno y nombre(s): el mismo orden con el que
+               las bandejas listan a la persona, para que el expediente se lea
+               igual que el renglón desde el que se abrió. El filtro evita el
+               espacio de más cuando no hay apellido materno. */
             nombreCompleto: function () {
                 return [
-                    this.persona.nombre,
                     this.persona.primer_apellido,
-                    this.persona.segundo_apellido
-                ].join(' ');
+                    this.persona.segundo_apellido,
+                    this.persona.nombre
+                ].filter(function (parte) {
+                    return String(parte || '').trim() !== '';
+                }).join(' ');
             },
             camposPersona: function () {
                 return [

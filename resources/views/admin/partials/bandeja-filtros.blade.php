@@ -29,6 +29,18 @@
             </select>
         </div>
 
+        {{-- La bandeja sigue llegando con lo más reciente arriba, que es lo que
+             sirve para atender lo que acaba de entrar. El alfabético es para
+             buscar a una persona concreta, así que se elige, no se impone. --}}
+        <div class="admin-bandeja-preregistros-campo admin-bandeja-preregistros-campo-orden">
+            <label for="{{ $prefijo_filtros }}-orden">Ordenar por</label>
+            <select id="{{ $prefijo_filtros }}-orden" v-model="filtros.orden">
+                <option value="reciente">Más reciente primero</option>
+                <option value="az">Nombre (A-Z)</option>
+                <option value="za">Nombre (Z-A)</option>
+            </select>
+        </div>
+
         <div class="admin-bandeja-preregistros-acciones-filtro">
             <button class="admin-bandeja-preregistros-boton admin-bandeja-preregistros-boton-filtrar" type="submit">Filtrar</button>
             <button class="admin-bandeja-preregistros-boton admin-bandeja-preregistros-boton-limpiar" type="button" v-on:click="limpiar">Limpiar</button>

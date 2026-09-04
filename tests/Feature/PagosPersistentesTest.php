@@ -32,7 +32,7 @@ class PagosPersistentesTest extends TestCase
 
         $this->assertCount(1, $pagos);
         $this->assertSame('1', $pagos[0]['id']);
-        $this->assertSame('Ana Candidata Prueba', $pagos[0]['nombre_completo']);
+        $this->assertSame('Candidata Prueba Ana', $pagos[0]['nombre_completo']);
         $this->assertSame('Por revisar', $pagos[0]['estatus']);
         $this->assertTrue($pagos[0]['puede_revisarse']);
     }
@@ -156,7 +156,7 @@ class PagosPersistentesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(2))
             ->get(route('admin.pagos.index'))
             ->assertOk()
-            ->assertSee('Ana Candidata Prueba');
+            ->assertSee('Candidata Prueba Ana');
     }
 
     public function test_comprobante_se_entrega_desde_el_disco_privado_y_no_expone_otro_pago(): void

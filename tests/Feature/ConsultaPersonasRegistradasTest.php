@@ -100,10 +100,14 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
         $this->get(route('admin.personas.registradas.index'))
             ->assertOk()
-            ->assertSee('Ada Lovelace')
-            ->assertSee('Cuenta Candidata')
+            /* Apellido paterno, materno y nombre(s): el orden de toda la zona
+               administrativa. La bandeja sigue llegando con lo más reciente
+               arriba y el alfabético se elige en el selector de orden. */
+            ->assertSee('Lovelace Byron Ada')
+            ->assertSee('Candidata Histórica Cuenta')
+            ->assertSee('id="bandeja-personas-registradas-orden"', false)
             ->assertSee('Aprobada')
-            ->assertDontSee('Grace Hopper')
+            ->assertDontSee('Hopper Murray Grace')
             ->assertDontSee('Ver expediente');
     }
 

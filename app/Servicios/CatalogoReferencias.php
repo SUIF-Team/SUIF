@@ -2,6 +2,7 @@
 
 namespace App\Servicios;
 
+use App\Support\NombrePersona;
 use DomainException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\UploadedFile;
@@ -181,11 +182,11 @@ class CatalogoReferencias
         }
 
         return $consulta->get()->map(function (object $fila): array {
-            $titular = trim(implode(' ', array_filter([
-                $fila->pers_nombre,
+            $titular = NombrePersona::administrativo(
                 $fila->pers_apellido_paterno,
                 $fila->pers_apellido_materno,
-            ])));
+                $fila->pers_nombre
+            );
 
             return [
                 'id' => (int) $fila->reba_id_referencia_bancaria,
@@ -285,11 +286,11 @@ class CatalogoReferencias
                 'vigencia' => (string) ($fila->reba_vigencia ?? ''),
                 'fecha_asignacion' => (string) ($fila->reba_fecha_asignacion ?? ''),
                 'curp' => (string) ($fila->pers_curp ?? ''),
-                'nombre_completo' => trim(implode(' ', array_filter([
-                    $fila->pers_nombre,
+                'nombre_completo' => NombrePersona::administrativo(
                     $fila->pers_apellido_paterno,
                     $fila->pers_apellido_materno,
-                ]))),
+                    $fila->pers_nombre
+                ),
                 'entidad_federativa' => (string) ($fila->enfe_entidad_federativa ?? ''),
                 'convocatoria' => (string) ($fila->conv_nombre ?? ''),
                 'monto_declarado' => $fila->pago_monto_pagado === null

@@ -2,6 +2,7 @@
 
 namespace App\Support\Admin;
 
+use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -147,11 +148,11 @@ class ConsultaPersonasRegistradas
 
     private function normalizarPersona(object $persona): array
     {
-        $nombre_completo = trim(implode(' ', array_filter([
-            $persona->pers_nombre,
+        $nombre_completo = NombrePersona::administrativo(
             $persona->pers_apellido_paterno,
             $persona->pers_apellido_materno,
-        ])));
+            $persona->pers_nombre
+        );
 
         return [
             'id' => (string) $persona->pers_id_persona,
