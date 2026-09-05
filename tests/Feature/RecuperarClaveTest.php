@@ -72,12 +72,21 @@ class RecuperarClaveTest extends TestCase
             ->assertSee('Enviar clave nueva');
     }
 
+    /**
+     * El from() no es adorno: la acción responde con back() —el formulario de
+     * recuperación se contesta sobre su misma pantalla— y back() resuelve el
+     * referer o, si falta, la última URL que la sesión visitó. El navegador
+     * siempre trae una de las dos; una prueba que sólo hace post() no trae
+     * ninguna, y Laravel caería en «/».
+     */
     public function test_curp_existente_e_inexistente_reciben_el_mismo_mensaje(): void
     {
         Mail::fake();
 
-        $existente = $this->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08']);
-        $inexistente = $this->post(route('clave.recuperar.post'), ['curp' => 'XXXX800101HDFXXX00']);
+        $existente = $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08']);
+        $inexistente = $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'XXXX800101HDFXXX00']);
 
         $existente->assertRedirect(route('clave.recuperar'))
             ->assertSessionHas('success', self::MENSAJE_GENERICO);
@@ -89,7 +98,8 @@ class RecuperarClaveTest extends TestCase
     {
         Mail::fake();
 
-        $this->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
+        $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
             ->assertRedirect(route('clave.recuperar'));
 
         $hash = DB::table('usuario')->where('usua_id_usuario', 1)->value('usua_clave_acceso');
@@ -115,7 +125,8 @@ class RecuperarClaveTest extends TestCase
 
         $hash_original = DB::table('usuario')->where('usua_id_usuario', 1)->value('usua_clave_acceso');
 
-        $this->post(route('clave.recuperar.post'), ['curp' => 'XXXX800101HDFXXX00'])
+        $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'XXXX800101HDFXXX00'])
             ->assertRedirect(route('clave.recuperar'));
 
         Mail::assertNothingSent();
@@ -129,7 +140,8 @@ class RecuperarClaveTest extends TestCase
     {
         Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP fuera de servicio'));
 
-        $this->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
+        $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
             ->assertRedirect(route('clave.recuperar'))
             ->assertSessionHas('success', self::MENSAJE_GENERICO);
 
@@ -145,7 +157,8 @@ class RecuperarClaveTest extends TestCase
 
         $hash_original = DB::table('usuario')->where('usua_id_usuario', 2)->value('usua_clave_acceso');
 
-        $this->post(route('clave.recuperar.post'), ['curp' => 'ADMA800101MDFNZS09'])
+        $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'ADMA800101MDFNZS09'])
             ->assertRedirect(route('clave.recuperar'))
             ->assertSessionHas('success', self::MENSAJE_GENERICO);
 

@@ -38,11 +38,19 @@ class RestaurarClaveAdminTest extends TestCase
         $this->assertTrue(Hash::check('AAAA-BBBB-CCCC', $this->hashDe(1)));
     }
 
+    /**
+     * El from() no es adorno: la acción responde con back() —restaurar se hace
+     * desde la bandeja y termina en la bandeja, sin recargarla— y back() resuelve
+     * el referer o, si falta, la última URL que la sesión visitó. El navegador
+     * siempre trae una de las dos; una prueba que sólo hace post() no trae
+     * ninguna, y Laravel caería en «/».
+     */
     public function test_restaura_hashea_y_envia_el_correo(): void
     {
         Mail::fake();
 
         $this->actingAs(Usuario::find(2))
+            ->from(route('admin.personas.registradas.index'))
             ->post(route('admin.personas.registradas.restaurar-clave', ['id' => 1]))
             ->assertRedirect(route('admin.personas.registradas.index'))
             ->assertSessionHas('success', 'La clave de Lovelace Byron Ada fue restaurada y enviada a su correo principal.');
@@ -68,6 +76,7 @@ class RestaurarClaveAdminTest extends TestCase
         Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP fuera de servicio'));
 
         $this->actingAs(Usuario::find(2))
+            ->from(route('admin.personas.registradas.index'))
             ->post(route('admin.personas.registradas.restaurar-clave', ['id' => 1]))
             ->assertRedirect(route('admin.personas.registradas.index'));
 
@@ -92,6 +101,7 @@ class RestaurarClaveAdminTest extends TestCase
 
         foreach ($casos as $id) {
             $this->actingAs(Usuario::find(2))
+                ->from(route('admin.personas.registradas.index'))
                 ->post(route('admin.personas.registradas.restaurar-clave', ['id' => $id]))
                 ->assertRedirect(route('admin.personas.registradas.index'))
                 ->assertSessionHas('warning', 'La persona solicitada no fue encontrada.');
