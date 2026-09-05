@@ -54,4 +54,21 @@ class AvisoPrivacidadTest extends TestCase
             ->assertSee('data-aviso-privacidad', false)
             ->assertSee(route('aviso-privacidad'), false);
     }
+
+    /**
+     * A quien ya lo cerró el servidor no se lo manda. Antes la marca vivía en
+     * localStorage y sólo el navegador la conocía, así que el aviso se pintaba
+     * siempre y se escondía después de cargar: parpadeaba en cada recarga.
+     *
+     * La cookie va sin cifrar porque la escribe JavaScript; si se olvidara
+     * eximirla en bootstrap/app.php, EncryptCookies la descartaría y este test
+     * sería el que avisara.
+     */
+    public function test_la_landing_no_manda_el_aviso_a_quien_ya_lo_cerro(): void
+    {
+        $this->withUnencryptedCookie('suif_aviso_privacidad', '1')
+            ->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('data-aviso-privacidad', false);
+    }
 }

@@ -149,51 +149,33 @@
 /*
  * Aviso de privacidad al entrar al sitio.
  *
- * El banner se pinta siempre y aquí se oculta cuando ya se cerró: al revés,
- * quien navegue sin JavaScript no lo vería nunca. localStorage lanza excepción
- * en algunos modos privados; si falla, el aviso simplemente vuelve a salir.
+ * El banner ya no se pinta siempre: el servidor lo omite cuando la cookie dice
+ * que se cerró, así que aquí sólo queda escribirla. Antes la marca vivía en
+ * localStorage, que el servidor no puede leer, de modo que el aviso salía en
+ * cada carga y este script lo escondía después; se veía parpadear en cada
+ * recarga aunque se hubiera cerrado hace meses.
+ *
+ * La cookie no lleva secure a propósito: el servidor de despliegue se sirve por
+ * IP sobre HTTP y el navegador la descartaría, dejando el aviso saliendo
+ * siempre. Un año de vigencia, para que el recordatorio vuelva alguna vez.
  */
 (function () {
     'use strict';
 
-    var CLAVE = 'suif.aviso-privacidad';
-
-    function yaSeCerro() {
-        try {
-            return window.localStorage.getItem(CLAVE) === '1';
-        } catch (error) {
-            return false;
-        }
-    }
-
-    function recordarCierre() {
-        try {
-            window.localStorage.setItem(CLAVE, '1');
-        } catch (error) {
-            /* Sin almacenamiento disponible el aviso se volverá a mostrar. */
-        }
-    }
+    var COOKIE = 'suif_aviso_privacidad=1; path=/; max-age=31536000; samesite=lax';
 
     document.addEventListener('DOMContentLoaded', function () {
         var banner = document.querySelector('[data-aviso-privacidad]');
+        var cerrar = banner ? banner.querySelector('[data-aviso-privacidad-cerrar]') : null;
 
-        if (!banner) {
+        if (!cerrar) {
             return;
         }
 
-        if (yaSeCerro()) {
+        cerrar.addEventListener('click', function () {
             banner.hidden = true;
-            return;
-        }
-
-        var cerrar = banner.querySelector('[data-aviso-privacidad-cerrar]');
-
-        if (cerrar) {
-            cerrar.addEventListener('click', function () {
-                banner.hidden = true;
-                recordarCierre();
-            });
-        }
+            document.cookie = COOKIE;
+        });
     });
 }());
 
