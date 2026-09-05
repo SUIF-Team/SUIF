@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comprobación de la celda «Mi archivo» de persona-documentos.js</title>
+<!--
+    La celda «Mi archivo» pasó a leerse de arriba abajo —previsualización,
+    botones, nombre del archivo— y eso obligó a sacar «Confirmar carga» del
+    formulario: ahora vive junto a «Abrir» y «Subsanar», y lo envía por su
+    atributo form=. Esa asociación no se ve en pantalla y se rompe callada si
+    el id deja de coincidir con el slug, así que se comprueba aquí.
+
+    NECESITA RED: Vue viene del mismo CDN que partials/scripts.blade.php, con
+    su misma etiqueta y su mismo integrity. Sin conexión el veredicto lo dice.
+
+    Carga el script real —no una copia— sobre dos documentos de mentira. De
+    window.SUIF sólo se monta lo que el script usa, y enviar() se queda con el
+    formulario que recibe en vez de salir a la red: es justamente lo que hay
+    que mirar, que el botón de un documento no envíe el formulario del otro.
+
+    Del respaldo sin JavaScript que pinta persona/documentos.blade.php no se
+    ocupa esto: ahí no hay previsualización ni Vue, sólo la misma pareja
+    id/form= escrita a mano.
+-->
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 1.5rem; }
+    #armazon { display: none; }
+    li { font-family: ui-monospace, monospace; }
+    .falla { color: #b00020; font-weight: 700; }
+    #veredicto { font-size: 1.1rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>Celda «Mi archivo»</h1>
+<p id="veredicto">Ejecutando…</p>
+<ol id="resultados"></ol>
+
+<div id="armazon">
+    <div
+        id="pr-documentos-app"
+        data-ruta-formatos="#formatos"
+        data-vista='{
+            "fase": "rechazado",
+            "por_enviar": 2,
+            "ruta_enviar": "#enviar",
+            "fecha_envio": null,
+            "solicitud_cerrada": false,
+            "documentos": [
+                {"slug":"solicitud-firmada","nombre":"Solicitud firmada","estado":"rechazado","etiqueta":"Rechazado","clase":"rejected","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"solicitud-vieja.pdf","observacion":"La firma no coincide.","es_formato":true,"ruta_ver":"#ver-1","ruta_formato":"#formato-1","ruta_subir":"#subir-1"},
+                {"slug":"curp","nombre":"CURP","estado":"pendiente","etiqueta":"Pendiente","clase":"pending","puede_reemplazar":true,"tiene_archivo":false,"nombre_original":null,"observacion":null,"es_formato":false,"ruta_ver":"#ver-2","ruta_formato":"#formato-2","ruta_subir":"#subir-2"}
+            ]
+        }'></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js" integrity="sha384-arPHRzOKPl8g3Rbe/cQBWYPnq4HcxfPFSFWD3qvI/hc2XQf+4GkVqkOlWgjN5mD3" crossorigin="anonymous"></script>
+<script src="../../public/assets/js/components/Alertas.js"></script>
+<script>
+/* Lo mínimo de window.SUIF que persona-documentos.js consulta. enviar() se
+   queda con el formulario y nunca resuelve: la pantalla se congela en
+   «Subiendo…», que es el estado que interesa mirar. */
+window.SUIF = {
+    formularioRecibido: null,
+    enviar: function (formulario) {
+        window.SUIF.formularioRecibido = formulario;
+
+        return new Promise(function () {});
+    },
+    errores: function () { return {}; },
+    mensajeError: function () { return 'error'; }
+};
+</script>
+<script src="../../public/assets/js/pages/persona-documentos.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var fallas = 0;
+    var veredicto = document.getElementById('veredicto');
+
+    function comprobar(nombre, real, esperado) {
+        var pasa = real === esperado;
+        var renglon = document.createElement('li');
+
+        renglon.textContent = (pasa ? 'OK   ' : 'FALLA') + '  ' + nombre
+            + (pasa ? '' : '  → «' + real + '», esperaba «' + esperado + '»');
+
+        if (!pasa) {
+            renglon.className = 'falla';
+            fallas += 1;
+        }
+
+        document.getElementById('resultados').appendChild(renglon);
+    }
+
+    /* La celda de ese documento: la tercera de su fila. */
+    function celda(slug) {
+        return document.querySelector('#pr-subir-' + slug).closest('td');
+    }
+
+    function confirmar(slug) {
+        return celda(slug).querySelector('button[type="submit"]');
+    }
+
+    function nombreAbajo(slug) {
+        var linea = celda(slug).querySelector('.pr-fila__archivo');
+
+        return linea ? linea.textContent.trim() : '';
+    }
+
+    /* Un input de archivo sólo acepta ficheros de verdad. */
+    function elegir(slug, nombre, tipo) {
+        var entrada = document.querySelector('#pr-subir-' + slug + ' input[type="file"]');
+        var transferencia = new DataTransfer();
+
+        transferencia.items.add(new File(['%PDF-1.4 de mentira'], nombre, { type: tipo }));
+        entrada.files = transferencia.files;
+        entrada.dispatchEvent(new Event('change'));
+    }
+
+    if (!window.Vue) {
+        veredicto.textContent = 'No se pudo cargar Vue desde el CDN. Esta comprobación necesita red.';
+        veredicto.className = 'falla';
+
+        return;
+    }
+
+    var pasos = [
+        { espera: 20, hacer: function () {
+            var hijos = Array.prototype.slice.call(celda('solicitud-firmada').children)
+                .map(function (nodo) { return nodo.className.split(' ')[0]; })
+                .join(',');
+
+            /* El orden del DOM es el orden de lectura y también el del
+               tabulador: primero lo que se mira, luego lo que se pulsa. */
+            comprobar('la celda se lee previsualización → botones → nombre',
+                hijos, 'pr-preview,pr-fila__acciones,pr-fila__archivo');
+
+            comprobar('sin archivo elegido no hay Confirmar carga',
+                confirmar('solicitud-firmada'), null);
+            comprobar('sin archivo elegido la previsualización está plegada',
+                celda('solicitud-firmada').querySelector('.pr-preview.is-visible'), null);
+            comprobar('abajo se nombra el archivo ya guardado',
+                nombreAbajo('solicitud-firmada'), 'solicitud-vieja.pdf');
+            comprobar('el documento sin archivo no nombra nada',
+                nombreAbajo('curp'), '');
+
+            elegir('solicitud-firmada', 'solicitud-nueva.pdf', 'application/pdf');
+        }},
+
+        { espera: 20, hacer: function () {
+            var boton = confirmar('solicitud-firmada');
+
+            comprobar('elegir un PDF despliega la previsualización',
+                celda('solicitud-firmada').querySelector('.pr-preview.is-visible') !== null, true);
+            comprobar('la previsualización apunta al archivo elegido',
+                (celda('solicitud-firmada').querySelector('iframe').src || '').slice(0, 5), 'blob:');
+            comprobar('aparece Confirmar carga', boton !== null, true);
+
+            /* El botón vive fuera del formulario: sin esta pareja id/form= no
+               enviaría nada, y con un id repetido enviaría el del vecino. */
+            comprobar('Confirmar carga queda asociado a SU formulario',
+                boton.form ? boton.form.id : null, 'pr-subir-solicitud-firmada');
+            comprobar('el otro documento sigue sin su botón',
+                confirmar('curp'), null);
+            comprobar('abajo manda el archivo elegido, no el guardado',
+                nombreAbajo('solicitud-firmada'), 'solicitud-nueva.pdf · 1 KB');
+
+            boton.click();
+        }},
+
+        { espera: 20, hacer: function () {
+            var recibido = window.SUIF.formularioRecibido;
+
+            comprobar('pulsarlo envía el formulario de ese documento',
+                recibido ? recibido.id : null, 'pr-subir-solicitud-firmada');
+            comprobar('mientras sube lo dice',
+                confirmar('solicitud-firmada').textContent.trim(), 'Subiendo…');
+
+            /* La validación previa vive en elegirArchivo(): mover el botón no
+               debe dejar pasar lo que antes se frenaba. */
+            elegir('curp', 'curp.png', 'image/png');
+        }},
+
+        { espera: 20, hacer: function () {
+            comprobar('un archivo que no es PDF no abre previsualización',
+                celda('curp').querySelector('.pr-preview.is-visible'), null);
+            comprobar('ni ofrece confirmar una carga que el servidor negaría',
+                confirmar('curp'), null);
+            comprobar('y lo explica donde se mira el nombre',
+                celda('curp').querySelector('.pr-fila__archivo.pr-error').textContent.trim(),
+                'Selecciona un PDF de máximo 1 MB.');
+
+            veredicto.textContent = fallas === 0 ? 'Todo pasó.' : fallas + ' comprobación(es) fallaron.';
+            veredicto.className = fallas === 0 ? '' : 'falla';
+        }}
+    ];
+
+    document.getElementById('armazon').style.display = '';
+
+    (function siguiente(i) {
+        if (i >= pasos.length) {
+            return;
+        }
+
+        pasos[i].hacer();
+        window.setTimeout(function () { siguiente(i + 1); }, pasos[i].espera);
+    }(0));
+}());
+</script>
+</body>
+</html>

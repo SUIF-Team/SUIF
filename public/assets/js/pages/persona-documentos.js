@@ -78,7 +78,14 @@
                                 </td>
 
                                 <td data-titulo="Mi archivo">
-                                    <div class="pr-fila__acciones">
+                                    <div class="pr-preview" :class="{ 'is-visible': !!elegidos[doc.slug] }">
+                                        <iframe
+                                            v-if="elegidos[doc.slug]"
+                                            title="Previsualización del archivo"
+                                            :src="elegidos[doc.slug].url"></iframe>
+                                    </div>
+
+                                    <div class="pr-fila__acciones pr-fila__acciones--archivo">
                                         <a
                                             v-if="doc.tiene_archivo"
                                             class="pr-btn pr-btn--secondary"
@@ -91,6 +98,7 @@
                                         <form
                                             v-if="doc.puede_reemplazar"
                                             method="POST"
+                                            :id="'pr-subir-' + doc.slug"
                                             :action="doc.ruta_subir"
                                             enctype="multipart/form-data"
                                             class="pr-upload-form"
@@ -106,24 +114,20 @@
                                                     :disabled="subiendo === doc.slug"
                                                     @change="elegirArchivo(doc, $event)">
                                             </label>
-                                            <div class="pr-preview" :class="{ 'is-visible': !!elegidos[doc.slug] }">
-                                                <span>{{ elegidos[doc.slug] ? elegidos[doc.slug].etiqueta : '' }}</span>
-                                                <iframe
-                                                    v-if="elegidos[doc.slug]"
-                                                    title="Previsualización del archivo"
-                                                    :src="elegidos[doc.slug].url"></iframe>
-                                                <button
-                                                    class="pr-btn"
-                                                    type="submit"
-                                                    :class="{ 'pr-btn--enviando': subiendo === doc.slug }"
-                                                    :disabled="subiendo !== null">
-                                                    {{ subiendo === doc.slug ? 'Subiendo…' : 'Confirmar carga' }}
-                                                </button>
-                                            </div>
                                         </form>
+
+                                        <button
+                                            v-if="doc.puede_reemplazar && elegidos[doc.slug]"
+                                            class="pr-btn"
+                                            type="submit"
+                                            :form="'pr-subir-' + doc.slug"
+                                            :class="{ 'pr-btn--enviando': subiendo === doc.slug }"
+                                            :disabled="subiendo !== null">
+                                            {{ subiendo === doc.slug ? 'Subiendo…' : 'Confirmar carga' }}
+                                        </button>
                                     </div>
 
-                                    <small class="pr-fila__archivo" v-if="doc.nombre_original">{{ doc.nombre_original }}</small>
+                                    <small class="pr-fila__archivo" v-if="etiquetaArchivo(doc)">{{ etiquetaArchivo(doc) }}</small>
                                     <small class="pr-fila__archivo pr-error" v-if="errores[doc.slug]" role="alert">{{ errores[doc.slug] }}</small>
                                 </td>
                             </tr>
@@ -221,6 +225,17 @@
                 }
 
                 return doc.tiene_archivo ? 'Reemplazar' : 'Adjuntar';
+            },
+
+            /* Una sola línea bajo los botones: mientras haya un archivo elegido
+               sin enviar manda ese —es el que se está por confirmar— y sólo
+               cuando no lo hay se nombra el que ya está guardado. */
+            etiquetaArchivo: function (doc) {
+                if (this.elegidos[doc.slug]) {
+                    return this.elegidos[doc.slug].etiqueta;
+                }
+
+                return doc.nombre_original || '';
             },
 
             /* ── Elegir el archivo ────────────────────────────────────────── */

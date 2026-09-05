@@ -562,6 +562,7 @@
     margin-top: 0.45rem;
     color: #6b7280;
     font-size: var(--fs-auxiliar);
+    text-align: center;
     overflow-wrap: anywhere;
 }
 
@@ -581,15 +582,23 @@
     border: 0;
 }
 
-/* La previsualización se abre dentro de su celda. */
+/* La previsualización encabeza la celda: es lo que la persona está
+   juzgando, así que va arriba y ocupa todo el ancho disponible. */
 .pr-tabla .pr-preview {
     width: 100%;
-    margin-top: 0.6rem;
+    margin: 0 0 0.6rem;
 }
 
 .pr-tabla .pr-preview iframe {
     width: 100%;
-    height: 180px;
+    height: 260px;
+    margin-top: 0;
+}
+
+/* Abrir, Subsanar y Confirmar carga cuelgan centrados de ese bloque.
+   El modificador evita centrar también el "Generar" de la columna Formato. */
+.pr-fila__acciones--archivo {
+    justify-content: center;
 }
 
 /* ─── En pantallas chicas cada fila se apila ─────────────────────────── */
@@ -637,6 +646,18 @@
 
     .pr-fila-observacion td::before {
         content: none;
+    }
+
+    /* Apilada, la celda comparte borde izquierdo con su rótulo y con el
+       resto de la tarjeta: centrar ahí rompería esa vertical. El centrado
+       de escritorio existe para colgar los botones de la previsualización,
+       que aquí ya ocupa el ancho completo. */
+    .pr-fila__acciones--archivo {
+        justify-content: flex-start;
+    }
+
+    .pr-fila__archivo {
+        text-align: left;
     }
 }
 

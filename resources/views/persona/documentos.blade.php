@@ -147,7 +147,12 @@
                                     </td>
 
                                     <td data-titulo="Mi archivo">
-                                        <div class="pr-fila__acciones">
+                                        {{-- Aquí no hay previsualización: depende de URL.createObjectURL,
+                                             así que sólo existe en la plantilla de Vue. El botón de
+                                             confirmar vive fuera del formulario y lo envía por su
+                                             atributo form=, para quedar en la misma fila que sus
+                                             hermanos y dejar el espacio de arriba a la previsualización. --}}
+                                        <div class="pr-fila__acciones pr-fila__acciones--archivo">
                                             @if($doc)
                                                 <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
                                                     <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
@@ -156,19 +161,15 @@
                                             @endif
 
                                             @if($puedeReemplazar)
-                                                <form method="POST" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
+                                                <form method="POST" id="pr-subir-{{ $slug }}" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
                                                     @csrf
                                                     <label class="pr-btn pr-file">
                                                         <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                                         <span>{{ $docEstado === 'rechazado' ? 'Subsanar' : ($doc ? 'Reemplazar' : 'Adjuntar') }}</span>
                                                         <input type="file" name="archivo" accept="application/pdf" required>
                                                     </label>
-                                                    <div class="pr-preview">
-                                                        <span></span>
-                                                        <iframe title="Previsualización del archivo"></iframe>
-                                                        <button class="pr-btn" type="submit">Confirmar carga</button>
-                                                    </div>
                                                 </form>
+                                                <button class="pr-btn" type="submit" form="pr-subir-{{ $slug }}">Confirmar carga</button>
                                             @endif
                                         </div>
 
