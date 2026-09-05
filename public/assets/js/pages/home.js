@@ -12,9 +12,9 @@
             return {
                 cards: [
                     { icon: 'far fa-edit', title: 'Pre-registro', desc: 'Completa tu registro y sube tu documentación desde cualquier lugar.' },
-                    { icon: 'far fa-credit-card', title: 'Pagos seguros', desc: 'Obtén tu referencia bancaria y realiza el pago correspondiente.' },
-                    { icon: 'fas fa-map-marker-alt', title: 'Planificación', desc: 'Selecciona la sede y el horario de aplicación de la evaluación.' },
-                    { icon: 'fas fa-search', title: 'Resultados', desc: 'Revisa el estado de tu trámite y descarga tus constancias.' }
+                    { icon: 'far fa-credit-card', title: 'Comprobante de pago', desc: 'Obtén tu referencia bancaria y realiza el pago correspondiente.' },
+                    { icon: 'fas fa-map-marker-alt', title: 'Sede y horario', desc: 'Selecciona la sede y el horario de aplicación de la evaluación.' },
+                    { icon: 'fas fa-search', title: 'Seguimiento', desc: 'Revisa el estado de tu trámite y descarga tus constancias.' }
                 ],
                 steps: [
                     { id: 1, number: '01', title: 'Pre-registro y documentación', desc: 'Completa tus datos personales y sube la documentación requerida al sistema.' },

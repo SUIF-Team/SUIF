@@ -38,7 +38,7 @@
 
     <section class="services-section container-fluid px-4 px-lg-5" aria-labelledby="services-title">
         <div class="section-heading">
-            <span class="section-kicker">Servicios</span>
+            <span class="section-kicker">Acciones</span>
             <h2 id="services-title">¿Qué puedes hacer en SUIF?</h2>
         </div>
 
@@ -172,6 +172,5 @@
 @endsection
 
 @section('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
     <script src="{{ asset_versionado('assets/js/pages/home.js') }}"></script>
 @endsection
