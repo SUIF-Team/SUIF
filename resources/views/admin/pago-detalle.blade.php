@@ -3,8 +3,8 @@
 @section('title', 'SUIF — Revisión de pago')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-preregistro.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-pago.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-pago.css') }}">
 @endsection
 
 @section('content')

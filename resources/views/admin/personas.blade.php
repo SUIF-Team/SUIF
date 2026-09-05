@@ -3,8 +3,8 @@
 @section('title', 'SUIF — Bandeja de pre-registros')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-preregistro.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-bandeja-preregistros.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-bandeja-preregistros.css') }}">
 @endsection
 
 @section('content')

@@ -37,6 +37,9 @@
     --fs-ui: 0.875rem;
     --fs-auxiliar: 0.8125rem;
     --fs-micro: 0.75rem;
+    /* Ancho común de los contenedores del panel administrativo; ver
+       docs/superpowers/specs/2026-09-05-ancho-contenedores-admin-design.md */
+    --admin-ancho: 1200px;
     --navbar-height: 120px;
     --alto-navbar: var(--navbar-height);
     --fondo-sistema: url('/assets/img/backgrounds/fondo-sistema.jpg');

@@ -2,7 +2,7 @@
 
 .admin-dashboard {
     flex: 1 0 auto;
-    padding: clamp(2rem, 5vw, 4rem) 1.25rem;
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
     background-color: rgba(255, 255, 255, 0.91);
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
@@ -13,7 +13,7 @@
 }
 
 .admin-dashboard-contenedor {
-    width: min(100%, 1200px);
+    width: min(100%, var(--admin-ancho));
     margin: 0 auto;
 }
 

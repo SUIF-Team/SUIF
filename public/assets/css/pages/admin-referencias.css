@@ -1,12 +1,12 @@
 /* Catálogo de referencias bancarias y su pantalla de carga. */
 
 .admin-referencias {
-    width: min(100%, 1200px);
-    margin: 0 auto;
     padding: clamp(2rem, 5vw, 4rem) 1rem;
 }
 
 .admin-referencias-contenedor {
+    width: min(100%, var(--admin-ancho));
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;

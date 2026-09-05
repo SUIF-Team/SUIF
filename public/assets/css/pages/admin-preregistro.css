@@ -2,9 +2,12 @@
     display: none;
 }
 
-.admin-preregistro-bandeja,
+/* Estas pantallas no llevan contenedor interno: las tarjetas cuelgan directas de
+   la sección, que además es el punto de montaje de Vue. La sección hace de marco
+   y de contenedor a la vez, así que el tope suma los dos márgenes laterales y el
+   contenido termina midiendo los mismos --admin-ancho que el resto del panel. */
 .admin-preregistro-flujo {
-    width: min(100%, 1100px);
+    width: min(100%, calc(var(--admin-ancho) + 2rem));
     margin: 0 auto;
     padding: clamp(2rem, 5vw, 4rem) 1rem;
 }
