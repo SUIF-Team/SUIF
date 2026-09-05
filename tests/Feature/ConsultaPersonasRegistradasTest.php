@@ -115,6 +115,26 @@ class ConsultaPersonasRegistradasTest extends TestCase
             ->assertDontSee('Ver expediente');
     }
 
+    /**
+     * La barra de filtros se quedó sin botón: la bandeja se acota mientras se
+     * escribe, así que no quedaba nada que pulsar. Y la región viva pasó a ser
+     * el conteo en lugar de la lista, porque releerla entera en cada pausa de
+     * tecleo no le sirve a quien usa lector de pantalla.
+     *
+     * Es la única bandeja Vue con una prueba que renderice el partial, así que
+     * aquí se afirma el markup que las tres comparten.
+     */
+    public function test_la_barra_de_filtros_no_tiene_boton_y_la_region_viva_es_el_conteo(): void
+    {
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.personas.registradas.index'))
+            ->assertOk()
+            ->assertDontSee('admin-bandeja-preregistros-boton-filtrar', false)
+            ->assertSee('<div class="admin-bandeja-preregistros-lista">', false)
+            ->assertSee('<p class="visually-hidden" role="status" v-if="personasFiltradas.length">', false)
+            ->assertSee('id="bandeja-personas-registradas-termino"', false);
+    }
+
     public function test_bandeja_de_preregistros_incluye_a_toda_persona_con_clave_sin_importar_el_estado(): void
     {
         $personas = app(ConsultaPreRegistros::class)->bandeja();

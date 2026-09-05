@@ -36,7 +36,13 @@
         <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="personas-registradas-listado-titulo">
             <h2 id="personas-registradas-listado-titulo">Personas</h2>
 
-            <div class="admin-bandeja-preregistros-lista" aria-live="polite">
+            {{-- La región viva es el conteo y no la lista: con el filtro
+                 aplicándose al escribir, releer la bandeja entera en cada
+                 pausa no le sirve a nadie. El caso vacío lo anuncia el
+                 mensaje del final, que ya tiene su propio role="status". --}}
+            <p class="visually-hidden" role="status" v-if="personasFiltradas.length">@{{ resumenResultados }}</p>
+
+            <div class="admin-bandeja-preregistros-lista">
                 {{-- El @can duplica el middleware de la ruta a propósito:
                      quien no puede gestionar usuarios ve la bandeja sin la
                      columna de acción, exactamente como antes. --}}

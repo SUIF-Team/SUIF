@@ -103,18 +103,6 @@
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.admin-bandeja-preregistros-boton-filtrar {
-    border-color: #bae6fd;
-    background: #e0f2fe;
-    color: #0276ad;
-}
-
-.admin-bandeja-preregistros-boton-filtrar:hover,
-.admin-bandeja-preregistros-boton-filtrar:focus-visible {
-    background: #bae6fd;
-    color: #025f8b;
-}
-
 .admin-bandeja-preregistros-boton-limpiar {
     border-color: #fecaca;
     background: #fee2e2;

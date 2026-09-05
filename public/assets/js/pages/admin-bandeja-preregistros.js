@@ -18,6 +18,7 @@
 
     var campo_estado = root.dataset.campoEstado || 'estado_bandeja';
     var campo_fecha = root.dataset.campoFecha || 'fecha_registro';
+    var temporizador;
 
     window.Vue.createApp({
         components: {
@@ -34,12 +35,7 @@
                     estado: 'Todos',
                     orden: 'reciente'
                 },
-                filtros_aplicados: {
-                    campo: 'nombre',
-                    termino: '',
-                    estado: 'Todos',
-                    orden: 'reciente'
-                },
+                termino_aplicado: '',
                 persona_seleccionada: null,
                 foco_restaurar: null,
                 aviso: { mensaje: '', tipo: 'success' },
@@ -48,8 +44,8 @@
         },
         computed: {
             personasFiltradas: function () {
-                var filtros = this.filtros_aplicados;
-                var termino = this.normalizar(filtros.termino);
+                var filtros = this.filtros;
+                var termino = this.normalizar(this.termino_aplicado);
 
                 var visibles = this.personas.filter(function (registro) {
                     var coincide_termino = !termino || this.normalizar(registro[filtros.campo]).includes(termino);
@@ -59,17 +55,34 @@
                 }, this);
 
                 return this.ordenar(visibles, filtros.orden);
+            },
+            /* Lo único que oye quien usa lector de pantalla cuando la lista se
+               acota. La lista entera era la región viva y se releía completa;
+               con el filtro aplicándose al escribir eso sería insoportable. */
+            resumenResultados: function () {
+                var total = this.personasFiltradas.length;
+
+                return total === 1 ? '1 resultado' : total + ' resultados';
+            }
+        },
+        /* Los select se aplican de golpe, pero el término no: repintar la lista
+           en cada tecla se nota cuando la bandeja es larga, y ninguna de las
+           tres está paginada.
+
+           El temporizador lee el valor vigente al dispararse y no el que
+           capturó el watch. Si se pulsa Limpiar dentro de esos 120 ms, un
+           disparo tardío asigna la cadena vacía en lugar de reponer el término
+           que se acaba de borrar. */
+        watch: {
+            'filtros.termino': function () {
+                window.clearTimeout(temporizador);
+
+                temporizador = window.setTimeout(function () {
+                    this.termino_aplicado = this.filtros.termino;
+                }.bind(this), 120);
             }
         },
         methods: {
-            filtrar: function () {
-                this.filtros_aplicados = {
-                    campo: this.filtros.campo,
-                    termino: this.filtros.termino.trim(),
-                    estado: this.filtros.estado,
-                    orden: this.filtros.orden
-                };
-            },
             limpiar: function () {
                 this.filtros = {
                     campo: 'nombre',
@@ -77,12 +90,7 @@
                     estado: 'Todos',
                     orden: 'reciente'
                 };
-                this.filtros_aplicados = {
-                    campo: 'nombre',
-                    termino: '',
-                    estado: 'Todos',
-                    orden: 'reciente'
-                };
+                this.termino_aplicado = '';
             },
             /* 'reciente' es el orden con el que llega la bandeja desde el
                servidor, así que devolver la lista tal cual ya es esa opción.

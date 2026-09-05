@@ -31,7 +31,13 @@
         <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="solicitudes-titulo">
             <h2 id="solicitudes-titulo">Solicitudes</h2>
 
-            <div class="admin-bandeja-preregistros-lista" aria-live="polite">
+            {{-- La región viva es el conteo y no la lista: con el filtro
+                 aplicándose al escribir, releer la bandeja entera en cada
+                 pausa no le sirve a nadie. El caso vacío lo anuncia el
+                 mensaje del final, que ya tiene su propio role="status". --}}
+            <p class="visually-hidden" role="status" v-if="personasFiltradas.length">@{{ resumenResultados }}</p>
+
+            <div class="admin-bandeja-preregistros-lista">
                 <div class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-encabezados" aria-hidden="true">
                     <span>Persona</span>
                     <span>Estado</span>

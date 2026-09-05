@@ -3,8 +3,11 @@
     $estados_filtro = $estados_filtro ?? [];
 @endphp
 
+{{-- La bandeja se acota mientras se escribe, así que no hay botón de filtrar:
+     no quedaba nada que pulsar. El submit se sigue interceptando porque el
+     formulario tiene un campo de texto y Enter lo enviaría igual. --}}
 <section class="admin-bandeja-preregistros-tarjeta" aria-label="Filtros de búsqueda">
-    <form class="admin-bandeja-preregistros-filtros" v-on:submit.prevent="filtrar">
+    <form class="admin-bandeja-preregistros-filtros" v-on:submit.prevent>
         <div class="admin-bandeja-preregistros-campo admin-bandeja-preregistros-campo-tipo">
             <label for="{{ $prefijo_filtros }}-campo">Filtrar por</label>
             <select id="{{ $prefijo_filtros }}-campo" v-model="filtros.campo">
@@ -42,7 +45,6 @@
         </div>
 
         <div class="admin-bandeja-preregistros-acciones-filtro">
-            <button class="admin-bandeja-preregistros-boton admin-bandeja-preregistros-boton-filtrar" type="submit">Filtrar</button>
             <button class="admin-bandeja-preregistros-boton admin-bandeja-preregistros-boton-limpiar" type="button" v-on:click="limpiar">Limpiar</button>
         </div>
     </form>
