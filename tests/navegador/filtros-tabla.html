@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comprobación de admin-filtros-tabla.js</title>
+<!--
+    El filtrado de las bandejas administrativas vive en JavaScript y el proyecto
+    no tiene corredor de pruebas para eso: no hay package.json ni empaquetador.
+    Este archivo es la comprobación, y se corre abriéndolo en un navegador.
+
+    Carga el script real —no una copia— sobre una tabla de mentira con las tres
+    formas de comparación, el orden invertido y el renglón vacío. Abajo escribe
+    OK o FALLA por cada caso.
+-->
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 1.5rem; }
+    [hidden] { display: none !important; }
+    #armazon { display: none; }
+    li { font-family: ui-monospace, monospace; }
+    .falla { color: #b00020; font-weight: 700; }
+    #veredicto { font-size: 1.1rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>admin-filtros-tabla.js</h1>
+<p id="veredicto">Ejecutando…</p>
+<ol id="resultados"></ol>
+
+<div id="armazon">
+    <form data-filtros-tabla="tabla-de-prueba">
+        <input id="buscar" name="buscar" type="search">
+        <select id="rol" name="rol">
+            <option value="">Todos</option>
+            <option value="Admin UIF">Admin UIF</option>
+            <option value="Admin DEC">Admin DEC</option>
+        </select>
+        <select id="estado" name="estado" data-filtro-modo="token">
+            <option value="">Todas</option>
+            <option value="disponible">Disponibles</option>
+            <option value="asignada">Asignadas</option>
+            <option value="sin-formato">Sin formato PDF</option>
+        </select>
+        <select id="orden" name="orden" data-filtro-orden>
+            <option value="">A-Z</option>
+            <option value="za">Z-A</option>
+        </select>
+        <button id="filtrar" type="submit">Filtrar</button>
+        <a id="limpiar" href="#sin-filtros" data-filtros-limpiar>Limpiar</a>
+    </form>
+
+    <table id="tabla-de-prueba">
+        <tbody>
+            <tr id="f1" data-filtro-buscar="Álvarez Prueba Ana ROLA900101"
+                data-filtro-rol="Admin UIF" data-filtro-estado="asignada sin-formato"><td>1</td></tr>
+            <tr id="f2" data-filtro-buscar="Bravo Prueba Beto ROLB900101"
+                data-filtro-rol="Admin DEC" data-filtro-estado="disponible"><td>2</td></tr>
+            <tr id="f3" data-filtro-buscar="Cruz Prueba Ana ROLC900101"
+                data-filtro-rol="Admin UIF" data-filtro-estado="asignada"><td>3</td></tr>
+            <tr data-tabla-vacia hidden><td>No se encontraron renglones.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="../../public/assets/js/pages/admin-filtros-tabla.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var fallas = 0;
+
+    function campo(id) {
+        return document.getElementById(id);
+    }
+
+    function filas() {
+        return Array.prototype.slice.call(document.querySelectorAll('#tabla-de-prueba tbody tr'));
+    }
+
+    function visibles() {
+        return filas().filter(function (fila) { return !fila.hidden; })
+            .map(function (fila) { return fila.id || 'vacia'; }).join(',');
+    }
+
+    function orden() {
+        return filas().map(function (fila) { return fila.id || 'vacia'; }).join(',');
+    }
+
+    function comprobar(nombre, real, esperado) {
+        var pasa = real === esperado;
+        var renglon = document.createElement('li');
+
+        renglon.textContent = (pasa ? 'OK   ' : 'FALLA') + '  ' + nombre
+            + (pasa ? '' : '  → «' + real + '», esperaba «' + esperado + '»');
+
+        if (!pasa) {
+            renglon.className = 'falla';
+            fallas += 1;
+        }
+
+        document.getElementById('resultados').appendChild(renglon);
+    }
+
+    /* El script escucha «input» en los campos de texto y espera 120 ms antes de
+       repintar, así que los casos de búsqueda se encadenan con ese respiro. */
+    function escribir(valor) {
+        campo('buscar').value = valor;
+        campo('buscar').dispatchEvent(new Event('input'));
+    }
+
+    function elegir(id, valor) {
+        campo(id).value = valor;
+        campo(id).dispatchEvent(new Event('change'));
+    }
+
+    var pasos = [
+        function () {
+            comprobar('el botón Filtrar se oculta', String(campo('filtrar').hidden), 'true');
+            comprobar('al arrancar están todas', visibles(), 'f1,f2,f3');
+            escribir('ana');
+        },
+        function () {
+            comprobar('busca sin distinguir mayúsculas', visibles(), 'f1,f3');
+            escribir('álvarez');
+        },
+        function () {
+            /* Mismo criterio que mb_stripos en el servidor: los acentos cuentan. */
+            comprobar('los acentos cuentan', visibles(), 'f1');
+            escribir('prueba');
+        },
+        function () {
+            elegir('rol', 'Admin UIF');
+            comprobar('dos filtros se acumulan', visibles(), 'f1,f3');
+            elegir('rol', '');
+            escribir('');
+        },
+        function () {
+            elegir('estado', 'sin-formato');
+            comprobar('token: una etiqueta de dos', visibles(), 'f1');
+            elegir('estado', 'asignada');
+            comprobar('token: la otra etiqueta', visibles(), 'f1,f3');
+            elegir('estado', 'disponible');
+            comprobar('token: sin solape', visibles(), 'f2');
+            elegir('estado', '');
+            escribir('zzz');
+        },
+        function () {
+            comprobar('sin coincidencias sale el aviso', visibles(), 'vacia');
+            campo('limpiar').click();
+            comprobar('limpiar no navega', window.location.hash, '');
+            comprobar('limpiar restituye', visibles(), 'f1,f2,f3');
+
+            elegir('orden', 'za');
+            comprobar('orden Z-A', orden(), 'f3,f2,f1,vacia');
+            elegir('orden', '');
+            comprobar('orden A-Z', orden(), 'f1,f2,f3,vacia');
+
+            var veredicto = document.getElementById('veredicto');
+            veredicto.textContent = fallas === 0
+                ? 'Todo pasó.'
+                : fallas + ' comprobación(es) fallaron.';
+            veredicto.className = fallas === 0 ? '' : 'falla';
+        }
+    ];
+
+    (function siguiente(i) {
+        if (i >= pasos.length) {
+            return;
+        }
+
+        pasos[i]();
+        window.setTimeout(function () { siguiente(i + 1); }, 200);
+    }(0));
+}());
+</script>
+</body>
+</html>

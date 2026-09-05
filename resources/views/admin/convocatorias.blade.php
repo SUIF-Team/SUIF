@@ -69,7 +69,8 @@
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-filtros" aria-label="Filtros de búsqueda">
-            <form method="GET" action="{{ route('admin.convocatorias.index') }}" class="admin-sedes-filtros-formulario">
+            <form method="GET" action="{{ route('admin.convocatorias.index') }}" class="admin-sedes-filtros-formulario"
+                  data-filtros-tabla="admin-convocatorias-tabla">
                 <div class="admin-sedes-campo">
                     <label for="buscar">Buscar convocatoria</label>
                     <input id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
@@ -85,14 +86,14 @@
                 </div>
                 <div class="admin-sedes-filtros-acciones">
                     <button class="admin-sedes-boton admin-sedes-boton--filtrar" type="submit">Filtrar</button>
-                    <a class="admin-sedes-boton admin-sedes-boton--limpiar" href="{{ route('admin.convocatorias.index') }}">Limpiar</a>
+                    <a class="admin-sedes-boton admin-sedes-boton--limpiar" href="{{ route('admin.convocatorias.index') }}" data-filtros-limpiar>Limpiar</a>
                 </div>
             </form>
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de convocatorias">
             <div class="admin-sedes-tabla-responsive">
-                <table class="admin-sedes-tabla">
+                <table id="admin-convocatorias-tabla" class="admin-sedes-tabla">
                     <thead>
                         <tr>
                             <th>Convocatoria</th>
@@ -106,8 +107,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($convocatorias as $convocatoria)
-                            <tr>
+                        @foreach($convocatorias as $convocatoria)
+                            <tr data-filtro-buscar="{{ $convocatoria['nombre'] }}"
+                                data-filtro-estado="{{ $convocatoria['estado'] }}">
                                 <td class="admin-sedes-tabla-nombre">{{ $convocatoria['nombre'] }}</td>
                                 <td>${{ $convocatoria['monto_formateado'] }} {{ config('suif.moneda') }}</td>
                                 <td>
@@ -133,11 +135,13 @@
                                     <a class="admin-sedes-editar" href="{{ route('admin.convocatorias.edit', $convocatoria['id']) }}">Editar</a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="admin-sedes-vacio">No se encontraron convocatorias con los filtros seleccionados.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
+
+                        {{-- El renglón se escribe siempre: con la tabla filtrándose
+                             en el navegador, el aviso aparece sin volver al servidor. --}}
+                        <tr data-tabla-vacia @unless($convocatorias->isEmpty()) hidden @endunless>
+                            <td colspan="8" class="admin-sedes-vacio" role="status">No se encontraron convocatorias con los filtros seleccionados.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -155,5 +159,6 @@
 @endsection
 
 @section('scripts')
+<script src="{{ asset_versionado('assets/js/pages/admin-filtros-tabla.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-convocatorias.js') }}"></script>
 @endsection

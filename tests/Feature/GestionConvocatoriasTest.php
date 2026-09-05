@@ -310,6 +310,24 @@ class GestionConvocatoriasTest extends TestCase
 
     /* ── Apoyos ─────────────────────────────────────────────────────────── */
 
+    /**
+     * La bandeja se acota en el navegador sobre la tabla que Blade ya escribió,
+     * y para eso cada renglón lleva sus valores en atributos. Si uno se cae al
+     * editar la vista, el filtro deja de acotar sin avisar de nada.
+     */
+    public function test_la_bandeja_lleva_el_cableado_del_filtro(): void
+    {
+        $this->crearConvocatoriaVigente();
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.convocatorias.index'))
+            ->assertOk()
+            ->assertSee('data-filtros-tabla="admin-convocatorias-tabla"', false)
+            ->assertSee('data-filtro-buscar="Certificación 2027"', false)
+            ->assertSee('data-filtro-estado="Vigente"', false)
+            ->assertSee('data-tabla-vacia', false);
+    }
+
     private function sembrarEstadosConvocatoria(): void
     {
         DB::table('c_estado_convocatoria')->insert([

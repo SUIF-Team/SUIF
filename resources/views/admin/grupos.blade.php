@@ -37,7 +37,8 @@
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-filtros" aria-label="Filtros de búsqueda">
-            <form method="GET" action="{{ route('admin.grupos.index') }}" class="admin-sedes-filtros-formulario">
+            <form method="GET" action="{{ route('admin.grupos.index') }}" class="admin-sedes-filtros-formulario"
+                  data-filtros-tabla="admin-grupos-tabla">
                 <div class="admin-sedes-campo">
                     <label for="sede">Sede</label>
                     <select id="sede" name="sede">
@@ -59,14 +60,14 @@
                 </div>
                 <div class="admin-sedes-filtros-acciones">
                     <button class="admin-sedes-boton admin-sedes-boton--filtrar" type="submit">Filtrar</button>
-                    <a class="admin-sedes-boton admin-sedes-boton--limpiar" href="{{ route('admin.grupos.index') }}">Limpiar</a>
+                    <a class="admin-sedes-boton admin-sedes-boton--limpiar" href="{{ route('admin.grupos.index') }}" data-filtros-limpiar>Limpiar</a>
                 </div>
             </form>
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de grupos">
             <div class="admin-sedes-tabla-responsive">
-                <table class="admin-sedes-tabla">
+                <table id="admin-grupos-tabla" class="admin-sedes-tabla">
                     <thead>
                         <tr>
                             <th>Sede</th>
@@ -78,8 +79,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($grupos as $grupo)
-                            <tr>
+                        @foreach($grupos as $grupo)
+                            <tr data-filtro-sede="{{ $grupo['sede_id'] }}"
+                                data-filtro-estado="{{ $grupo['estado_clave'] }}">
                                 <td class="admin-sedes-tabla-nombre">
                                     {{ $grupo['sede_nombre'] }}
                                     <small>{{ $grupo['sede_direccion'] }}</small>
@@ -105,11 +107,13 @@
                                     <a class="admin-sedes-editar" href="{{ route('admin.grupos.edit', $grupo['id']) }}">Editar</a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="admin-sedes-vacio">No se encontraron grupos con los filtros seleccionados.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
+
+                        {{-- El renglón se escribe siempre: con la tabla filtrándose
+                             en el navegador, el aviso aparece sin volver al servidor. --}}
+                        <tr data-tabla-vacia @unless($grupos->isEmpty()) hidden @endunless>
+                            <td colspan="6" class="admin-sedes-vacio" role="status">No se encontraron grupos con los filtros seleccionados.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -126,5 +130,6 @@
 @endsection
 
 @section('scripts')
+<script src="{{ asset_versionado('assets/js/pages/admin-filtros-tabla.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-sedes.js') }}"></script>
 @endsection

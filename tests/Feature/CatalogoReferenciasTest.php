@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Usuario;
 use App\Servicios\CatalogoReferencias;
 use DomainException;
 use Illuminate\Database\Schema\Blueprint;
@@ -9,6 +10,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -24,6 +26,8 @@ use ZipArchive;
  */
 class CatalogoReferenciasTest extends TestCase
 {
+    use SiembraAdministradores;
+
     /** Membrete tal como lo exporta el archivo oficial: siete renglones. */
     private const MEMBRETE = [
         'UNIVERSIDAD NACIONAL AUTÓNOMA DE MÉXICO,,,',
@@ -44,6 +48,15 @@ class CatalogoReferenciasTest extends TestCase
 
         Storage::fake('referencias');
 
+        /* El catálogo también se ve desde el panel, y esa pantalla necesita el
+           esquema administrativo y una cuenta que la abra. REFERENCIA_BANCARIA
+           se vuelve a crear enseguida porque la del trait no trae ni el formato
+           ni la fecha de emisión, que son columnas de esta pantalla. */
+        $this->crearEsquemaAdministrativo();
+        $this->sembrarRolesYPrivilegios();
+        $this->crearCuenta(1, self::ROL_SUPERUSUARIO, 'SUPE900101MDFABC01', 'Sofía', 'Superusuaria', 'Prueba');
+        $this->crearCuenta(2, self::ROL_PERSONA, 'PERS900101MDFABC02', 'Persona', 'Solicitante', 'Prueba');
+
         Schema::dropIfExists('referencia_bancaria');
 
         Schema::create('referencia_bancaria', function (Blueprint $table): void {
@@ -59,6 +72,57 @@ class CatalogoReferenciasTest extends TestCase
             $table->date('reba_fecha_asignacion')->nullable();
             $table->time('reba_hora_asignacion')->nullable();
         });
+    }
+
+    /**
+     * La bandeja se acota en el navegador sobre la tabla que Blade ya escribió,
+     * y para eso cada renglón lleva sus valores en atributos. Si uno se cae al
+     * editar la vista, el filtro deja de acotar sin avisar de nada.
+     */
+    public function test_la_bandeja_lleva_el_cableado_del_filtro(): void
+    {
+        DB::table('solicitud')->insert([
+            'soli_id_persona' => 2,
+            'soli_id_pago' => 7,
+        ]);
+
+        DB::table('referencia_bancaria')->insert([
+            [
+                'reba_id_pago' => 7,
+                'reba_referencia' => '4130326001856RJ30299',
+                'reba_path' => null,
+                'reba_monto' => 7500,
+                'reba_vigencia' => '2027-03-31',
+                'reba_fecha_emision' => '2027-01-15',
+                'reba_fecha_carga' => '2027-01-15',
+                'reba_hora_carga' => '09:00:00',
+                'reba_fecha_asignacion' => '2027-02-01',
+                'reba_hora_asignacion' => '09:00:00',
+            ],
+            [
+                'reba_id_pago' => null,
+                'reba_referencia' => '4130326001857RJ30210',
+                'reba_path' => 'formatos/4130326001857RJ30210.pdf',
+                'reba_monto' => 7500,
+                'reba_vigencia' => '2027-03-31',
+                'reba_fecha_emision' => '2027-01-15',
+                'reba_fecha_carga' => '2027-01-15',
+                'reba_hora_carga' => '09:00:00',
+                'reba_fecha_asignacion' => null,
+                'reba_hora_asignacion' => null,
+            ],
+        ]);
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('admin.referencias.index'))
+            ->assertOk()
+            ->assertSee('data-filtros-tabla="admin-referencias-tabla"', false)
+            ->assertSee('data-filtro-buscar="4130326001856RJ30299 PERS900101MDFABC02"', false)
+            /* Una referencia entregada y sin formato cae en los dos filtros de
+               estado a la vez, y por eso el atributo trae las dos etiquetas. */
+            ->assertSee('data-filtro-estado="asignada sin-formato"', false)
+            ->assertSee('data-filtro-estado="disponible"', false)
+            ->assertSee('data-tabla-vacia', false);
     }
 
     public function test_carga_el_archivo_de_la_dec_con_su_membrete_encima_de_la_tabla(): void

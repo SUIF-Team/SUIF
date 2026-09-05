@@ -49,14 +49,15 @@
         </section>
 
         <section class="admin-referencias-tarjeta admin-referencias-filtros" aria-label="Filtros de búsqueda">
-            <form method="GET" action="{{ route('admin.referencias.index') }}" class="admin-referencias-filtros-formulario">
+            <form method="GET" action="{{ route('admin.referencias.index') }}" class="admin-referencias-filtros-formulario"
+                  data-filtros-tabla="admin-referencias-tabla">
                 <div class="admin-referencias-campo">
                     <label for="buscar">Referencia o CURP</label>
                     <input id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
                 </div>
                 <div class="admin-referencias-campo">
                     <label for="estado">Estatus</label>
-                    <select id="estado" name="estado">
+                    <select id="estado" name="estado" data-filtro-modo="token">
                         <option value="">Todas</option>
                         <option value="disponible" @selected(($filtros['estado'] ?? '') === 'disponible')>Disponibles</option>
                         <option value="asignada" @selected(($filtros['estado'] ?? '') === 'asignada')>Asignadas</option>
@@ -65,14 +66,14 @@
                 </div>
                 <div class="admin-referencias-filtros-acciones">
                     <button class="admin-referencias-boton admin-referencias-boton--filtrar" type="submit">Filtrar</button>
-                    <a class="admin-referencias-boton admin-referencias-boton--limpiar" href="{{ route('admin.referencias.index') }}">Limpiar</a>
+                    <a class="admin-referencias-boton admin-referencias-boton--limpiar" href="{{ route('admin.referencias.index') }}" data-filtros-limpiar>Limpiar</a>
                 </div>
             </form>
         </section>
 
         <section class="admin-referencias-tarjeta admin-referencias-tabla-contenedor" aria-label="Catálogo de referencias">
             <div class="admin-referencias-tabla-responsive">
-                <table class="admin-referencias-tabla">
+                <table id="admin-referencias-tabla" class="admin-referencias-tabla">
                     <thead>
                         <tr>
                             <th>Referencia</th>
@@ -84,8 +85,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($referencias as $referencia)
-                            <tr>
+                        {{-- ponytail: el catálogo se pinta entero y el filtro lo acota en
+                             el navegador. La carga sin filtro ya era así —catalogo() no
+                             tiene límite—, pero la carga filtrada ahora también trae todo.
+                             Si el catálogo crece hasta doler, lo que falta es paginación,
+                             que hoy no existe en ninguna pantalla del sistema. --}}
+                        @foreach($referencias as $referencia)
+                            <tr data-filtro-buscar="{{ $referencia['referencia'].' '.$referencia['curp'] }}"
+                                data-filtro-estado="{{ $referencia['asignada'] ? 'asignada' : 'disponible' }}{{ $referencia['tiene_formato'] ? '' : ' sin-formato' }}">
                                 <td class="admin-referencias-tabla-numero">{{ $referencia['referencia'] }}</td>
                                 <td>
                                     @if($referencia['monto'] !== null)
@@ -134,13 +141,15 @@
                                     @endif
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="admin-referencias-vacio">
-                                    No hay referencias que coincidan con los filtros seleccionados.
-                                </td>
-                            </tr>
-                        @endforelse
+                        @endforeach
+
+                        {{-- El renglón se escribe siempre: con la tabla filtrándose
+                             en el navegador, el aviso aparece sin volver al servidor. --}}
+                        <tr data-tabla-vacia @unless($referencias->isEmpty()) hidden @endunless>
+                            <td colspan="6" class="admin-referencias-vacio" role="status">
+                                No hay referencias que coincidan con los filtros seleccionados.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -157,5 +166,6 @@
 @endsection
 
 @section('scripts')
+<script src="{{ asset_versionado('assets/js/pages/admin-filtros-tabla.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-referencias.js') }}"></script>
 @endsection

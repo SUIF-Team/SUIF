@@ -597,6 +597,33 @@ class GestionSedesTest extends TestCase
         $this->assertStringStartsWith('%PDF', $respuesta->getContent());
     }
 
+    /**
+     * Las dos bandejas se acotan en el navegador sobre la tabla que Blade ya
+     * escribió, y para eso cada renglón lleva sus valores en atributos. Si uno
+     * se cae al editar la vista, el filtro deja de acotar sin avisar de nada.
+     */
+    public function test_las_bandejas_de_sedes_y_grupos_llevan_el_cableado_del_filtro(): void
+    {
+        [$idSede] = $this->crearSedeProgramada(4);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.sedes.index'))
+            ->assertOk()
+            ->assertSee('data-filtros-tabla="admin-sedes-tabla"', false)
+            ->assertSee('data-filtro-buscar="Sede de prueba"', false)
+            ->assertSee('data-filtro-ubicacion="Dirección de prueba"', false)
+            ->assertSee('data-filtro-estado="con-cupo"', false)
+            ->assertSee('data-tabla-vacia', false);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.grupos.index'))
+            ->assertOk()
+            ->assertSee('data-filtros-tabla="admin-grupos-tabla"', false)
+            ->assertSee('data-filtro-sede="'.$idSede.'"', false)
+            ->assertSee('data-filtro-estado="con-cupo"', false)
+            ->assertSee('data-tabla-vacia', false);
+    }
+
     private function crearEsquemaTemporal(): void
     {
         foreach ([

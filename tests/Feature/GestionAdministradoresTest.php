@@ -248,4 +248,22 @@ class GestionAdministradoresTest extends TestCase
             ->assertSee('Registro Prueba Ulises')
             ->assertDontSee('Pagos Prueba Delia');
     }
+
+    /**
+     * La bandeja se acota en el navegador sobre la tabla que Blade ya escribió,
+     * y para eso cada renglón lleva sus valores en atributos. Si uno se cae al
+     * editar la vista, el filtro deja de acotar sin avisar de nada.
+     */
+    public function test_la_bandeja_lleva_el_cableado_del_filtro(): void
+    {
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.administradores.index'))
+            ->assertOk()
+            ->assertSee('data-filtros-tabla="admin-administradores-tabla"', false)
+            ->assertSee('data-filtro-buscar="Registro Prueba Ulises UIFA900101MDFABC03"', false)
+            ->assertSee('data-filtro-rol="Admin UIF"', false)
+            ->assertSee('data-filtro-estatus="activos"', false)
+            ->assertSee('data-filtro-orden', false)
+            ->assertSee('data-tabla-vacia', false);
+    }
 }
