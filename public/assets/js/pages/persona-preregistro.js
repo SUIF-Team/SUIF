@@ -38,14 +38,6 @@
         return;
     }
 
-    /* Fuera del estado reactivo: es un nodo del DOM, no un dato que la
-       plantilla tenga que observar. */
-    var formulario = document.querySelector('#pr-data-form');
-
-    if (!formulario) {
-        return;
-    }
-
     window.Vue.createApp({
         components: {
             alertas: window.SUIFComponentes.Alertas
@@ -65,15 +57,13 @@
         methods: {
             /* El botón se apaga mientras falte algo, usando la validación del
                propio navegador: las reglas ya están en los required, maxlength
-               y pattern de los campos, no hace falta copiarlas. */
-            revisarCompletitud: function () {
-                this.completo = formulario.checkValidity();
+               y pattern de los campos, no hace falta copiarlas.
 
-                var boton = formulario.querySelector('button[type=submit]');
-
-                if (boton) {
-                    boton.disabled = !this.completo || this.enviando;
-                }
+               El estado se publica y lo lee el :disabled del botón. Ponerlo a
+               mano sobre el nodo no serviría: Vue rehace ese botón al montar y
+               al repintar, y le devolvería el disabled de la plantilla. */
+            revisarCompletitud: function (evento) {
+                this.completo = evento.currentTarget.checkValidity();
             },
 
             enviar: function (evento) {
@@ -84,7 +74,6 @@
                 this.enviando = true;
                 this.avisoError = '';
                 this.erroresServidor = {};
-                this.revisarCompletitud();
 
                 window.SUIF.enviarYSeguir(evento.target).then(function (resultado) {
                     if (resultado.navegando) {
@@ -94,7 +83,6 @@
                     this.enviando = false;
                     this.avisoError = resultado.mensaje;
                     this.erroresServidor = resultado.errores;
-                    this.revisarCompletitud();
 
                     /* El aviso queda arriba del formulario, que puede ser más
                        alto que la pantalla: sin esto el botón respondería y la
@@ -109,9 +97,15 @@
             }
         },
         mounted: function () {
-            formulario.addEventListener('input', this.revisarCompletitud);
-            formulario.addEventListener('change', this.revisarCompletitud);
-            this.revisarCompletitud();
+            /* Se consulta aquí y no al cargar el script: Vue acaba de rehacer
+               estos nodos, y la referencia tomada antes apuntaría al
+               formulario que ya reemplazó. En la edición llega relleno, así
+               que el botón nace encendido. */
+            var formulario = document.querySelector('#pr-data-form');
+
+            if (formulario) {
+                this.completo = formulario.checkValidity();
+            }
         }
     }).mount(raiz);
 }());

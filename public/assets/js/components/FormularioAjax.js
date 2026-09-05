@@ -125,19 +125,21 @@
      * Las pantallas que no necesitan nada más que lo de arriba se marcan en el
      * HTML con data-formulario-ajax y se montan solas: así no hace falta un
      * archivo por pantalla que repita la misma llamada.
+     *
+     * Se monta aquí mismo, sin esperar a DOMContentLoaded, y el porqué importa:
+     * al montar, Vue rehace los hijos del elemento, de modo que cualquier nodo
+     * que otro script hubiera tomado antes se queda huérfano y sus escuchadores
+     * dejan de dispararse en silencio. Este archivo se carga desde
+     * partials/scripts, al final del <body> y por delante de @yield('scripts'),
+     * así que el HTML que necesita ya está y los scripts de página encuentran
+     * los nodos definitivos. Esperar al evento invertía ese orden y dejaba sin
+     * efecto, entre otros, la vista previa del mapa y el botón de baja de las
+     * pantallas de sedes, grupos y administradores.
      */
-    function montarLosMarcados() {
-        Array.prototype.forEach.call(
-            document.querySelectorAll('[data-formulario-ajax]'),
-            function (nodo) {
-                window.SUIF.montarFormulario(nodo);
-            }
-        );
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', montarLosMarcados);
-    } else {
-        montarLosMarcados();
-    }
+    Array.prototype.forEach.call(
+        document.querySelectorAll('[data-formulario-ajax]'),
+        function (nodo) {
+            window.SUIF.montarFormulario(nodo);
+        }
+    );
 }());

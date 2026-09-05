@@ -453,6 +453,70 @@ async function principal() {
         );
     });
 
+    /* ── FormularioAjax ──────────────────────────────────────────────────── */
+
+    /* Carga el componente con un DOM mínimo y devuelve lo que llegó a montarse.
+       `aplazados` recoge los DOMContentLoaded que se hayan registrado. */
+    function cargarFormularioAjax(nodos) {
+        const montados = [];
+        let aplazados = [];
+
+        /* main.js va primero porque FormularioAjax usa su enviarYSeguir, y sus
+           propios DOMContentLoaded (navbar, aviso de privacidad) no cuentan:
+           el contador se pone a cero antes de cargar lo que se examina. */
+        const ctx = cargar(['main.js'], {
+            Vue: {
+                createApp: (o) => ({ mount: (n) => { montados.push({ nodo: n, opciones: o }); } }),
+            },
+            SUIFComponentes: { Alertas: {}, BackNavigation: {} },
+            document: {
+                addEventListener: (n, f) => { if (n === 'DOMContentLoaded') aplazados.push(f); },
+                querySelector: () => null,
+                querySelectorAll: (sel) => (sel === '[data-formulario-ajax]' ? nodos : []),
+            },
+            readyState: 'loading',
+        });
+
+        aplazados = [];
+        vm.runInContext(
+            fs.readFileSync(path.join(RAIZ, 'components', 'FormularioAjax.js'), 'utf8'),
+            ctx,
+            'FormularioAjax.js'
+        );
+
+        return { SUIF: ctx.SUIF, montados, aplazados };
+    }
+
+    await prueba('FormularioAjax: monta al cargar, no en DOMContentLoaded', () => {
+        const nodo = { dataset: {} };
+        const caso = cargarFormularioAjax([nodo]);
+
+        /* Esta es la garantía que importa: partials/scripts va antes de
+           @yield('scripts'), así que montar aquí deja los nodos definitivos
+           para los scripts de página. Aplazarlo los dejaba huérfanos —fue lo
+           que apagó el mapa y el botón de baja en sedes y administradores. */
+        assert.strictEqual(caso.montados.length, 1, 'debió montarse durante la carga del archivo');
+        assert.strictEqual(caso.montados[0].nodo, nodo);
+        assert.strictEqual(caso.aplazados.length, 0, 'no debe quedar nada esperando al evento');
+    });
+
+    await prueba('FormularioAjax: la app expone el estado que usan las vistas', () => {
+        const caso = cargarFormularioAjax([{ dataset: { error: 'Algo falló', exito: '' } }]);
+        const opciones = caso.montados[0].opciones;
+        const estado = opciones.data();
+
+        assert.strictEqual(estado.avisoError, 'Algo falló', 'arranca con lo que pintó el servidor');
+        assert.strictEqual(estado.avisoExito, '');
+        assert.strictEqual(estado.enviando, false);
+        igual(estado.erroresServidor, {});
+        assert.strictEqual(typeof opciones.methods.enviar, 'function');
+        assert.ok(opciones.components.alertas, 'registra <alertas>');
+    });
+
+    await prueba('FormularioAjax: sin nodos marcados no monta nada', () => {
+        assert.strictEqual(cargarFormularioAjax([]).montados.length, 0);
+    });
+
     /* ── Pantalla de documentación ───────────────────────────────────────── */
 
     /* createApp se intercepta para quedarse con las opciones sin montar nada:

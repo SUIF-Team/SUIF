@@ -15,7 +15,16 @@
     :errores="erroresServidor"
     clase="pr-alert pr-error"></alertas>
 
-<form method="POST" action="{{ $accion }}" id="pr-data-form" @submit.prevent="enviar($event)">
+{{-- Los escuchadores van en la plantilla y no en el script: Vue reemplaza
+     estos nodos al montar, asi que cualquier addEventListener puesto antes se
+     quedaria en un formulario que ya no esta en la pagina. --}}
+<form
+    method="POST"
+    action="{{ $accion }}"
+    id="pr-data-form"
+    @submit.prevent="enviar($event)"
+    @input="revisarCompletitud($event)"
+    @change="revisarCompletitud($event)">
     @csrf
 
     <p class="pr-notice pr-notice--bloqueo" role="note">
@@ -65,7 +74,12 @@
         @if($mostrarCancelar)
             <a class="pr-btn pr-btn--secondary" href="{{ route('persona.preregistro.index') }}">Cancelar</a>
         @endif
-        <button class="pr-btn" type="submit" {{ $botonDeshabilitado ? 'disabled' : '' }} :class="{ 'pr-btn--enviando': enviando }">
+        <button
+            class="pr-btn"
+            type="submit"
+            {{ $botonDeshabilitado ? 'disabled' : '' }}
+            :disabled="!completo || enviando"
+            :class="{ 'pr-btn--enviando': enviando }">
             <span v-if="enviando" v-cloak>Enviando…</span>
             <span v-else>{{ $textoBoton }}</span>
         </button>
