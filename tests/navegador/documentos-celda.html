@@ -10,6 +10,12 @@
     atributo form=. Esa asociación no se ve en pantalla y se rompe callada si
     el id deja de coincidir con el slug, así que se comprueba aquí.
 
+    Y con los botones sueltos en la celda, cada renglón los colocaba según
+    cuántos tuviera: al documento sin «Abrir» se le recorría el resto y
+    ninguna columna coincidía con la de arriba. Ahora son tres carriles fijos
+    del CSS, así que esta comprobación también carga la hoja de estilos real
+    y mide dónde cae cada botón.
+
     NECESITA RED: Vue viene del mismo CDN que partials/scripts.blade.php, con
     su misma etiqueta y su mismo integrity. Sin conexión el veredicto lo dice.
 
@@ -22,6 +28,8 @@
     ocupa esto: ahí no hay previsualización ni Vue, sólo la misma pareja
     id/form= escrita a mano.
 -->
+<link rel="stylesheet" href="../../public/assets/css/app.css">
+<link rel="stylesheet" href="../../public/assets/css/pages/persona-preregistro.css">
 <style>
     body { font: 14px/1.5 system-ui, sans-serif; margin: 1.5rem; }
     #armazon { display: none; }
@@ -48,7 +56,8 @@
             "solicitud_cerrada": false,
             "documentos": [
                 {"slug":"solicitud-firmada","nombre":"Solicitud firmada","estado":"rechazado","etiqueta":"Rechazado","clase":"rejected","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"solicitud-vieja.pdf","observacion":"La firma no coincide.","es_formato":true,"ruta_ver":"#ver-1","ruta_formato":"#formato-1","ruta_subir":"#subir-1"},
-                {"slug":"curp","nombre":"CURP","estado":"pendiente","etiqueta":"Pendiente","clase":"pending","puede_reemplazar":true,"tiene_archivo":false,"nombre_original":null,"observacion":null,"es_formato":false,"ruta_ver":"#ver-2","ruta_formato":"#formato-2","ruta_subir":"#subir-2"}
+                {"slug":"curp","nombre":"CURP","estado":"pendiente","etiqueta":"Pendiente","clase":"pending","puede_reemplazar":true,"tiene_archivo":false,"nombre_original":null,"observacion":null,"es_formato":false,"ruta_ver":"#ver-2","ruta_formato":"#formato-2","ruta_subir":"#subir-2"},
+                {"slug":"identificacion-oficial","nombre":"Identificación oficial","estado":"cargado","etiqueta":"Cargado","clase":"loaded","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"ine.pdf","observacion":null,"es_formato":false,"ruta_ver":"#ver-3","ruta_formato":"#formato-3","ruta_subir":"#subir-3"}
             ]
         }'></div>
 </div>
@@ -108,6 +117,35 @@ window.SUIF = {
         return linea ? linea.textContent.trim() : '';
     }
 
+    function abrir(slug) {
+        return celda(slug).querySelector('a.pr-btn');
+    }
+
+    function adjuntar(slug) {
+        return document.querySelector('#pr-subir-' + slug + ' label');
+    }
+
+    /* El carril se mide por dónde empieza el botón, no por su ancho: dos
+       rótulos de largo distinto siguen siendo la misma columna. */
+    function izquierda(nodo) {
+        return nodo ? Math.round(nodo.getBoundingClientRect().left) : null;
+    }
+
+    /* Bajo 768px la celda se apila y los carriles se disuelven a propósito;
+       ahí las medidas no dicen nada. */
+    function hayCarriles() {
+        return window.getComputedStyle(
+            celda('curp').querySelector('.pr-fila__acciones')
+        ).display === 'grid';
+    }
+
+    function sinCarriles(nombre) {
+        var renglon = document.createElement('li');
+
+        renglon.textContent = 'SALTA  ' + nombre + '  → la ventana mide menos de 768px';
+        document.getElementById('resultados').appendChild(renglon);
+    }
+
     /* Un input de archivo sólo acepta ficheros de verdad. */
     function elegir(slug, nombre, tipo) {
         var entrada = document.querySelector('#pr-subir-' + slug + ' input[type="file"]');
@@ -145,6 +183,24 @@ window.SUIF = {
             comprobar('el documento sin archivo no nombra nada',
                 nombreAbajo('curp'), '');
 
+            if (hayCarriles()) {
+                comprobar('los Abrir de dos renglones caen en la misma vertical',
+                    izquierda(abrir('solicitud-firmada')), izquierda(abrir('identificacion-oficial')));
+
+                /* El caso que se veía torcido: a CURP le falta el Abrir, y
+                   aun así su Adjuntar no se corre al carril de la izquierda. */
+                comprobar('Subsanar y Reemplazar comparten vertical',
+                    izquierda(adjuntar('solicitud-firmada')), izquierda(adjuntar('identificacion-oficial')));
+                comprobar('al documento sin Abrir no se le recorre el Adjuntar',
+                    izquierda(adjuntar('curp')), izquierda(adjuntar('solicitud-firmada')));
+                comprobar('el primer carril arranca en el borde de la celda',
+                    izquierda(abrir('solicitud-firmada')),
+                    Math.round(celda('solicitud-firmada').getBoundingClientRect().left
+                        + parseFloat(window.getComputedStyle(celda('solicitud-firmada')).paddingLeft)));
+            } else {
+                sinCarriles('la alineación por carriles');
+            }
+
             elegir('solicitud-firmada', 'solicitud-nueva.pdf', 'application/pdf');
         }},
 
@@ -165,6 +221,19 @@ window.SUIF = {
                 confirmar('curp'), null);
             comprobar('abajo manda el archivo elegido, no el guardado',
                 nombreAbajo('solicitud-firmada'), 'solicitud-nueva.pdf · 1 KB');
+
+            if (hayCarriles()) {
+                /* Estrenar el tercer carril no puede empujar a los otros dos:
+                   si lo hiciera, el renglón se desalinearía del de arriba. */
+                comprobar('aparecer Confirmar carga no mueve a Abrir',
+                    izquierda(abrir('solicitud-firmada')), izquierda(abrir('identificacion-oficial')));
+                comprobar('ni mueve a Subsanar',
+                    izquierda(adjuntar('solicitud-firmada')), izquierda(adjuntar('identificacion-oficial')));
+                comprobar('y él ocupa el tercer carril, a la derecha',
+                    izquierda(boton) > izquierda(adjuntar('solicitud-firmada')), true);
+            } else {
+                sinCarriles('el tercer carril');
+            }
 
             boton.click();
         }},
@@ -196,7 +265,10 @@ window.SUIF = {
         }}
     ];
 
-    document.getElementById('armazon').style.display = '';
+    /* En bloque, no vaciando el estilo en línea: eso devolvería el mando a la
+       regla #armazon { display: none } y un nodo oculto mide cero, con lo que
+       las comprobaciones de carriles pasarían comparando ceros. */
+    document.getElementById('armazon').style.display = 'block';
 
     (function siguiente(i) {
         if (i >= pasos.length) {

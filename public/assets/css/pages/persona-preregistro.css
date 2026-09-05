@@ -562,7 +562,6 @@
     margin-top: 0.45rem;
     color: #6b7280;
     font-size: var(--fs-auxiliar);
-    text-align: center;
     overflow-wrap: anywhere;
 }
 
@@ -595,10 +594,29 @@
     margin-top: 0;
 }
 
-/* Abrir, Subsanar y Confirmar carga cuelgan centrados de ese bloque.
-   El modificador evita centrar también el "Generar" de la columna Formato. */
+/* Tres carriles fijos —abrir, subsanar, confirmar— para que los botones de
+   un documento caigan en la misma vertical que los del siguiente aunque a
+   ese le falte alguno: centrarlos movía cada uno según cuántos hermanos
+   tuviera al lado, y ningún renglón coincidía con el de arriba. El
+   modificador deja fuera al "Generar" de la columna Formato. */
 .pr-fila__acciones--archivo {
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+}
+
+.pr-fila__acciones--archivo > a {
+    grid-column: 1;
+}
+
+/* El formulario es el carril; adentro, la etiqueta lo llena. */
+.pr-fila__acciones--archivo > .pr-upload-form {
+    display: grid;
+    grid-column: 2;
+}
+
+.pr-fila__acciones--archivo > button {
+    grid-column: 3;
 }
 
 /* ─── En pantallas chicas cada fila se apila ─────────────────────────── */
@@ -648,16 +666,11 @@
         content: none;
     }
 
-    /* Apilada, la celda comparte borde izquierdo con su rótulo y con el
-       resto de la tarjeta: centrar ahí rompería esa vertical. El centrado
-       de escritorio existe para colgar los botones de la previsualización,
-       que aquí ya ocupa el ancho completo. */
+    /* Apilada no hay renglón de al lado con el que alinearse, y tres
+       carriles en 375px dejarían los rótulos partidos: los botones
+       vuelven a fluir uno tras otro. */
     .pr-fila__acciones--archivo {
-        justify-content: flex-start;
-    }
-
-    .pr-fila__archivo {
-        text-align: left;
+        display: flex;
     }
 }
 
