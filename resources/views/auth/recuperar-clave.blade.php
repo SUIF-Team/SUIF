@@ -22,19 +22,16 @@
              compila los hijos del elemento montado. Sin JavaScript se ve el
              mensaje que ya sirvió el servidor y el envío es el de siempre. --}}
         <div id="recuperar-clave-app" data-formulario-ajax data-exito="{{ session('success') }}">
-        <div
-            class="alert alert-success"
-            role="status"
-            {{ session('success') ? '' : 'hidden' }}
-            :hidden="!avisoExito"
-            v-text="avisoExito">{{ session('success') }}</div>
+        {{-- Pedir clave nueva termina en esta misma pantalla, asi que la
+             confirmacion se pinta aqui. Sin Vue manda el <noscript>. --}}
+        @if(session('success'))
+            <noscript>
+                <div class="alert alert-success" role="status">{{ session('success') }}</div>
+            </noscript>
+        @endif
 
-        <div
-            class="alert alert-danger"
-            role="alert"
-            hidden
-            :hidden="!avisoError"
-            v-text="avisoError"></div>
+        <alertas :mensaje="avisoExito" tipo="success" clase="alert alert-success"></alertas>
+        <alertas :mensaje="avisoError" tipo="error" clase="alert alert-danger"></alertas>
 
         <form
             method="POST"

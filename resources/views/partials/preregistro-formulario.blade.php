@@ -74,10 +74,15 @@
         @if($mostrarCancelar)
             <a class="pr-btn pr-btn--secondary" href="{{ route('persona.preregistro.index') }}">Cancelar</a>
         @endif
+        {{-- Sin disabled estatico: Vue descarta el binding cuando el atributo
+             ya viene puesto, y el boton se quedaba apagado para siempre. El
+             estado inicial lo fija mounted() con checkValidity(), que es la
+             misma regla que expresaba $botonDeshabilitado. Sin JavaScript el
+             boton nace activo y la validacion nativa del navegador impide
+             enviarlo incompleto, que es mejor que un boton muerto. --}}
         <button
             class="pr-btn"
             type="submit"
-            {{ $botonDeshabilitado ? 'disabled' : '' }}
             :disabled="!completo || enviando"
             :class="{ 'pr-btn--enviando': enviando }">
             <span v-if="enviando" v-cloak>Enviando…</span>

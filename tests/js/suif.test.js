@@ -647,6 +647,66 @@ async function principal() {
         assert.strictEqual(app.fase, 'documentos', 'la tabla no se toca si el servidor no mandó estado nuevo');
     });
 
+    /* ── Vistas: atributo estático contra su propio binding ──────────────── */
+
+    /*
+     * Si una etiqueta lleva `foo` y además `:foo`, el compilador de Vue se
+     * queda con el estático y DESCARTA el binding, sin aviso ninguno. El
+     * atributo queda congelado en lo que pintó Blade.
+     *
+     * Así se quedó muerto el botón Continuar del pre-registro: tenía el
+     * disabled de Blade y un :disabled que nunca llegó a aplicarse, de modo
+     * que seguía apagado con el formulario completo. No lo delata ni el lint,
+     * ni la compilación de la plantilla, ni un error en consola: sólo se ve
+     * usando la pantalla. Por eso se comprueba aquí.
+     *
+     * class y style son la excepción real: esos sí se fusionan.
+     */
+    await prueba('vistas: ningún atributo estático anula a su binding de Vue', () => {
+        const FUSIONABLES = new Set(['class', 'style']);
+        const vistas = path.join(__dirname, '..', '..', 'resources', 'views');
+
+        const archivos = [];
+        (function recorrer(dir) {
+            for (const entrada of fs.readdirSync(dir, { withFileTypes: true })) {
+                const completo = path.join(dir, entrada.name);
+                if (entrada.isDirectory()) recorrer(completo);
+                else if (entrada.name.endsWith('.blade.php')) archivos.push(completo);
+            }
+        })(vistas);
+
+        assert.ok(archivos.length > 50, 'debería encontrar las vistas del proyecto');
+
+        const colisiones = [];
+
+        for (const archivo of archivos) {
+            const txt = fs.readFileSync(archivo, 'utf8');
+            const corto = path.relative(vistas, archivo).replace(/\\/g, '/');
+
+            /* Una expresión de Blade puede traer '>' dentro ($errors->any()),
+               así que se le deja pasar o la etiqueta ni se reconoce. */
+            for (const m of txt.matchAll(/<(\w[\w-]*)((?:\{\{[\s\S]*?\}\}|[^<>])*?)>/g)) {
+                const cuerpo = m[2];
+                const dinamicos = [...cuerpo.matchAll(/(?::|v-bind:)([\w-]+)\s*=/g)].map((d) => d[1]);
+
+                for (const nombre of new Set(dinamicos)) {
+                    if (FUSIONABLES.has(nombre)) continue;
+
+                    const estatico = new RegExp(`(?<![:\\w-])${nombre}(?:\\s*=|[\\s>])`).test(cuerpo);
+                    /* {{ $x ? 'disabled' : '' }} produce el atributo igual. */
+                    const porBlade = new RegExp(`\\{\\{[\\s\\S]*?'${nombre}'[\\s\\S]*?\\}\\}`).test(cuerpo);
+
+                    if (estatico || porBlade) {
+                        const linea = txt.slice(0, m.index).split('\n').length;
+                        colisiones.push(`${corto}:${linea} <${m[1]}> ${nombre} anula a :${nombre}`);
+                    }
+                }
+            }
+        }
+
+        assert.deepStrictEqual(colisiones, [], 'colisiones encontradas:\n  ' + colisiones.join('\n  '));
+    });
+
     console.log('\n' + hechas + ' comprobaciones, todas correctas.');
 }
 

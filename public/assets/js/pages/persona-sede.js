@@ -17,7 +17,7 @@
 
     var raiz = document.querySelector('#sedes-app');
 
-    if (!raiz || !window.Vue) {
+    if (!raiz || !window.Vue || !window.SUIFComponentes || !window.SUIFComponentes.Alertas) {
         return;
     }
 
@@ -38,6 +38,9 @@
     var focoAnterior = null;
 
     window.Vue.createApp({
+        components: {
+            alertas: window.SUIFComponentes.Alertas
+        },
         data: function () {
             return {
                 sedes: vista.sedes || [],
