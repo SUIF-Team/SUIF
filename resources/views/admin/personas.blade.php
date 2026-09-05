@@ -70,7 +70,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
-<script src="{{ asset('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
 @endsection

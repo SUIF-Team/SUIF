@@ -6,9 +6,10 @@
     cuando los datos ya quedaron registrados.
 
     El formulario es HTML real —required, maxlength, pattern—, así que sin
-    JavaScript se envía igual y el servidor valida lo mismo. Vue sólo adelanta
-    los avisos y apaga el botón, por eso v-cloak va en los avisos y nunca en
-    el formulario completo.
+    JavaScript se envía igual y el servidor valida lo mismo. Con JavaScript el
+    envío va por fetch: lo que el servidor rechace se dice aquí mismo, sin
+    recargar ni obligar a recorrer el formulario de nuevo. Por eso v-cloak va en
+    los avisos y nunca en el formulario completo.
 --}}
 @extends('layouts.persona')
 
@@ -29,13 +30,23 @@
     @endif
 
     <div class="facturacion-tarjeta" id="facturacion-app" data-vista='@json($formulario)'>
+        <alertas
+            :mensaje="avisoError"
+            tipo="error"
+            :errores="erroresServidor"
+            clase="facturacion-alerta facturacion-alerta--error"></alertas>
+
         <h1>Datos para tu CFDI</h1>
         <p class="facturacion-muted">
             Captúralos tal como aparecen en tu constancia de situación fiscal. El CFDI se
             emitirá con uso «gastos en general» y se enviará al correo que indiques.
         </p>
 
-        <form method="POST" action="{{ route('persona.facturacion.store') }}" class="facturacion-form">
+        <form
+            method="POST"
+            action="{{ route('persona.facturacion.store') }}"
+            class="facturacion-form"
+            @submit.prevent="enviar($event)">
             @csrf
 
             <div class="facturacion-grid">
@@ -160,8 +171,8 @@
                 <a href="{{ route('persona.pago.index') }}" class="facturacion-boton facturacion-boton--secundario">
                     Volver a mi pago
                 </a>
-                <button type="submit" class="facturacion-boton" :disabled="!puedeEnviar">
-                    Registrar datos fiscales
+                <button type="submit" class="facturacion-boton" :disabled="!puedeEnviar || enviando">
+                    @{{ enviando ? 'Registrando…' : 'Registrar datos fiscales' }}
                 </button>
             </div>
         </form>
@@ -170,6 +181,5 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
 <script src="{{ asset_versionado('assets/js/pages/persona-facturacion.js') }}"></script>
 @endpush

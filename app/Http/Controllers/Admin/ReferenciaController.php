@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Servicios\CatalogoReferencias;
 use DomainException;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -51,7 +50,7 @@ class ReferenciaController extends Controller
      * El paquete se carga completo o no se carga: el servicio lanza
      * DomainException con lo que hay que corregir y no deja nada a medias.
      */
-    public function guardarPaquete(Request $request, CatalogoReferencias $catalogo): RedirectResponse
+    public function guardarPaquete(Request $request, CatalogoReferencias $catalogo)
     {
         $request->validate([
             'paquete' => ['required', 'file', 'mimes:zip', 'max:51200'],
@@ -64,11 +63,23 @@ class ReferenciaController extends Controller
         try {
             $resultado = $catalogo->importarPaquete($request->file('paquete'));
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         } catch (Throwable $exception) {
             Log::error('No fue posible importar el paquete de referencias.', ['error' => $exception->getMessage()]);
 
-            return back()->with('error', 'No fue posible procesar el archivo ZIP.');
+            return $this->responder($request, 'error', 'No fue posible procesar el archivo ZIP.');
+        }
+
+        /* Sin destino: la carga termina en la misma pantalla, y el resumen de
+           lo importado —cuántas referencias, cuántos formatos— es justo lo que
+           el administrador necesita leer después de subir un ZIP de 50 MB. */
+        if ($request->expectsJson()) {
+            return response()->json([
+                'tipo' => 'success',
+                'mensaje' => 'Las referencias y sus formatos se cargaron correctamente.',
+                'redirigir' => null,
+                'importacion' => $resultado,
+            ]);
         }
 
         return back()

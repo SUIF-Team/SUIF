@@ -880,3 +880,24 @@
     .admin-preregistro-reversion-acciones,
     .admin-reversion-modal-acciones { flex-direction: column-reverse; }
 }
+
+/* Aviso de lo que el servidor rechaza en las pantallas de dictamen y de
+   revisión de pagos, ahora que resolver ya no recarga: el motivo tiene que
+   verse sin perder lo que el revisor llevaba escrito. */
+.admin-preregistro-alerta {
+    margin-bottom: 1.25rem;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.admin-preregistro-alerta--error {
+    background: #fff0f0;
+    color: #9b1717;
+}
+
+.admin-preregistro-alerta ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1.15rem;
+}

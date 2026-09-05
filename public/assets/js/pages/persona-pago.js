@@ -16,7 +16,7 @@
 
     var raiz = document.querySelector('#pago-form-app');
 
-    if (!raiz || !window.Vue) {
+    if (!raiz || !window.Vue || !window.SUIFComponentes || !window.SUIFComponentes.Alertas) {
         return;
     }
 
@@ -56,8 +56,15 @@
     }
 
     window.Vue.createApp({
+        components: {
+            alertas: window.SUIFComponentes.Alertas
+        },
         data: function () {
             return {
+                avisoError: '',
+                /* {campo: mensaje} de lo que rechazó el servidor */
+                erroresServidor: {},
+                enviando: false,
                 montoPagado: vista.montoPagado || '',
                 fechaPago: vista.fechaPago || '',
                 horaPago: vista.horaPago || '',
@@ -148,6 +155,33 @@
 
                 this.archivo = null;
                 this.error = null;
+            },
+
+            /*
+             * Subsanar un comprobante rechazado es el camino que se repite, y
+             * cada intento fallido costaba una recarga que además vaciaba el
+             * archivo ya elegido. Ahora el motivo se dice arriba y lo escrito
+             * se queda. El éxito sí navega: la pantalla pasa a mostrar el pago
+             * en revisión, que es otro estado.
+             */
+            enviar: function (evento) {
+                if (this.enviando) {
+                    return;
+                }
+
+                this.enviando = true;
+                this.avisoError = '';
+                this.erroresServidor = {};
+
+                window.SUIF.enviarYSeguir(evento.target).then(function (resultado) {
+                    if (resultado.navegando) {
+                        return;
+                    }
+
+                    this.enviando = false;
+                    this.avisoError = resultado.mensaje;
+                    this.erroresServidor = resultado.errores;
+                }.bind(this));
             }
         }
     }).mount('#pago-form-app');

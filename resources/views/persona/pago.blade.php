@@ -117,7 +117,6 @@
      y la confirmación no aparecería. --}}
 @if($puedeCargar || $comprobanteFiscal['puedeElegir'])
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
     @if($puedeCargar)
         <script src="{{ asset_versionado('assets/js/pages/persona-pago.js') }}"></script>
     @endif

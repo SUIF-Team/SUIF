@@ -43,11 +43,25 @@
         <div class="login-tarjeta">
             <h2 class="login-titulo-formulario">Inicio de sesión</h2>
 
-            @if(session('error'))
-                <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
-            @endif
+            {{-- La raíz de Vue envuelve el formulario y no es el formulario:
+                 Vue compila los hijos del elemento montado, así que una
+                 directiva puesta en él mismo nunca se aplicaría. --}}
+            <div id="login-app" data-formulario-ajax>
+            {{-- El aviso del servidor se pinta si llegó con la página —el
+                 camino sin JavaScript— y Vue lo reutiliza para los intentos
+                 que ya no recargan. --}}
+            <div
+                class="alert alert-danger"
+                role="alert"
+                {{ session('error') ? '' : 'hidden' }}
+                :hidden="!avisoError"
+                v-text="avisoError">{{ session('error') }}</div>
 
-            <form method="POST" action="{{ route('login.post') }}" class="login-formulario">
+            <form
+                method="POST"
+                action="{{ route('login.post') }}"
+                class="login-formulario"
+                @submit.prevent="enviar($event)">
                 @csrf
 
                 <div class="login-grupo">
@@ -88,7 +102,10 @@
                 </div>
 
                 <div class="login-acciones">
-                    <button type="submit" class="btn login-boton">Acceder</button>
+                    <button type="submit" class="btn login-boton" :disabled="enviando">
+                        <span v-if="enviando" v-cloak>Entrando…</span>
+                        <span v-else>Acceder</span>
+                    </button>
                 </div>
 
                 <p class="login-preregistro">
@@ -98,7 +115,9 @@
                 <a href="{{ route('clave.recuperar') }}">Recuperar contraseña</a>
             </p>
             </form>
+            </div>
         </div>
     </div>
 </section>
 @endsection
+

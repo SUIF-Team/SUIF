@@ -56,14 +56,26 @@ class SedeController extends Controller
         try {
             $gestion->seleccionarParaUsuario((int) Auth::id(), (int) $datos['evaluacion_id']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.sede.index')
-                ->withErrors(['sede' => $exception->getMessage()]);
+            /* El caso que se repite: entre un sondeo y el siguiente alguien más
+               tomó el último lugar. La pantalla lo dice sin recargar para que la
+               persona elija otro horario con el catálogo todavía delante. */
+            return $this->responder(
+                $request,
+                'error',
+                $exception->getMessage(),
+                route('persona.sede.index'),
+                [],
+                'sede'
+            );
         }
 
-        return redirect()
-            ->route('persona.sede.index')
-            ->with('success', 'Tu sede y horario quedaron confirmados.');
+        /* Confirmar lleva al resumen, que es otra pantalla: aquí sí se navega. */
+        return $this->responder(
+            $request,
+            'success',
+            'Tu sede y horario quedaron confirmados.',
+            route('persona.sede.index')
+        );
     }
 
     /**

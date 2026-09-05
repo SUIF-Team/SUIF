@@ -49,12 +49,15 @@ class AdministradorController extends Controller
         try {
             $gestion->crear($this->validar($request, false));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.administradores.index')
-            ->with('success', 'El administrador se creó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'El administrador se creó correctamente.',
+            route('admin.administradores.index')
+        );
     }
 
     public function edit(int $id, GestionAdministradores $gestion)
@@ -62,6 +65,8 @@ class AdministradorController extends Controller
         try {
             $administrador = $gestion->administrador($id);
         } catch (DomainException $exception) {
+            /* Abrir el formulario es una navegación, no una acción: si el
+               registro ya no existe se vuelve al listado como siempre. */
             return redirect()
                 ->route('admin.administradores.index')
                 ->with('error', $exception->getMessage());
@@ -80,42 +85,51 @@ class AdministradorController extends Controller
         try {
             $gestion->actualizar($id, $this->validar($request, true, $id), (int) auth()->id());
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.administradores.index')
-            ->with('success', 'El administrador se actualizó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'El administrador se actualizó correctamente.',
+            route('admin.administradores.index')
+        );
     }
 
     /**
      * La baja retira el acceso y conserva el renglón: es lo que deja rastro de
      * quién dictaminó cada expediente.
      */
-    public function destroy(int $id, GestionAdministradores $gestion)
+    public function destroy(Request $request, int $id, GestionAdministradores $gestion)
     {
         try {
             $gestion->desactivar($id, (int) auth()->id());
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.administradores.index')
-            ->with('success', 'El administrador quedó sin acceso al sistema.');
+        return $this->responder(
+            $request,
+            'success',
+            'El administrador quedó sin acceso al sistema.',
+            route('admin.administradores.index')
+        );
     }
 
-    public function reactivar(int $id, GestionAdministradores $gestion)
+    public function reactivar(Request $request, int $id, GestionAdministradores $gestion)
     {
         try {
             $gestion->reactivar($id);
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.administradores.index')
-            ->with('success', 'El administrador recuperó su acceso.');
+        return $this->responder(
+            $request,
+            'success',
+            'El administrador recuperó su acceso.',
+            route('admin.administradores.index')
+        );
     }
 
     /**

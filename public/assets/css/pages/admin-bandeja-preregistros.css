@@ -348,3 +348,29 @@
         width: 100%;
     }
 }
+
+/* Aviso de las acciones que se resuelven sin salir de la bandeja. Restaurar
+   una clave es la que importa: cuando el correo no sale, este mensaje trae la
+   única copia de la clave generada, así que tiene que quedarse a la vista. */
+.admin-bandeja-preregistros-alerta {
+    margin-bottom: 1.25rem;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.admin-bandeja-preregistros-alerta--success {
+    background: #eef7ef;
+    color: #1d6b2c;
+}
+
+.admin-bandeja-preregistros-alerta--warning {
+    background: #fdf4e3;
+    color: #7a5410;
+}
+
+.admin-bandeja-preregistros-alerta--error {
+    background: #fff0f0;
+    color: #9b1717;
+}

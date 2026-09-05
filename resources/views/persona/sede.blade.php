@@ -80,16 +80,25 @@
     class="sede-shell"
     v-cloak
     data-vista='@json($vista)'
+    data-error="{{ $errors->first() }}"
     data-disponibilidad-url="{{ route('persona.sede.disponibilidad') }}">
-    @if($errors->any())
-        <div class="sede-alerta sede-alerta--error" role="alert">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    {{-- El aviso se pinta siempre, oculto mientras no haya nada que decir:
+         Vue reutiliza este mismo nodo para los fallos que ya no recargan la
+         pantalla —el caso normal es que alguien más se lleve el último lugar
+         entre un sondeo y el envío—, y así el catálogo no se pierde de vista.
+         Sin JavaScript se ve la lista que pintó el servidor. --}}
+    <div
+        class="sede-alerta sede-alerta--error"
+        role="alert"
+        {{ $errors->any() ? '' : 'hidden' }}
+        :hidden="!avisoError"
+        v-text="avisoError">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 
     <h1>Elige tu sede y horario</h1>
     <p class="sede-muted">Selecciona dónde y cuándo presentarás tu evaluación. Cada sede puede aplicar el examen en varios horarios; los lugares se actualizan automáticamente.</p>
@@ -202,7 +211,6 @@
 
 @if(!$confirmada)
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
     <script src="{{ asset_versionado('assets/js/pages/persona-sede.js') }}"></script>
     @endpush
 @endif

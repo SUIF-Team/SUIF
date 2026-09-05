@@ -23,6 +23,11 @@
             <p>Consulta y gestiona a las personas registradas en el sistema y el estado actual de su solicitud.</p>
         </header>
 
+        <alertas
+            :mensaje="aviso.mensaje"
+            :tipo="aviso.tipo"
+            :clase="'admin-bandeja-preregistros-alerta admin-bandeja-preregistros-alerta--' + aviso.tipo"></alertas>
+
         @include('admin.partials.bandeja-filtros', [
             'prefijo_filtros' => 'bandeja-personas-registradas',
             'estados_filtro' => array_merge(['Todos'], $datos_vista['estados']),
@@ -85,13 +90,17 @@
                     aria-describedby="restaurar-clave-descripcion">
                     <h2 id="restaurar-clave-titulo">¿Restaurar la clave de acceso?</h2>
                     <p id="restaurar-clave-descripcion">Se generará una clave nueva para @{{ persona_seleccionada.nombre_completo }} y se enviará a su correo principal. La clave anterior dejará de funcionar.</p>
-                    <form method="POST" :action="persona_seleccionada.ruta_restaurar_clave" class="admin-reversion-modal-acciones">
+                    <form
+                        method="POST"
+                        :action="persona_seleccionada.ruta_restaurar_clave"
+                        class="admin-reversion-modal-acciones"
+                        v-on:submit.prevent="restaurar($event)">
                         @csrf
-                        <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" ref="cancelar_restaurar" v-on:click="cerrarRestaurar">
+                        <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" ref="cancelar_restaurar" :disabled="restaurando" v-on:click="cerrarRestaurar">
                             Cancelar
                         </button>
-                        <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit">
-                            Sí, restaurar
+                        <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="restaurando">
+                            @{{ restaurando ? 'Restaurando…' : 'Sí, restaurar' }}
                         </button>
                     </form>
                 </section>
@@ -107,7 +116,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset_versionado('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
 @endsection

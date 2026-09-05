@@ -18,7 +18,21 @@
 <div
     id="pago-form-app"
     data-vista='@json($vistaFormulario)'>
-    <form method="POST" action="{{ route('persona.pago.comprobante') }}" enctype="multipart/form-data" class="pago-form">
+    {{-- Lo que rechace el servidor —el PDF pasado de peso, un monto con tres
+         decimales— se dice aquí sin recargar: la subsanación es justo el caso
+         que se repite. Sin JavaScript manda el bloque de la pantalla de pago. --}}
+    <alertas
+        :mensaje="avisoError"
+        tipo="error"
+        :errores="erroresServidor"
+        clase="pago-alerta pago-alerta--error"></alertas>
+
+    <form
+        method="POST"
+        action="{{ route('persona.pago.comprobante') }}"
+        enctype="multipart/form-data"
+        class="pago-form"
+        @submit.prevent="enviar($event)">
         @csrf
 
         <fieldset class="pago-datos">
@@ -117,6 +131,9 @@
 
         {{-- El botón nace habilitado en el HTML y se apaga desde aquí: si Vue no
              llega a cargar, el formulario se envía como siempre. --}}
-        <button type="submit" class="pago-boton" :disabled="!puedeEnviar">{{ $etiquetaBoton }}</button>
+        <button type="submit" class="pago-boton" :disabled="!puedeEnviar || enviando">
+            <span v-if="enviando" v-cloak>Enviando…</span>
+            <span v-else>{{ $etiquetaBoton }}</span>
+        </button>
     </form>
 </div>

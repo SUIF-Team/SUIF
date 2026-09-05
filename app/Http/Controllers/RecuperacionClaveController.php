@@ -60,7 +60,9 @@ class RecuperacionClaveController extends Controller
             }
         }
 
-        return redirect()->route('clave.recuperar')->with('success', self::MENSAJE_GENERICO);
+        /* Sin destino a propósito: la confirmación pertenece a esta misma
+           pantalla, así que se pinta aquí en lugar de navegar. */
+        return $this->responder($request, 'success', self::MENSAJE_GENERICO);
     }
 
     private function puedeRecuperarse(?Persona $persona): bool

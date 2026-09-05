@@ -11,7 +11,7 @@
 
     var raiz = document.querySelector('#facturacion-app');
 
-    if (!raiz || !window.Vue) {
+    if (!raiz || !window.Vue || !window.SUIFComponentes || !window.SUIFComponentes.Alertas) {
         return;
     }
 
@@ -32,8 +32,15 @@
     var MAXIMO_CORREO = 65;
 
     window.Vue.createApp({
+        components: {
+            alertas: window.SUIFComponentes.Alertas
+        },
         data: function () {
             return {
+                avisoError: '',
+                /* {campo: mensaje} de lo que rechazó el servidor */
+                erroresServidor: {},
+                enviando: false,
                 razonSocial: vista.razonSocial || '',
                 personaMoral: vista.personaMoral || '0',
                 regimenFiscal: vista.regimenFiscal || '',
@@ -125,6 +132,33 @@
 
             normalizarCodigoPostal: function () {
                 this.codigoPostal = this.codigoPostal.replace(/[^0-9]/g, '').slice(0, 5);
+            },
+
+            /*
+             * Los datos fiscales no se pueden corregir después, así que el
+             * formulario es largo y se revisa con cuidado. Antes, cualquier
+             * rechazo del servidor recargaba la pantalla y devolvía a la
+             * persona al principio; ahora el motivo aparece arriba sin mover
+             * nada. El éxito sí navega: lleva de vuelta al paso de pago.
+             */
+            enviar: function (evento) {
+                if (this.enviando) {
+                    return;
+                }
+
+                this.enviando = true;
+                this.avisoError = '';
+                this.erroresServidor = {};
+
+                window.SUIF.enviarYSeguir(evento.target).then(function (resultado) {
+                    if (resultado.navegando) {
+                        return;
+                    }
+
+                    this.enviando = false;
+                    this.avisoError = resultado.mensaje;
+                    this.erroresServidor = resultado.errores;
+                }.bind(this));
             }
         }
     }).mount(raiz);

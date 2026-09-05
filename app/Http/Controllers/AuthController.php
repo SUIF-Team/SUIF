@@ -51,9 +51,7 @@ class AuthController extends Controller
         // Un solo mensaje para ambos casos: no se revela si la CURP existe.
         if (!$persona || !$persona->usuario
             || !Hash::check($datos['clave'], $persona->usuario->usua_clave_acceso)) {
-            return back()
-                ->withInput($request->only('curp'))
-                ->with('error', 'La CURP o la clave de acceso no son correctas.');
+            return $this->fallaDeAcceso($request, 'La CURP o la clave de acceso no son correctas.');
         }
 
         /* La baja de un administrador retira el acceso sin borrar el renglón.
@@ -61,9 +59,7 @@ class AuthController extends Controller
            su clave, así que repetirle el mensaje genérico sólo lo confundiría
            y no protege nada. */
         if (!$persona->usuario->tieneAcceso()) {
-            return back()
-                ->withInput($request->only('curp'))
-                ->with('error', 'Esta cuenta ya no tiene acceso al sistema.');
+            return $this->fallaDeAcceso($request, 'Esta cuenta ya no tiene acceso al sistema.');
         }
 
         Auth::login($persona->usuario);
@@ -73,7 +69,33 @@ class AuthController extends Controller
            AccesoAdministrativo para que el login y el tablero no puedan
            discrepar: aterrizar en una pantalla que el rol no abre daría un 403
            como primera pantalla de la sesión. */
-        return redirect()->route($acceso->rutaInicial($persona->usuario));
+        $destino = route($acceso->rutaInicial($persona->usuario));
+
+        /* Sin mensaje: entrar no necesita anunciarse, y el redirect de siempre
+           tampoco lo llevaba. Al formulario sólo le hace falta saber a dónde ir. */
+        return $request->expectsJson()
+            ? response()->json(['tipo' => 'success', 'mensaje' => '', 'redirigir' => $destino])
+            : redirect()->to($destino);
+    }
+
+    /**
+     * Un intento fallido no debe tirar la pantalla.
+     *
+     * Equivocarse de clave es el error más repetido del sistema, y hasta ahora
+     * cada intento recargaba el formulario: la clave se perdía —withInput sólo
+     * conserva la CURP, y así debe seguir— y el foco volvía al principio. El
+     * mensaje es el mismo para CURP inexistente y clave incorrecta, para no
+     * revelar qué cuentas existen.
+     */
+    private function fallaDeAcceso(Request $request, string $mensaje)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['tipo' => 'error', 'mensaje' => $mensaje], 422);
+        }
+
+        return back()
+            ->withInput($request->only('curp'))
+            ->with('error', $mensaje);
     }
 
     /**

@@ -95,14 +95,19 @@ class FacturacionController extends Controller
         try {
             $comprobante_fiscal->guardarDatosFiscales((int) Auth::id(), $datos);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.pago.index')
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('persona.pago.index')
+            );
         }
 
-        return redirect()->route('persona.pago.index')->with(
+        return $this->responder(
+            $request,
             'success',
-            'Tus datos de facturación quedaron registrados. Tu CFDI se enviará a '.$datos['correo_cfdi'].'.'
+            'Tus datos de facturación quedaron registrados. Tu CFDI se enviará a '.$datos['correo_cfdi'].'.',
+            route('persona.pago.index')
         );
     }
 

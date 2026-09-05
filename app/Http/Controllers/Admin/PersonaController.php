@@ -71,6 +71,7 @@ class PersonaController extends Controller
      * cuando el correo no pudo salir: ese aviso es la única copia.
      */
     public function restaurarClave(
+        Request $request,
         string $id,
         ConsultaPersonasRegistradas $consulta_personas,
         GestionClaves $gestion_claves
@@ -79,8 +80,7 @@ class PersonaController extends Controller
         $persona = ctype_digit($id) ? $consulta_personas->persona((int) $id) : null;
 
         if (!$persona) {
-            return redirect()->route('admin.personas.registradas.index')
-                ->with('warning', 'La persona solicitada no fue encontrada.');
+            return $this->responder($request, 'warning', 'La persona solicitada no fue encontrada.');
         }
 
         $clave = $gestion_claves->generar();
@@ -89,17 +89,29 @@ class PersonaController extends Controller
         $correo = $gestion_claves->correoPrincipal((int) $id);
 
         if ($correo === null) {
-            return redirect()->route('admin.personas.registradas.index')
-                ->with('warning', 'La clave de '.$persona['nombre_completo'].' fue restaurada, pero no tiene un correo principal registrado. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.');
+            return $this->responder(
+                $request,
+                'warning',
+                'La clave de '.$persona['nombre_completo'].' fue restaurada, pero no tiene un correo principal registrado. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.'
+            );
         }
 
         if (!$gestion_claves->enviar($correo, $clave)) {
-            return redirect()->route('admin.personas.registradas.index')
-                ->with('warning', 'La clave de '.$persona['nombre_completo'].' fue restaurada, pero el correo no pudo enviarse. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.');
+            return $this->responder(
+                $request,
+                'warning',
+                'La clave de '.$persona['nombre_completo'].' fue restaurada, pero el correo no pudo enviarse. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.'
+            );
         }
 
-        return redirect()->route('admin.personas.registradas.index')
-            ->with('success', 'La clave de '.$persona['nombre_completo'].' fue restaurada y enviada a su correo principal.');
+        /* Sin destino: la acción se hace desde la bandeja y termina en la
+           bandeja. El aviso puede traer la clave a mano cuando el correo no
+           salió, así que recargar la lista sería justo perderla de vista. */
+        return $this->responder(
+            $request,
+            'success',
+            'La clave de '.$persona['nombre_completo'].' fue restaurada y enviada a su correo principal.'
+        );
     }
 
     public function show(

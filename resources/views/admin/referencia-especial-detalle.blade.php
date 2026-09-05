@@ -82,13 +82,24 @@
             </div>
         </section>
 
-        <section class="admin-referencias-tarjeta admin-referencias-seccion" aria-label="Emisión de la referencia">
+        {{-- data-formulario-ajax monta la app compartida de envio. Lo habitual
+             aquí es que la referencia elegida ya se haya entregado a otra
+             solicitud: se avisa sin recargar para elegir otra de la misma
+             lista. Sin JavaScript el formulario se envía como siempre. --}}
+        <section class="admin-referencias-tarjeta admin-referencias-seccion" data-formulario-ajax aria-label="Emisión de la referencia">
             <h2>Referencia por entregar</h2>
+
+            <alertas
+                :mensaje="avisoError"
+                tipo="error"
+                :errores="erroresServidor"
+                clase="admin-referencias-aviso admin-referencias-aviso--error"></alertas>
 
             @if($solicitud['candidatas'])
                 <form method="POST"
                       action="{{ route('admin.referencias.especiales.emitir', ['id' => $solicitud['id_pago']]) }}"
-                      class="admin-referencias-filtros-formulario">
+                      class="admin-referencias-filtros-formulario"
+                      @submit.prevent="enviar($event)">
                     @csrf
                     <div class="admin-referencias-campo">
                         <label for="referencia">
@@ -106,8 +117,8 @@
                         </select>
                     </div>
                     <div class="admin-referencias-filtros-acciones">
-                        <button class="admin-referencias-boton admin-referencias-boton--primario" type="submit">
-                            Emitir y avisar a los participantes
+                        <button class="admin-referencias-boton admin-referencias-boton--primario" type="submit" :disabled="enviando">
+                            @{{ enviando ? 'Emitiendo…' : 'Emitir y avisar a los participantes' }}
                         </button>
                     </div>
                 </form>
@@ -136,7 +147,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset_versionado('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-referencias.js') }}"></script>
 @endsection

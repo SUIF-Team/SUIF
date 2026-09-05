@@ -17,7 +17,7 @@
 
     var raiz = document.querySelector('#referencia-especial-app');
 
-    if (!raiz || !window.Vue) {
+    if (!raiz || !window.Vue || !window.SUIFComponentes || !window.SUIFComponentes.Alertas) {
         return;
     }
 
@@ -49,6 +49,9 @@
     }
 
     window.Vue.createApp({
+        components: {
+            alertas: window.SUIFComponentes.Alertas
+        },
         data: function () {
             return {
                 pagador: {
@@ -72,7 +75,10 @@
                 moneda: vista.moneda || 'MXN',
                 nuevaCurp: '',
                 confirmando: false,
-                enviando: false
+                enviando: false,
+                avisoError: '',
+                /* {campo: mensaje} de lo que rechazó el servidor */
+                erroresServidor: {}
             };
         },
 
@@ -261,10 +267,21 @@
 
                 this.enviando = true;
                 formularioPendiente = null;
+                this.avisoError = '';
+                this.erroresServidor = {};
 
-                /* submit() no dispara el evento submit, así que no se vuelve a
-                   abrir el diálogo. */
-                formulario.submit();
+                window.SUIF.enviarYSeguir(formulario).then(function (resultado) {
+                    /* Solicitar lleva a la pantalla de la referencia, que es
+                       otra: ahí sí se navega. */
+                    if (resultado.navegando) {
+                        return;
+                    }
+
+                    this.enviando = false;
+                    this.cerrarConfirmacion();
+                    this.avisoError = resultado.mensaje;
+                    this.erroresServidor = resultado.errores;
+                }.bind(this));
             },
 
             atraparFoco: function (evento) {

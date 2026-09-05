@@ -42,6 +42,15 @@
          hijos del elemento montado, así que una directiva puesta en él mismo
          —@submit.prevent, por ejemplo— nunca llegaría a aplicarse. --}}
     <div id="referencia-especial-app" data-vista='@json($vista)'>
+    {{-- Lo que rechace el servidor —una CURP que ya va en otra solicitud— se
+         dice aquí sin recargar: la lista de participantes es larga y volver a
+         recorrerla por un dato repetido era el peor momento de la pantalla. --}}
+    <alertas
+        :mensaje="avisoError"
+        tipo="error"
+        :errores="erroresServidor"
+        clase="referencia-alerta referencia-alerta--error"></alertas>
+
     <form
         method="POST"
         action="{{ route('persona.referencia.especial.store') }}"
@@ -293,6 +302,5 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
 <script src="{{ asset_versionado('assets/js/pages/persona-referencia-especial.js') }}"></script>
 @endpush

@@ -45,6 +45,7 @@ class ConvocatoriaController extends Controller
     public function create(GestionConvocatorias $gestion)
     {
         if ($gestion->bandeja()['resumen']['vigente'] !== null) {
+            /* Abrir el formulario es una navegación, no una acción. */
             return redirect()
                 ->route('admin.convocatorias.index')
                 ->with('error', 'Ya hay una convocatoria vigente. Ciérrala o interrúmpela para poder crear otra.');
@@ -61,12 +62,15 @@ class ConvocatoriaController extends Controller
         try {
             $gestion->crear($this->validar($request));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.convocatorias.index')
-            ->with('success', 'La convocatoria se creó correctamente y quedó vigente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La convocatoria se creó correctamente y quedó vigente.',
+            route('admin.convocatorias.index')
+        );
     }
 
     public function edit(int $id, GestionConvocatorias $gestion)
@@ -74,6 +78,8 @@ class ConvocatoriaController extends Controller
         try {
             $convocatoria = $gestion->convocatoria($id);
         } catch (DomainException $exception) {
+            /* Abrir el formulario es una navegación, no una acción: si el
+               registro ya no existe se vuelve al listado como siempre. */
             return redirect()
                 ->route('admin.convocatorias.index')
                 ->with('error', $exception->getMessage());
@@ -91,25 +97,31 @@ class ConvocatoriaController extends Controller
         try {
             $gestion->actualizar($id, $this->validar($request));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.convocatorias.index')
-            ->with('success', 'La convocatoria se actualizó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La convocatoria se actualizó correctamente.',
+            route('admin.convocatorias.index')
+        );
     }
 
-    public function destroy(int $id, GestionConvocatorias $gestion)
+    public function destroy(Request $request, int $id, GestionConvocatorias $gestion)
     {
         try {
             $gestion->eliminar($id);
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.convocatorias.index')
-            ->with('success', 'La convocatoria se eliminó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La convocatoria se eliminó correctamente.',
+            route('admin.convocatorias.index')
+        );
     }
 
     /**
@@ -129,12 +141,15 @@ class ConvocatoriaController extends Controller
         try {
             $gestion->cambiarEstado($id, $datos['estado']);
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.convocatorias.index')
-            ->with('success', "La convocatoria quedó en estado «{$datos['estado']}».");
+        return $this->responder(
+            $request,
+            'success',
+            "La convocatoria quedó en estado «{$datos['estado']}».",
+            route('admin.convocatorias.index')
+        );
     }
 
     /**

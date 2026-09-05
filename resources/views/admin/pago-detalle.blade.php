@@ -143,14 +143,23 @@
             {{-- Sólo la decisión: el motivo se pide después, y aparte, para no
                  desbalancear la tarjeta con un cuadro de texto que casi nunca
                  se usa. --}}
+            <alertas
+                :mensaje="avisoError"
+                tipo="error"
+                :errores="erroresServidor"
+                clase="admin-preregistro-alerta admin-preregistro-alerta--error"></alertas>
+
             <section id="acciones-pago" class="admin-pago-resolucion" aria-label="Acciones del pago">
                 <p id="acciones-pago-ayuda" class="visually-hidden">
                     Revisa el comprobante antes de validar o rechazar el pago.
                 </p>
-                <form method="POST" action="{{ route('admin.pagos.validar', ['id' => $pago['id']]) }}">
+                <form
+                    method="POST"
+                    action="{{ route('admin.pagos.validar', ['id' => $pago['id']]) }}"
+                    v-on:submit.prevent="enviar($event)">
                     @csrf
-                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" aria-describedby="acciones-pago-ayuda">
-                        Validar pago
+                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando" aria-describedby="acciones-pago-ayuda">
+                        @{{ enviando ? 'Validando…' : 'Validar pago' }}
                     </button>
                 </form>
 
@@ -178,7 +187,10 @@
             v-if="rechazoAbierto"
             aria-labelledby="panel-rechazo-titulo">
             <h2 id="panel-rechazo-titulo">Motivo del rechazo</h2>
-            <form method="POST" action="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}">
+            <form
+                method="POST"
+                action="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}"
+                v-on:submit.prevent="enviar($event)">
                 @csrf
                 {{-- El valor lo escribe Blade con old(); admin-pago-detalle.js lo
                      lee del DOM antes de montar para sembrar el v-model. --}}
@@ -220,8 +232,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-pago-detalle.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-reversion.js') }}"></script>
 @endsection

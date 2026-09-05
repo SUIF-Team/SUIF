@@ -45,9 +45,12 @@ class PagoController extends Controller
 
         if (!$avance->solicitudAprobada() || !$avance->referenciaAsignada()
             || !in_array($pago_estado, ['sin_cargar', 'rechazado'], true)) {
-            return redirect()
-                ->route('persona.pago.index')
-                ->with('warning', $this->mensajeBloqueo($avance, $pago_estado));
+            return $this->responder(
+                $request,
+                'warning',
+                $this->mensajeBloqueo($avance, $pago_estado),
+                route('persona.pago.index')
+            );
         }
 
         /* La validación corre antes de escribir el archivo: un formulario
@@ -86,13 +89,20 @@ class PagoController extends Controller
         } catch (DomainException $exception) {
             $disco->delete($ruta);
 
-            return redirect()
-                ->route('persona.pago.index')
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('persona.pago.index')
+            );
         }
 
-        return redirect()->route('persona.pago.index')
-            ->with('success', 'Tu comprobante fue enviado. El proceso de revisión puede tardar hasta 24 horas.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tu comprobante fue enviado. El proceso de revisión puede tardar hasta 24 horas.',
+            route('persona.pago.index')
+        );
     }
 
     /**
@@ -111,16 +121,21 @@ class PagoController extends Controller
         try {
             $comprobante_fiscal->registrarEleccion((int) Auth::id(), $datos['tipo']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.pago.index')
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('persona.pago.index')
+            );
         }
 
-        return redirect()->route('persona.pago.index')->with(
+        return $this->responder(
+            $request,
             'success',
             $datos['tipo'] === ComprobanteFiscal::CFDI
-                ? 'Elegiste CFDI. Captura tus datos de facturación para que podamos emitirlo y enviártelo por correo electrónico.'
-                : 'Elegiste ticket. Te lo haremos llegar por correo electrónico.'
+            ? 'Elegiste CFDI. Captura tus datos de facturación para que podamos emitirlo y enviártelo por correo electrónico.'
+            : 'Elegiste ticket. Te lo haremos llegar por correo electrónico.',
+            route('persona.pago.index')
         );
     }
 

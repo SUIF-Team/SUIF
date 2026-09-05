@@ -18,11 +18,29 @@
             registraste. La clave anterior dejará de funcionar.
         </p>
 
-        @if(session('success'))
-            <div class="alert alert-success" role="status">{{ session('success') }}</div>
-        @endif
+        {{-- La raíz de Vue envuelve el formulario y no es el formulario: Vue
+             compila los hijos del elemento montado. Sin JavaScript se ve el
+             mensaje que ya sirvió el servidor y el envío es el de siempre. --}}
+        <div id="recuperar-clave-app" data-formulario-ajax data-exito="{{ session('success') }}">
+        <div
+            class="alert alert-success"
+            role="status"
+            {{ session('success') ? '' : 'hidden' }}
+            :hidden="!avisoExito"
+            v-text="avisoExito">{{ session('success') }}</div>
 
-        <form method="POST" action="{{ route('clave.recuperar.post') }}" class="login-formulario">
+        <div
+            class="alert alert-danger"
+            role="alert"
+            hidden
+            :hidden="!avisoError"
+            v-text="avisoError"></div>
+
+        <form
+            method="POST"
+            action="{{ route('clave.recuperar.post') }}"
+            class="login-formulario"
+            @submit.prevent="enviar($event)">
             @csrf
 
             <div class="login-grupo">
@@ -46,9 +64,13 @@
             </div>
 
             <div class="login-acciones">
-                <button type="submit" class="btn login-boton">Enviar clave nueva</button>
+                <button type="submit" class="btn login-boton" :disabled="enviando">
+                    <span v-if="enviando" v-cloak>Enviando…</span>
+                    <span v-else>Enviar clave nueva</span>
+                </button>
             </div>
         </form>
+        </div>
 
         <p class="login-preregistro recuperar-clave-regreso">
             <a href="{{ route('login') }}">Volver a iniciar sesión.</a>

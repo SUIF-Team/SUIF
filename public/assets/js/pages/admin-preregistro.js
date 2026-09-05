@@ -17,13 +17,17 @@
 
     window.Vue.createApp({
         components: {
-            'back-navigation': window.SUIFComponentes.BackNavigation
+            'back-navigation': window.SUIFComponentes.BackNavigation,
+            alertas: window.SUIFComponentes.Alertas
         },
         data: function () {
             return {
                 persona: datos_vista.persona,
                 estados: datos_vista.estados,
                 enviando: false,
+                avisoError: '',
+                /* {campo: mensaje} de lo que rechazo el servidor */
+                erroresServidor: {},
                 estados_documentos: datos_vista.decisiones || {},
                 comentarios: Object.assign({}, datos_vista.comentarios || {}),
                 erroresComentarios: datos_vista.errores_comentarios || {},
@@ -125,6 +129,42 @@
             }
         },
         methods: {
+            /*
+             * El dictamen se guarda sin recargar.
+             *
+             * La pantalla lleva una decision y, en los rechazos, un comentario
+             * escrito por cada documento, mas la fecha limite. Que el servidor
+             * rechazara algo costaba recargar y volver a marcarlo todo: con
+             * withInput() los campos regresaban, pero desde arriba de la
+             * pantalla y sin el visor abierto donde estaba.
+             *
+             * "Guardar" e "Interrumpir" comparten formulario y se distinguen
+             * por el formaction del boton, asi que el destino se lee de ahi.
+             */
+            enviar: function (evento) {
+                if (this.enviando) {
+                    return;
+                }
+
+                this.enviando = true;
+                this.avisoError = '';
+                this.erroresServidor = {};
+
+                window.SUIF.enviarYSeguir(evento.target, {
+                    url: window.SUIF.destinoDeEnvio(evento.target, evento)
+                }).then(function (resultado) {
+                    /* Resolver el expediente lleva a la pantalla de resultado,
+                       que es otra: ahi si se navega. */
+                    if (resultado.navegando) {
+                        return;
+                    }
+
+                    this.enviando = false;
+                    this.avisoError = resultado.mensaje;
+                    this.erroresServidor = resultado.errores;
+                }.bind(this));
+            },
+
             clasePaso: function (paso) {
                 var estado = this.estados[paso];
 

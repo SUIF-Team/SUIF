@@ -8,7 +8,6 @@ use App\Servicios\CatalogoReferencias;
 use App\Servicios\ComprobanteFiscal;
 use App\Servicios\ReferenciaEspecial;
 use DomainException;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -87,19 +86,25 @@ class ReferenciaController extends Controller
     /**
      * Entrega una referencia libre del catálogo y la liga a la solicitud.
      */
-    public function generar(CatalogoReferencias $catalogo): RedirectResponse
+    public function generar(Request $request, CatalogoReferencias $catalogo)
     {
         try {
             $catalogo->asignar((int) Auth::id());
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.referencia.individual')
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('persona.referencia.individual')
+            );
         }
 
-        return redirect()
-            ->route('persona.referencia.individual')
-            ->with('success', 'Tu referencia bancaria quedó asignada. Es única y personal.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tu referencia bancaria quedó asignada. Es única y personal.',
+            route('persona.referencia.individual')
+        );
     }
 
     /**
@@ -141,7 +146,7 @@ class ReferenciaController extends Controller
     /**
      * Registra la solicitud de referencia especial. La emisión es de la DEC.
      */
-    public function solicitarEspecial(Request $request, ReferenciaEspecial $referencia_especial): RedirectResponse
+    public function solicitarEspecial(Request $request, ReferenciaEspecial $referencia_especial)
     {
         $request->merge([
             'razon_social' => trim((string) $request->input('razon_social')),
@@ -203,16 +208,29 @@ class ReferenciaController extends Controller
                 array_values($datos['participantes'])
             );
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.referencia.especial')
-                ->withInput()
-                ->withErrors(['participantes' => $exception->getMessage()]);
+            if (!$request->expectsJson()) {
+                return redirect()
+                    ->route('persona.referencia.especial')
+                    ->withInput()
+                    ->withErrors(['participantes' => $exception->getMessage()]);
+            }
+
+            return $this->responder(
+                $request,
+                'error',
+                $exception->getMessage(),
+                route('persona.referencia.especial'),
+                [],
+                'participantes'
+            );
         }
 
-        return redirect()->route('persona.referencia.individual')->with(
+        return $this->responder(
+            $request,
             'success',
             'Registramos tu solicitud para '.$resultado['participantes'].' participantes. '
-            .'La Dirección emitirá la referencia y te avisaremos por correo en cuanto esté lista.'
+            .'La Dirección emitirá la referencia y te avisaremos por correo en cuanto esté lista.',
+            route('persona.referencia.individual')
         );
     }
 

@@ -42,12 +42,15 @@ class SedeController extends Controller
         try {
             $gestion->crear($this->validar($request));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.sedes.index')
-            ->with('success', 'La sede se creó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La sede se creó correctamente.',
+            route('admin.sedes.index')
+        );
     }
 
     public function edit(int $id)
@@ -63,25 +66,31 @@ class SedeController extends Controller
         try {
             $gestion->actualizar($id, $this->validar($request));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.sedes.index')
-            ->with('success', 'La sede se actualizó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La sede se actualizó correctamente.',
+            route('admin.sedes.index')
+        );
     }
 
-    public function destroy(int $id, GestionSedes $gestion)
+    public function destroy(Request $request, int $id, GestionSedes $gestion)
     {
         try {
             $gestion->eliminar($id);
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.sedes.index')
-            ->with('success', 'La sede se eliminó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La sede se eliminó correctamente.',
+            route('admin.sedes.index')
+        );
     }
 
     /**

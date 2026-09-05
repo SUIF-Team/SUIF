@@ -3,6 +3,15 @@
  * Los componentes y las páginas mantienen sus estilos en archivos separados.
  */
 
+/* El atributo hidden lo apaga cualquier regla con display propio, así que
+   había que repetir la excepción componente por componente (.pr-modal[hidden],
+   .admin-reversion-modal[hidden], .admin-sedes-modal[hidden]…). Con las
+   pantallas que ya no recargan, ocultar y mostrar en sitio es constante: se
+   declara una vez y hidden vuelve a significar lo que dice. */
+[hidden] {
+    display: none !important;
+}
+
 :root {
     --unam-blue: #112f4b;
     --unam-blue-dark: #0b1a2e;

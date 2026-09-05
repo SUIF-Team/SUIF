@@ -3,7 +3,8 @@
 
     var root = document.querySelector('[data-bandeja-administrativa]');
 
-    if (!root || !window.Vue || !window.SUIFComponentes || !window.SUIFComponentes.BackNavigation) {
+    if (!root || !window.Vue || !window.SUIFComponentes
+        || !window.SUIFComponentes.BackNavigation || !window.SUIFComponentes.Alertas) {
         return;
     }
 
@@ -20,7 +21,8 @@
 
     window.Vue.createApp({
         components: {
-            'back-navigation': window.SUIFComponentes.BackNavigation
+            'back-navigation': window.SUIFComponentes.BackNavigation,
+            alertas: window.SUIFComponentes.Alertas
         },
         data: function () {
             return {
@@ -39,7 +41,9 @@
                     orden: 'reciente'
                 },
                 persona_seleccionada: null,
-                foco_restaurar: null
+                foco_restaurar: null,
+                aviso: { mensaje: '', tipo: 'success' },
+                restaurando: false
             };
         },
         computed: {
@@ -137,6 +141,29 @@
                     }
                 }.bind(this));
             },
+            /*
+             * Restaurar una clave se hace desde la bandeja y termina en la
+             * bandeja: recargarla no aportaba nada y, cuando el correo no sale,
+             * el aviso trae la única copia de la clave generada. Ahora se queda
+             * a la vista y la lista no se mueve.
+             */
+            restaurar: function (evento) {
+                if (this.restaurando) {
+                    return;
+                }
+
+                this.restaurando = true;
+
+                window.SUIF.enviar(evento.target).then(function (respuesta) {
+                    this.restaurando = false;
+                    this.cerrarRestaurar();
+
+                    this.aviso = respuesta.ok
+                        ? { mensaje: respuesta.datos.mensaje || '', tipo: respuesta.datos.tipo || 'success' }
+                        : { mensaje: window.SUIF.mensajeError(respuesta), tipo: 'error' };
+                }.bind(this));
+            },
+
             cerrarRestaurar: function () {
                 this.persona_seleccionada = null;
                 document.body.classList.remove('admin-reversion-modal-abierto');

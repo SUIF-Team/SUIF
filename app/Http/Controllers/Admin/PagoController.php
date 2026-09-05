@@ -82,10 +82,11 @@ class PagoController extends Controller
     }
 
     public function validar(
+        Request $request,
         string $id,
         ConsultaPagos $consulta_pagos,
         RevisionPagos $revision_pagos
-    ): RedirectResponse {
+    ) {
         $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
@@ -95,12 +96,21 @@ class PagoController extends Controller
         try {
             $revision_pagos->aprobar((int) $pago['id']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('admin.pagos.show', ['id' => $pago['id']])
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('admin.pagos.show', ['id' => $pago['id']])
+            );
         }
 
-        return redirect()->route('admin.pagos.resultado', ['id' => $pago['id']]);
+        /* Sin mensaje: la pantalla de resultado ya explica el desenlace y el
+           redirect de siempre tampoco flasheaba nada. */
+        $destino = route('admin.pagos.resultado', ['id' => $pago['id']]);
+
+        return $request->expectsJson()
+            ? response()->json(['tipo' => 'success', 'mensaje' => '', 'redirigir' => $destino])
+            : redirect()->to($destino);
     }
 
     public function rechazar(
@@ -108,7 +118,7 @@ class PagoController extends Controller
         string $id,
         ConsultaPagos $consulta_pagos,
         RevisionPagos $revision_pagos
-    ): RedirectResponse {
+    ) {
         $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
@@ -125,13 +135,23 @@ class PagoController extends Controller
         try {
             $revision_pagos->rechazar((int) $pago['id'], $datos['motivo_rechazo']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('admin.pagos.show', ['id' => $pago['id']])
-                ->withInput()
-                ->with('warning', $exception->getMessage());
+            /* El motivo del rechazo es texto escrito a mano: recargar lo
+               devolvía con old() pero desde arriba de la pantalla. */
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('admin.pagos.show', ['id' => $pago['id']])
+            );
         }
 
-        return redirect()->route('admin.pagos.resultado', ['id' => $pago['id']]);
+        /* Sin mensaje: la pantalla de resultado ya explica el desenlace y el
+           redirect de siempre tampoco flasheaba nada. */
+        $destino = route('admin.pagos.resultado', ['id' => $pago['id']]);
+
+        return $request->expectsJson()
+            ? response()->json(['tipo' => 'success', 'mensaje' => '', 'redirigir' => $destino])
+            : redirect()->to($destino);
     }
 
     /**
@@ -141,10 +161,11 @@ class PagoController extends Controller
      * de estar resuelto y lo que sigue es volver a decidirlo.
      */
     public function reanudar(
+        Request $request,
         string $id,
         ConsultaPagos $consulta_pagos,
         RevisionPagos $revision_pagos
-    ): RedirectResponse {
+    ) {
         $pago = $this->obtenerPago($id, $consulta_pagos);
 
         if ($pago instanceof RedirectResponse) {
@@ -154,14 +175,20 @@ class PagoController extends Controller
         try {
             $revision_pagos->reanudar((int) $pago['id']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('admin.pagos.show', ['id' => $pago['id']])
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('admin.pagos.show', ['id' => $pago['id']])
+            );
         }
 
-        return redirect()
-            ->route('admin.pagos.show', ['id' => $pago['id']])
-            ->with('success', 'El pago volvió a revisión.');
+        return $this->responder(
+            $request,
+            'success',
+            'El pago volvió a revisión.',
+            route('admin.pagos.show', ['id' => $pago['id']])
+        );
     }
 
     public function resultado(

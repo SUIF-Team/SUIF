@@ -107,14 +107,46 @@
                     </div>
                 </dl>
 
-                <form method="POST" action="{{ route('admin.referencias.paquete.store') }}" enctype="multipart/form-data" class="admin-referencias-formulario">
-                    @csrf
-                    <label class="admin-referencias-archivo">
-                        <span>Seleccionar ZIP</span>
-                        <input type="file" name="paquete" accept=".zip,application/zip" required>
-                    </label>
-                    <button type="submit" class="admin-referencias-boton admin-referencias-boton--primario">Cargar referencias</button>
-                </form>
+                {{-- La carga va por XMLHttpRequest y no por fetch porque es el
+                     unico punto que se beneficia de saber cuanto lleva subido:
+                     el ZIP admite 50 MB y antes el boton se quedaba mudo hasta
+                     el final. Sin JavaScript el formulario se envia igual. --}}
+                <div id="referencias-carga-app">
+                    <alertas
+                        :mensaje="avisoError"
+                        tipo="error"
+                        clase="admin-referencias-aviso admin-referencias-aviso--error"></alertas>
+
+                    <div class="admin-referencias-tarjeta admin-referencias-aviso" v-if="resultado" v-cloak>
+                        <strong>Resultado de la carga</strong>
+                        <ul>
+                            <li>@{{ resultado.nuevas }} referencias nuevas.</li>
+                            <li>@{{ resultado.actualizadas }} referencias actualizadas.</li>
+                            <li>@{{ resultado.total }} referencias en total, todas con su formato PDF.</li>
+                        </ul>
+                    </div>
+
+                    <form
+                        method="POST"
+                        action="{{ route('admin.referencias.paquete.store') }}"
+                        enctype="multipart/form-data"
+                        class="admin-referencias-formulario"
+                        @submit.prevent="cargar($event)">
+                        @csrf
+                        <label class="admin-referencias-archivo">
+                            <span>Seleccionar ZIP</span>
+                            <input type="file" name="paquete" accept=".zip,application/zip" required :disabled="subiendo">
+                        </label>
+                        <button type="submit" class="admin-referencias-boton admin-referencias-boton--primario" :disabled="subiendo">
+                            @{{ subiendo ? 'Cargando…' : 'Cargar referencias' }}
+                        </button>
+
+                        <p class="admin-referencias-progreso" v-if="subiendo" v-cloak role="status" aria-live="polite">
+                            <progress class="admin-referencias-progreso__barra" max="100" :value="progreso"></progress>
+                            <span>@{{ progreso < 100 ? 'Subiendo ' + progreso + '%' : 'Procesando el ZIP en el servidor…' }}</span>
+                        </p>
+                    </form>
+                </div>
             </section>
         </div>
 
@@ -129,7 +161,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset_versionado('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-referencias.js') }}"></script>
 @endsection

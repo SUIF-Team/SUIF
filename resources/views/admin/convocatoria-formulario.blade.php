@@ -79,12 +79,24 @@
             </section>
         @endif
 
-        <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta">
+        <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" data-formulario-ajax>
             <h2>Datos de la convocatoria</h2>
+            {{-- data-formulario-ajax monta la app compartida de envío: el guardado
+                 va por fetch y lo que el servidor rechace se dice aquí mismo,
+                 sin recargar ni volver a subir la pantalla. La raíz envuelve al
+                 formulario y no es el formulario, porque Vue compila los hijos
+                 del elemento montado. Sin JavaScript se envía como siempre. --}}
+            <alertas
+                :mensaje="avisoError"
+                tipo="error"
+                :errores="erroresServidor"
+                clase="admin-sedes-alerta"></alertas>
+
             <form
                 method="POST"
                 action="{{ $modoEdicion ? route('admin.convocatorias.update', $convocatoria['id']) : route('admin.convocatorias.store') }}"
-                class="admin-sedes-formulario">
+                class="admin-sedes-formulario"
+                @submit.prevent="enviar($event)">
                 @csrf
                 @if($modoEdicion)
                     @method('PUT')
@@ -227,7 +239,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset_versionado('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-convocatorias.js') }}"></script>
 @endsection

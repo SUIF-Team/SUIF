@@ -8,8 +8,9 @@
  * catálogo completo en cada sondeo y aquí se sustituye entero, en lugar de
  * parchar nodo por nodo.
  *
- * El envío sigue siendo un POST normal del formulario: Vue sólo intercepta para
- * pedir confirmación, porque apartar el lugar no se puede deshacer.
+ * El envío va por fetch: pide confirmación —apartar el lugar no se deshace— y,
+ * si el horario se llenó mientras tanto, lo dice sin recargar, con el catálogo
+ * todavía delante. Sin JavaScript el formulario se envía como siempre.
  */
 (function () {
     'use strict';
@@ -46,7 +47,10 @@
                 seleccion: {},
                 /* { sede, horario } mientras el diálogo está abierto */
                 confirmacion: null,
-                enviando: false
+                enviando: false,
+                /* Arranca con el error del servidor para que v-text no borre
+                   el que ya venía pintado en la página. */
+                avisoError: raiz.dataset.error || ''
             };
         },
         methods: {
@@ -146,10 +150,25 @@
                 this.enviando = true;
                 this.detener();
                 formularioPendiente = null;
+                this.avisoError = '';
 
-                /* submit() no dispara el evento submit, así que no se vuelve a
-                   abrir el diálogo. */
-                formulario.submit();
+                window.SUIF.enviarYSeguir(formulario).then(function (resultado) {
+                    /* Confirmar lleva al resumen, que es otra pantalla: ahí sí
+                       se navega y conviene dejar el botón apagado mientras. */
+                    if (resultado.navegando) {
+                        return;
+                    }
+
+                    /* El caso que se repite: entre el último sondeo y el envío
+                       alguien más tomó el lugar. Se dice aquí mismo y el
+                       catálogo vuelve a moverse, sin perder dónde iba la
+                       persona en la lista. */
+                    this.enviando = false;
+                    this.confirmacion = null;
+                    document.body.classList.remove('sede-modal-abierto');
+                    this.avisoError = resultado.mensaje;
+                    this.iniciar();
+                }.bind(this));
             },
 
             atraparFoco: function (evento) {

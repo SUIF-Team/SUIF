@@ -75,6 +75,22 @@ class PreRegistroController extends Controller
             return redirect()->route('persona.preregistro.index');
         }
 
+        return view('persona.documentos', $this->pantallaDocumentos($request));
+    }
+
+    /**
+     * Todo lo que necesita la pantalla de documentación.
+     *
+     * Vive aparte porque subirDocumento() y enviarRevision() responden con el
+     * mismo estado ya recalculado: la pantalla lo sustituye entero en lugar de
+     * parchar renglón por renglón, igual que hace el catálogo de sedes con su
+     * sondeo. Así una carga no puede dejar la tabla contando una historia y la
+     * base de datos otra.
+     */
+    private function pantallaDocumentos(Request $request): array
+    {
+        $idSolicitud = $this->solicitudActual();
+
         $estado = $this->estado($request);
         $estado['documentos'] = $this->documentosGuardados($idSolicitud);
         $estado['fase'] = $this->faseSegunDocumentos($estado['documentos']);
@@ -83,7 +99,7 @@ class PreRegistroController extends Controller
            alimenta el panel y la barra de avance, para no abrir otra verdad. */
         $avance = new AvancePersona(auth()->id());
 
-        return view('persona.documentos', [
+        return [
             'estado' => $estado,
             'documentos' => $this->documentos,
             'formatos' => $this->formatos,
@@ -93,7 +109,79 @@ class PreRegistroController extends Controller
             'motivoInterrupcion' => $avance->motivoSolicitudCerrada(),
             'fechaEnvio' => $this->fechaDelEstado($estado['documentos'], 'revision'),
             'fechaAprobacion' => $this->fechaDelEstado($estado['documentos'], 'aprobado'),
-        ]);
+            'vista' => $this->vistaDocumentos($estado, $avance),
+        ];
+    }
+
+    /**
+     * La parte de la pantalla que maneja Vue, ya lista para serializar.
+     *
+     * Las etiquetas y las clases de estado se arman aquí y no en la plantilla
+     * porque después de una carga por AJAX ya no hay Blade que las calcule: si
+     * se quedaran allá, la fila reemplazada volvería sin su color ni su texto.
+     */
+    private function vistaDocumentos(array $estado, AvancePersona $avance): array
+    {
+        $clases = [
+            'pendiente' => 'pending',
+            'cargado' => 'loaded',
+            'revision' => 'review',
+            'aprobado' => 'approved',
+            'rechazado' => 'rejected',
+        ];
+        $etiquetas = [
+            'pendiente' => 'Pendiente',
+            'cargado' => 'Cargado',
+            'revision' => 'En revisión',
+            'aprobado' => 'Aprobado',
+            'rechazado' => 'Rechazado',
+        ];
+
+        $documentos = [];
+        $porEnviar = 0;
+
+        foreach ($this->documentos as $slug => $nombre) {
+            $guardado = $estado['documentos'][$slug] ?? null;
+            $situacion = $guardado ? $guardado['estado'] : 'pendiente';
+
+            /* Misma regla que subirDocumento(): mientras alguien lo revisa o ya
+               lo aprobó, el archivo dejó de ser de la persona. */
+            $puedeReemplazar = !in_array($situacion, ['revision', 'aprobado'], true);
+
+            /* Mismo criterio que enviarRevision(): los aprobados no se
+               reenvían, así que el conteo del diálogo no miente cuando la
+               persona está subsanando. */
+            if ($situacion !== 'aprobado') {
+                $porEnviar++;
+            }
+
+            $documentos[] = [
+                'slug' => $slug,
+                'nombre' => $nombre,
+                'estado' => $situacion,
+                'etiqueta' => $etiquetas[$situacion],
+                'clase' => $clases[$situacion],
+                'puede_reemplazar' => $puedeReemplazar,
+                'tiene_archivo' => (bool) $guardado,
+                'nombre_original' => $guardado ? $guardado['nombre_original'] : null,
+                'observacion' => $situacion === 'rechazado' && $guardado
+                    ? ($guardado['observacion'] ?: null)
+                    : null,
+                'es_formato' => in_array($slug, $this->formatos, true),
+                'ruta_ver' => route('persona.preregistro.documentos.ver', $slug),
+                'ruta_formato' => route('persona.preregistro.formatos.generar', $slug),
+                'ruta_subir' => route('persona.preregistro.documentos.store', $slug),
+            ];
+        }
+
+        return [
+            'fase' => $estado['fase'],
+            'documentos' => $documentos,
+            'por_enviar' => $porEnviar,
+            'ruta_enviar' => route('persona.preregistro.documentos.enviar'),
+            'fecha_envio' => $this->fechaDelEstado($estado['documentos'], 'revision'),
+            'solicitud_cerrada' => $avance->solicitudCerrada(),
+        ];
     }
 
         /**
@@ -132,8 +220,14 @@ class PreRegistroController extends Controller
         /* Se vuelve a comprobar aquí: el permiso pudo cambiar entre que
            se abrió el formulario y se envió. */
         if (!$idPersona || !$this->puedeEditar()) {
-            return redirect()->route('persona.preregistro.index')
-                ->withErrors(['datos' => 'Tus datos ya no se pueden modificar porque tu documentación está en revisión.']);
+            return $this->responder(
+                $request,
+                'error',
+                'Tus datos ya no se pueden modificar porque tu documentación está en revisión.',
+                route('persona.preregistro.index'),
+                [],
+                'datos'
+            );
         }
 
         $request->merge([
@@ -187,8 +281,12 @@ class PreRegistroController extends Controller
         $estado['fase'] = 'registrado';
         $request->session()->put('suif.preregistro', $estado);
 
-        return redirect()->route('persona.preregistro.index')
-            ->with('success', 'Tus datos fueron actualizados correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tus datos fueron actualizados correctamente.',
+            route('persona.preregistro.index')
+        );
     }
 
        public function guardarDatos(Request $request, GestionClaves $gestion_claves)
@@ -266,8 +364,12 @@ class PreRegistroController extends Controller
         $estado['correo_enviado'] = $this->enviarClave($datos['correo_principal'], $clave);
         $request->session()->put('suif.preregistro', $estado);
 
-        return redirect()->route('persona.preregistro.index')
-            ->with('success', 'Tus datos fueron guardados correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tus datos fueron guardados correctamente.',
+            route('persona.preregistro.index')
+        );
     }
 
     /**
@@ -565,8 +667,14 @@ class PreRegistroController extends Controller
         $idSolicitud = $this->solicitudActual();
 
         if (!$idSolicitud) {
-            return redirect()->route('persona.documentos.index')
-                ->withErrors(['documentos' => 'No encontramos tu solicitud. Vuelve a iniciar sesión.']);
+            return $this->responder(
+                $request,
+                'error',
+                'No encontramos tu solicitud. Vuelve a iniciar sesión.',
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
         }
 
         /* Espejo de la regla de la vista: un documento en revisión o aprobado
@@ -576,8 +684,14 @@ class PreRegistroController extends Controller
         $estadoActual = isset($guardados[$documento]) ? $guardados[$documento]['estado'] : 'pendiente';
 
         if (in_array($estadoActual, ['revision', 'aprobado'], true)) {
-            return redirect()->route('persona.documentos.index')
-                ->withErrors(['documentos' => 'Ese documento ya no se puede reemplazar: está en revisión o fue aprobado.']);
+            return $this->responder(
+                $request,
+                'error',
+                'Ese documento ya no se puede reemplazar: está en revisión o fue aprobado.',
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
         }
 
         $idTipo = DB::table('tipo_documento')
@@ -626,8 +740,13 @@ class PreRegistroController extends Controller
             $this->registrarEstadoDocumento($idDocumento, 'Cargado');
         });
 
-        return redirect()->route('persona.documentos.index')
-            ->with('success', 'Documento cargado. Revísalo antes de continuar.');
+        return $this->responder(
+            $request,
+            'success',
+            'Documento cargado. Revísalo antes de continuar.',
+            route('persona.documentos.index'),
+            ['vista' => $this->pantallaDocumentos($request)['vista']]
+        );
     }
 
         public function verDocumento(Request $request, $documento)
@@ -667,8 +786,14 @@ class PreRegistroController extends Controller
 
         foreach (array_keys($this->documentos) as $slug) {
             if (empty($documentos[$slug])) {
-                return redirect()->route('persona.documentos.index')
-                    ->withErrors(['documentos' => 'Debes cargar todos los documentos antes de continuar.']);
+                return $this->responder(
+                    $request,
+                    'error',
+                    'Debes cargar todos los documentos antes de continuar.',
+                    route('persona.documentos.index'),
+                    [],
+                    'documentos'
+                );
             }
         }
 
@@ -680,8 +805,14 @@ class PreRegistroController extends Controller
         );
 
         if (!$porRevisar) {
-            return redirect()->route('persona.documentos.index')
-                ->withErrors(['documentos' => 'Todos tus documentos ya fueron aprobados.']);
+            return $this->responder(
+                $request,
+                'error',
+                'Todos tus documentos ya fueron aprobados.',
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
         }
 
         DB::transaction(function () use ($idSolicitud, $porRevisar) {
@@ -692,10 +823,15 @@ class PreRegistroController extends Controller
             $this->registrarEstadoSolicitud($idSolicitud, 'En revisión');
         });
 
-        return redirect()->route('persona.documentos.index')
-            ->with('success', count($porRevisar) === count($documentos)
-                ? 'Tus documentos fueron enviados a revisión.'
-                : 'Los documentos que corregiste fueron enviados a revisión.');
+        return $this->responder(
+            $request,
+            'success',
+            count($porRevisar) === count($documentos)
+            ? 'Tus documentos fueron enviados a revisión.'
+            : 'Los documentos que corregiste fueron enviados a revisión.',
+            route('persona.documentos.index'),
+            ['vista' => $this->pantallaDocumentos($request)['vista']]
+        );
     }
 
     private function estado(Request $request)

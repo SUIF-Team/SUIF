@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Servicios\ReferenciaEspecial;
 use DomainException;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -38,7 +37,7 @@ class ReferenciaEspecialController extends Controller
         ]);
     }
 
-    public function emitir(string $id, Request $request, ReferenciaEspecial $referencias): RedirectResponse
+    public function emitir(string $id, Request $request, ReferenciaEspecial $referencias)
     {
         $datos = $request->validate([
             'referencia' => ['required', 'integer'],
@@ -50,15 +49,23 @@ class ReferenciaEspecialController extends Controller
         try {
             $resultado = $referencias->emitir((int) $id, (int) $datos['referencia']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('admin.referencias.especiales.show', $id)
-                ->with('warning', $exception->getMessage());
+            /* Lo habitual aquí es que la referencia elegida ya se haya
+               entregado a otra solicitud: se dice sin recargar para que el
+               <select> del catálogo siga a la vista y se elija otra. */
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('admin.referencias.especiales.show', $id)
+            );
         }
 
-        return redirect()->route('admin.referencias.especiales.index')->with(
+        return $this->responder(
+            $request,
             'success',
             'Se entregó la referencia '.$resultado['referencia'].'. Se avisó a '
-            .$resultado['avisados'].' participantes por correo.'
+            .$resultado['avisados'].' participantes por correo.',
+            route('admin.referencias.especiales.index')
         );
     }
 }

@@ -76,6 +76,16 @@
                     </div>
                 </div>
             @else
+                {{-- Vue sustituye el contenido de este contenedor al montarse;
+                     lo que Blade pinta aquí es el respaldo para quien navega
+                     sin JavaScript, donde cada carga vuelve a ser un POST
+                     normal con su recarga. Las dos versiones tienen que decir
+                     lo mismo: al tocar la tabla, tocar también la plantilla de
+                     assets/js/pages/persona-documentos.js. --}}
+                <div
+                    id="pr-documentos-app"
+                    data-vista='@json($vista)'
+                    data-ruta-formatos="{{ route('persona.documentos.index', ['ver' => 'formatos']) }}">
                 <h1>Documentación requerida</h1>
                 <p class="pr-muted">Sube los documentos uno por uno. Cada PDF debe pesar máximo 1 MB.</p>
                 <p class="pr-volver-formatos">
@@ -230,6 +240,7 @@
                         </section>
                     </div>
                 @endif
+                </div>
             @endif
         </main>
     </div>

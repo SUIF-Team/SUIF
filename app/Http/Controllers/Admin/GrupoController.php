@@ -46,12 +46,15 @@ class GrupoController extends Controller
         try {
             $gestion->crearGrupo($this->validar($request, $gestion));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.grupos.index')
-            ->with('success', 'El grupo se creó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'El grupo se creó correctamente.',
+            route('admin.grupos.index')
+        );
     }
 
     public function edit(int $id, GestionSedes $gestion)
@@ -59,6 +62,8 @@ class GrupoController extends Controller
         try {
             $grupo = $gestion->grupo($id);
         } catch (DomainException $exception) {
+            /* Abrir el formulario es una navegación, no una acción: si el
+               registro ya no existe se vuelve al listado como siempre. */
             return redirect()
                 ->route('admin.grupos.index')
                 ->with('error', $exception->getMessage());
@@ -77,25 +82,31 @@ class GrupoController extends Controller
         try {
             $gestion->actualizarGrupo($id, $this->validar($request, $gestion, $id));
         } catch (DomainException $exception) {
-            return back()->withInput()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.grupos.index')
-            ->with('success', 'El grupo se actualizó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'El grupo se actualizó correctamente.',
+            route('admin.grupos.index')
+        );
     }
 
-    public function destroy(int $id, GestionSedes $gestion)
+    public function destroy(Request $request, int $id, GestionSedes $gestion)
     {
         try {
             $gestion->eliminarGrupoPorId($id);
         } catch (DomainException $exception) {
-            return back()->with('error', $exception->getMessage());
+            return $this->responder($request, 'error', $exception->getMessage());
         }
 
-        return redirect()
-            ->route('admin.grupos.index')
-            ->with('success', 'El grupo se eliminó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'El grupo se eliminó correctamente.',
+            route('admin.grupos.index')
+        );
     }
 
     private function validar(Request $request, GestionSedes $gestion, ?int $id = null): array

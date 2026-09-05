@@ -385,3 +385,22 @@
         justify-content: center;
     }
 }
+
+/* Avance de la carga del paquete. El ZIP admite 50 MB: sin barra, el botón se
+   quedaba mudo y no había forma de distinguir una subida lenta de una pantalla
+   colgada. Al llegar a 100 el servidor todavía tiene que abrir el ZIP, por eso
+   el texto de al lado cambia en vez de desaparecer. */
+.admin-referencias-progreso {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.85rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted, #555);
+}
+
+.admin-referencias-progreso__barra {
+    flex: 1 1 220px;
+    height: 8px;
+    max-width: 320px;
+}

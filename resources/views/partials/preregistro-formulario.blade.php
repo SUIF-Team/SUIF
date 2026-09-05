@@ -4,7 +4,18 @@
     Variables: $accion, $textoBoton, $mostrarCancelar, $avisoClave, $botonDeshabilitado,
     $mostrarAviso (aviso de privacidad y su casilla: solo en el alta).
 --}}
-<form method="POST" action="{{ $accion }}" id="pr-data-form">
+{{-- La raíz de Vue es el contenedor y no el formulario: Vue compila los hijos
+     del elemento montado, así que una directiva puesta en él mismo nunca se
+     aplicaría. Los campos siguen siendo HTML de servidor; Vue sólo intercepta
+     el envío y pinta lo que el servidor rechace. --}}
+<div id="pr-datos-app">
+<alertas
+    :mensaje="avisoError"
+    tipo="error"
+    :errores="erroresServidor"
+    clase="pr-alert pr-error"></alertas>
+
+<form method="POST" action="{{ $accion }}" id="pr-data-form" @submit.prevent="enviar($event)">
     @csrf
 
     <p class="pr-notice pr-notice--bloqueo" role="note">
@@ -54,6 +65,10 @@
         @if($mostrarCancelar)
             <a class="pr-btn pr-btn--secondary" href="{{ route('persona.preregistro.index') }}">Cancelar</a>
         @endif
-        <button class="pr-btn" type="submit" {{ $botonDeshabilitado ? 'disabled' : '' }}>{{ $textoBoton }}</button>
+        <button class="pr-btn" type="submit" {{ $botonDeshabilitado ? 'disabled' : '' }} :class="{ 'pr-btn--enviando': enviando }">
+            <span v-if="enviando" v-cloak>Enviando…</span>
+            <span v-else>{{ $textoBoton }}</span>
+        </button>
     </div>
 </form>
+</div>

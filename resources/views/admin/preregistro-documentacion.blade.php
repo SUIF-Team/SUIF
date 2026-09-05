@@ -50,7 +50,17 @@
         </div>
     </nav>
 
-    <form method="POST" action="{{ route('admin.documentos.validar', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}" class="admin-preregistro-contenido-principal" v-on:submit="enviando = true">
+    <alertas
+        :mensaje="avisoError"
+        tipo="error"
+        :errores="erroresServidor"
+        clase="admin-preregistro-alerta admin-preregistro-alerta--error"></alertas>
+
+    <form
+        method="POST"
+        action="{{ route('admin.documentos.validar', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}"
+        class="admin-preregistro-contenido-principal"
+        v-on:submit.prevent="enviar($event)">
         @csrf
         <input type="hidden" name="origen" value="{{ $contexto_bandeja['origen'] }}">
         <input v-for="documento in documentosPendientes" :key="`estado-${documento.id}`" type="hidden" :name="`documentos[${documento.id}]`" :value="estadoDocumento(documento.id) || ''">
@@ -219,7 +229,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-preregistro.js') }}"></script>
 @endsection
