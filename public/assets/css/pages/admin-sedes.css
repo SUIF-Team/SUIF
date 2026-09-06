@@ -222,13 +222,18 @@
     text-align: center;
 }
 
-/* Sede y Ubicacion se quedan a la izquierda: son texto libre y de largo
-   variable, que se lee mejor alineado. De Capacidad en adelante son dos cifras,
-   una pildora y una accion, cortas y de largo parejo, que se leen mejor
-   centradas bajo su encabezado, que ya iba centrado. El renglon de tabla vacia
-   es un td con colspan en primera posicion, asi que esta regla no lo alcanza.
-   El centrado vertical ya lo da el vertical-align: middle de arriba. */
-.admin-sedes-tabla--centrada td:nth-child(n+3) {
+/* Las columnas de texto libre se quedan a la izquierda, que es como se leen
+   mejor; las de dato corto y largo parejo (cifras, fechas, pildoras, acciones)
+   se centran bajo su encabezado, que ya iba centrado. Lo unico que cambia por
+   tabla es cuantas columnas de texto libre hay al principio, de ahi los dos
+   modificadores: grupos, convocatorias y administradores solo tienen la
+   primera; sedes tiene Sede y Ubicacion.
+
+   El renglon de tabla vacia es un td con colspan en primera posicion, asi que
+   ninguna de las dos reglas lo alcanza. El centrado vertical no hace falta
+   pedirlo: lo da el vertical-align: middle de arriba. */
+.admin-sedes-tabla--centrada td:nth-child(n+2),
+.admin-sedes-tabla--centrada-desde-3 td:nth-child(n+3) {
     text-align: center;
 }
 

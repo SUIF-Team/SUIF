@@ -93,7 +93,7 @@
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de convocatorias">
             <div class="admin-sedes-tabla-responsive admin-tabla-bandeja">
-                <table id="admin-convocatorias-tabla" class="admin-sedes-tabla">
+                <table id="admin-convocatorias-tabla" class="admin-sedes-tabla admin-sedes-tabla--centrada">
                     <thead>
                         <tr>
                             <th>Convocatoria</th>
@@ -115,7 +115,6 @@
                                 <td>
                                     <strong>{{ \Illuminate\Support\Carbon::parse($convocatoria['fecha_inicio_registro'])->format('d/m/Y') }}
                                         al {{ \Illuminate\Support\Carbon::parse($convocatoria['fecha_fin_registro'])->format('d/m/Y') }}</strong>
-                                    <small>{{ $convocatoria['registro_abierto'] ? 'Abierto hoy' : 'Cerrado hoy' }}</small>
                                 </td>
                                 <td>{{ \Illuminate\Support\Carbon::parse($convocatoria['fin_fecha_entrega_docs'])->format('d/m/Y') }}</td>
                                 <td>
