@@ -11,37 +11,33 @@
 <section class="login-seccion" aria-labelledby="login-titulo">
     <div class="login-panel login-panel-informacion">
         <div class="login-informacion-contenido">
-            <p class="login-bienvenida">Bienvenido al</p>
-            <h1 id="login-titulo" class="login-titulo-proceso">Proceso de Certificación UIF</h1>
+            <p class="login-bienvenida">Bienvenido a</p>
+            <h1 id="login-titulo" class="login-titulo-proceso">SUIF — Sistema Integral de Certificaciones</h1>
 
             <span class="login-divisor" aria-hidden="true"></span>
 
             <p class="login-descripcion">
-                Desde la plataforma podrás gestionar tu proceso de registro ante la UIF. Aquí encontrarás tres opciones principales:
+                Desde aquí realizas y das seguimiento a tu trámite de Certificación en materia de Prevención de Operaciones con Recursos de Procedencia Ilícita.
             </p>
 
             <ul class="login-lista">
                 <li>
-                    <strong>Iniciar pre-registro:</strong>
-                    Si es tu primera vez, completa el formulario de pre-registro y obtén una clave de acceso en tu correo electrónico.
+                    <strong>¿Es tu primera vez?</strong>
+                    Haz tu pre-registro: captura tus datos y recibe tu clave de acceso en tu correo principal.
                 </li>
                 <li>
-                    <strong>Consultar referencia bancaria:</strong>
-                    Una vez pre-registrado, podrás consultar la referencia asignada para realizar tu pago correspondiente.
-                </li>
-                <li>
-                    <strong>Completar tu proceso:</strong>
-                    Si ya cuentas con la clave enviada a tu correo, ingrésala para retomar o completar tu trámite desde donde lo dejaste.
+                    <strong>¿Ya tienes tu clave?</strong>
+                    Inicia sesión con tu CURP y tu clave de acceso para continuar tu trámite desde donde lo dejaste.
                 </li>
             </ul>
 
-            <p class="login-indicacion">Si aún no has iniciado, comienza con tu pre-registro.</p>
+            <p class="login-indicacion">Dentro verás tu avance paso a paso: pre-registro, documentación, referencia de pago, validación del pago, sede y horario, resultados y certificado.</p>
         </div>
     </div>
 
     <div class="login-panel login-panel-formulario">
         <div class="login-tarjeta">
-            <h2 class="login-titulo-formulario">Inicio de sesión</h2>
+            <h2 class="login-titulo-formulario">Iniciar sesión</h2>
 
             {{-- La raíz de Vue envuelve el formulario y no es el formulario:
                  Vue compila los hijos del elemento montado, así que una
@@ -114,7 +110,7 @@
                 <a href="{{ route('persona.preregistro.index') }}">¿Aún no tienes clave? Realiza tu pre-registro.</a>
             </p>
             <p class="login-preregistro login-recuperar">
-                <a href="{{ route('clave.recuperar') }}">Recuperar contraseña</a>
+                <a href="{{ route('clave.recuperar') }}">Recuperar clave de acceso</a>
             </p>
             </form>
             </div>
