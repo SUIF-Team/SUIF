@@ -76,7 +76,7 @@
                     <input id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
                 </div>
                 <div class="admin-sedes-campo">
-                    <label for="estado">Estatus</label>
+                    <label for="estado">Estado</label>
                     <select id="estado" name="estado">
                         <option value="">Todos</option>
                         @foreach($estados as $opcion)
@@ -102,7 +102,7 @@
                             <th>Entrega de documentos</th>
                             <th>Vigencia</th>
                             <th>Solicitudes</th>
-                            <th>Estatus</th>
+                            <th>Estado</th>
                             <th>Acción</th>
                         </tr>
                     </thead>

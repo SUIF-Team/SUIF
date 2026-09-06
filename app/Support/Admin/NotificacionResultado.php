@@ -125,7 +125,7 @@ class NotificacionResultado
             'ruta' => route('admin.pagos.reanudar', ['id' => $id_pago]),
             'etiqueta' => 'Reanudar revisión del pago',
             'titulo_modal' => '¿Reanudar la revisión de este pago?',
-            'texto_modal' => 'El pago volverá a "Por revisar" y podrás validarlo o rechazarlo de nuevo. La resolución anterior se conserva en el historial.',
+            'texto_modal' => 'El pago volverá a "En revisión" y podrás validarlo o rechazarlo de nuevo. La resolución anterior se conserva en el historial.',
         ];
     }
 

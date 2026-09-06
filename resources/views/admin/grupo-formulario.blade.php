@@ -114,8 +114,7 @@
         <div id="admin-sedes-navegacion">
             <back-navigation
                 destino="{{ route('admin.grupos.index') }}"
-                etiqueta="Volver a la bandeja"
-                etiqueta-accesible="Volver a la bandeja de grupos"></back-navigation>
+                etiqueta="Volver a la bandeja"></back-navigation>
         </div>
     </div>
 

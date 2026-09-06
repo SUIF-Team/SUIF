@@ -33,7 +33,7 @@ class PagosPersistentesTest extends TestCase
         $this->assertCount(1, $pagos);
         $this->assertSame('1', $pagos[0]['id']);
         $this->assertSame('Candidata Prueba Ana', $pagos[0]['nombre_completo']);
-        $this->assertSame('Por revisar', $pagos[0]['estatus']);
+        $this->assertSame('En revisión', $pagos[0]['estatus']);
         $this->assertTrue($pagos[0]['puede_revisarse']);
     }
 

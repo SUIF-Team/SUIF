@@ -141,7 +141,11 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
         $this->assertCount(3, $personas);
         $this->assertSame(['50', '20', '11'], array_column($personas, 'id'));
-        $this->assertSame(['Aprobada', 'Pre-registro', 'En revisión'], array_column($personas, 'estado_bandeja'));
+        /* La segunda solicitud está en 'Pre-registro' en el catálogo: la
+           bandeja la presenta como 'En revisión' porque su filtro no ofrece
+           las etapas previas al envío. Los dos valores iguales no son un
+           descuido. Ver ConsultaPreRegistros::etiquetaBandeja(). */
+        $this->assertSame(['Aprobada', 'En revisión', 'En revisión'], array_column($personas, 'estado_bandeja'));
     }
 
     private function crearEsquemaTemporal(): void

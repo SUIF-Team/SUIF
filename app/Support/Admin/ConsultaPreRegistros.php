@@ -325,7 +325,7 @@ class ConsultaPreRegistros
             'curp' => (string) $solicitud->pers_curp,
             'rfc' => (string) $solicitud->pers_rfc,
             'fecha_registro' => $solicitud->pers_fecha_registro.' 00:00:00',
-            'estado_bandeja' => (string) $solicitud->estado_solicitud,
+            'estado_bandeja' => $this->etiquetaBandeja((string) $solicitud->estado_solicitud),
             'clase_estado' => $this->claseEstado((string) $solicitud->estado_solicitud),
         ];
     }
@@ -400,6 +400,20 @@ class ConsultaPreRegistros
                 'documentacion' => 'Pendiente',
             ],
         };
+    }
+
+    /* La bandeja atiende expedientes, no etapas del catálogo. Pre-registro y
+       Documentación son fases previas al envío: se pintan con el mismo badge
+       ámbar que En revisión, pero el filtro sólo ofrece En revisión, Aprobada
+       y Rechazada, así que esas filas quedaban a la vista y fuera de todo
+       filtro. Se presentan con la etiqueta que el filtro sí tiene. El catálogo
+       no se toca: PreRegistroController siembra 'Pre-registro' buscando la
+       fila por nombre, y renombrarlo rompería el alta de toda solicitud. */
+    private function etiquetaBandeja(string $estado_solicitud): string
+    {
+        return in_array($estado_solicitud, ['Pre-registro', 'Documentación'], true)
+            ? 'En revisión'
+            : $estado_solicitud;
     }
 
     private function claseEstado(string $estado_solicitud): string

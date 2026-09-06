@@ -17,9 +17,6 @@ class OrigenBandejaAdmin
             'ruta' => route('admin.personas.index'),
             'etiqueta' => 'Atrás',
             'etiqueta_accesible' => 'Atrás',
-            /* Al cerrar la revisión ya no hay expediente al cual regresar: la
-               pantalla de resultado nombra la bandeja de la que se vino. */
-            'etiqueta_resultado' => 'Volver a la bandeja de pre-registro',
         ];
     }
 }

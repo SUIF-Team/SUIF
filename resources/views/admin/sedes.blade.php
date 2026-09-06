@@ -43,7 +43,7 @@
                     <input id="ubicacion" name="ubicacion" type="search" value="{{ $filtros['ubicacion'] ?? '' }}">
                 </div>
                 <div class="admin-sedes-campo">
-                    <label for="estado">Estatus</label>
+                    <label for="estado">Estado</label>
                     <select id="estado" name="estado">
                         <option value="">Todos</option>
                         <option value="con-cupo" @selected(($filtros['estado'] ?? '') === 'con-cupo')>Con cupo</option>
@@ -67,7 +67,7 @@
                             <th>Ubicación</th>
                             <th>Capacidad</th>
                             <th>Grupos</th>
-                            <th>Estatus</th>
+                            <th>Estado</th>
                             <th>Acción</th>
                         </tr>
                     </thead>

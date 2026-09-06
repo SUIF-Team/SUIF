@@ -56,7 +56,7 @@
                     <input id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
                 </div>
                 <div class="admin-referencias-campo">
-                    <label for="estado">Estatus</label>
+                    <label for="estado">Estado</label>
                     <select id="estado" name="estado" data-filtro-modo="token">
                         <option value="">Todas</option>
                         <option value="disponible" @selected(($filtros['estado'] ?? '') === 'disponible')>Disponibles</option>
@@ -80,7 +80,7 @@
                             <th>Monto</th>
                             <th>Vigencia</th>
                             <th>Formato</th>
-                            <th>Estatus</th>
+                            <th>Estado</th>
                             <th>Asignada a</th>
                         </tr>
                     </thead>

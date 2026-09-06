@@ -187,8 +187,7 @@
         <div id="admin-sedes-navegacion">
             <back-navigation
                 destino="{{ route('admin.convocatorias.index') }}"
-                etiqueta="Volver a la bandeja"
-                etiqueta-accesible="Volver a la bandeja de convocatorias"></back-navigation>
+                etiqueta="Volver a la bandeja"></back-navigation>
         </div>
     </div>
 

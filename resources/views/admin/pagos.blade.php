@@ -25,12 +25,10 @@
 
         @include('admin.partials.bandeja-filtros', [
             'prefijo_filtros' => 'bandeja-pagos',
-            'estados_filtro' => ['Todos', 'Por revisar', 'Aprobado', 'Rechazado'],
+            'estados_filtro' => ['Todos', 'En revisión', 'Aprobado', 'Rechazado'],
         ])
 
-        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="pagos-recibidos-titulo">
-            <h2 id="pagos-recibidos-titulo">Pagos recibidos</h2>
-
+        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-label="Pagos recibidos">
             {{-- La región viva es el conteo y no la lista: con el filtro
                  aplicándose al escribir, releer la bandeja entera en cada
                  pausa no le sirve a nadie. El caso vacío lo anuncia el
@@ -40,7 +38,7 @@
             <div class="admin-bandeja-preregistros-lista">
                 <div class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-encabezados" aria-hidden="true">
                     <span>Persona</span>
-                    <span>Estatus</span>
+                    <span>Estado</span>
                     <span>Acción</span>
                 </div>
 

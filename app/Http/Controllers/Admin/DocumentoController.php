@@ -352,8 +352,6 @@ class DocumentoController extends Controller
         $notificacion = $notificacion_resultado->paraPreRegistro($expediente['persona'], $estados);
         $notificacion = array_merge($notificacion, [
             'ruta_regreso' => $contexto_bandeja['ruta'],
-            'etiqueta_regreso' => $contexto_bandeja['etiqueta_resultado'],
-            'etiqueta_regreso_accesible' => $contexto_bandeja['etiqueta_resultado'],
         ]);
 
         return view('admin.notificacion-resultado', [

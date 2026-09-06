@@ -62,7 +62,7 @@
                     </select>
                 </div>
                 <div class="admin-sedes-campo">
-                    <label for="estatus">Estatus</label>
+                    <label for="estatus">Estado</label>
                     <select id="estatus" name="estatus">
                         <option value="">Todos</option>
                         <option value="activos" @selected(($filtros['estatus'] ?? '') === 'activos')>Con acceso</option>
@@ -92,7 +92,7 @@
                             <th>CURP</th>
                             <th>Tipo</th>
                             <th>Alta</th>
-                            <th>Estatus</th>
+                            <th>Estado</th>
                             <th>Acción</th>
                         </tr>
                     </thead>

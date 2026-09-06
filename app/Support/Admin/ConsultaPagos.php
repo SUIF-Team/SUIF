@@ -179,7 +179,7 @@ class ConsultaPagos
     /**
      * Comprobantes enviados que siguen esperando decisión. Se cuenta sobre la
      * misma consulta de la bandeja para que el indicador del dashboard y lo
-     * que ahí se ve como «Por revisar» no se puedan desincronizar; se resuelve
+     * que ahí se ve como «En revisión» no se puedan desincronizar; se resuelve
      * en SQL porque normalizar cada fila toca el disco.
      */
     public function totalPorValidar(): int
@@ -401,7 +401,7 @@ class ConsultaPagos
         return match ($estado) {
             self::COMPLETADO => 'Aprobado',
             self::DECLINADO => 'Rechazado',
-            default => 'Por revisar',
+            default => 'En revisión',
         };
     }
 
@@ -440,7 +440,7 @@ class ConsultaPagos
         return match ($estado) {
             'Completado', 'Aprobado' => 'admin-preregistro-paso--completado',
             'Rechazado' => 'admin-preregistro-paso--rechazado',
-            'Por revisar', 'En revisión' => 'admin-preregistro-paso--actual',
+            'En revisión' => 'admin-preregistro-paso--actual',
             default => 'admin-preregistro-paso--pendiente',
         };
     }

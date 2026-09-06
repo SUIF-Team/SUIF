@@ -33,9 +33,7 @@
             'estados_filtro' => array_merge(['Todos'], $datos_vista['estados']),
         ])
 
-        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="personas-registradas-listado-titulo">
-            <h2 id="personas-registradas-listado-titulo">Personas</h2>
-
+        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-label="Personas">
             {{-- La región viva es el conteo y no la lista: con el filtro
                  aplicándose al escribir, releer la bandeja entera en cada
                  pausa no le sirve a nadie. El caso vacío lo anuncia el

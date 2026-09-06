@@ -139,8 +139,7 @@
         <div id="admin-referencias-navegacion">
             <back-navigation
                 destino="{{ route('admin.referencias.especiales.index') }}"
-                etiqueta="Volver a las solicitudes"
-                etiqueta-accesible="Volver a las solicitudes"></back-navigation>
+                etiqueta="Volver a la bandeja"></back-navigation>
         </div>
     </div>
 </section>
