@@ -356,6 +356,7 @@
    bloque se centra; el texto de dentro sigue a la izquierda. */
 .admin-referencias-tabla--centrada td {
     text-align: center;
+    vertical-align: middle;
 }
 
 .admin-referencias-celda {
@@ -379,14 +380,17 @@
    el que deja ver el centrado. Estado no aparece a proposito: es una pildora
    suelta, no un dato que tenga que alinearse con el de arriba, y sin ancho
    fijo el td la centra entera. */
-.admin-referencias-tabla--centrada td:nth-child(1) .admin-referencias-celda { width: 21ch; }
+/* La referencia mide 20.7ch y no tiene espacios donde partir: 22ch le dejan un
+   caracter de sobra para que nunca baje de renglon. */
+.admin-referencias-tabla--centrada td:nth-child(1) .admin-referencias-celda { width: 22ch; }
 .admin-referencias-tabla--centrada td:nth-child(2) .admin-referencias-celda { width: 14ch; }
 .admin-referencias-tabla--centrada td:nth-child(3) .admin-referencias-celda { width: 18ch; }
 .admin-referencias-tabla--centrada td:nth-child(4) .admin-referencias-celda { width: 7ch; }
-/* 29ch es el piso de la columna, y lo marca el renglon del CURP (18 caracteres
-   mas la fecha), no el titular: por debajo de eso se parte un dato de formato
-   fijo. Los titulares mas largos si parten renglon, que es lo que se prefiere. */
-.admin-referencias-tabla--centrada td:nth-child(6) .admin-referencias-celda { width: 29ch; }
+/* Con la fecha en su propio renglon el piso de la columna es el CURP solo
+   (18.7ch) y no el CURP mas la fecha (28.6ch): de ahi salen los 9ch que se
+   fueron a Referencia. Un titular largo si parte renglon; es prosa, a
+   diferencia del CURP y la referencia, que son codigos. */
+.admin-referencias-tabla--centrada td:nth-child(6) .admin-referencias-celda { width: 20ch; }
 
 .admin-referencias-tabla-numero {
     color: var(--text-dark);

@@ -141,12 +141,10 @@
                                     <div class="admin-referencias-celda">
                                         @if($referencia['asignada'])
                                             {{ $referencia['titular'] ?: 'Sin nombre registrado' }}
-                                            <small>
-                                                {{ $referencia['curp'] }}
-                                                @if($referencia['fecha_asignacion'])
-                                                    · {{ \Illuminate\Support\Carbon::parse($referencia['fecha_asignacion'])->format('d/m/Y') }}
-                                                @endif
-                                            </small>
+                                            <small>{{ $referencia['curp'] }}</small>
+                                            @if($referencia['fecha_asignacion'])
+                                                <small>{{ \Illuminate\Support\Carbon::parse($referencia['fecha_asignacion'])->format('d/m/Y') }}</small>
+                                            @endif
                                         @else
                                             <span class="admin-referencias-texto-atenuado">—</span>
                                         @endif
