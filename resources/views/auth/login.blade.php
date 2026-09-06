@@ -11,8 +11,8 @@
 <section class="login-seccion" aria-labelledby="login-titulo">
     <div class="login-panel login-panel-informacion">
         <div class="login-informacion-contenido">
-            <p class="login-bienvenida">Bienvenido a</p>
-            <h1 id="login-titulo" class="login-titulo-proceso">SUIF — Sistema Integral de Certificaciones</h1>
+            <p class="login-bienvenida">Bienvenido al</p>
+            <h1 id="login-titulo" class="login-titulo-proceso">Sistema de la Unidad de Inteligencia Financiera</h1>
 
             <span class="login-divisor" aria-hidden="true"></span>
 
