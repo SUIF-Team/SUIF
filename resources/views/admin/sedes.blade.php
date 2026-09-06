@@ -59,7 +59,7 @@
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de sedes">
-            <div class="admin-sedes-tabla-responsive">
+            <div class="admin-sedes-tabla-responsive admin-tabla-bandeja">
                 <table id="admin-sedes-tabla" class="admin-sedes-tabla admin-sedes-tabla--centrada">
                     <thead>
                         <tr>

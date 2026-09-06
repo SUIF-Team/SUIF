@@ -72,7 +72,7 @@
         </section>
 
         <section class="admin-referencias-tarjeta admin-referencias-tabla-contenedor" aria-label="Catálogo de referencias">
-            <div class="admin-referencias-tabla-responsive admin-referencias-tabla-responsive--bandeja">
+            <div class="admin-referencias-tabla-responsive admin-tabla-bandeja">
                 <table id="admin-referencias-tabla" class="admin-referencias-tabla admin-referencias-tabla--centrada">
                     <thead>
                         <tr>

@@ -904,3 +904,54 @@
     margin: 0.35rem 0 0;
     padding-left: 1.15rem;
 }
+
+
+/* Bandeja: acota el alto de una tabla larga y deja su encabezado fijo. Se pone
+   en el envoltorio con overflow-x de cada familia de tabla, junto a su clase
+   propia. Vive aqui, y no en el CSS de una pantalla, porque la usan sedes y
+   referencias y son familias de tabla distintas.
+
+   Los valores son los de .admin-bandeja-preregistros-lista, que es la bandeja
+   que estandarizo el panel; aquella no puede reutilizarse tal cual porque no
+   es una tabla sino una rejilla de divs. */
+.admin-tabla-bandeja {
+    max-height: 28rem;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.admin-tabla-bandeja::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+.admin-tabla-bandeja::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: #f1f5f9;
+}
+
+.admin-tabla-bandeja::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #cbd5e1;
+}
+
+/* El fondo opaco del th lo pone cada familia; aqui solo se fija arriba. Con
+   border-collapse: collapse el borde de una celda pegajosa pertenece a la
+   rejilla colapsada y se va con el scroll, por eso la linea se dibuja dentro
+   de la celda con un inset. El selector lleva dos clases a proposito: asi gana
+   al border-bottom de la familia sin depender del orden de carga. */
+.admin-tabla-bandeja thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--border-light);
+}
+
+/* Mismo corte que la bandeja de preregistros: el envoltorio ya captura el
+   gesto horizontal, y anidarle tambien el vertical atrapa el scroll de la
+   pagina. */
+@media (max-width: 500px) {
+    .admin-tabla-bandeja {
+        max-height: none;
+    }
+}

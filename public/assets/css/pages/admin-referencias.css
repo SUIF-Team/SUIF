@@ -286,40 +286,6 @@
     overflow-x: auto;
 }
 
-/* Misma bandeja que .admin-bandeja-preregistros-lista. Solo la usa el
-   catalogo: las solicitudes especiales caben enteras en pantalla. */
-.admin-referencias-tabla-responsive--bandeja {
-    max-height: 28rem;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-}
-
-.admin-referencias-tabla-responsive--bandeja::-webkit-scrollbar {
-    width: 0.5rem;
-}
-
-.admin-referencias-tabla-responsive--bandeja::-webkit-scrollbar-track {
-    border-radius: 999px;
-    background: #f1f5f9;
-}
-
-.admin-referencias-tabla-responsive--bandeja::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: #cbd5e1;
-}
-
-/* El fondo opaco del th ya esta mas abajo; aqui solo lo fijamos arriba.
-   Con border-collapse: collapse el borde de una celda pegajosa pertenece a
-   la rejilla colapsada y se va con el scroll, por eso la linea se dibuja
-   dentro de la celda con un inset. */
-.admin-referencias-tabla-responsive--bandeja thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    border-bottom: 0;
-    box-shadow: inset 0 -1px 0 var(--border-light);
-}
-
 .admin-referencias-tabla {
     width: 100%;
     border-collapse: collapse;
@@ -466,15 +432,6 @@
 
     .admin-referencias-boton {
         justify-content: center;
-    }
-}
-
-/* Mismo corte que la bandeja de preregistros: el contenedor ya captura el
-   gesto horizontal, y anidarle tambien el vertical atrapa el scroll de la
-   pagina. */
-@media (max-width: 500px) {
-    .admin-referencias-tabla-responsive--bandeja {
-        max-height: none;
     }
 }
 
