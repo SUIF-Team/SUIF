@@ -12,7 +12,7 @@
     <div class="login-panel login-panel-informacion">
         <div class="login-informacion-contenido">
             <p class="login-bienvenida">Bienvenido al</p>
-            <h1 id="login-titulo" class="login-titulo-proceso">Sistema de la Unidad de Inteligencia Financiera</h1>
+            <h1 id="login-titulo" class="login-titulo-proceso">Proceso de Certificación UIF</h1>
 
             <span class="login-divisor" aria-hidden="true"></span>
 
