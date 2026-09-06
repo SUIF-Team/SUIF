@@ -16,8 +16,8 @@
             <p class="aviso-banner__texto">
                 Este sistema trata datos personales para el trámite de certificación y usa una cookie
                 necesaria para tu sesión. Consulta el
-                <a href="{{ route('aviso-privacidad') }}">aviso de privacidad integral</a>
-                o su <a href="{{ route('aviso-privacidad.simplificado') }}">versión simplificada</a>.
+                <a href="{{ config('suif.enlaces.aviso_privacidad') }}" target="_blank" rel="noopener noreferrer">aviso de privacidad integral</a>
+                o su <a href="{{ config('suif.enlaces.aviso_privacidad_simplificado') }}" target="_blank" rel="noopener noreferrer">versión simplificada</a>.
             </p>
 
             <button type="button" class="aviso-banner__boton" data-aviso-privacidad-cerrar>

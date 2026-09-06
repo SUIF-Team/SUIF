@@ -1,8 +1,8 @@
 {{--
     Aviso de privacidad simplificado.
     Artículo 22 de la LGPDPPSO: lleva las fracciones I, IV, VII y VIII del
-    artículo 21 y remite al aviso integral. Se reutiliza en su propia página y
-    en el formulario de pre-registro, que es donde se recaban los datos.
+    artículo 21 y remite al aviso integral, que publica la FCA en PDF. Se
+    muestra en el formulario de pre-registro, que es donde se recaban los datos.
 --}}
 <section class="aviso-simple" aria-labelledby="aviso-simple-titulo">
     <h2 id="aviso-simple-titulo" class="aviso-simple__titulo">Aviso de privacidad simplificado</h2>
@@ -34,7 +34,7 @@
     </p>--}}
 
     <p class="aviso-simple__enlace">
-        Consulta el <a href="{{ route('aviso-privacidad') }}" target="_blank" rel="noopener noreferrer">aviso de privacidad integral</a>
+        Consulta el <a href="{{ config('suif.enlaces.aviso_privacidad') }}" target="_blank" rel="noopener noreferrer">aviso de privacidad integral</a>
         para el detalle completo de datos, finalidades, fundamento y plazos.
     </p> 
 </section>
