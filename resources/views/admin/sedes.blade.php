@@ -60,7 +60,7 @@
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de sedes">
             <div class="admin-sedes-tabla-responsive">
-                <table id="admin-sedes-tabla" class="admin-sedes-tabla">
+                <table id="admin-sedes-tabla" class="admin-sedes-tabla admin-sedes-tabla--centrada">
                     <thead>
                         <tr>
                             <th>Sede</th>
@@ -80,7 +80,7 @@
                                 <td>{{ $sede['direccion'] }}</td>
                                 <td>
                                     <strong>{{ $sede['ocupados'] }} / {{ $sede['cupo'] * count($sede['horarios']) }}</strong>
-                                    <small>{{ $sede['cupo'] }} por aplicación · {{ $sede['disponibles'] }} disponibles</small>
+                                    <small>{{ $sede['cupo'] }} por aplicación</small>
                                 </td>
                                 {{-- La programación se administra en el módulo Grupos; aquí
                                      sólo interesa cuántos tiene registrados la sede. --}}

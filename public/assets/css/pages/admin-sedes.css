@@ -222,6 +222,16 @@
     text-align: center;
 }
 
+/* Sede y Ubicacion se quedan a la izquierda: son texto libre y de largo
+   variable, que se lee mejor alineado. De Capacidad en adelante son dos cifras,
+   una pildora y una accion, cortas y de largo parejo, que se leen mejor
+   centradas bajo su encabezado, que ya iba centrado. El renglon de tabla vacia
+   es un td con colspan en primera posicion, asi que esta regla no lo alcanza.
+   El centrado vertical ya lo da el vertical-align: middle de arriba. */
+.admin-sedes-tabla--centrada td:nth-child(n+3) {
+    text-align: center;
+}
+
 .admin-sedes-tabla tbody tr:last-child td { border-bottom: 0; }
 .admin-sedes-tabla tbody tr:hover { background: #f8fafc; }
 .admin-sedes-tabla-nombre { color: var(--text-dark); font-weight: 600; }
