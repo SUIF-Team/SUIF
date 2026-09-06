@@ -362,6 +362,11 @@
     display: inline-block;
     max-width: 100%;
     text-align: left;
+    /* La referencia es una cadena sin espacios: sin esto no encuentra donde
+       partir y se derrama encima de la columna de al lado. Va break-word y no
+       anywhere: anywhere ademas encoge el ancho minimo de la columna y la
+       tabla llegaba a partir la pildora de Estado en tres renglones. */
+    overflow-wrap: break-word;
 }
 
 /* El bloque tiene que medir lo mismo en todas las filas: si cada celda se
@@ -371,13 +376,17 @@
    parte renglon dentro del bloque en vez de ensancharlo y descolocar su fila.
    Anchos medidos sobre el contenido mas largo de cada columna (1ch = 7.78px
    en Open Sans 14px); la tabla al 100% reparte el sobrante y es ese sobrante
-   el que deja ver el centrado. */
-.admin-referencias-tabla--centrada td:nth-child(1) .admin-referencias-celda { width: 11ch; }
-.admin-referencias-tabla--centrada td:nth-child(2) .admin-referencias-celda { width: 13ch; }
+   el que deja ver el centrado. Estado no aparece a proposito: es una pildora
+   suelta, no un dato que tenga que alinearse con el de arriba, y sin ancho
+   fijo el td la centra entera. */
+.admin-referencias-tabla--centrada td:nth-child(1) .admin-referencias-celda { width: 21ch; }
+.admin-referencias-tabla--centrada td:nth-child(2) .admin-referencias-celda { width: 14ch; }
 .admin-referencias-tabla--centrada td:nth-child(3) .admin-referencias-celda { width: 18ch; }
 .admin-referencias-tabla--centrada td:nth-child(4) .admin-referencias-celda { width: 7ch; }
-.admin-referencias-tabla--centrada td:nth-child(5) .admin-referencias-celda { width: 12ch; }
-.admin-referencias-tabla--centrada td:nth-child(6) .admin-referencias-celda { width: 30ch; }
+/* 29ch es el piso de la columna, y lo marca el renglon del CURP (18 caracteres
+   mas la fecha), no el titular: por debajo de eso se parte un dato de formato
+   fijo. Los titulares mas largos si parten renglon, que es lo que se prefiere. */
+.admin-referencias-tabla--centrada td:nth-child(6) .admin-referencias-celda { width: 29ch; }
 
 .admin-referencias-tabla-numero {
     color: var(--text-dark);
