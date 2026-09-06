@@ -66,7 +66,7 @@
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de grupos">
-            <div class="admin-sedes-tabla-responsive">
+            <div class="admin-sedes-tabla-responsive admin-tabla-bandeja">
                 <table id="admin-grupos-tabla" class="admin-sedes-tabla">
                     <thead>
                         <tr>

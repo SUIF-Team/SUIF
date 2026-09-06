@@ -84,7 +84,7 @@
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de administradores">
-            <div class="admin-sedes-tabla-responsive">
+            <div class="admin-sedes-tabla-responsive admin-tabla-bandeja">
                 <table id="admin-administradores-tabla" class="admin-sedes-tabla">
                     <thead>
                         <tr>
