@@ -97,6 +97,19 @@
     margin: 2rem 0 0;
 }
 
+/* Pie del panel: es la salida de emergencia, no parte del instructivo, asi
+   que va mas chica y sin el blanco pleno de los textos anteriores. */
+.login-soporte {
+    margin: 1.25rem 0 0;
+    color: #dfe4e8;
+    font-size: 0.9rem;
+}
+
+.login-soporte a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
 .login-panel-formulario {
     justify-content: center;
     background-color: rgba(248, 249, 250, 0.94);

@@ -32,6 +32,14 @@
             </ul>
 
             <p class="login-indicacion">Dentro verás tu avance paso a paso: pre-registro, documentación, referencia de pago, validación del pago, sede y horario, resultados y certificado.</p>
+
+            {{-- El correo de soporte vive en la configuración y no aquí: es el
+                 mismo buzón del resto del sistema y cambia con el área, no con
+                 la pantalla. --}}
+            <p class="login-soporte">
+                ¿No recibiste tu clave o no puedes entrar? Revisa tu bandeja de correo no deseado o escribe a
+                <a href="mailto:{{ config('suif.soporte_correo') }}">{{ config('suif.soporte_correo') }}</a>.
+            </p>
         </div>
     </div>
 
