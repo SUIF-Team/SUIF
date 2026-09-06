@@ -22,8 +22,15 @@
     gap: 0.35rem;
 }
 
-.refesp-campo--ancho {
+/* Renglón compartido dentro de la rejilla del pagador: ocupa la fila entera y
+   la parte en columnas iguales. La razón social y el correo del CFDI son los
+   dos campos largos, y sueltos en la rejilla cada uno se llevaba un renglón
+   completo. Con auto-fit se apilan solos cuando la tarjeta se angosta. */
+.refesp-fila {
     grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem 1.25rem;
 }
 
 .refesp-campo label {

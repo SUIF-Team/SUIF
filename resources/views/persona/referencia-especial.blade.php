@@ -68,22 +68,43 @@
 
         <div class="referencia-tarjeta">
             <h1>Datos para la expedición de la referencia especial</h1>
-            <p class="referencia-muted">
+            <p class="pr-notice">
                 El pago debe provenir de la cuenta de quien aquí se registra: el comprobante fiscal se
                 emite a su nombre y no puede facturarse a terceros.
             </p>
 
             <div class="refesp-grid">
-                <div class="refesp-campo refesp-campo--ancho">
-                    <label for="razon_social">Nombre / razón social del tercero que realizará el pago *</label>
-                    <input
-                        id="razon_social"
-                        name="razon_social"
-                        type="text"
-                        maxlength="35"
-                        required
-                        placeholder="Ingrese nombre o razón social"
-                        v-model="pagador.razonSocial">
+                {{-- Los dos datos largos del pagador van juntos y a mitades:
+                     sueltos en la rejilla, cada uno se comía un renglón entero. --}}
+                <div class="refesp-fila">
+                    <div class="refesp-campo">
+                        <label for="razon_social">Nombre / razón social del tercero que realizará el pago *</label>
+                        <input
+                            id="razon_social"
+                            name="razon_social"
+                            type="text"
+                            maxlength="35"
+                            required
+                            placeholder="Ingrese nombre o razón social"
+                            v-model="pagador.razonSocial">
+                    </div>
+
+                    <div class="refesp-campo">
+                        <label for="correo_cfdi">Correo para enviar el CFDI *</label>
+                        <input
+                            id="correo_cfdi"
+                            name="correo_cfdi"
+                            type="email"
+                            maxlength="65"
+                            required
+                            v-model="pagador.correoCfdi"
+                            @input="normalizarCorreo"
+                            aria-describedby="correo_cfdi-ayuda">
+                        <p id="correo_cfdi-ayuda" class="refesp-ayuda">
+                            Puede ser distinto del correo con el que entras al sistema.
+                        </p>
+                        <p class="refesp-error" role="alert" v-if="avisoCorreo" v-cloak>@{{ avisoCorreo }}</p>
+                    </div>
                 </div>
 
                 <div class="refesp-campo">
@@ -135,23 +156,6 @@
                         v-model="pagador.codigoPostal"
                         @input="normalizarCodigoPostal">
                     <p class="refesp-error" role="alert" v-if="avisoCodigoPostal" v-cloak>@{{ avisoCodigoPostal }}</p>
-                </div>
-
-                <div class="refesp-campo refesp-campo--ancho">
-                    <label for="correo_cfdi">Correo para enviar el CFDI *</label>
-                    <input
-                        id="correo_cfdi"
-                        name="correo_cfdi"
-                        type="email"
-                        maxlength="65"
-                        required
-                        v-model="pagador.correoCfdi"
-                        @input="normalizarCorreo"
-                        aria-describedby="correo_cfdi-ayuda">
-                    <p id="correo_cfdi-ayuda" class="refesp-ayuda">
-                        Puede ser distinto del correo con el que entras al sistema.
-                    </p>
-                    <p class="refesp-error" role="alert" v-if="avisoCorreo" v-cloak>@{{ avisoCorreo }}</p>
                 </div>
             </div>
 
@@ -245,7 +249,7 @@
                 </fieldset>
             </div>
 
-            <p class="referencia-muted refesp-total pr-notice" v-cloak>
+            <p class="refesp-total pr-notice" v-cloak>
                 Total a pagar: <strong>$@{{ totalFormateado }} @{{ moneda }}</strong>
                 (@{{ participantes.length }} × $@{{ cuotaFormateada }}).
                 La Dirección emitirá la referencia por ese importe.
