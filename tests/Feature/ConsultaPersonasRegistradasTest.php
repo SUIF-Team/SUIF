@@ -144,7 +144,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
         /* La segunda solicitud está en 'Pre-registro' en el catálogo: la
            bandeja la presenta como 'En revisión' porque su filtro no ofrece
            las etapas previas al envío. Los dos valores iguales no son un
-           descuido. Ver ConsultaPreRegistros::etiquetaBandeja(). */
+           descuido. Ver ConsultaPreRegistros::etiquetaEstado(). */
         $this->assertSame(['Aprobada', 'En revisión', 'En revisión'], array_column($personas, 'estado_bandeja'));
     }
 

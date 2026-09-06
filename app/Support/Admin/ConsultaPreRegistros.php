@@ -325,7 +325,7 @@ class ConsultaPreRegistros
             'curp' => (string) $solicitud->pers_curp,
             'rfc' => (string) $solicitud->pers_rfc,
             'fecha_registro' => $solicitud->pers_fecha_registro.' 00:00:00',
-            'estado_bandeja' => $this->etiquetaBandeja((string) $solicitud->estado_solicitud),
+            'estado_bandeja' => $this->etiquetaEstado((string) $solicitud->estado_solicitud),
             'clase_estado' => $this->claseEstado((string) $solicitud->estado_solicitud),
         ];
     }
@@ -395,21 +395,26 @@ class ConsultaPreRegistros
                 'documentacion' => 'En revisión',
             ],
             default => [
-                'general' => $estado_solicitud,
+                'general' => $this->etiquetaEstado($estado_solicitud),
                 'preregistro' => 'Completado',
                 'documentacion' => 'Pendiente',
             ],
         };
     }
 
-    /* La bandeja atiende expedientes, no etapas del catálogo. Pre-registro y
-       Documentación son fases previas al envío: se pintan con el mismo badge
-       ámbar que En revisión, pero el filtro sólo ofrece En revisión, Aprobada
-       y Rechazada, así que esas filas quedaban a la vista y fuera de todo
-       filtro. Se presentan con la etiqueta que el filtro sí tiene. El catálogo
-       no se toca: PreRegistroController siembra 'Pre-registro' buscando la
-       fila por nombre, y renombrarlo rompería el alta de toda solicitud. */
-    private function etiquetaBandeja(string $estado_solicitud): string
+    /* El administrador atiende expedientes, no etapas del catálogo.
+       Pre-registro y Documentación son fases previas al envío: se pintan con
+       el mismo badge ámbar que En revisión, pero el filtro de la bandeja sólo
+       ofrece En revisión, Aprobada y Rechazada, así que esas filas quedaban a
+       la vista y fuera de todo filtro. Se presentan con la etiqueta que el
+       filtro sí tiene, y la usan por igual la bandeja y el expediente para que
+       una misma solicitud no cambie de nombre al abrirla.
+
+       El catálogo no se toca: PreRegistroController siembra 'Pre-registro'
+       buscando la fila por nombre, y renombrarlo rompería el alta de toda
+       solicitud. Ninguna comparación del flujo distingue Pre-registro de En
+       revisión: todas buscan Aprobada, Rechazada o Cancelada. */
+    private function etiquetaEstado(string $estado_solicitud): string
     {
         return in_array($estado_solicitud, ['Pre-registro', 'Documentación'], true)
             ? 'En revisión'
