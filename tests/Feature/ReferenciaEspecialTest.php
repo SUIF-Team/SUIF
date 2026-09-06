@@ -80,8 +80,11 @@ class ReferenciaEspecialTest extends TestCase
         ]);
 
         DB::table('tipo_comunicacion')->insert([
-            'tico_id_tipo_comunicacion' => 1,
-            'tico_tipo_comunicacion' => 'Correo principal',
+            ['tico_id_tipo_comunicacion' => 1, 'tico_tipo_comunicacion' => 'Correo principal'],
+            /* El correo del CFDI es otro tipo de comunicación: lo siembra
+               suif_comprobante_fiscal.sql y sin él no se puede pedir la
+               referencia especial. */
+            ['tico_id_tipo_comunicacion' => 4, 'tico_tipo_comunicacion' => 'Correo facturación'],
         ]);
 
         $this->sembrarSolicitud(self::SOLICITANTE, 'Aprobada');
@@ -124,6 +127,138 @@ class ReferenciaEspecialTest extends TestCase
 
         $this->assertSame('Empresa de Ejemplo S.A.', $fiscal->dafi_razon_social);
         $this->assertSame((int) $fiscal->dafi_id_dato_fiscal, (int) $pago->pago_id_dato_fiscal);
+    }
+
+    /**
+     * El CFDI se le manda al pagador, pero COMUNICACION cuelga de PERSONA. El
+     * correo se guarda en la persona de la solicitud más antigua del pago, que
+     * es por la que ConsultaPagos::solicitudesCfdi() representa al grupo: si
+     * alguien cambia esa regla de representante, esta prueba truena antes de que
+     * la DEC descubra en el cierre de mes que le faltan correos.
+     */
+    public function test_el_correo_del_cfdi_queda_en_la_solicitud_representante(): void
+    {
+        $id_pago = $this->solicitar();
+
+        $representante = (int) DB::table('solicitud')
+            ->where('soli_id_pago', $id_pago)
+            ->min('soli_id_solicitud');
+
+        $correos = DB::table('comunicacion')
+            ->where('comu_id_tipo_comunicacion', 4)
+            ->get();
+
+        /* Un renglón por pago y no uno por participante: los demás conservan el
+           correo de facturación que traigan de otra convocatoria. */
+        $this->assertCount(1, $correos);
+        $this->assertSame('facturas@empresa.mx', $correos[0]->comu_descripcion);
+        $this->assertSame(
+            (int) DB::table('solicitud')->where('soli_id_solicitud', $representante)->value('soli_id_persona'),
+            (int) $correos[0]->comu_id_persona
+        );
+    }
+
+    public function test_sin_correo_de_facturacion_no_se_registra_la_solicitud(): void
+    {
+        $datos = $this->formulario();
+        unset($datos['correo_cfdi']);
+
+        $this->actingAs($this->usuario(self::SOLICITANTE))
+            ->post(route('persona.referencia.especial.store'), $datos)
+            ->assertSessionHasErrors('correo_cfdi');
+
+        $this->assertSame(0, DB::table('pago')->count());
+    }
+
+    public function test_el_correo_del_cfdi_se_guarda_en_minusculas(): void
+    {
+        $datos = $this->formulario();
+        $datos['correo_cfdi'] = 'Facturas@Empresa.MX';
+
+        $this->actingAs($this->usuario(self::SOLICITANTE))
+            ->post(route('persona.referencia.especial.store'), $datos);
+
+        $this->assertSame(
+            'facturas@empresa.mx',
+            DB::table('comunicacion')->where('comu_id_tipo_comunicacion', 4)->value('comu_descripcion')
+        );
+    }
+
+    public function test_el_autollenado_devuelve_el_nombre_registrado(): void
+    {
+        $this->actingAs($this->usuario(self::SOLICITANTE))
+            ->getJson(route('persona.referencia.especial.persona', ['curp' => self::CURP_COMPANERA]))
+            ->assertOk()
+            ->assertJson([
+                'encontrada' => true,
+                'persona' => [
+                    'curp' => self::CURP_COMPANERA,
+                    'nombre' => 'Pablo',
+                    'primer_apellido' => 'Hernández',
+                    'segundo_apellido' => 'Juárez',
+                ],
+            ]);
+    }
+
+    /**
+     * El motivo del rechazo es el trámite de otra persona: al teclear sólo se
+     * dice que no aplica. El motivo exacto sigue apareciendo al enviar, cuando
+     * quien lo lee responde por la lista completa.
+     */
+    public function test_el_autollenado_calla_el_motivo_del_rechazo(): void
+    {
+        /* Una CURP que no existe y una que ni siquiera tiene forma de CURP. */
+        foreach (['XXXX000000XXXXXX00', 'no-es-una-curp'] as $curp) {
+            $this->actingAs($this->usuario(self::SOLICITANTE))
+                ->getJson(route('persona.referencia.especial.persona', ['curp' => $curp]))
+                ->assertOk()
+                ->assertExactJson(['encontrada' => false]);
+        }
+
+        /* Y una que existe pero ya tiene su referencia: se calla igual, sin
+           decir en qué punto del trámite va esa persona. */
+        $id_pago = DB::table('pago')->insertGetId([
+            'pago_referencia_bancaria' => self::REFERENCIA_INDIVIDUAL,
+            'pago_referencia_bancaria_path' => 'catalogo/individual.pdf',
+            'pago_monto_pagado' => 7000,
+        ], 'pago_id_pago');
+
+        DB::table('solicitud')
+            ->where('soli_id_persona', $this->idPersona(self::COMPANERA))
+            ->update(['soli_id_pago' => $id_pago]);
+
+        $this->actingAs($this->usuario(self::SOLICITANTE))
+            ->getJson(route('persona.referencia.especial.persona', ['curp' => self::CURP_COMPANERA]))
+            ->assertOk()
+            ->assertExactJson(['encontrada' => false]);
+    }
+
+    /**
+     * Quien ya tiene su referencia no está armando ninguna lista, así que
+     * tampoco tiene por qué preguntar nombres.
+     */
+    public function test_el_autollenado_se_cierra_con_la_referencia_ya_asignada(): void
+    {
+        $id_pago = DB::table('pago')->insertGetId([
+            'pago_referencia_bancaria' => self::REFERENCIA_INDIVIDUAL,
+            'pago_referencia_bancaria_path' => 'catalogo/individual.pdf',
+            'pago_monto_pagado' => 7000,
+        ], 'pago_id_pago');
+
+        DB::table('solicitud')
+            ->where('soli_id_persona', $this->idPersona(self::SOLICITANTE))
+            ->update(['soli_id_pago' => $id_pago]);
+
+        $this->actingAs($this->usuario(self::SOLICITANTE))
+            ->getJson(route('persona.referencia.especial.persona', ['curp' => self::CURP_COMPANERA]))
+            ->assertOk()
+            ->assertExactJson(['encontrada' => false]);
+    }
+
+    public function test_el_autollenado_exige_sesion(): void
+    {
+        $this->getJson(route('persona.referencia.especial.persona', ['curp' => self::CURP_COMPANERA]))
+            ->assertUnauthorized();
     }
 
     /**
@@ -395,6 +530,7 @@ class ReferenciaEspecialTest extends TestCase
             'regimen_fiscal' => 1,
             'codigo_postal' => '01000',
             'rfc' => 'EEJ860101AB1',
+            'correo_cfdi' => 'facturas@empresa.mx',
             'participantes' => [
                 [
                     'curp' => self::CURP_SOLICITANTE,

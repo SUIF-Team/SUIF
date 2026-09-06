@@ -9,6 +9,11 @@
     valida exactamente lo mismo que Vue: aquí sólo se adelantan los avisos y se
     apaga el botón.
 
+    De cada persona se teclea nada más la CURP: el nombre y los apellidos los
+    trae el servidor y sus campos van de sólo lectura, como los de quien
+    solicita. Antes se capturaban a mano y se cotejaban contra la base al
+    enviar, así que un acento de más echaba abajo la lista entera al final.
+
     La confirmación es un diálogo porque el envío no tiene vuelta atrás: liga a
     todos los participantes al mismo pago.
 --}}
@@ -41,7 +46,10 @@
     {{-- La raíz de Vue es el contenedor y no el formulario: Vue compila los
          hijos del elemento montado, así que una directiva puesta en él mismo
          —@submit.prevent, por ejemplo— nunca llegaría a aplicarse. --}}
-    <div id="referencia-especial-app" data-vista='@json($vista)'>
+    <div
+        id="referencia-especial-app"
+        data-vista='@json($vista)'
+        data-buscar-url="{{ route('persona.referencia.especial.persona') }}">
     {{-- Lo que rechace el servidor —una CURP que ya va en otra solicitud— se
          dice aquí sin recargar: la lista de participantes es larga y volver a
          recorrerla por un dato repetido era el peor momento de la pantalla. --}}
@@ -128,6 +136,23 @@
                         @input="normalizarCodigoPostal">
                     <p class="refesp-error" role="alert" v-if="avisoCodigoPostal" v-cloak>@{{ avisoCodigoPostal }}</p>
                 </div>
+
+                <div class="refesp-campo refesp-campo--ancho">
+                    <label for="correo_cfdi">Correo para enviar el CFDI *</label>
+                    <input
+                        id="correo_cfdi"
+                        name="correo_cfdi"
+                        type="email"
+                        maxlength="65"
+                        required
+                        v-model="pagador.correoCfdi"
+                        @input="normalizarCorreo"
+                        aria-describedby="correo_cfdi-ayuda">
+                    <p id="correo_cfdi-ayuda" class="refesp-ayuda">
+                        Puede ser distinto del correo con el que entras al sistema.
+                    </p>
+                    <p class="refesp-error" role="alert" v-if="avisoCorreo" v-cloak>@{{ avisoCorreo }}</p>
+                </div>
             </div>
 
             <h2 class="refesp-subtitulo" id="refesp-participantes-titulo">
@@ -140,14 +165,14 @@
                     class="refesp-contador__boton"
                     :disabled="participantes.length <= 1"
                     @click="quitarUltimo"
-                    aria-label="Quitar el último participante">−</button>
+                    aria-label="Quitar la última persona">−</button>
                 <output class="refesp-contador__valor" aria-live="polite">@{{ participantes.length }}</output>
                 <button
                     type="button"
                     class="refesp-contador__boton"
                     :disabled="participantes.length >= maximo"
                     @click="agregar()"
-                    aria-label="Agregar un participante">+</button>
+                    aria-label="Agregar una persona">+</button>
             </div>
 
             <p class="refesp-error" role="alert" v-if="avisoDuplicados" v-cloak>@{{ avisoDuplicados }}</p>
@@ -155,7 +180,7 @@
             <div class="refesp-personas" v-cloak aria-labelledby="refesp-participantes-titulo">
                 <fieldset class="refesp-persona" v-for="(persona, indice) in participantes" :key="indice">
                     <legend class="refesp-persona__legend">
-                        Participante @{{ indice + 1 }}<span v-if="indice === 0"> (tú)</span>
+                        Persona @{{ indice + 1 }}<span v-if="indice === 0"> (tú)</span>
                     </legend>
 
                     <div class="refesp-campo">
@@ -179,7 +204,7 @@
                             type="text"
                             maxlength="45"
                             required
-                            :readonly="indice === 0"
+                            readonly
                             v-model="persona.nombre">
                     </div>
 
@@ -191,7 +216,7 @@
                             type="text"
                             maxlength="45"
                             required
-                            :readonly="indice === 0"
+                            readonly
                             v-model="persona.primer_apellido">
                     </div>
 
@@ -203,7 +228,7 @@
                             type="text"
                             maxlength="45"
                             required
-                            :readonly="indice === 0"
+                            readonly
                             v-model="persona.segundo_apellido">
                     </div>
 
@@ -212,35 +237,15 @@
                         class="refesp-persona__quitar"
                         v-if="indice > 0"
                         @click="quitar(indice)"
-                        :aria-label="'Quitar al participante ' + (indice + 1)">
+                        :aria-label="'Quitar a la persona ' + (indice + 1)">
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
 
                     <p class="refesp-error" role="alert" v-if="avisoPersona(persona)">@{{ avisoPersona(persona) }}</p>
                 </fieldset>
-
-                <div class="refesp-agregar">
-                    <label class="refesp-agregar__label" for="refesp-nueva-curp">Agregar persona…</label>
-                    <input
-                        id="refesp-nueva-curp"
-                        type="text"
-                        maxlength="18"
-                        placeholder="CURP del participante (opcional)"
-                        v-model="nuevaCurp"
-                        :disabled="participantes.length >= maximo"
-                        @keydown.enter.prevent="agregar(nuevaCurp)">
-                    <button
-                        type="button"
-                        class="refesp-agregar__boton"
-                        :disabled="participantes.length >= maximo"
-                        @click="agregar(nuevaCurp)"
-                        aria-label="Agregar participante">
-                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                    </button>
-                </div>
             </div>
 
-            <p class="referencia-muted refesp-total" v-cloak>
+            <p class="referencia-muted refesp-total pr-notice" v-cloak>
                 Total a pagar: <strong>$@{{ totalFormateado }} @{{ moneda }}</strong>
                 (@{{ participantes.length }} × $@{{ cuotaFormateada }}).
                 La Dirección emitirá la referencia por ese importe.
@@ -273,8 +278,12 @@
                         <dd>@{{ pagador.razonSocial }}</dd>
                     </div>
                     <div>
-                        <dt>Cantidad de participantes</dt>
+                        <dt>Cantidad de personas</dt>
                         <dd>@{{ participantes.length }}</dd>
+                    </div>
+                    <div>
+                        <dt>Correo para el CFDI</dt>
+                        <dd>@{{ pagador.correoCfdi }}</dd>
                     </div>
                 </dl>
 

@@ -8,6 +8,7 @@ use App\Servicios\CatalogoReferencias;
 use App\Servicios\ComprobanteFiscal;
 use App\Servicios\ReferenciaEspecial;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -133,6 +134,11 @@ class ReferenciaController extends Controller
                     'regimenFiscal' => (string) old('regimen_fiscal', ''),
                     'codigoPostal' => old('codigo_postal', ''),
                     'rfc' => old('rfc', ''),
+                    /* No se sugiere el correo de la cuenta, como sí hace
+                       persona/facturacion: aquí el CFDI es de un tercero y
+                       prellenarlo invita a mandarle la factura de la empresa al
+                       buzón personal de quien capturó. */
+                    'correoCfdi' => old('correo_cfdi', ''),
                 ],
                 'participantes' => $this->participantesCapturados($avance),
                 'minimo' => ReferenciaEspecial::MINIMO_PARTICIPANTES,
@@ -152,6 +158,7 @@ class ReferenciaController extends Controller
             'razon_social' => trim((string) $request->input('razon_social')),
             'rfc' => mb_strtoupper(trim((string) $request->input('rfc')), 'UTF-8'),
             'codigo_postal' => trim((string) $request->input('codigo_postal')),
+            'correo_cfdi' => mb_strtolower(trim((string) $request->input('correo_cfdi')), 'UTF-8'),
         ]);
 
         /* Mismas reglas que persona/facturacion: es el mismo renglón de
@@ -167,6 +174,9 @@ class ReferenciaController extends Controller
                 'regex:/^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/u',
                 $request->input('persona_moral') === '1' ? 'size:12' : 'size:13',
             ],
+            /* El 65 sale de COMUNICACION.COMU_DESCRIPCION, igual que en
+               persona/facturacion. */
+            'correo_cfdi' => ['required', 'email', 'max:65'],
             'participantes' => [
                 'required',
                 'array',
@@ -190,6 +200,9 @@ class ReferenciaController extends Controller
             'rfc.required' => 'Escribe el RFC de quien realizará el pago.',
             'rfc.size' => 'El RFC de una persona moral tiene 12 caracteres y el de una persona física 13.',
             'rfc.regex' => 'Escribe el RFC con homoclave, como aparece en la constancia de situación fiscal.',
+            'correo_cfdi.required' => 'Escribe el correo al que se enviará el CFDI del pago.',
+            'correo_cfdi.email' => 'Escribe un correo válido.',
+            'correo_cfdi.max' => 'El correo no debe exceder los 65 caracteres.',
             'participantes.required' => 'Captura a las personas a las que se les pagará la certificación.',
             'participantes.min' => 'La referencia especial cubre al menos :min participantes.',
             'participantes.max' => 'La referencia especial admite como máximo :max participantes.',
@@ -231,6 +244,33 @@ class ReferenciaController extends Controller
             'Registramos tu solicitud para '.$resultado['participantes'].' participantes. '
             .'La Dirección emitirá la referencia y te avisaremos por correo en cuanto esté lista.',
             route('persona.referencia.individual')
+        );
+    }
+
+    /**
+     * Nombre registrado de una CURP que puede compartir la referencia especial.
+     *
+     * Lo consulta el formulario mientras se teclea, para que nadie capture a
+     * mano un nombre que el envío va a comparar contra la base de todas formas.
+     * Responde encontrada/no encontrada y nada más: el motivo del rechazo es
+     * asunto del trámite de la otra persona. Molde: SedeController::disponibilidad().
+     */
+    public function buscarPersona(Request $request, ReferenciaEspecial $referencia_especial): JsonResponse
+    {
+        $curp = mb_strtoupper(trim((string) $request->query('curp')), 'UTF-8');
+
+        /* Mismo formato que exige el POST; una CURP mal formada no llega a la
+           base. */
+        if (preg_match('/^[A-Z0-9]{18}$/', $curp) !== 1) {
+            return response()->json(['encontrada' => false]);
+        }
+
+        $persona = $referencia_especial->buscarParticipante((int) Auth::id(), $curp);
+
+        return response()->json(
+            $persona === null
+                ? ['encontrada' => false]
+                : ['encontrada' => true, 'persona' => $persona]
         );
     }
 

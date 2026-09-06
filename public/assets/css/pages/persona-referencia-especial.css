@@ -3,10 +3,6 @@
    lo que esta pantalla no tenía: la rejilla del pagador, los renglones de
    participantes, el contador y el diálogo de confirmación. */
 
-[v-cloak] {
-    display: none;
-}
-
 .refesp-form {
     display: flex;
     flex-direction: column;
@@ -160,52 +156,8 @@
     background: #fff0f0;
 }
 
-.refesp-agregar {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem;
-    border: 1px dashed #d9dee7;
-    border-radius: 10px;
-}
-
-.refesp-agregar__label {
-    color: #6b7280;
-}
-
-.refesp-agregar input {
-    flex: 1;
-    min-width: 0;
-    padding: 0.55rem 0.75rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-}
-
-.refesp-agregar__boton {
-    width: 2.5rem;
-    height: 2.5rem;
-    flex-shrink: 0;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #f7f8fa;
-    color: #172a44;
-    cursor: pointer;
-}
-
-.refesp-agregar__boton:hover:not([disabled]),
-.refesp-agregar__boton:focus-visible:not([disabled]) {
-    background: #eceff4;
-}
-
-.refesp-agregar__boton[disabled] {
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
 .refesp-total {
-    margin: 1.5rem 0 0;
-    padding-top: 1rem;
-    border-top: 1px dashed #d7dce5;
+    margin-top: 1.5rem;
 }
 
 .refesp-barra {

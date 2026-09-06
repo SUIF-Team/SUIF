@@ -2,7 +2,8 @@
     persona/referencia-seleccion.blade.php
     Selector del paso «Obtener referencia»: explica el pago y encamina a la
     persona al flujo individual o al especial. No guarda la elección: sólo
-    navega. El flujo especial todavía no existe, así que su botón va inhabilitado.
+    navega. El individual entrega una referencia del catálogo; el especial lleva
+    a la captura del tercero que paga y de las personas que cubre.
 --}}
 @extends('layouts.persona')
 

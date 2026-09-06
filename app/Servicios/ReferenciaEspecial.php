@@ -46,7 +46,8 @@ class ReferenciaEspecial
 
     public function __construct(
         private readonly CatalogoReferencias $catalogo,
-        private readonly GestionClaves $claves
+        private readonly GestionClaves $claves,
+        private readonly ComprobanteFiscal $comprobante
     ) {
     }
 
@@ -55,7 +56,7 @@ class ReferenciaEspecial
      * pago compartido y le cuelga las solicitudes de los participantes.
      *
      * @param array{razon_social: string, persona_moral: string, regimen_fiscal: int|string,
-     *              codigo_postal: string, rfc: string} $pagador
+     *              codigo_postal: string, rfc: string, correo_cfdi: string} $pagador
      * @param array<int, array{curp: string, nombre: string, primer_apellido: string,
      *              segundo_apellido: string}> $participantes
      * @return array{id_pago: int, monto: float, participantes: int}
@@ -119,6 +120,22 @@ class ReferenciaEspecial
                     'Alguno de los participantes obtuvo su referencia mientras capturabas. Vuelve a intentarlo.'
                 );
             }
+
+            /* El CFDI se emite a nombre del pagador, pero COMUNICACION cuelga de
+               PERSONA y el pagador no es una: se guarda en la persona de la
+               solicitud más antigua del pago, que es justamente por la que el
+               reporte de CFDI une el correo —ConsultaPagos::solicitudesCfdi()
+               representa al grupo con MIN(soli_id_solicitud)—. Un renglón por
+               pago y no N, para no pisarle a los demás participantes el correo
+               de facturación que traigan de otra convocatoria.
+
+               Va dentro de la transacción a propósito: si al catálogo le falta
+               el tipo «Correo facturación», es mejor no emitir una referencia
+               que después no se va a poder facturar. */
+            $this->comprobante->guardarCorreoDeFacturacion(
+                $this->personaDeSolicitud(min($solicitudes)),
+                $pagador['correo_cfdi']
+            );
 
             return [
                 'id_pago' => (int) $id_pago,
@@ -410,7 +427,83 @@ class ReferenciaEspecial
      */
     private function solicitudCobrable(array $participante, mixed $id_convocatoria): int
     {
+        $fila = $this->filaCobrable($participante['curp'] ?? '', $id_convocatoria);
         $curp = $this->normalizarCurp($participante['curp'] ?? '');
+
+        $capturado = $this->comparable([
+            $participante['nombre'] ?? '',
+            $participante['primer_apellido'] ?? '',
+            $participante['segundo_apellido'] ?? '',
+        ]);
+
+        $registrado = $this->comparable([
+            $fila->pers_nombre,
+            $fila->pers_apellido_paterno,
+            $fila->pers_apellido_materno,
+        ]);
+
+        if ($capturado !== $registrado) {
+            throw new DomainException('El nombre capturado para '.$curp.' no coincide con el que tiene registrado.');
+        }
+
+        return (int) $fila->soli_id_solicitud;
+    }
+
+    /**
+     * Nombre registrado de quien puede compartir la referencia de este usuario,
+     * o null si no puede. Es lo que el formulario consulta mientras se teclea la
+     * CURP, para no capturar veinte renglones y que los rechacen todos al
+     * enviar.
+     *
+     * Devuelve null en vez del motivo a propósito: quien pregunta ya sabe si la
+     * CURP existe —la tecleó—, y decirle además que esa persona ya tiene
+     * referencia o que no está aprobada es contar el trámite de alguien más. El
+     * motivo exacto sí aparece al enviar, cuando quien lo lee es responsable de
+     * la lista completa.
+     *
+     * @return array{curp: string, nombre: string, primer_apellido: string, segundo_apellido: string}|null
+     */
+    public function buscarParticipante(int $id_usuario, string $curp): ?array
+    {
+        $solicitante = $this->solicitudDelUsuario($id_usuario);
+
+        /* Sin solicitud propia, o con la referencia ya asignada, no hay lista
+           que armar y tampoco nombres que entregar. */
+        if (!$solicitante || $solicitante->soli_id_pago) {
+            return null;
+        }
+
+        try {
+            /* Se reutiliza la verificación del envío en lugar de repetirla: si
+               algún día cambia una regla, las dos pantallas cambian juntas y no
+               puede pasar que aquí se autollene a alguien que allá se rechaza. */
+            $fila = $this->filaCobrable($curp, $solicitante->soli_id_convocatoria);
+        } catch (DomainException) {
+            return null;
+        }
+
+        return [
+            'curp' => $this->normalizarCurp($curp),
+            'nombre' => (string) $fila->pers_nombre,
+            'primer_apellido' => (string) $fila->pers_apellido_paterno,
+            'segundo_apellido' => (string) $fila->pers_apellido_materno,
+        ];
+    }
+
+    /**
+     * La persona de esa CURP y su solicitud, si se le puede cobrar en esta
+     * referencia. El motivo del rechazo nombra la CURP: en una lista de veinte,
+     * «hay un error» no le sirve a nadie.
+     *
+     * ponytail: conserva el lockForUpdate que solicitar() necesita, así que la
+     * consulta de sólo lectura del autollenado también lo toma. Corre fuera de
+     * transacción explícita, o sea que PostgreSQL lo suelta al terminar la
+     * sentencia: en el peor caso espera unos milisegundos a que otra solicitud
+     * libere el renglón. Si eso llegara a estorbar, se parametriza el bloqueo.
+     */
+    private function filaCobrable(string $curp_capturada, mixed $id_convocatoria): object
+    {
+        $curp = $this->normalizarCurp($curp_capturada);
 
         $fila = DB::table('persona as p')
             ->join('solicitud as s', 's.soli_id_persona', '=', 'p.pers_id_persona')
@@ -443,23 +536,18 @@ class ReferenciaEspecial
             throw new DomainException($curp.' todavía no tiene su solicitud aprobada.');
         }
 
-        $capturado = $this->comparable([
-            $participante['nombre'] ?? '',
-            $participante['primer_apellido'] ?? '',
-            $participante['segundo_apellido'] ?? '',
-        ]);
+        return $fila;
+    }
 
-        $registrado = $this->comparable([
-            $fila->pers_nombre,
-            $fila->pers_apellido_paterno,
-            $fila->pers_apellido_materno,
-        ]);
-
-        if ($capturado !== $registrado) {
-            throw new DomainException('El nombre capturado para '.$curp.' no coincide con el que tiene registrado.');
-        }
-
-        return (int) $fila->soli_id_solicitud;
+    /**
+     * La persona dueña de una solicitud. Hace falta porque COMUNICACION cuelga
+     * de PERSONA y el pago sólo conoce solicitudes.
+     */
+    private function personaDeSolicitud(int $id_solicitud): int
+    {
+        return (int) DB::table('solicitud')
+            ->where('soli_id_solicitud', $id_solicitud)
+            ->value('soli_id_persona');
     }
 
     /**

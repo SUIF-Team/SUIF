@@ -365,6 +365,8 @@ class ReportesTest extends TestCase
         $this->assertSame('3000000001', $filas[0]['referencia_bancaria']);
         /* El monto del renglón ya es el total de los tres participantes. */
         $this->assertSame(21000.0, $filas[0]['monto_declarado']);
+        /* Y el correo del pagador viaja con él: es a donde va la factura. */
+        $this->assertSame('facturas@papelera.mx', $filas[0]['correo_facturacion']);
     }
 
     public function test_el_reporte_de_cfdi_deja_fuera_a_quien_pidio_ticket(): void
@@ -649,9 +651,19 @@ class ReportesTest extends TestCase
         }
 
         DB::table('comunicacion')->insert([
-            'comu_id_persona' => $this->personaDe($pagada),
-            'comu_id_tipo_comunicacion' => 4,
-            'comu_descripcion' => 'facturas@ejemplo.mx',
+            [
+                'comu_id_persona' => $this->personaDe($pagada),
+                'comu_id_tipo_comunicacion' => 4,
+                'comu_descripcion' => 'facturas@ejemplo.mx',
+            ],
+            /* Así lo deja ReferenciaEspecial::solicitar(): el correo del pagador
+               colgado de la persona de la solicitud más antigua del pago, que es
+               por la que solicitudesCfdi() representa al grupo. */
+            [
+                'comu_id_persona' => $this->personaDe($empleadoUno),
+                'comu_id_tipo_comunicacion' => 4,
+                'comu_descripcion' => 'facturas@papelera.mx',
+            ],
         ]);
     }
 

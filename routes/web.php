@@ -71,6 +71,11 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
            referencia. Se captura aquí y la emite la DEC. */
         Route::get('/referencia/especial', [PersonaReferenciaController::class, 'especial'])->name('referencia.especial');
         Route::post('/referencia/especial', [PersonaReferenciaController::class, 'solicitarEspecial'])->name('referencia.especial.store');
+        /* Autollenado de la lista: entrega el nombre registrado de una CURP, así
+           que va acotado como los demás caminos que exponen datos personales. */
+        Route::get('/referencia/especial/persona', [PersonaReferenciaController::class, 'buscarPersona'])
+            ->middleware('throttle:buscar-persona')
+            ->name('referencia.especial.persona');
         Route::post('/referencia', [PersonaReferenciaController::class, 'generar'])->name('referencia.generar');
         Route::get('/referencia/formato', [PersonaReferenciaController::class, 'formato'])->name('referencia.formato');
         Route::get('/documentos', [PreRegistroController::class, 'documentos'])->name('documentos.index');

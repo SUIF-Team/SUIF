@@ -12,6 +12,14 @@
     display: none !important;
 }
 
+/* Mismo empate, otro atributo: [v-cloak] mide lo mismo que la clase del
+   diálogo que oculta, así que un .modal con display propio le gana por ir
+   después y el bloque se pinta entero hasta que Vue monta. Declararlo aquí
+   —una vez, y antes que las hojas de página— lo resuelve en todas. */
+[v-cloak] {
+    display: none !important;
+}
+
 :root {
     --unam-blue: #112f4b;
     --unam-blue-dark: #0b1a2e;
@@ -213,6 +221,19 @@ button:focus-visible {
         background-attachment: scroll;
     }
 }
+
+/* Aviso en amarillo del trámite. Nació en el pre-registro y hoy lo usan tres
+   pantallas, así que la regla base vive aquí; las variantes (--identidad,
+   --formatos, --enviado, --bloqueo) siguen en persona-preregistro.css. */
+.pr-notice {
+    margin: 22px 0 22px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #fff5df;
+    color: #936200;
+    font-size: var(--fs-auxiliar);
+}
+
 /* Aviso de privacidad que aparece al entrar, y el bloque simplificado que se
    reutiliza en el pre-registro. Viven aqui porque los cuatro layouts cargan
    este archivo. */

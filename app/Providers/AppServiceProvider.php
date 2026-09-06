@@ -46,6 +46,20 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by('recuperar-clave:'.$request->ip());
         });
 
+        /* El autollenado devuelve el nombre de quien trae esa CURP. Es un dato
+           personal servido a una sesión válida: el tope por minuto sobra para
+           teclear —una CURP no se escribe en dos segundos— y el de la hora
+           cubre cuatro listas completas del máximo de participantes, así que
+           deja trabajar y no deja barrer el padrón. */
+        RateLimiter::for('buscar-persona', function (Request $request) {
+            $identidad = (string) ($request->user()?->getAuthIdentifier() ?? $request->ip());
+
+            return [
+                Limit::perMinute(30)->by('buscar-persona:'.$identidad),
+                Limit::perHour(200)->by('buscar-persona-hora:'.$identidad),
+            ];
+        });
+
         /* Todos los permisos se resuelven contra PRIVILEGIO_ROL y ninguno
            contra el nombre del rol. Con un solo administrador daba lo mismo;
            con uno por área, comparar contra la cadena "Administrador" deja

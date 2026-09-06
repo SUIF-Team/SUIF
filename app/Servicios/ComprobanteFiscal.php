@@ -177,8 +177,12 @@ class ComprobanteFiscal
      * El correo del CFDI puede no ser el de la cuenta de la persona —la de
      * una empresa, por ejemplo—, así que es un tipo de comunicación aparte y
      * no reemplaza al correo principal.
+     *
+     * Público porque la referencia especial guarda el mismo dato por otro
+     * camino: ahí el correo lo captura quien pide la referencia para todo el
+     * grupo, y el renglón de COMUNICACION es idéntico.
      */
-    private function guardarCorreoDeFacturacion(int $id_persona, string $correo): void
+    public function guardarCorreoDeFacturacion(int $id_persona, string $correo): void
     {
         $id_tipo = DB::table('tipo_comunicacion')
             ->where('tico_tipo_comunicacion', 'Correo facturación')
