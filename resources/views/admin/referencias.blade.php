@@ -72,8 +72,8 @@
         </section>
 
         <section class="admin-referencias-tarjeta admin-referencias-tabla-contenedor" aria-label="Catálogo de referencias">
-            <div class="admin-referencias-tabla-responsive">
-                <table id="admin-referencias-tabla" class="admin-referencias-tabla">
+            <div class="admin-referencias-tabla-responsive admin-referencias-tabla-responsive--bandeja">
+                <table id="admin-referencias-tabla" class="admin-referencias-tabla admin-referencias-tabla--centrada">
                     <thead>
                         <tr>
                             <th>Referencia</th>
@@ -93,52 +93,64 @@
                         @foreach($referencias as $referencia)
                             <tr data-filtro-buscar="{{ $referencia['referencia'].' '.$referencia['curp'] }}"
                                 data-filtro-estado="{{ $referencia['asignada'] ? 'asignada' : 'disponible' }}{{ $referencia['tiene_formato'] ? '' : ' sin-formato' }}">
-                                <td class="admin-referencias-tabla-numero">{{ $referencia['referencia'] }}</td>
-                                <td>
-                                    @if($referencia['monto'] !== null)
-                                        ${{ number_format($referencia['monto'], 2) }} {{ config('suif.moneda', 'MXN') }}
-                                    @else
-                                        <span class="admin-referencias-texto-atenuado">Cuota vigente</span>
-                                    @endif
+                                <td class="admin-referencias-tabla-numero">
+                                    <div class="admin-referencias-celda">{{ $referencia['referencia'] }}</div>
                                 </td>
                                 <td>
-                                    @if($referencia['vigencia'])
-                                        {{ \Illuminate\Support\Carbon::parse($referencia['vigencia'])->format('d/m/Y') }}
-                                    @else
-                                        <span class="admin-referencias-texto-atenuado">Sin vigencia</span>
-                                    @endif
+                                    <div class="admin-referencias-celda">
+                                        @if($referencia['monto'] !== null)
+                                            ${{ number_format($referencia['monto'], 2) }} {{ config('suif.moneda', 'MXN') }}
+                                        @else
+                                            <span class="admin-referencias-texto-atenuado">Cuota vigente</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="admin-referencias-celda">
+                                        @if($referencia['vigencia'])
+                                            {{ \Illuminate\Support\Carbon::parse($referencia['vigencia'])->format('d/m/Y') }}
+                                        @else
+                                            <span class="admin-referencias-texto-atenuado">Sin vigencia</span>
+                                        @endif
 
-                                    @if($referencia['fecha_emision'])
-                                        <div class="admin-referencias-texto-atenuado">
-                                            Emitida el {{ \Illuminate\Support\Carbon::parse($referencia['fecha_emision'])->format('d/m/Y') }}
-                                        </div>
-                                    @endif
+                                        @if($referencia['fecha_emision'])
+                                            <div class="admin-referencias-texto-atenuado">
+                                                Emitida el {{ \Illuminate\Support\Carbon::parse($referencia['fecha_emision'])->format('d/m/Y') }}
+                                            </div>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
-                                    @if($referencia['tiene_formato'])
-                                        <a class="admin-referencias-enlace" target="_blank" rel="noopener"
-                                           href="{{ route('admin.referencias.formato', ['id' => $referencia['id']]) }}">Ver PDF</a>
-                                    @else
-                                        <span class="admin-referencias-texto-atenuado">Sin PDF</span>
-                                    @endif
+                                    <div class="admin-referencias-celda">
+                                        @if($referencia['tiene_formato'])
+                                            <a class="admin-referencias-enlace" target="_blank" rel="noopener"
+                                               href="{{ route('admin.referencias.formato', ['id' => $referencia['id']]) }}">Ver PDF</a>
+                                        @else
+                                            <span class="admin-referencias-texto-atenuado">Sin PDF</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="admin-referencias-estado admin-referencias-estado--{{ $referencia['asignada'] ? 'asignada' : 'disponible' }}">
-                                        {{ $referencia['asignada'] ? 'Asignada' : 'Disponible' }}
-                                    </span>
+                                    <div class="admin-referencias-celda">
+                                        <span class="admin-referencias-estado admin-referencias-estado--{{ $referencia['asignada'] ? 'asignada' : 'disponible' }}">
+                                            {{ $referencia['asignada'] ? 'Asignada' : 'Disponible' }}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td>
-                                    @if($referencia['asignada'])
-                                        {{ $referencia['titular'] ?: 'Sin nombre registrado' }}
-                                        <small>
-                                            {{ $referencia['curp'] }}
-                                            @if($referencia['fecha_asignacion'])
-                                                · {{ \Illuminate\Support\Carbon::parse($referencia['fecha_asignacion'])->format('d/m/Y') }}
-                                            @endif
-                                        </small>
-                                    @else
-                                        <span class="admin-referencias-texto-atenuado">—</span>
-                                    @endif
+                                    <div class="admin-referencias-celda">
+                                        @if($referencia['asignada'])
+                                            {{ $referencia['titular'] ?: 'Sin nombre registrado' }}
+                                            <small>
+                                                {{ $referencia['curp'] }}
+                                                @if($referencia['fecha_asignacion'])
+                                                    · {{ \Illuminate\Support\Carbon::parse($referencia['fecha_asignacion'])->format('d/m/Y') }}
+                                                @endif
+                                            </small>
+                                        @else
+                                            <span class="admin-referencias-texto-atenuado">—</span>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

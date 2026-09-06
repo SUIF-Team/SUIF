@@ -274,12 +274,50 @@
     color: var(--text-dark);
 }
 
+/* Sin relleno y recortada, igual que .admin-sedes-tabla-contenedor: el
+   relleno lo ponen las celdas. Con 0.5rem aqui la barra gris del thead
+   quedaba con un anillo blanco de 8px alrededor en vez de llegar al canto. */
 .admin-referencias-tabla-contenedor {
-    padding: 0.5rem;
+    padding: 0;
+    overflow: hidden;
 }
 
 .admin-referencias-tabla-responsive {
     overflow-x: auto;
+}
+
+/* Misma bandeja que .admin-bandeja-preregistros-lista. Solo la usa el
+   catalogo: las solicitudes especiales caben enteras en pantalla. */
+.admin-referencias-tabla-responsive--bandeja {
+    max-height: 28rem;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.admin-referencias-tabla-responsive--bandeja::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+.admin-referencias-tabla-responsive--bandeja::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: #f1f5f9;
+}
+
+.admin-referencias-tabla-responsive--bandeja::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #cbd5e1;
+}
+
+/* El fondo opaco del th ya esta mas abajo; aqui solo lo fijamos arriba.
+   Con border-collapse: collapse el borde de una celda pegajosa pertenece a
+   la rejilla colapsada y se va con el scroll, por eso la linea se dibuja
+   dentro de la celda con un inset. */
+.admin-referencias-tabla-responsive--bandeja thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--border-light);
 }
 
 .admin-referencias-tabla {
@@ -312,6 +350,34 @@
     margin-top: 0.2rem;
     color: var(--text-muted);
 }
+
+/* El encabezado va centrado y la tabla es width: 100%, asi que la columna
+   recibe espacio sobrante y el dato quedaba pegado a su canto izquierdo. El
+   bloque se centra; el texto de dentro sigue a la izquierda. */
+.admin-referencias-tabla--centrada td {
+    text-align: center;
+}
+
+.admin-referencias-celda {
+    display: inline-block;
+    max-width: 100%;
+    text-align: left;
+}
+
+/* El bloque tiene que medir lo mismo en todas las filas: si cada celda se
+   centrara segun su propio ancho, los renglones cortos arrancarian mas a la
+   derecha y se perderia el borde izquierdo comun que se pidio.
+   Va width y no min-width a proposito: un titular mas largo de lo previsto
+   parte renglon dentro del bloque en vez de ensancharlo y descolocar su fila.
+   Anchos medidos sobre el contenido mas largo de cada columna (1ch = 7.78px
+   en Open Sans 14px); la tabla al 100% reparte el sobrante y es ese sobrante
+   el que deja ver el centrado. */
+.admin-referencias-tabla--centrada td:nth-child(1) .admin-referencias-celda { width: 11ch; }
+.admin-referencias-tabla--centrada td:nth-child(2) .admin-referencias-celda { width: 13ch; }
+.admin-referencias-tabla--centrada td:nth-child(3) .admin-referencias-celda { width: 18ch; }
+.admin-referencias-tabla--centrada td:nth-child(4) .admin-referencias-celda { width: 7ch; }
+.admin-referencias-tabla--centrada td:nth-child(5) .admin-referencias-celda { width: 12ch; }
+.admin-referencias-tabla--centrada td:nth-child(6) .admin-referencias-celda { width: 30ch; }
 
 .admin-referencias-tabla-numero {
     color: var(--text-dark);
@@ -387,6 +453,15 @@
 
     .admin-referencias-boton {
         justify-content: center;
+    }
+}
+
+/* Mismo corte que la bandeja de preregistros: el contenedor ya captura el
+   gesto horizontal, y anidarle tambien el vertical atrapa el scroll de la
+   pagina. */
+@media (max-width: 500px) {
+    .admin-referencias-tabla-responsive--bandeja {
+        max-height: none;
     }
 }
 
