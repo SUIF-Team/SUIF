@@ -12,6 +12,7 @@
     @include('partials.fuentes')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset_versionado('assets/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/componentes.css') }}">
     <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/navbar-sistema.css') }}">
     <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/sidebar-persona.css') }}">
     <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/footer.css') }}">

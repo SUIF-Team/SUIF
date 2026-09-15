@@ -1,0 +1,698 @@
+/*
+ * Componentes compartidos del sistema.
+ *
+ * Cada pantalla declaraba los suyos: ~60 apariencias de boton en 23 hojas, 12
+ * familias de chip de estado, 15 cajas de notificacion, 13 campos, 4 tablas y 7
+ * dialogos. Aqui viven una vez y la pantalla sólo elige modificador.
+ *
+ * Se carga despues de app.css y antes de las hojas de pages/, de modo que una regla
+ * de pagina todavia gana: migrar una pantalla es cambiar su clase y borrar su regla.
+ * Si algo se sigue viendo como antes, es que quedó la regla vieja.
+ *
+ * Los valores salen del inventario y las decisiones de
+ * docs/superpowers/specs/2026-09-15-identidad-cromatica-design.md
+ */
+
+/* ---------- Boton ---------- */
+
+/* Se pinta sobre <button>, <a> y <label> (subir archivo), asi que declara explicito
+   todo lo que un <a> no hereda: tipografia, cursor y alineacion. */
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--alto-control);
+    padding: 0 1.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--radio-control);
+    background: transparent;
+    color: var(--text-dark);
+    font-family: var(--font-sans);
+    font-size: var(--fs-ui);
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.boton:focus-visible {
+    outline: var(--foco-anillo);
+    outline-offset: var(--foco-separacion);
+}
+
+.boton--primario {
+    border-color: var(--unam-blue);
+    background: var(--unam-blue);
+    color: var(--surface-white);
+}
+
+.boton--primario:hover {
+    border-color: var(--unam-blue-dark);
+    background: var(--unam-blue-dark);
+    color: var(--surface-white);
+}
+
+.boton--secundario {
+    border-color: var(--borde-control);
+    background: var(--surface-white);
+    color: var(--unam-blue);
+}
+
+.boton--secundario:hover {
+    background: #eef2f7;
+}
+
+/* Peligro en dos pasos: relleno suave donde se ofrece la accion y solido en el «si»
+   del dialogo, que es el clic que no se deshace. */
+.boton--peligro {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
+}
+
+.boton--peligro:hover {
+    background: #fbd5d5;
+}
+
+.boton--peligro-solido {
+    border-color: var(--peligro-solido);
+    background: var(--peligro-solido);
+    color: var(--surface-white);
+}
+
+.boton--peligro-solido:hover {
+    border-color: #7f1616;
+    background: #7f1616;
+}
+
+.boton--exito {
+    border-color: var(--exito-solido);
+    background: var(--surface-white);
+    color: var(--exito-texto);
+}
+
+.boton--exito:hover {
+    background: var(--exito-fondo);
+}
+
+/* Enlace de accion dentro de una fila o un parrafo. Conserva el alto minimo para no
+   dejar objetivos de 20px como los de las tablas actuales. */
+.boton--texto {
+    padding: 0 0.25rem;
+    background: none;
+    color: var(--unam-blue);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.boton--texto:hover {
+    color: var(--unam-blue-dark);
+}
+
+.boton--icono {
+    width: var(--alto-control);
+    padding: 0;
+}
+
+/* Sobre fondo azul: navbar del sistema y pie. */
+.boton--claro {
+    border-color: rgba(255, 255, 255, 0.55);
+    color: var(--surface-white);
+}
+
+.boton--claro:hover {
+    border-color: var(--surface-white);
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.boton--claro:focus-visible {
+    outline: var(--foco-anillo-claro);
+}
+
+/* Al final para que gane a los modificadores: un boton apagado no reacciona al
+   hover. Deshabilitado y «enviando» se ven igual porque en ambos casos otro clic no
+   hace nada; lo que cambia es el cursor. El gris se lee (5.05:1); el anterior era
+   blanco sobre #dfe3e9, es decir 1.29:1. */
+.boton[disabled],
+.boton[aria-disabled="true"],
+.boton--cargando,
+.boton[disabled]:hover,
+.boton[aria-disabled="true"]:hover,
+.boton--cargando:hover {
+    border-color: var(--inactivo-fondo);
+    background: var(--inactivo-fondo);
+    color: var(--inactivo-texto);
+    cursor: not-allowed;
+}
+
+.boton--cargando,
+.boton--cargando:hover {
+    cursor: progress;
+}
+
+/* ---------- Estado ---------- */
+
+/* El estado se dice con texto; el color acompaña. */
+.estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: var(--neutro-fondo);
+    color: var(--neutro-texto);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.estado--exito {
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
+}
+
+.estado--peligro {
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
+}
+
+.estado--revision {
+    background: var(--revision-fondo);
+    color: var(--revision-texto);
+}
+
+.estado--info {
+    background: var(--info-fondo);
+    color: var(--info-texto);
+}
+
+/* Un rol no es un estado del tramite: por eso no toma ninguno de los cinco papeles.
+   El de la DEC usaba el ambar de «en revision». */
+.estado--rol-superusuario {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.estado--rol-uif {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.estado--rol-dec {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+/* ---------- Pasos ---------- */
+
+/* El avance de un tramite: el sidebar de persona, el tracker del pago, los pasos del
+   expediente admin y las tarjetas del dashboard eran cuatro componentes distintos
+   para lo mismo. */
+.pasos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.paso {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-control);
+    background: var(--surface-white);
+}
+
+.paso__numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--neutro-fondo);
+    color: var(--neutro-texto);
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
+}
+
+.paso__titulo {
+    font-size: var(--fs-ui);
+    font-weight: 600;
+}
+
+.paso__estado {
+    color: var(--neutro-texto);
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
+}
+
+.paso--exito .paso__numero {
+    background: var(--exito-solido);
+    color: var(--surface-white);
+}
+
+.paso--exito .paso__estado {
+    color: var(--exito-texto);
+}
+
+.paso--revision .paso__numero {
+    background: var(--revision-texto);
+    color: var(--surface-white);
+}
+
+.paso--revision .paso__estado {
+    color: var(--revision-texto);
+}
+
+.paso--peligro .paso__numero {
+    background: var(--peligro-solido);
+    color: var(--surface-white);
+}
+
+.paso--peligro .paso__estado {
+    color: var(--peligro-texto);
+}
+
+/* El paso en curso se marca con el dorado institucional, no con otro color de
+   estado: no es un resultado, es dónde está la persona. */
+.paso--actual {
+    box-shadow: inset 0 0 0 2px var(--unam-gold);
+}
+
+.paso--bloqueado {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ---------- Notificacion ---------- */
+
+/* Resultado de una accion. El icono lo pone la vista; aqui se reserva su hueco y su
+   alineacion con la primera linea. */
+.notificacion {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    margin: 0 0 1rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radio-caja);
+    font-size: var(--fs-cuerpo);
+    line-height: 1.5;
+}
+
+.notificacion__icono {
+    flex: none;
+    padding-top: 0.125rem;
+}
+
+.notificacion ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.notificacion--exito {
+    border-color: var(--exito-borde);
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
+}
+
+.notificacion--error {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
+}
+
+.notificacion--advertencia {
+    border-color: var(--revision-borde);
+    background: var(--revision-fondo);
+    color: var(--revision-texto);
+}
+
+.notificacion--info {
+    border-color: var(--info-borde);
+    background: var(--info-fondo);
+    color: var(--info-texto);
+}
+
+/* ---------- Aviso ---------- */
+
+/* Explica algo antes de actuar, a diferencia de la notificacion, que cuenta lo que
+   acaba de pasar. El ambar queda reservado para la precaucion: informar es azul y lo
+   ya hecho, verde. */
+.aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 1.375rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radio-caja);
+    background: var(--info-fondo);
+    color: var(--info-texto);
+    font-size: var(--fs-auxiliar);
+    line-height: 1.5;
+}
+
+.aviso p {
+    margin: 0;
+}
+
+.aviso p + p {
+    margin-top: 0.4rem;
+}
+
+.aviso ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.15rem;
+}
+
+.aviso li + li {
+    margin-top: 0.3rem;
+}
+
+.aviso--precaucion {
+    background: var(--revision-fondo);
+    color: var(--revision-texto);
+}
+
+.aviso--hecho {
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
+}
+
+/* El motivo que escribe la DEC: conserva sus saltos de linea y usa el rojo de mayor
+   contraste del sistema (9:1), porque suele ser el texto mas largo que se lee en
+   color. */
+.aviso-motivo {
+    margin: 1.125rem 0 0;
+    padding: 1.125rem;
+    border: 1px solid #ebc7c7;
+    border-radius: var(--radio-caja);
+    background: #fff8f8;
+    color: #8d1117;
+    font-size: var(--fs-cuerpo);
+}
+
+.aviso-motivo__titulo {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
+}
+
+.aviso-motivo p {
+    margin: 0;
+    white-space: pre-line;
+}
+
+/* Ayuda bajo un campo y texto atenuado: un solo gris donde habia nueve. */
+.ayuda {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-auxiliar);
+}
+
+.atenuado {
+    color: var(--text-muted);
+}
+
+/* Lista o tabla sin resultados. */
+.vacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+    font-size: var(--fs-cuerpo);
+    text-align: center;
+}
+
+/* ---------- Formulario ---------- */
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.etiqueta {
+    color: var(--text-dark);
+    font-size: var(--fs-ui);
+    font-weight: 600;
+}
+
+.control {
+    width: 100%;
+    min-height: var(--alto-control);
+    padding: 0 0.75rem;
+    border: 1px solid var(--borde-control);
+    border-radius: var(--radio-control);
+    background: var(--surface-white);
+    color: var(--text-dark);
+    font-family: var(--font-sans);
+    font-size: var(--fs-ui);
+    line-height: 1.5;
+}
+
+textarea.control {
+    min-height: 6rem;
+    padding: 0.625rem 0.75rem;
+    resize: vertical;
+}
+
+.control::placeholder {
+    color: #6b6b66;
+    opacity: 1;
+}
+
+.control:focus-visible {
+    outline: var(--foco-anillo);
+    outline-offset: var(--foco-separacion);
+}
+
+.control[disabled],
+.control[readonly] {
+    border-color: #d9d6cf;
+    background: #f1f0ec;
+    color: var(--inactivo-texto);
+}
+
+/* El campo con error se marca en el campo y en el mensaje, no sólo en la caja de
+   arriba: aria-invalid es lo que lee el lector de pantalla. */
+.control[aria-invalid="true"] {
+    border-color: var(--peligro-texto);
+}
+
+.campo__error {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    color: var(--peligro-texto);
+    font-size: var(--fs-auxiliar);
+}
+
+/* Radio o casilla dentro de un recuadro que se puede pulsar entero. */
+.opcion {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--borde-control);
+    border-radius: var(--radio-control);
+    background: var(--surface-white);
+    font-size: var(--fs-ui);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.opcion input {
+    accent-color: var(--unam-blue);
+}
+
+.opcion:hover {
+    background: #f7f7f4;
+}
+
+.opcion:has(:checked) {
+    border-color: var(--unam-blue);
+    background: #eef2f7;
+}
+
+.opcion:has(:focus-visible) {
+    outline: var(--foco-anillo);
+    outline-offset: var(--foco-separacion);
+}
+
+/* ---------- Tarjeta ---------- */
+
+.tarjeta {
+    padding: 1.5rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-caja);
+    background: var(--surface-white);
+    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
+}
+
+.tarjeta--compacta {
+    padding: 1.25rem;
+}
+
+.tarjeta--amplia {
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* ---------- Tabla ---------- */
+
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* El tamaño, el peso y las mayusculas de th vienen de la base tipografica. */
+.tabla th {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    background: #f8fafc;
+    color: var(--text-muted);
+    text-align: left;
+}
+
+.tabla td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+}
+
+.tabla tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.tabla tbody tr:hover {
+    background: #f8fafc;
+}
+
+.tabla--centrada th:nth-child(n + 2),
+.tabla--centrada td:nth-child(n + 2) {
+    text-align: center;
+}
+
+.tabla-contenedor {
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-caja);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
+}
+
+.tabla-desplazable {
+    max-height: 28rem;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.tabla-desplazable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--border-light);
+}
+
+.tabla-desplazable::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+.tabla-desplazable::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: #f1f5f9;
+}
+
+.tabla-desplazable::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #cbd5e1;
+}
+
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.filtros .campo {
+    flex: 1 1 12rem;
+}
+
+/* ---------- Dialogo ---------- */
+
+.dialogo {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.dialogo__velo {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 26, 46, 0.58);
+}
+
+.dialogo__tarjeta {
+    position: relative;
+    width: min(100%, 31rem);
+    padding: 1.75rem;
+    border-radius: var(--radio-caja);
+    background: var(--surface-white);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.dialogo__titulo {
+    margin: 0 0 0.75rem;
+}
+
+.dialogo__texto {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+}
+
+/* Cancelar y confirmar en extremos opuestos: el «si» no queda pegado al boton que
+   se pulsa por inercia. */
+.dialogo__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+/* Una sola clase para bloquear el desplazamiento del fondo; habia siete identicas,
+   una por dialogo. */
+.dialogo-abierto {
+    overflow: hidden;
+}
+
+@media (max-width: 40rem) {
+    .dialogo__acciones {
+        flex-direction: column-reverse;
+    }
+
+    .dialogo__acciones .boton {
+        width: 100%;
+    }
+}
