@@ -133,6 +133,15 @@
     outline: var(--foco-anillo-claro);
 }
 
+/* main.js marca asi el boton de copiar cuando el portapapeles falla. Antes sólo
+   tenia estilo el de la referencia; el de la clave de acceso cambiaba su texto y
+   nada mas. */
+.boton.is-error {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
+}
+
 /* Al final para que gane a los modificadores: un boton apagado no reacciona al
    hover. Deshabilitado y «enviando» se ven igual porque en ambos casos otro clic no
    hace nada; lo que cambia es el cursor. El gris se lee (5.05:1); el anterior era
@@ -169,6 +178,13 @@
     font-weight: 600;
     line-height: 1.5;
     white-space: nowrap;
+}
+
+/* Igual que la base; existe para que la plantilla siempre escriba un modificador
+   y no haya que recordar cuál es el papel por omisión. */
+.estado--neutro {
+    background: var(--neutro-fondo);
+    color: var(--neutro-texto);
 }
 
 .estado--exito {

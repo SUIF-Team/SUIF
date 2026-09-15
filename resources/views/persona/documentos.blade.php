@@ -9,9 +9,22 @@
 @section('content')
 <section class="pr-shell">
     <div class="pr-layout">
-        <main class="pr-card">
-            @if(session('success'))<div class="pr-alert">{{ session('success') }}</div>@endif
-            @if($errors->any())<div class="pr-alert pr-error"><strong>Revisa la información:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        <main class="tarjeta pr-card">
+            @if(session('success'))
+                <div class="notificacion notificacion--exito" role="status">
+                    <i class="fa-solid fa-circle-check notificacion__icono" aria-hidden="true"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="notificacion notificacion--error" role="alert">
+                    <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                    <div>
+                        <strong>Revisa la información:</strong>
+                        <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    </div>
+                </div>
+            @endif
 
             @if($verFormatos)
                 @include('partials.preregistro-formatos', ['soloConsulta' => true])
@@ -29,8 +42,8 @@
                     </p>
 
                     @if($motivoInterrupcion)
-                        <div class="pr-interrumpido__motivo">
-                            <strong>Motivo</strong>
+                        <div class="aviso-motivo">
+                            <strong class="aviso-motivo__titulo">Motivo</strong>
                             <p>{{ $motivoInterrupcion }}</p>
                         </div>
                     @else
@@ -41,7 +54,7 @@
                     @endif
 
                     <div class="pr-interrumpido__acciones">
-                        <a href="{{ route('persona.dashboard') }}" class="pr-btn pr-btn--secondary">Volver a mi panel</a>
+                        <a href="{{ route('persona.dashboard') }}" class="boton boton--secundario">Volver a mi panel</a>
                     </div>
                 </div>
             @elseif($estado['fase'] === 'aprobado' && !$solicitudRechazada)
@@ -57,8 +70,8 @@
                         @foreach($documentos as $slug => $nombre)
                             <li class="pr-aceptado__fila">
                                 <span class="pr-aceptado__doc">{{ $nombre }}</span>
-                                <span class="pr-status pr-status--approved">Aprobado</span>
-                                <a class="pr-aceptado__abrir" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
+                                <span class="estado estado--exito">Aprobado</span>
+                                <a class="boton boton--texto" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
                                     <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
                                     <span>Abrir</span>
                                 </a>
@@ -68,10 +81,10 @@
 
                     <div class="pr-aceptado__acciones">
                         @if($solicitudAprobada)
-                            <a href="{{ route('persona.referencia.index') }}" class="pr-btn">Continuar</a>
+                            <a href="{{ route('persona.referencia.index') }}" class="boton boton--primario">Continuar</a>
                         @else
                             <p class="pr-muted">Falta que el equipo administrativo cierre la revisión de tu solicitud completa.</p>
-                            <a href="{{ route('persona.dashboard') }}" class="pr-btn pr-btn--secondary">Volver a mi panel</a>
+                            <a href="{{ route('persona.dashboard') }}" class="boton boton--secundario">Volver a mi panel</a>
                         @endif
                     </div>
                 </div>
@@ -89,7 +102,7 @@
                 <h1>Documentación requerida</h1>
                 <p class="pr-muted">Sube los documentos uno por uno. Cada PDF debe pesar máximo 1 MB.</p>
                 <p class="pr-volver-formatos">
-                    <a href="{{ route('persona.documentos.index', ['ver' => 'formatos']) }}">
+                    <a class="boton boton--texto" href="{{ route('persona.documentos.index', ['ver' => 'formatos']) }}">
                         <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                         Ver o descargar los formatos otra vez
                     </a>
@@ -109,12 +122,15 @@
                                 <?php
                                     $doc = isset($estado['documentos'][$slug]) ? $estado['documentos'][$slug] : null;
                                     $docEstado = $doc ? $doc['estado'] : 'pendiente';
+                                    /* El papel semántico del chip, no un nombre de color:
+                                       «cargado» informa —el documento subió, nadie lo ha
+                                       revisado— y por eso no es verde. */
                                     $clasesEstado = [
-                                        'pendiente' => 'pending',
-                                        'cargado' => 'loaded',
-                                        'revision' => 'review',
-                                        'aprobado' => 'approved',
-                                        'rechazado' => 'rejected',
+                                        'pendiente' => 'neutro',
+                                        'cargado' => 'info',
+                                        'revision' => 'revision',
+                                        'aprobado' => 'exito',
+                                        'rechazado' => 'peligro',
                                     ];
                                     $etiquetasEstado = [
                                         'pendiente' => 'Pendiente',
@@ -130,13 +146,13 @@
                                 <tr class="pr-fila pr-fila--{{ $docEstado }}">
                                     <td data-titulo="Documento">
                                         <strong class="pr-fila__nombre">{{ $nombre }}</strong>
-                                        <span class="pr-status pr-status--{{ $clasesEstado[$docEstado] }}">{{ $etiquetasEstado[$docEstado] }}</span>
+                                        <span class="estado estado--{{ $clasesEstado[$docEstado] }}">{{ $etiquetasEstado[$docEstado] }}</span>
                                     </td>
 
                                     <td data-titulo="Formato">
                                         @if(in_array($slug, $formatos))
                                             <div class="pr-fila__acciones">
-                                                <a class="pr-btn" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
+                                                <a class="boton boton--primario" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
                                                     <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                                                     <span>Generar</span>
                                                 </a>
@@ -154,7 +170,7 @@
                                              hermanos y dejar el espacio de arriba a la previsualización. --}}
                                         <div class="pr-fila__acciones pr-fila__acciones--archivo">
                                             @if($doc)
-                                                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
+                                                <a class="boton boton--secundario" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
                                                     <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
                                                     <span>Abrir</span>
                                                 </a>
@@ -163,13 +179,13 @@
                                             @if($puedeReemplazar)
                                                 <form method="POST" id="pr-subir-{{ $slug }}" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
                                                     @csrf
-                                                    <label class="pr-btn pr-file">
+                                                    <label class="boton boton--primario pr-file">
                                                         <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                                         <span>{{ $docEstado === 'rechazado' ? 'Subsanar' : ($doc ? 'Reemplazar' : 'Adjuntar') }}</span>
                                                         <input type="file" name="archivo" accept="application/pdf" required>
                                                     </label>
                                                 </form>
-                                                <button class="pr-btn" type="submit" form="pr-subir-{{ $slug }}">Confirmar carga</button>
+                                                <button class="boton boton--primario" type="submit" form="pr-subir-{{ $slug }}">Confirmar carga</button>
                                             @endif
                                         </div>
 
@@ -182,8 +198,8 @@
                                 @if($doc && $docEstado === 'rechazado' && !empty($doc['observacion']))
                                     <tr class="pr-fila-observacion">
                                         <td colspan="3">
-                                            <div class="pr-observation">
-                                                <strong>Motivo del rechazo</strong>
+                                            <div class="aviso-motivo">
+                                                <strong class="aviso-motivo__titulo">Motivo del rechazo</strong>
                                                 <p>{{ $doc['observacion'] }}</p>
                                             </div>
                                         </td>
@@ -195,9 +211,9 @@
                 </div>
 
                 @if($estado['fase'] === 'aprobado')
-                    <p class="pr-notice">Tus documentos fueron aprobados. Espera la resolución de tu solicitud.</p>
+                    <p class="aviso aviso--hecho">Tus documentos fueron aprobados. Espera la resolución de tu solicitud.</p>
                 @elseif($estado['fase'] === 'revision' && !$solicitudRechazada)
-                    <p class="pr-notice pr-notice--enviado" role="status">
+                    <p class="aviso aviso--hecho" role="status">
                         <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                         <span>
                             Tus documentos fueron enviados a revisión{{ $fechaEnvio ? ' el '.$fechaEnvio : '' }}.
@@ -222,21 +238,21 @@
                     ?>
                     <form method="POST" action="{{ route('persona.preregistro.documentos.enviar') }}" class="pr-actions" data-envio-revision>
                         @csrf
-                        <button type="submit" class="pr-btn" data-boton-envio>Enviar a revisión</button>
+                        <button type="submit" class="boton boton--primario" data-boton-envio>Enviar a revisión</button>
                     </form>
 
-                    <div class="pr-modal" data-modal-envio hidden>
-                        <div class="pr-modal__fondo" data-cerrar-envio></div>
-                        <section class="pr-modal__card" role="dialog" aria-modal="true"
+                    <div class="dialogo" data-modal-envio hidden>
+                        <div class="dialogo__velo" data-cerrar-envio></div>
+                        <section class="dialogo__tarjeta" role="dialog" aria-modal="true"
                                  aria-labelledby="pr-envio-titulo" aria-describedby="pr-envio-texto">
-                            <h2 id="pr-envio-titulo">¿Enviar tus documentos a revisión?</h2>
-                            <p id="pr-envio-texto">
+                            <h2 class="dialogo__titulo" id="pr-envio-titulo">¿Enviar tus documentos a revisión?</h2>
+                            <p class="dialogo__texto" id="pr-envio-texto">
                                 Se {{ $porEnviar === 1 ? 'enviará 1 documento' : 'enviarán '.$porEnviar.' documentos' }}.
                                 Después ya no podrás reemplazarlos hasta que el equipo administrativo termine de revisarlos.
                             </p>
-                            <div class="pr-modal__acciones">
-                                <button type="button" class="pr-btn pr-btn--secondary" data-cerrar-envio>Cancelar</button>
-                                <button type="button" class="pr-btn" data-confirmar-envio>Sí, enviar</button>
+                            <div class="dialogo__acciones">
+                                <button type="button" class="boton boton--secundario" data-cerrar-envio>Cancelar</button>
+                                <button type="button" class="boton boton--primario" data-confirmar-envio>Sí, enviar</button>
                             </div>
                         </section>
                     </div>

@@ -122,12 +122,14 @@ class PreRegistroController extends Controller
      */
     private function vistaDocumentos(array $estado, AvancePersona $avance): array
     {
+        /* El papel semántico del chip, no un nombre de color: «cargado» informa
+           —el documento subió y nadie lo ha revisado— y por eso no es verde. */
         $clases = [
-            'pendiente' => 'pending',
-            'cargado' => 'loaded',
-            'revision' => 'review',
-            'aprobado' => 'approved',
-            'rechazado' => 'rejected',
+            'pendiente' => 'neutro',
+            'cargado' => 'info',
+            'revision' => 'revision',
+            'aprobado' => 'exito',
+            'rechazado' => 'peligro',
         ];
         $etiquetas = [
             'pendiente' => 'Pendiente',

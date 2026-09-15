@@ -10,9 +10,10 @@
      * el redirect; en las pantallas que ya no recargan hay que pintarlo en
      * sitio, y sin él la acción se quedaría sin confirmación visible.
      *
-     * Las clases se reciben de fuera porque el panel usa las de Bootstrap y el
-     * portal de la persona las suyas (pr-alert): el componente aporta la
-     * estructura y el rol de accesibilidad, no el aspecto.
+     * Las clases se reciben de fuera: el componente aporta la estructura y el rol
+     * de accesibilidad, no el aspecto. Lo que se le pasa es la caja compartida
+     * (notificacion notificacion--exito|--error) de partials/componentes.css;
+     * mientras queden pantallas sin migrar, alguna sigue enviando la suya.
      */
     window.SUIFComponentes.Alertas = {
         props: {

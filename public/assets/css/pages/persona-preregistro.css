@@ -1,316 +1,16 @@
-/* Estilos del flujo de pre-registro. */
+/*
+ * Pre-registro y documentación de la persona.
+ *
+ * Botones, chips de estado, cajas de mensaje, campos, avisos y el diálogo viven en
+ * partials/componentes.css: aquí queda sólo lo que es de estas dos pantallas —su
+ * composición, la tabla de documentos y las pantallas de cierre—.
+ */
+
 .pr-shell {
-    min-height: 0;
-    padding: 28px 32px 36px;
-}
-.pr-layout {
-    display: block;
-    max-width: 1040px;
-}
-.pr-card {
-    padding: 28px 32px;
-    border-radius: 12px;
-}
-
-.pr-grid {
-    gap: 16px 34px;
-}
-.pr-field input,
-.pr-field select {
-    padding: 11px 13px;
-}
-
-.pr-btn {
-    min-width: 132px;
-    padding: 10px 16px;
-}
-.pr-btn:disabled {
-    background: #e2e6ed;
-    color: #fff;
-    cursor: not-allowed;
-}
-@media (max-width: 767px) {
-    .pr-shell {
-        padding: 18px 14px;
-    }
-    .pr-card {
-        padding: 22px 18px;
-    }
-}
-.persona-sidebar {
-    flex-direction: column;
-    align-items: stretch;
-}
-.pr-layout,
-.pr-card {
     width: 100%;
-}
-.pr-card {
-    max-width: none;
-}
-.pr-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.pr-field {
-    min-width: 0;
-}
-.pr-field input,
-.pr-field select {
-    min-width: 0;
-}
-@media (max-width: 767px) {
-    .pr-grid {
-        grid-template-columns: 1fr;
-    }
-}
-.pr-shell {
     min-height: 760px;
-    padding: 38px 44px 54px;
-    background: rgba(255, 255, 255, 0.82);
-}
-.pr-layout {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: 28px;
-    max-width: 1220px;
-    margin: auto;
-}
-.pr-card {
-    background: #fff;
-    border-radius: 18px;
-    padding: 32px;
-    box-shadow: 0 12px 35px rgba(23, 42, 68, 0.09);
-}
-.pr-card h1,
-.pr-card h2 {
-    margin-top: 0;
-    color: #172a44;
-}
-.pr-muted {
-    color: #6e7887;
-}
-.pr-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-}
-.pr-field {
-    display: grid;
-    gap: 7px;
-}
-
-.pr-field input,
-.pr-field select {
-    width: 100%;
-    padding: 13px 14px;
-    border: 1px solid #d9dee7;
-    border-radius: 9px;
-    background: #fff;
-}
-.pr-actions {
-    margin-top: 24px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-}
-.pr-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 150px;
-    padding: 12px 18px;
-    border: 0;
-    border-radius: 9px;
-    background: #b98709;
-    color: #fff;
-    text-decoration: none;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    cursor: pointer;
-}
-.pr-btn--secondary {
-    background: #fff3bd;
-    color: #172a44;
-    border: 1px solid #ead99a;
-}
-.pr-btn[disabled] {
-    background: #dfe3e9;
-    cursor: not-allowed;
-}
-.pr-key {
-    display: inline-block;
-    padding: 15px 24px;
-    border-radius: 10px;
-    background: #b98709;
-    color: #fff;
-    font-size: var(--fs-seccion);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-}
-.pr-docs {
-    display: grid;
-    gap: 13px;
-    margin-top: 24px;
-}
-.pr-doc {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
-    gap: 14px;
-    align-items: center;
-    padding: 14px;
-    border: 1px solid #dce1e9;
-    border-radius: 12px;
-}
-.pr-status {
-    min-width: 110px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    text-align: center;
-    font-size: var(--fs-micro);
-    font-weight: 600;
-}
-.pr-status--pending {
-    background: #e5e8ed;
-}
-.pr-status--loaded {
-    background: #dff2e4;
-    color: #22713b;
-}
-.pr-status--review {
-    background: #ffe0a9;
-    color: #7a4d00;
-}
-.pr-status--approved {
-    background: #16a653;
-    color: #fff;
-}
-.pr-status--rejected {
-    background: #b5000a;
-    color: #fff;
-}
-.pr-file {
-    position: relative;
-    overflow: hidden;
-}
-.pr-file input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-.pr-observation {
-    margin-top: 18px;
-    padding: 18px;
-    border: 1px solid #ebc7c7;
-    border-radius: 12px;
-    background: #fff8f8;
-    color: #8d1117;
-}
-.pr-observation p {
-    white-space: pre-line;
-}
-.pr-format {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 14px;
-    align-items: center;
-    padding: 14px;
-    border: 1px solid #dce1e9;
-    border-radius: 12px;
-}
-.pr-alert {
-    margin-bottom: 18px;
-    padding: 13px 16px;
-    border-radius: 10px;
-    background: #eef7f0;
-    color: #245f35;
-}
-.pr-error {
-    background: #fff0f0;
-    color: #9b1717;
-}
-.pr-preview {
-    display: none;
-    margin-top: 8px;
-    font-size: var(--fs-auxiliar);
-}
-.pr-preview.is-visible {
-    display: block;
-}
-.pr-preview iframe {
-    width: 100%;
-    height: 360px;
-    border: 1px solid #dce1e9;
-    border-radius: 10px;
-    margin-top: 8px;
-}
-@media (max-width: 900px) {
-    .pr-layout {
-        grid-template-columns: 1fr;
-    }
-    .pr-grid {
-        grid-template-columns: 1fr;
-    }
-    .pr-doc,
-    .pr-format {
-        grid-template-columns: 1fr;
-    }
-    .pr-shell {
-        padding: 24px 16px;
-    }
-}
-.persona-sidebar {
-    flex-direction: column;
-    align-items: stretch;
-}
-.pr-shell {
-    width: 100%;
-    min-height: 0;
     padding: 28px 32px 36px;
-}
-.pr-layout {
-    display: block;
-    width: 100%;
-    max-width: none;
-    margin: 0;
-}
-.pr-card {
-    width: 100%;
-    max-width: none;
-    padding: 28px 32px;
-    border-radius: 12px;
-}
-
-.pr-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 34px;
-}
-.pr-field {
-    min-width: 0;
-}
-.pr-field input,
-.pr-field select {
-    min-width: 0;
-    padding: 11px 13px;
-}
-
-.pr-btn {
-    min-width: 132px;
-    padding: 10px 16px;
-}
-@media (max-width: 767px) {
-    .pr-shell {
-        padding: 18px 14px;
-    }
-    .pr-card {
-        padding: 22px 18px;
-    }
-    .pr-grid {
-        grid-template-columns: 1fr;
-    }
-}
-.pr-shell {
-    min-height: 760px;
+    background-color: rgba(255, 255, 255, 0.82);
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)),
         var(--fondo-sistema);
@@ -318,37 +18,152 @@
     background-repeat: no-repeat;
     background-size: cover;
 }
+
+.pr-layout {
+    width: 100%;
+}
+
 .pr-card {
     min-height: 640px;
+    padding: 28px 32px;
 }
+
+.pr-card h1,
+.pr-card h2 {
+    margin-top: 0;
+    color: #172a44;
+}
+
+.pr-muted {
+    color: var(--text-muted);
+}
+
+.pr-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 34px;
+}
+
+/* La CURP y el RFC se ven en mayúsculas mientras se escriben. */
+.pr-grid input[name="curp"],
+.pr-grid input[name="rfc"] {
+    text-transform: uppercase;
+}
+
+.pr-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.pr-docs {
+    display: grid;
+    gap: 13px;
+    margin-top: 24px;
+}
+
+.pr-format {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-caja);
+}
+
+/* Documentos personales, sin formato descargable. */
+.pr-format__nota {
+    color: var(--text-muted);
+    font-size: var(--fs-auxiliar);
+}
+
+/* La etiqueta se ve como un botón y esconde su input dentro. */
+.pr-file {
+    position: relative;
+    overflow: hidden;
+}
+
+.pr-file input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.pr-preview {
+    display: none;
+    margin-top: 8px;
+    font-size: var(--fs-auxiliar);
+}
+
+.pr-preview.is-visible {
+    display: block;
+}
+
+.pr-preview iframe {
+    width: 100%;
+    height: 360px;
+    margin-top: 8px;
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+}
+
+@media (max-width: 900px) {
+    .pr-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pr-format {
+        grid-template-columns: 1fr;
+    }
+
+    .pr-shell {
+        padding: 24px 16px;
+    }
+}
+
 @media (max-width: 767px) {
     .pr-shell {
         min-height: 0;
+        padding: 18px 14px;
         background-size: auto 100%;
     }
+
     .pr-card {
         min-height: 0;
+        padding: 22px 18px;
+    }
+
+    .pr-grid {
+        grid-template-columns: 1fr;
     }
 }
+
+/* ─── Clave de acceso ────────────────────────────────────────────────── */
+
 .pr-clave {
     width: min(100%, 640px);
     margin: 0 auto;
     padding: 4.5rem 1rem 3.5rem;
     text-align: center;
 }
+
 .pr-clave__icon {
-    width: 3.5rem;
-    height: 3.5rem;
     display: inline-grid;
     place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 50%;
-    background: #e6f4ea;
-    color: #20753e;
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
     font-size: var(--fs-pagina);
 }
+
 .pr-clave__eyebrow {
     margin: 1.35rem 0 0.35rem;
-    color: #8b6717;
+    color: var(--unam-gold-dark);
     font-size: var(--fs-micro);
     font-weight: 600;
     letter-spacing: 0.04em;
@@ -358,9 +173,9 @@
 .pr-clave__texto {
     max-width: 47ch;
     margin: 1rem auto 1.75rem;
-    color: #5f6b7a;
-
+    color: var(--text-muted);
 }
+
 .pr-clave__codigo {
     display: flex;
     align-items: center;
@@ -371,135 +186,46 @@
     border-radius: 0.7rem;
     background: #fffaf0;
 }
+
 .pr-clave__codigo > span {
     color: #172a44;
     font-size: var(--fs-seccion);
     font-weight: 600;
     letter-spacing: 0.08em;
 }
-.pr-clave__copiar {
-    padding: 0.55rem 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid #d9b75d;
-    border-radius: 0.45rem;
-    background: #fff;
-    color: #6f4d00;
-    cursor: pointer;
-}
-.pr-clave__copiar:hover,
-.pr-clave__copiar:focus-visible {
-    background: #fff2c9;
-}
+
 .pr-clave__ayuda {
     margin: 0.75rem 0 0;
-    color: #667085;
+    color: var(--text-muted);
     font-size: var(--fs-auxiliar);
 }
-.pr-clave + .pr-actions {
-    width: min(100%, 640px);
-    margin: 0 auto;
-    padding-top: 1.5rem;
+
+.pr-clave .pr-actions {
+    width: 100%;
+    margin: 2rem 0 0;
+    padding: 0;
 }
+
 @media (max-width: 767px) {
     .pr-clave {
         padding: 2.5rem 0 2rem;
     }
 
     .pr-clave__codigo {
-        align-items: stretch;
         flex-direction: column;
+        align-items: stretch;
     }
-    .pr-clave__copiar {
-        justify-content: center;
-    }
-    .pr-clave + .pr-actions {
-        width: 100%;
-    }
-}
-.pr-clave .pr-actions {
-    justify-content: flex-end;
-    width: 100%;
-    margin: 2rem 0 0;
-    padding: 0;
-}
-@media (max-width: 767px) {
+
     .pr-clave .pr-actions {
-        width: 100%;
         margin-top: 1.5rem;
     }
 }
 
-/* ─── Aviso de captura de datos personales ───────────────────────────── */
-
-.pr-notice--identidad {
-    text-align: left;
-}
-
-.pr-notice--identidad p {
-    margin: 0;
-}
-
-.pr-notice--identidad p + p {
-    margin-top: 0.4rem;
-}
-
-/* La CURP y el RFC se ven en mayúsculas mientras se escriben. */
-.pr-field input[name="curp"],
-.pr-field input[name="rfc"] {
-    text-transform: uppercase;
-}
-
-/* ─── Aviso de la pantalla de formatos ───────────────────────────────── */
-
-.pr-notice--formatos {
-    text-align: left;
-}
-
-.pr-notice--formatos p {
-    margin: 0 0 0.5rem;
-}
-
-.pr-notice--formatos ul {
-    margin: 0;
-    padding-left: 1.15rem;
-}
-
-.pr-notice--formatos li + li {
-    margin-top: 0.3rem;
-}
-
-/* Documentos personales, sin formato descargable. */
-.pr-format__nota {
-    color: #6b7280;
-    font-size: var(--fs-auxiliar);
-    font-style: italic;
-}
-
-/* Enlace para volver a consultar los formatos desde la carga. */
-.pr-volver-formatos {
-    margin: 0 0 1.25rem;
-}
-
-.pr-volver-formatos a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: #b38612;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.pr-volver-formatos a:hover,
-.pr-volver-formatos a:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 0.18em;
-}
-
-
 /* ─── Tabla de documentación ─────────────────────────────────────────── */
+
+/* Las filas son tarjetas separadas, no renglones de una rejilla: cada documento se
+   atiende por su cuenta y arrastra sus propios botones y su observación. Por eso no
+   usa .tabla, que es la de las bandejas administrativas. */
 
 .pr-tabla-envoltorio {
     margin-bottom: 1.75rem;
@@ -514,32 +240,32 @@
 
 .pr-tabla thead th {
     padding: 0 1rem 0.35rem;
-    color: #6b7280;
+    color: var(--text-muted);
     text-align: left;
 }
 
 .pr-tabla tbody td {
     padding: 1rem;
-    background: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    border-bottom: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--surface-white);
     vertical-align: middle;
 }
 
 .pr-tabla tbody td:first-child {
-    border-left: 1px solid #e5e7eb;
+    border-left: 1px solid var(--border-light);
     border-radius: 10px 0 0 10px;
 }
 
 .pr-tabla tbody td:last-child {
-    border-right: 1px solid #e5e7eb;
+    border-right: 1px solid var(--border-light);
     border-radius: 0 10px 10px 0;
 }
 
 .pr-fila__nombre {
     display: block;
     margin-bottom: 0.4rem;
-    color: #112f4b;
+    color: var(--unam-blue);
 }
 
 .pr-fila__acciones {
@@ -552,45 +278,44 @@
 .pr-fila__archivo {
     display: block;
     margin-top: 0.45rem;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: var(--fs-auxiliar);
     overflow-wrap: anywhere;
 }
 
 /* El color del borde refuerza el estado, además del texto del chip. */
 .pr-fila--rechazado td {
-    border-color: #dc2626;
+    border-color: var(--peligro-texto);
 }
 
 .pr-fila--aprobado td {
-    border-color: #16a34a;
+    border-color: var(--exito-solido);
 }
 
 /* La observación cuelga visualmente de la fila anterior. */
 .pr-fila-observacion td {
     padding-top: 0;
-    background: transparent;
     border: 0;
+    background: transparent;
 }
 
-/* La previsualización encabeza la celda: es lo que la persona está
-   juzgando, así que va arriba y ocupa todo el ancho disponible. */
+/* La previsualización encabeza la celda: es lo que la persona está juzgando, así
+   que va arriba y ocupa todo el ancho disponible. */
 .pr-tabla .pr-preview {
     width: 100%;
     margin: 0 0 0.6rem;
 }
 
 .pr-tabla .pr-preview iframe {
-    width: 100%;
     height: 260px;
     margin-top: 0;
 }
 
-/* Tres carriles fijos —abrir, subsanar, confirmar— para que los botones de
-   un documento caigan en la misma vertical que los del siguiente aunque a
-   ese le falte alguno: centrarlos movía cada uno según cuántos hermanos
-   tuviera al lado, y ningún renglón coincidía con el de arriba. El
-   modificador deja fuera al "Generar" de la columna Formato. */
+/* Tres carriles fijos —abrir, subsanar, confirmar— para que los botones de un
+   documento caigan en la misma vertical que los del siguiente aunque a ese le falte
+   alguno: centrarlos movía cada uno según cuántos hermanos tuviera al lado, y ningún
+   renglón coincidía con el de arriba. El modificador deja fuera al «Generar» de la
+   columna Formato. */
 .pr-fila__acciones--archivo {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -629,7 +354,7 @@
 
     .pr-tabla tbody td {
         display: block;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--border-light);
         border-bottom: 0;
         border-radius: 0;
     }
@@ -639,7 +364,7 @@
     }
 
     .pr-tabla tbody td:last-child {
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-light);
         border-radius: 0 0 10px 10px;
     }
 
@@ -647,7 +372,7 @@
         content: attr(data-titulo);
         display: block;
         margin-bottom: 0.4rem;
-        color: #6b7280;
+        color: var(--text-muted);
         font-size: var(--fs-micro);
         font-weight: 600;
         letter-spacing: 0.04em;
@@ -658,146 +383,86 @@
         content: none;
     }
 
-    /* Apilada no hay renglón de al lado con el que alinearse, y tres
-       carriles en 375px dejarían los rótulos partidos: los botones
-       vuelven a fluir uno tras otro. */
+    /* Apilada no hay renglón de al lado con el que alinearse, y tres carriles en
+       375px dejarían los rótulos partidos: los botones vuelven a fluir uno tras
+       otro. */
     .pr-fila__acciones--archivo {
         display: flex;
     }
 }
 
-/* ─── Resumen de datos de la persona ────────────────────────────── */
+/* ─── Resumen de datos de la persona ─────────────────────────────────── */
 
 .pr-datos {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 0.9rem;
     margin: 0 0 1.75rem;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .pr-datos dt {
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .pr-datos dd {
     margin: 0.2rem 0 0;
-    color: #112f4b;
+    color: var(--unam-blue);
     font-weight: 600;
     overflow-wrap: anywhere;
 }
 
-/* ─── Diálogo de confirmación del envío a revisión ───────────────────── */
+/* ─── Cierres de flujo ───────────────────────────────────────────────── */
 
-.pr-modal[hidden] {
-    display: none;
-}
+/* Documentación aceptada y trámite interrumpido son la misma pantalla con distinto
+   desenlace: mismo ancho, mismo círculo y mismo orden. */
 
-.pr-modal {
-    position: fixed;
-    z-index: 1200;
-    inset: 0;
-    padding: 1rem;
-    display: grid;
-    place-items: center;
-}
-
-.pr-modal__fondo {
-    position: absolute;
-    inset: 0;
-    background: rgba(11, 26, 46, 0.58);
-}
-
-.pr-modal__card {
-    position: relative;
-    width: min(100%, 31rem);
-    padding: 1.75rem;
-    border-radius: 0.75rem;
-    background: #ffffff;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-}
-
-.pr-modal__card h2 {
-    margin: 0 0 0.75rem;
-    color: #172a44;
-    font-size: var(--fs-subtitulo);
-}
-
-.pr-modal__card p {
-    margin: 0 0 1.5rem;
-    color: #5f6b7a;
-
-}
-
-.pr-modal__acciones {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-/* El fondo no se desplaza mientras el diálogo está abierto. */
-.pr-modal-abierto {
-    overflow: hidden;
-}
-
-/* El botón se apaga en cuanto la persona confirma, para que se note
-   que el envío ya salió y no se pueda repetir el clic. */
-.pr-btn--enviando,
-.pr-btn--enviando:hover {
-    background: #dfe3e9;
-    border-color: #dfe3e9;
-    color: #6b7280;
-    cursor: not-allowed;
-}
-
-/* ─── Aviso de expediente ya enviado ─────────────────────────────────── */
-
-.pr-notice--enviado {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    background: #eef7f0;
-    color: #245f35;
-    text-align: left;
-}
-
-/* ─── Confirmación de documentación aceptada ─────────────────────────── */
-
-.pr-aceptado {
+.pr-aceptado,
+.pr-interrumpido {
     max-width: 640px;
     margin: 2rem auto 0;
     text-align: center;
 }
 
-.pr-aceptado__icono {
+.pr-aceptado__icono,
+.pr-interrumpido__icono {
     display: inline-grid;
     place-items: center;
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 3.5rem;
+    height: 3.5rem;
     margin-bottom: 1rem;
     border-radius: 50%;
-    background: #d8f0e0;
-    color: #0f6e56;
     font-size: var(--fs-pagina);
 }
 
-.pr-aceptado h1 {
+.pr-aceptado__icono {
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
+}
+
+.pr-interrumpido__icono {
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
+}
+
+.pr-aceptado h1,
+.pr-interrumpido h1 {
     margin: 0 0 0.3rem;
     color: #16263f;
 }
 
-.pr-aceptado__texto {
-    margin: 0 auto 1.5rem;
+.pr-aceptado__texto,
+.pr-interrumpido__texto,
+.pr-interrumpido__sin-motivo {
     max-width: 46ch;
-
+    margin: 0 auto 1.5rem;
 }
 
 .pr-aceptado__lista {
     margin: 0 0 1.75rem;
     padding: 0.5rem 0.25rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-caja);
     list-style: none;
-    border: 1px solid #e0ddd5;
-    border-radius: 12px;
     text-align: left;
 }
 
@@ -814,29 +479,13 @@
 }
 
 .pr-aceptado__doc {
-    color: #112f4b;
+    color: var(--unam-blue);
     font-weight: 600;
     overflow-wrap: anywhere;
 }
 
-.pr-aceptado__abrir {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: #b38612;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.pr-aceptado__abrir:hover,
-.pr-aceptado__abrir:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 0.18em;
-}
-
-.pr-aceptado__acciones {
+.pr-aceptado__acciones,
+.pr-interrumpido__acciones {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -847,101 +496,27 @@
     margin: 0;
 }
 
+/* El motivo se alinea a la izquierda dentro de una pantalla centrada. */
+.pr-interrumpido .aviso-motivo {
+    margin: 0 0 1.75rem;
+    text-align: left;
+}
+
 @media (max-width: 767.98px) {
     .pr-aceptado__fila {
         grid-template-columns: 1fr;
         justify-items: start;
         gap: 0.5rem;
     }
-
-    .pr-modal__acciones .pr-btn {
-        flex: 1 1 100%;
-    }
 }
 
-/* ─── Aviso de datos no modificables tras el envío ───────────────────── */
-
-.pr-notice--bloqueo {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    text-align: left;
-}
-
-/* ─── Trámite interrumpido ───────────────────────────────────────────── */
-
-.pr-interrumpido {
-    max-width: 640px;
-    margin: 2rem auto 0;
-    text-align: center;
-}
-
-.pr-interrumpido__icono {
-    display: inline-grid;
-    place-items: center;
-    width: 3.2rem;
-    height: 3.2rem;
-    margin-bottom: 1rem;
-    border-radius: 50%;
-    background: #fbe3e3;
-    color: #b5000a;
-    font-size: var(--fs-pagina);
-}
-
-.pr-interrumpido h1 {
-    margin: 0 0 0.3rem;
-    color: #16263f;
-}
-
-.pr-interrumpido__texto {
-    margin: 0 auto 1.5rem;
-    max-width: 46ch;
-
-}
-
-.pr-interrumpido__motivo {
-    margin: 0 0 1.75rem;
-    padding: 18px;
-    border: 1px solid #ebc7c7;
-    border-radius: 12px;
-    background: #fff8f8;
-    color: #8d1117;
-    text-align: left;
-}
-
-.pr-interrumpido__motivo strong {
-    display: block;
-    margin-bottom: 0.4rem;
-    font-size: var(--fs-auxiliar);
-}
-
-/* El motivo lo escribe una persona: los saltos de línea que capturó se
-   respetan, igual que en .pr-observation. */
-.pr-interrumpido__motivo p {
-    margin: 0;
-
-    white-space: pre-line;
-    overflow-wrap: anywhere;
-}
-
-.pr-interrumpido__sin-motivo {
-    margin: 0 auto 1.75rem;
-    max-width: 46ch;
-}
-
-.pr-interrumpido__acciones {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-}
-/* ─── Aviso de privacidad del pre-registro ───────────────── */
+/* ─── Aviso de privacidad del pre-registro ───────────────────────────── */
 
 .pr-aviso {
     margin: 22px 0;
     padding: 18px 20px;
-    border: 1px solid #dce1e9;
-    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-caja);
     background: #f8fafc;
     font-size: var(--fs-auxiliar);
     text-align: left;
@@ -966,5 +541,5 @@
     width: 18px;
     height: 18px;
     margin-top: 0.15rem;
-    accent-color: #b98709;
+    accent-color: var(--unam-blue);
 }

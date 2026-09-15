@@ -39,12 +39,12 @@
             <alertas
                 :mensaje="aviso.mensaje"
                 :tipo="aviso.tipo"
-                :clase="aviso.tipo === 'success' ? 'pr-alert' : 'pr-alert pr-error'"></alertas>
+                :clase="aviso.tipo === 'success' ? 'notificacion notificacion--exito' : 'notificacion notificacion--error'"></alertas>
 
             <h1>Documentación requerida</h1>
             <p class="pr-muted">Sube los documentos uno por uno. Cada PDF debe pesar máximo 1 MB.</p>
             <p class="pr-volver-formatos">
-                <a :href="rutaFormatos">
+                <a class="boton boton--texto" :href="rutaFormatos">
                     <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                     Ver o descargar los formatos otra vez
                 </a>
@@ -64,12 +64,12 @@
                             <tr class="pr-fila" :class="'pr-fila--' + doc.estado">
                                 <td data-titulo="Documento">
                                     <strong class="pr-fila__nombre">{{ doc.nombre }}</strong>
-                                    <span class="pr-status" :class="'pr-status--' + doc.clase">{{ doc.etiqueta }}</span>
+                                    <span class="estado" :class="'estado--' + doc.clase">{{ doc.etiqueta }}</span>
                                 </td>
 
                                 <td data-titulo="Formato">
                                     <div class="pr-fila__acciones" v-if="doc.es_formato">
-                                        <a class="pr-btn" :href="doc.ruta_formato">
+                                        <a class="boton boton--primario" :href="doc.ruta_formato">
                                             <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                                             <span>Generar</span>
                                         </a>
@@ -88,7 +88,7 @@
                                     <div class="pr-fila__acciones pr-fila__acciones--archivo">
                                         <a
                                             v-if="doc.tiene_archivo"
-                                            class="pr-btn pr-btn--secondary"
+                                            class="boton boton--secundario"
                                             target="_blank"
                                             :href="doc.ruta_ver">
                                             <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
@@ -103,7 +103,7 @@
                                             enctype="multipart/form-data"
                                             class="pr-upload-form"
                                             @submit.prevent="subir(doc, $event)">
-                                            <label class="pr-btn pr-file">
+                                            <label class="boton boton--primario pr-file">
                                                 <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                                 <span>{{ etiquetaCarga(doc) }}</span>
                                                 <input
@@ -118,24 +118,24 @@
 
                                         <button
                                             v-if="doc.puede_reemplazar && elegidos[doc.slug]"
-                                            class="pr-btn"
+                                            class="boton boton--primario"
                                             type="submit"
                                             :form="'pr-subir-' + doc.slug"
-                                            :class="{ 'pr-btn--enviando': subiendo === doc.slug }"
+                                            :class="{ 'boton--cargando': subiendo === doc.slug }"
                                             :disabled="subiendo !== null">
                                             {{ subiendo === doc.slug ? 'Subiendo…' : 'Confirmar carga' }}
                                         </button>
                                     </div>
 
                                     <small class="pr-fila__archivo" v-if="etiquetaArchivo(doc)">{{ etiquetaArchivo(doc) }}</small>
-                                    <small class="pr-fila__archivo pr-error" v-if="errores[doc.slug]" role="alert">{{ errores[doc.slug] }}</small>
+                                    <small class="pr-fila__archivo campo__error" v-if="errores[doc.slug]" role="alert">{{ errores[doc.slug] }}</small>
                                 </td>
                             </tr>
 
                             <tr class="pr-fila-observacion" v-if="doc.observacion">
                                 <td colspan="3">
-                                    <div class="pr-observation">
-                                        <strong>Motivo del rechazo</strong>
+                                    <div class="aviso-motivo">
+                                        <strong class="aviso-motivo__titulo">Motivo del rechazo</strong>
                                         <p>{{ doc.observacion }}</p>
                                     </div>
                                 </td>
@@ -145,11 +145,11 @@
                 </table>
             </div>
 
-            <p class="pr-notice" v-if="fase === 'aprobado'">
+            <p class="aviso aviso--hecho" v-if="fase === 'aprobado'">
                 Tus documentos fueron aprobados. Espera la resolución de tu solicitud.
             </p>
 
-            <p class="pr-notice pr-notice--enviado" role="status" v-else-if="fase === 'revision' && !solicitudCerrada">
+            <p class="aviso aviso--hecho" role="status" v-else-if="fase === 'revision' && !solicitudCerrada">
                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                 <span>
                     Tus documentos fueron enviados a revisión{{ fechaEnvio ? ' el ' + fechaEnvio : '' }}.
@@ -163,22 +163,22 @@
                     :action="rutaEnviar"
                     class="pr-actions"
                     @submit.prevent="abrirModal($event)">
-                    <button type="submit" class="pr-btn" :disabled="enviando">Enviar a revisión</button>
+                    <button type="submit" class="boton boton--primario" :disabled="enviando">Enviar a revisión</button>
                 </form>
 
-                <div class="pr-modal" v-if="modalAbierto" @keydown="alTeclearEnModal">
-                    <div class="pr-modal__fondo" @click="cerrarModal"></div>
-                    <section class="pr-modal__card" role="dialog" aria-modal="true"
+                <div class="dialogo" v-if="modalAbierto" @keydown="alTeclearEnModal">
+                    <div class="dialogo__velo" @click="cerrarModal"></div>
+                    <section class="dialogo__tarjeta" role="dialog" aria-modal="true"
                              aria-labelledby="pr-envio-titulo" aria-describedby="pr-envio-texto">
-                        <h2 id="pr-envio-titulo">¿Enviar tus documentos a revisión?</h2>
-                        <p id="pr-envio-texto">
+                        <h2 class="dialogo__titulo" id="pr-envio-titulo">¿Enviar tus documentos a revisión?</h2>
+                        <p class="dialogo__texto" id="pr-envio-texto">
                             Se {{ porEnviar === 1 ? 'enviará 1 documento' : 'enviarán ' + porEnviar + ' documentos' }}.
                             Después ya no podrás reemplazarlos hasta que el equipo administrativo termine de revisarlos.
                         </p>
-                        <div class="pr-modal__acciones">
-                            <button type="button" class="pr-btn pr-btn--secondary" ref="cancelar"
+                        <div class="dialogo__acciones">
+                            <button type="button" class="boton boton--secundario" ref="cancelar"
                                     :disabled="enviando" @click="cerrarModal">Cancelar</button>
-                            <button type="button" class="pr-btn" :class="{ 'pr-btn--enviando': enviando }"
+                            <button type="button" class="boton boton--primario" :class="{ 'boton--cargando': enviando }"
                                     :disabled="enviando" @click="confirmarEnvio">
                                 {{ enviando ? 'Enviando…' : 'Sí, enviar' }}
                             </button>
@@ -383,7 +383,7 @@
                 /* El aviso que trajo el servidor con la página pertenece a la
                    visita anterior: se retira para no dejar dos mensajes. */
                 Array.prototype.forEach.call(
-                    document.querySelectorAll('.pr-card > .pr-alert'),
+                    document.querySelectorAll('.pr-card > .notificacion'),
                     function (nodo) { nodo.remove(); }
                 );
             },
@@ -420,12 +420,12 @@
             }
         },
         mounted: function () {
-            document.body.classList.remove('pr-modal-abierto');
+            document.body.classList.remove('dialogo-abierto');
         },
         watch: {
             /* La clase la lleva el <body>, que está fuera de la app. */
             modalAbierto: function (abierto) {
-                document.body.classList.toggle('pr-modal-abierto', abierto);
+                document.body.classList.toggle('dialogo-abierto', abierto);
             }
         }
     }).mount(raiz);
