@@ -111,18 +111,26 @@
         </div>
     </noscript>
 
-    <form method="GET" action="{{ route('persona.sede.index') }}" class="sede-filtro">
-        <input type="search" name="buscar" placeholder="Buscar por nombre o dirección…" value="{{ $buscarActual }}">
-        <button type="submit" class="sede-boton sede-boton--filtrar">Filtrar</button>
-        @if($buscarActual !== '')
-            <a href="{{ route('persona.sede.index') }}" class="sede-boton sede-boton--secundario">Limpiar</a>
-        @endif
+    {{-- La lista se acota mientras se escribe, como en las bandejas del admin,
+         así que no hay botón de filtrar. El submit se intercepta porque Enter
+         enviaría el formulario igual. --}}
+    <form class="sede-filtro" role="search" @submit.prevent>
+        <input
+            type="search"
+            v-model="buscar"
+            ref="buscador"
+            placeholder="Buscar por nombre o dirección…"
+            aria-label="Buscar sede por nombre o dirección"
+            autocomplete="off">
+        <button type="button" class="sede-boton sede-boton--limpiar" v-if="buscar" @click="limpiarBusqueda">Limpiar</button>
     </form>
 
-    <p class="sede-contador">Sedes programadas · @{{ sedes.length }}</p>
+    {{-- Lo anuncia el contador y no la lista: con el filtro en vivo, la lista
+         entera se volvería a leer en cada tecla. --}}
+    <p class="sede-contador" role="status">Sedes programadas · @{{ sedesFiltradas.length }}</p>
 
-    <div class="sede-lista" aria-live="polite">
-        <article v-for="sede in sedes" :key="sede.id" class="sede-tarjeta">
+    <div class="sede-lista">
+        <article v-for="sede in sedesFiltradas" :key="sede.id" class="sede-tarjeta">
             <div class="sede-tarjeta__info">
                 <h2 class="sede-tarjeta__nombre">@{{ sede.nombre }}</h2>
                 <p class="sede-tarjeta__direccion">@{{ sede.direccion }}</p>
@@ -170,7 +178,7 @@
             </form>
         </article>
 
-        <p v-if="!sedes.length" class="sede-muted">No hay sedes programadas que coincidan con tu búsqueda.</p>
+        <p v-if="!sedesFiltradas.length" class="sede-muted">No hay sedes programadas que coincidan con tu búsqueda.</p>
     </div>
 
     {{-- La selección no se puede deshacer, así que se pide confirmación

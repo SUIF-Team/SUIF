@@ -29,9 +29,14 @@ use ZipArchive;
  * archivo—, porque AGENTS.md no admite datos reales en Git. Si la DEC manda
  * otra versión, se limpia igual antes de comitearla.
  *
- * ponytail: CASILLAS y las celdas de celdas() están atadas a esta versión de
- * la plantilla. Si la DEC la cambia, se actualizan aquí; FormatoPagoTest lee
- * el archivo generado y falla si algo deja de caer donde debe.
+ * La tipografía tampoco se escribe aquí: cada celda conserva su estilo, y la
+ * plantilla ya los trae en Arial 8 sin negritas, centrados y abajo. El evento
+ * va en negritas, y el evento y el régimen conservan su alineación.
+ *
+ * ponytail: CASILLAS, las celdas de celdas() y esos estilos están atados a
+ * esta versión de la plantilla. Si la DEC la cambia, se actualizan aquí y en
+ * sus estilos; FormatoPagoTest lee el archivo generado y falla si algo deja de
+ * caer donde debe o pierde su tipografía.
  */
 class FormatoPagoDec
 {
@@ -347,10 +352,15 @@ class FormatoPagoDec
         $alineacion = $documento->createElementNS(self::NS_TRAZO, 'a:pPr');
         $alineacion->setAttribute('algn', 'ctr');
 
+        /* Arial 8 sin negritas, como las celdas. Sin tipografía explícita la
+           «X» saldría en la fuente del tema, que es Calibri. */
         $letra = $documento->createElementNS(self::NS_TRAZO, 'a:rPr');
         $letra->setAttribute('lang', 'es-MX');
         $letra->setAttribute('sz', '800');
-        $letra->setAttribute('b', '1');
+
+        $tipografia = $documento->createElementNS(self::NS_TRAZO, 'a:latin');
+        $tipografia->setAttribute('typeface', 'Arial');
+        $letra->appendChild($tipografia);
 
         $tramo = $documento->createElementNS(self::NS_TRAZO, 'a:r');
         $tramo->appendChild($letra);

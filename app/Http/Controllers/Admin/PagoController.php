@@ -54,19 +54,7 @@ class PagoController extends Controller
             ? [$notificacion_resultado->accionReanudarPago($pago['id'])]
             : [];
 
-        /* El formato de la DEC sólo se ofrece con el pago validado: antes no
-           hay nada que facturar. */
-        $formato = null;
-
-        if ($pago['estado_persistido'] === ConsultaPagos::COMPLETADO) {
-            $responsables = $gestion_responsables->activos();
-
-            $formato = [
-                'motivo' => $formato_pago->motivoNoDisponible($pago, $responsables),
-                'responsables' => $responsables,
-                'sugerido' => $this->responsableSugerido($pago, $responsables),
-            ];
-        }
+        $formato = $this->opcionesFormato($pago, $gestion_responsables, $formato_pago);
 
         return view('admin.pago-detalle', compact('pago', 'acciones', 'formato'));
     }
@@ -264,7 +252,9 @@ class PagoController extends Controller
     public function resultado(
         string $id,
         ConsultaPagos $consulta_pagos,
-        NotificacionResultado $notificacion_resultado
+        NotificacionResultado $notificacion_resultado,
+        GestionResponsables $gestion_responsables,
+        FormatoPagoDec $formato_pago
     ) {
         $pago = $this->obtenerPago($id, $consulta_pagos);
 
@@ -278,9 +268,11 @@ class PagoController extends Controller
 
         $notificacion = $notificacion_resultado->paraPago($pago);
 
+        /* Validar trae a la DEC aquí, y lo que sigue es generar el comprobante. */
         return view('admin.notificacion-resultado', [
             'persona' => $notificacion['persona'],
             'notificacion' => $notificacion,
+            'formato' => $this->opcionesFormato($pago, $gestion_responsables, $formato_pago),
         ]);
     }
 
@@ -301,6 +293,32 @@ class PagoController extends Controller
         }
 
         return $pago;
+    }
+
+    /**
+     * Lo que necesita la tarjeta «Generar comprobante», o null mientras el
+     * pago no esté validado: antes no hay nada que facturar.
+     *
+     * @param  array<string, mixed>  $pago
+     * @return array{ruta: string, motivo: ?string, responsables: array<int, array<string, mixed>>, sugerido: ?int}|null
+     */
+    private function opcionesFormato(
+        array $pago,
+        GestionResponsables $gestion_responsables,
+        FormatoPagoDec $formato_pago
+    ): ?array {
+        if ($pago['estado_persistido'] !== ConsultaPagos::COMPLETADO) {
+            return null;
+        }
+
+        $responsables = $gestion_responsables->activos();
+
+        return [
+            'ruta' => route('admin.pagos.formato', ['id' => $pago['id']]),
+            'motivo' => $formato_pago->motivoNoDisponible($pago, $responsables),
+            'responsables' => $responsables,
+            'sugerido' => $this->responsableSugerido($pago, $responsables),
+        ];
     }
 
     /**

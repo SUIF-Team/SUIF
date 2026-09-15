@@ -8,6 +8,10 @@
  * catálogo completo en cada sondeo y aquí se sustituye entero, en lugar de
  * parchar nodo por nodo.
  *
+ * La búsqueda acota la lista aquí mismo mientras se escribe, sin distinguir
+ * mayúsculas ni acentos, sobre ese catálogo completo: si el sondeo también
+ * filtrara, borrar letras no devolvería sedes hasta el siguiente.
+ *
  * El envío va por fetch: pide confirmación —apartar el lugar no se deshace— y,
  * si el horario se llenó mientras tanto, lo dice sin recargar, con el catálogo
  * todavía delante. Sin JavaScript el formulario se envía como siempre.
@@ -37,6 +41,16 @@
     var formularioPendiente = null;
     var focoAnterior = null;
 
+    /* Quien busca «coyoacan» espera encontrar «Coyoacán». NFD separa el acento
+       de su letra como marca combinante, y \p{M} quita esas marcas. */
+    function normalizar(texto) {
+        return String(texto || '')
+            .trim()
+            .toLocaleLowerCase('es-MX')
+            .normalize('NFD')
+            .replace(/\p{M}/gu, '');
+    }
+
     window.Vue.createApp({
         components: {
             alertas: window.SUIFComponentes.Alertas
@@ -44,7 +58,7 @@
         data: function () {
             return {
                 sedes: vista.sedes || [],
-                buscar: vista.buscar || '',
+                buscar: '',
                 umbralCupoBajo: vista.umbralCupoBajo || 15,
                 /* sede.id -> evaluacion_id marcada */
                 seleccion: {},
@@ -56,7 +70,28 @@
                 avisoError: raiz.dataset.error || ''
             };
         },
+        computed: {
+            sedesFiltradas: function () {
+                var termino = normalizar(this.buscar);
+
+                if (!termino) {
+                    return this.sedes;
+                }
+
+                return this.sedes.filter(function (sede) {
+                    return normalizar(sede.nombre).includes(termino)
+                        || normalizar(sede.direccion).includes(termino);
+                });
+            }
+        },
         methods: {
+            /* El botón desaparece al vaciar el término: el foco vuelve al
+               campo para que no se pierda en la página. */
+            limpiarBusqueda: function () {
+                this.buscar = '';
+                this.$refs.buscador.focus();
+            },
+
             /* Las fechas llegan como AAAA-MM-DD; se voltean a mano para no
                pasar por Date, que reinterpretaría la cadena en UTC. */
             fechaCorta: function (iso) {
@@ -197,11 +232,9 @@
 
             /* ── Sondeo ───────────────────────────────────────────────────── */
 
+            /* Sin término: el filtro se aplica en sedesFiltradas. */
             consultar: function () {
-                var url = raiz.dataset.disponibilidadUrl
-                    + '?buscar=' + encodeURIComponent(this.buscar);
-
-                window.fetch(url, {
+                window.fetch(raiz.dataset.disponibilidadUrl, {
                     headers: { Accept: 'application/json' },
                     credentials: 'same-origin'
                 }).then(function (respuesta) {

@@ -62,7 +62,7 @@ class GestionSedes
      * Una sede cuyas aplicaciones vencieron todas se queda sin horarios, deja de
      * estar «programada» y se cae por el filtro que ya existía.
      */
-    public function catalogoParticipante(string $buscar = ''): Collection
+    public function catalogoParticipante(): Collection
     {
         return $this->filasCatalogo()
             ->map(fn (array $sede): array => $this->armarSede(
@@ -76,14 +76,6 @@ class GestionSedes
                 ))
             ))
             ->where('programada', true)
-            ->filter(function (array $sede) use ($buscar): bool {
-                if ($buscar === '') {
-                    return true;
-                }
-
-                return mb_stripos($sede['nombre'], $buscar) !== false
-                    || mb_stripos($sede['direccion'], $buscar) !== false;
-            })
             ->values();
     }
 

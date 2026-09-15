@@ -197,8 +197,19 @@
     white-space: nowrap;
 }
 
-.sede-boton--filtrar {
-    background: #c69a3a;
+/* El «Limpiar» de las bandejas del admin que filtran en vivo
+   (admin-bandeja-preregistros.css): el mismo botón en los dos lados. */
+.sede-boton--limpiar {
+    border: 1px solid #fecaca;
+    background: #fee2e2;
+    color: #b91c1c;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sede-boton--limpiar:hover,
+.sede-boton--limpiar:focus-visible {
+    background: #fecaca;
+    color: #991b1b;
 }
 
 .sede-boton--deshabilitado {

@@ -550,7 +550,12 @@ class GestionSedesTest extends TestCase
             ->assertSee('Sede vencida');
     }
 
-    public function test_el_sondeo_respeta_el_filtro_de_busqueda_vigente(): void
+    /**
+     * La búsqueda de sedes acota la lista en el navegador. Para eso el sondeo
+     * trae el catálogo completo aunque llegue un término: si filtrara, borrar
+     * letras no devolvería las sedes hasta el siguiente sondeo.
+     */
+    public function test_la_busqueda_de_sedes_filtra_en_el_navegador_sobre_el_catalogo_completo(): void
     {
         $this->crearSedeProgramada(1);
 
@@ -572,8 +577,14 @@ class GestionSedesTest extends TestCase
         $this->actingAs(Usuario::findOrFail(1))
             ->getJson(route('persona.sede.disponibilidad', ['buscar' => 'Norte']))
             ->assertOk()
-            ->assertJsonCount(1, 'sedes')
-            ->assertJsonPath('sedes.0.nombre', 'Sede Norte');
+            ->assertJsonCount(2, 'sedes');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.sede.index'))
+            ->assertOk()
+            ->assertSee('v-model="buscar"', false)
+            ->assertSee('sede-boton--limpiar', false)
+            ->assertDontSee('sede-boton--filtrar', false);
     }
 
     public function test_el_comprobante_de_sede_se_entrega_en_pdf_solo_con_la_sede_confirmada(): void

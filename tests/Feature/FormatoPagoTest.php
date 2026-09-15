@@ -56,7 +56,7 @@ class FormatoPagoTest extends TestCase
         $this->actingAs(Usuario::findOrFail(4))
             ->get(route('admin.pagos.show', 1))
             ->assertOk()
-            ->assertDontSee('Formato de pago DEC');
+            ->assertDontSee('Generar comprobante');
 
         $this->actingAs(Usuario::findOrFail(4))
             ->post(route('admin.pagos.formato', 1), ['responsable' => 1])
@@ -74,7 +74,7 @@ class FormatoPagoTest extends TestCase
         $this->actingAs(Usuario::findOrFail(4))
             ->get(route('admin.pagos.show', 1))
             ->assertOk()
-            ->assertSee('Formato de pago DEC')
+            ->assertSee('Generar comprobante')
             ->assertDontSee('Descargar formato');
 
         $this->actingAs(Usuario::findOrFail(4))
@@ -182,7 +182,7 @@ class FormatoPagoTest extends TestCase
             ->withSession(['formato_pago.responsable' => 2])
             ->get(route('admin.pagos.show', 1))
             ->assertOk()
-            ->assertSee('Formato de pago DEC')
+            ->assertSee('Generar comprobante')
             ->assertSee('<option value="2" selected>', false)
             /* Quien está dado de baja no se ofrece. */
             ->assertDontSee('Inactiva Baja Prueba');
@@ -197,6 +197,59 @@ class FormatoPagoTest extends TestCase
             ->assertForbidden();
 
         $this->assertNull(DB::table('pago')->where('pago_id_pago', 1)->value('pago_id_responsable'));
+    }
+
+    public function test_el_resultado_del_pago_aprobado_ofrece_generar_el_comprobante(): void
+    {
+        $this->estadoPago('Completado');
+
+        $this->actingAs(Usuario::findOrFail(4))
+            ->get(route('admin.pagos.resultado', 1))
+            ->assertOk()
+            ->assertSeeInOrder(['PAGO APROBADO', 'Generar comprobante', 'Corregir la resolución'])
+            ->assertSee('Descargar formato');
+    }
+
+    /**
+     * Lo que escribe el formato va en Arial 8 sin negritas, centrado y abajo.
+     * Sólo el evento va en negritas, y el evento y el régimen conservan su
+     * alineación porque son los textos largos. Esos estilos vienen de la
+     * plantilla: una versión nueva de la DEC que no los traiga falla aquí.
+     */
+    public function test_lo_que_escribe_el_formato_va_en_arial_8(): void
+    {
+        $this->estadoPago('Completado');
+        $this->datosFiscales('Ana Candidata Prueba');
+        DB::table('pago')->where('pago_id_pago', 1)->update([
+            'pago_uso_cfdi' => true,
+            'pago_id_metodo_pago' => 2,
+            'pago_id_banco' => 1,
+        ]);
+
+        $respuesta = $this->actingAs(Usuario::findOrFail(4))
+            ->post(route('admin.pagos.formato', 1), ['responsable' => 1])
+            ->assertOk();
+
+        $hoja = $this->parte($respuesta, self::HOJA);
+        $estilos = $this->parte($respuesta, 'xl/styles.xml');
+
+        foreach (['B10', 'B11', 'G11', 'B13', 'C15', 'B20', 'B24', 'H24', 'G25', 'B28', 'G29'] as $referencia) {
+            $this->assertNotNull($this->celda($hoja, $referencia), "$referencia no se escribió.");
+
+            $estilo = $this->estilo($hoja, $estilos, $referencia);
+
+            $this->assertSame('Arial 8', $estilo['fuente'], $referencia);
+            $this->assertSame($referencia === 'B24', $estilo['negritas'], $referencia);
+
+            if (!in_array($referencia, ['B24', 'C15'], true)) {
+                $this->assertSame('center bottom', $estilo['alineacion'], $referencia);
+            }
+        }
+
+        $dibujo = $this->parte($respuesta, self::DIBUJO);
+
+        $this->assertStringContainsString('<a:latin typeface="Arial"/>', $dibujo);
+        $this->assertStringNotContainsString(' b="1"', $dibujo);
     }
 
     /* ── Apoyos ───────────────────────────────────────────────────────── */
@@ -344,5 +397,35 @@ class FormatoPagoTest extends TestCase
         $renglon = (int) $xpath->query('xdr:from/xdr:row', $ancla)->item(0)->textContent;
 
         return chr(ord('A') + $columna).($renglon + 1);
+    }
+
+    /**
+     * Fuente y alineación con que la plantilla pinta la celda.
+     *
+     * @return array{fuente: string, negritas: bool, alineacion: string}
+     */
+    private function estilo(string $hoja, string $estilos, string $referencia): array
+    {
+        $documento = new DOMDocument();
+        $documento->loadXML($hoja);
+        $xpath = new DOMXPath($documento);
+        $xpath->registerNamespace('m', self::NS_HOJA);
+        $indice = (int) $xpath->evaluate('string(//m:c[@r="'.$referencia.'"]/@s)');
+
+        $documento = new DOMDocument();
+        $documento->loadXML($estilos);
+        $xpath = new DOMXPath($documento);
+        $xpath->registerNamespace('m', self::NS_HOJA);
+
+        $xf = $xpath->query('/m:styleSheet/m:cellXfs/m:xf')->item($indice);
+        $fuente = $xpath->query('/m:styleSheet/m:fonts/m:font')->item((int) $xf->getAttribute('fontId'));
+
+        return [
+            'fuente' => $xpath->evaluate('string(m:name/@val)', $fuente).' '.$xpath->evaluate('string(m:sz/@val)', $fuente),
+            'negritas' => $xpath->query('m:b', $fuente)->length > 0,
+            /* Sin atributos, Excel alinea el texto a la izquierda y abajo. */
+            'alineacion' => ($xpath->evaluate('string(m:alignment/@horizontal)', $xf) ?: 'general')
+                .' '.($xpath->evaluate('string(m:alignment/@vertical)', $xf) ?: 'bottom'),
+        ];
     }
 }

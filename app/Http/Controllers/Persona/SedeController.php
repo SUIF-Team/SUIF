@@ -19,7 +19,7 @@ class SedeController extends Controller
      */
     private const UMBRAL_CUPO_BAJO = 15;
 
-    public function index(Request $request, GestionSedes $gestion)
+    public function index(GestionSedes $gestion)
     {
         $idUsuario = (int) Auth::id();
         $seleccionada = $gestion->sedeSeleccionadaPorUsuario($idUsuario);
@@ -32,14 +32,10 @@ class SedeController extends Controller
             ]);
         }
 
-        $buscar = trim((string) $request->query('buscar'));
-
         return view('persona.sede', [
             'confirmada' => false,
-            'buscarActual' => $buscar,
             'vista' => [
-                'sedes' => $gestion->catalogoParticipante($buscar),
-                'buscar' => $buscar,
+                'sedes' => $gestion->catalogoParticipante(),
                 'umbralCupoBajo' => self::UMBRAL_CUPO_BAJO,
             ],
         ]);
@@ -83,13 +79,13 @@ class SedeController extends Controller
      *
      * Devuelve el catálogo completo, no sólo los cupos: una aplicación puede
      * vencer o darse de baja con la pantalla abierta, y entonces el renglón no
-     * cambia de número, desaparece. Se respeta el filtro de búsqueda vigente
-     * para no reinyectar sedes que la persona ya descartó.
+     * cambia de número, desaparece. La búsqueda la aplica el navegador sobre
+     * este catálogo completo.
      */
-    public function disponibilidad(Request $request, GestionSedes $gestion): JsonResponse
+    public function disponibilidad(GestionSedes $gestion): JsonResponse
     {
         return response()->json([
-            'sedes' => $gestion->catalogoParticipante(trim((string) $request->query('buscar'))),
+            'sedes' => $gestion->catalogoParticipante(),
         ]);
     }
 

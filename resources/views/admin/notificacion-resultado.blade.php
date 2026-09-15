@@ -4,6 +4,9 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
+@if(!empty($formato))
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-pago.css') }}">
+@endif
 @endsection
 
 @section('content')
@@ -48,6 +51,8 @@
             <h2>{{ $notificacion['titulo'] }}</h2>
         </div>
     </main>
+
+    @include('partials.admin.formato-pago', ['formato' => $formato ?? null])
 
     @include('partials.admin.acciones-reversion', ['acciones' => $notificacion['acciones'] ?? []])
 
