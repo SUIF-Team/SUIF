@@ -38,6 +38,7 @@ Orden de ejecución en una instalación nueva:
 9. `suif_roles_administrativos.sql` — roles administrativos y catálogo de privilegios
 10. `suif_comprobante_fiscal.sql` — comprobante fiscal del pago (ticket o CFDI)
 11. `suif_convocatorias.sql` — catálogo de estados de convocatoria y el privilegio que abre su módulo
+12. `suif_formato_pago.sql` — forma de pago, banco y responsable del pago; régimen fiscal de la DEC
 
 `suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
 que el banco emitió la referencia. Va DESPUÉS de
@@ -154,12 +155,13 @@ También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
 `suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
 registrar nada.
 
-## Los otros ocho se pueden repetir
+## Los otros nueve se pueden repetir
 
 `suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
 `suif_catalogos.sql`, `suif_grupos_multiples.sql`,
 `suif_referencias_bancarias.sql`, `suif_roles_administrativos.sql`,
-`suif_comprobante_fiscal.sql` y `suif_convocatorias.sql` son idempotentes:
+`suif_comprobante_fiscal.sql`, `suif_convocatorias.sql` y
+`suif_formato_pago.sql` son idempotentes:
 volver a ejecutarlos no duplica ni destruye nada. Por eso la regla al desplegar
 es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
 
@@ -343,6 +345,31 @@ privilegio la pantalla responde 403 hasta para el Superusuario.
 Volver a ejecutarlo no reabre nada: sólo toca las convocatorias que no tengan
 ningún renglón de estado, y ni siquiera marca vigente a la más reciente si en la
 base ya hay otra convocatoria vigente.
+
+## El formato de pago de la DEC
+
+`suif_formato_pago.sql` es **requisito de despliegue** del formato de pago con
+el que la DEC emite el CFDI o el ticket. Va DESPUÉS de
+`suif_comprobante_fiscal.sql`, que siembra `REGIMEN_FISCAL`. Hace tres cosas:
+
+- Crea `METODO_PAGO`, `BANCO` y `RESPONSABLE`, y siembra las cuatro formas de
+  pago —las casillas del formato— y los bancos. Los responsables no se
+  siembran: son nombres de personas y se capturan desde el módulo
+  «Responsables de pago». Darlos de baja no borra el renglón (`RESP_ACTIVO`):
+  los pagos que ya atendieron lo siguen referenciando.
+- Agrega a `PAGO` las columnas `PAGO_ID_METODO_PAGO`, `PAGO_ID_BANCO` y
+  `PAGO_ID_RESPONSABLE`, **nulables**, con sus llaves foráneas. Sustituye al
+  borrador `suif14092026.sql`, que las dejaba `NOT NULL`: `PAGO` nace al
+  asignar la referencia, antes de que exista cualquiera de esos datos, y el
+  `ALTER` abortaba sobre una tabla con renglones.
+- Amplía `REFI_REGIMEN_FISCAL` a 100 caracteres y deja los 11 regímenes con
+  el texto exacto de la lista de la DEC. Los ids 1 a 4 conservan su régimen,
+  así que `DATO_FISCAL` no se entera.
+
+Córrelo ANTES de publicar el código: sin las tablas, el expediente del pago y
+el formulario del comprobante fallan con `relation "metodo_pago" does not
+exist`. Después da de alta a los responsables desde el tablero: sin uno
+activo, el expediente no ofrece generar el formato.
 
 ## Antes de tocar producción
 

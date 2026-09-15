@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PersonaController as AdminPersonaController;
 use App\Http\Controllers\Admin\ReferenciaController as AdminReferenciaController;
 use App\Http\Controllers\Admin\ReferenciaEspecialController as AdminReferenciaEspecialController;
 use App\Http\Controllers\Admin\ReporteController as AdminReporteController;
+use App\Http\Controllers\Admin\ResponsableController as AdminResponsableController;
 use App\Http\Controllers\Admin\ResultadoController as AdminResultadoController;
 use App\Http\Controllers\Admin\SedeController as AdminSedeController;
 use App\Http\Controllers\Persona\CertificadoController;
@@ -132,7 +133,18 @@ Route::middleware(['auth', 'can:acceder-admin'])
             Route::post('/pagos/{id}/validar', [AdminPagoController::class, 'validar'])->name('pagos.validar');
             Route::post('/pagos/{id}/rechazar', [AdminPagoController::class, 'rechazar'])->name('pagos.rechazar');
             Route::get('/pagos/{id}/resultado', [AdminPagoController::class, 'resultado'])->name('pagos.resultado');
+            Route::post('/pagos/{id}/formato', [AdminPagoController::class, 'formato'])->name('pagos.formato');
             Route::get('/pagos/{id}', [AdminPagoController::class, 'show'])->name('pagos.show');
+
+            /* Quienes atienden los pagos: la DEC elige a uno al generar el
+               formato de pago, así que el catálogo también es suyo. */
+            Route::get('/responsables', [AdminResponsableController::class, 'index'])->name('responsables.index');
+            Route::get('/responsables/crear', [AdminResponsableController::class, 'create'])->name('responsables.create');
+            Route::post('/responsables', [AdminResponsableController::class, 'store'])->name('responsables.store');
+            Route::get('/responsables/{id}/editar', [AdminResponsableController::class, 'edit'])->name('responsables.edit');
+            Route::put('/responsables/{id}', [AdminResponsableController::class, 'update'])->name('responsables.update');
+            Route::delete('/responsables/{id}', [AdminResponsableController::class, 'destroy'])->name('responsables.destroy');
+            Route::post('/responsables/{id}/reactivar', [AdminResponsableController::class, 'reactivar'])->name('responsables.reactivar');
         });
 
         /* El catálogo de referencias asigna dinero y archivos: lo emite la DEC. */

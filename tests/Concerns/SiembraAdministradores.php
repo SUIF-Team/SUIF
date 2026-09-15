@@ -27,6 +27,9 @@ trait SiembraAdministradores
     protected function crearEsquemaAdministrativo(): void
     {
         foreach ([
+            'responsable',
+            'banco',
+            'metodo_pago',
             'estado_convocatoria',
             'c_estado_convocatoria',
             'estado_pago',
@@ -150,6 +153,28 @@ trait SiembraAdministradores
             $table->integer('pago_id_dato_fiscal')->nullable();
             /* Marca del pago compartido de una referencia especial. */
             $table->integer('pago_no_empleado')->nullable();
+            /* Lo que lleva el formato de pago de la DEC. */
+            $table->integer('pago_id_metodo_pago')->nullable();
+            $table->integer('pago_id_banco')->nullable();
+            $table->integer('pago_id_responsable')->nullable();
+        });
+
+        Schema::create('metodo_pago', function (Blueprint $table): void {
+            $table->increments('mepa_id_metodo_pago');
+            $table->string('mepa_metodo_pago', 55);
+        });
+
+        Schema::create('banco', function (Blueprint $table): void {
+            $table->increments('banc_id_banco');
+            $table->string('banc_banco', 75);
+        });
+
+        Schema::create('responsable', function (Blueprint $table): void {
+            $table->increments('resp_id_responsable');
+            $table->string('resp_nombre', 55);
+            $table->string('resp_apellido_paterno', 55);
+            $table->string('resp_apellido_materno', 55)->nullable();
+            $table->boolean('resp_activo')->default(true);
         });
 
         Schema::create('referencia_bancaria', function (Blueprint $table): void {

@@ -16,8 +16,11 @@ use Tests\TestCase;
  * El comprobante que la persona pide de su pago —ticket o CFDI— y, cuando
  * pide CFDI, los datos con los que se le factura.
  *
- * Pedirlo es opcional y elegirlo es definitivo: las dos reglas se comprueban
- * contra el servicio y contra las pantallas.
+ * Elegirlo es definitivo, y desde que se pide al subir el comprobante los
+ * datos fiscales se capturan sin esperar la validación: las reglas se
+ * comprueban contra el servicio y contra las pantallas. La elección al subir
+ * se prueba en PagosPersistentesTest; aquí queda el selector de los pagos
+ * validados antes de ese cambio.
  */
 class ComprobanteFiscalTest extends TestCase
 {
@@ -42,7 +45,7 @@ class ComprobanteFiscalTest extends TestCase
             ->assertOk()
             ->assertSee('Quiero ticket')
             ->assertSee('Quiero CFDI')
-            ->assertSee('no es obligatorio');
+            ->assertSee('¿Qué comprobante necesitas?');
     }
 
     public function test_el_selector_no_aparece_mientras_el_pago_sigue_en_revision(): void
@@ -158,6 +161,32 @@ class ComprobanteFiscalTest extends TestCase
             ->assertOk()
             ->assertSee('Datos para tu CFDI')
             ->assertSee('626 - RESICO');
+    }
+
+    public function test_los_datos_fiscales_se_capturan_sin_esperar_la_validacion_del_pago(): void
+    {
+        /* La elección se hace al subir el comprobante: con CFDI elegido y el
+           pago todavía en revisión, la pantalla de pago ya ofrece el
+           formulario, y éste se abre y se guarda. */
+        DB::table('pago')->where('pago_id_pago', 1)->update(['pago_uso_cfdi' => true]);
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.pago.index'))
+            ->assertOk()
+            ->assertSee('Llenar formulario');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.facturacion.index'))
+            ->assertOk();
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.facturacion.store'), $this->datosFiscalesValidos())
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('pago', [
+            'pago_id_pago' => 1,
+            'pago_id_dato_fiscal' => 1,
+        ]);
     }
 
     public function test_guardar_datos_fiscales_crea_el_renglon_y_lo_liga_al_pago(): void
@@ -388,6 +417,9 @@ class ComprobanteFiscalTest extends TestCase
     private function crearEsquemaTemporal(): void
     {
         foreach ([
+            'responsable',
+            'banco',
+            'metodo_pago',
             'privilegio_rol',
             'privilegio',
             'comunicacion',
@@ -545,6 +577,30 @@ class ComprobanteFiscalTest extends TestCase
             $table->integer('pago_id_dato_fiscal')->nullable();
             /* Marca del pago compartido de una referencia especial. */
             $table->integer('pago_no_empleado')->nullable();
+            /* Lo que lleva el formato de pago de la DEC. */
+            $table->integer('pago_id_metodo_pago')->nullable();
+            $table->integer('pago_id_banco')->nullable();
+            $table->integer('pago_id_responsable')->nullable();
+        });
+
+        /* El detalle administrativo muestra la forma de pago y, con el pago
+           validado, ofrece el formato a quien lo atendió. */
+        Schema::create('metodo_pago', function (Blueprint $table): void {
+            $table->increments('mepa_id_metodo_pago');
+            $table->string('mepa_metodo_pago', 55);
+        });
+
+        Schema::create('banco', function (Blueprint $table): void {
+            $table->increments('banc_id_banco');
+            $table->string('banc_banco', 75);
+        });
+
+        Schema::create('responsable', function (Blueprint $table): void {
+            $table->increments('resp_id_responsable');
+            $table->string('resp_nombre', 55);
+            $table->string('resp_apellido_paterno', 55);
+            $table->string('resp_apellido_materno', 55)->nullable();
+            $table->boolean('resp_activo')->default(true);
         });
 
         Schema::create('c_estado_pago', function (Blueprint $table): void {

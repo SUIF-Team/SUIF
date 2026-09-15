@@ -1,10 +1,12 @@
 {{--
     partials/pago-comprobante-fiscal.blade.php
-    El comprobante que la persona pide de su pago: ticket o CFDI. Se muestra
-    sólo cuando el pago quedó validado.
+    El comprobante que la persona pide de su pago: ticket o CFDI. Hoy se elige
+    al subir el comprobante; aquí se muestra la elección y, si es CFDI sin
+    datos, el enlace para capturarlos.
 
-    Pedirlo no es obligatorio y la elección es definitiva, así que antes de
-    guardarla se pide confirmación. Todo se pinta desde Blade: Vue únicamente
+    El selector sólo aparece en pagos validados sin elección, anteriores a ese
+    cambio. La elección es definitiva, así que antes de guardarla se pide
+    confirmación. Todo se pinta desde Blade: Vue únicamente
     intercepta el envío para abrir el diálogo, de modo que sin JavaScript el
     formulario se manda igual y el servidor valida lo mismo.
 
@@ -21,12 +23,11 @@
 
     @if(!$comprobanteFiscal['eleccion'])
 
-        <h2 class="pago-comprobante__titulo">¿Quieres un comprobante de tu pago?</h2>
+        <h2 class="pago-comprobante__titulo">¿Qué comprobante necesitas?</h2>
 
         <p class="pago-comprobante__nota" id="comprobante-fiscal-nota">
-            Solicitar comprobante <strong>no es obligatorio</strong>. Si quieres, puedes generar
-            un ticket o un CFDI; si no necesitas ninguno, puedes continuar con tu trámite sin
-            elegir nada. La opción que elijas <strong>no se podrá modificar después</strong>.
+            Elige si quieres un ticket o un CFDI de tu pago. La opción que elijas
+            <strong>no se podrá modificar después</strong>.
         </p>
 
         <div class="pago-comprobante__opciones">

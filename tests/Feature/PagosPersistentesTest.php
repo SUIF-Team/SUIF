@@ -73,12 +73,21 @@ class PagosPersistentesTest extends TestCase
         app(RevisionPagos::class)->registrarComprobanteDePersona(
             1,
             'solicitudes/100/comprobante-corregido.pdf',
-            ['monto_pagado' => '7000.00', 'fecha_pago' => '2026-08-03', 'hora_pago' => '11:45']
+            [
+                'monto_pagado' => '7000.00',
+                'fecha_pago' => '2026-08-03',
+                'hora_pago' => '11:45',
+                'metodo_pago' => 4,
+                'banco' => null,
+                'uso_cfdi' => false,
+            ]
         );
 
         $this->assertDatabaseHas('pago', [
             'pago_id_pago' => 1,
             'pago_comprobante_path' => 'solicitudes/100/comprobante-corregido.pdf',
+            'pago_id_metodo_pago' => 4,
+            'pago_id_banco' => null,
         ]);
         $this->assertSame('Pendiente', $this->ultimoEstadoPago(1));
         $this->assertDatabaseHas('estado_pago', [
@@ -88,17 +97,14 @@ class PagosPersistentesTest extends TestCase
         ]);
     }
 
-    public function test_la_persona_captura_monto_fecha_y_hora_al_subir_su_comprobante(): void
+    public function test_la_persona_captura_monto_fecha_hora_y_forma_de_pago_al_subir_su_comprobante(): void
     {
         app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
 
         $this->actingAs(Usuario::findOrFail(1))
-            ->post(route('persona.pago.comprobante'), [
-                'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
+            ->post(route('persona.pago.comprobante'), $this->datosDelComprobante([
                 'monto_pagado' => '6850.50',
-                'fecha_pago' => '2026-08-03',
-                'hora_pago' => '11:45',
-            ])
+            ]))
             ->assertRedirect(route('persona.pago.index'))
             ->assertSessionHas('success');
 
@@ -109,6 +115,9 @@ class PagosPersistentesTest extends TestCase
             'pago_monto_pagado' => 6850.5,
             'pago_fecha_pago' => '2026-08-03',
             'pago_hora_pago' => '11:45:00',
+            'pago_id_metodo_pago' => 2,
+            'pago_id_banco' => 1,
+            'pago_uso_cfdi' => false,
         ]);
         $this->assertSame('Pendiente', $this->ultimoEstadoPago(1));
     }
@@ -123,16 +132,13 @@ class PagosPersistentesTest extends TestCase
                 'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
             ])
             ->assertRedirect(route('persona.pago.index'))
-            ->assertSessionHasErrors(['monto_pagado', 'fecha_pago', 'hora_pago']);
+            ->assertSessionHasErrors(['monto_pagado', 'fecha_pago', 'hora_pago', 'metodo_pago', 'comprobante_fiscal']);
 
         $this->actingAs(Usuario::findOrFail(1))
             ->from(route('persona.pago.index'))
-            ->post(route('persona.pago.comprobante'), [
-                'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
-                'monto_pagado' => '7000.00',
+            ->post(route('persona.pago.comprobante'), $this->datosDelComprobante([
                 'fecha_pago' => Carbon::now()->addDay()->toDateString(),
-                'hora_pago' => '11:45',
-            ])
+            ]))
             ->assertRedirect(route('persona.pago.index'))
             ->assertSessionHasErrors('fecha_pago');
 
@@ -142,6 +148,56 @@ class PagosPersistentesTest extends TestCase
             'pago_comprobante_path' => 'solicitudes/100/recibo.pdf',
         ]);
         $this->assertSame('Declinado', $this->ultimoEstadoPago(1));
+    }
+
+    public function test_el_banco_solo_se_exige_cuando_se_paga_con_tarjeta(): void
+    {
+        app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->from(route('persona.pago.index'))
+            ->post(route('persona.pago.comprobante'), $this->datosDelComprobante(['banco' => '']))
+            ->assertRedirect(route('persona.pago.index'))
+            ->assertSessionHasErrors('banco');
+
+        /* Con transferencia el banco no aplica: aunque llegue, no se guarda. */
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.pago.comprobante'), $this->datosDelComprobante(['metodo_pago' => '4']))
+            ->assertRedirect(route('persona.pago.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('pago', [
+            'pago_id_pago' => 1,
+            'pago_id_metodo_pago' => 4,
+            'pago_id_banco' => null,
+        ]);
+    }
+
+    public function test_elegir_cfdi_al_subir_el_comprobante_lleva_a_capturar_los_datos_fiscales(): void
+    {
+        app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.pago.comprobante'), $this->datosDelComprobante(['comprobante_fiscal' => 'cfdi']))
+            ->assertRedirect(route('persona.facturacion.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('pago', ['pago_id_pago' => 1, 'pago_uso_cfdi' => true]);
+    }
+
+    public function test_subsanar_el_comprobante_no_cambia_la_eleccion_ya_guardada(): void
+    {
+        DB::table('pago')->where('pago_id_pago', 1)->update(['pago_uso_cfdi' => false]);
+        app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
+
+        /* Con elección guardada el campo ya no se pide, y si llega otro valor
+           a mano, se ignora. */
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.pago.comprobante'), $this->datosDelComprobante(['comprobante_fiscal' => 'cfdi']))
+            ->assertRedirect(route('persona.pago.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('pago', ['pago_id_pago' => 1, 'pago_uso_cfdi' => false]);
     }
 
     public function test_rutas_administrativas_requieren_el_privilegio_de_gestionar_pagos(): void
@@ -257,9 +313,32 @@ class PagosPersistentesTest extends TestCase
         $this->assertSame('Completado', $this->ultimoEstadoPago(1));
     }
 
+    /**
+     * Un envío válido del formulario del comprobante: tarjeta de débito de
+     * BBVA y ticket. Cada prueba sobreescribe lo que necesite cambiar.
+     *
+     * @param  array<string, mixed>  $cambios
+     * @return array<string, mixed>
+     */
+    private function datosDelComprobante(array $cambios = []): array
+    {
+        return array_merge([
+            'comprobante' => UploadedFile::fake()->create('pago.pdf', 40, 'application/pdf'),
+            'monto_pagado' => '7000.00',
+            'fecha_pago' => '2026-08-03',
+            'hora_pago' => '11:45',
+            'metodo_pago' => '2',
+            'banco' => '1',
+            'comprobante_fiscal' => 'ticket',
+        ], $cambios);
+    }
+
     private function crearEsquemaTemporal(): void
     {
         foreach ([
+            'responsable',
+            'banco',
+            'metodo_pago',
             'privilegio_rol',
             'privilegio',
             'estado_pago',
@@ -413,6 +492,30 @@ class PagosPersistentesTest extends TestCase
             $table->integer('pago_id_dato_fiscal')->nullable();
             /* Marca del pago compartido de una referencia especial. */
             $table->integer('pago_no_empleado')->nullable();
+            /* Lo que lleva el formato de pago de la DEC. */
+            $table->integer('pago_id_metodo_pago')->nullable();
+            $table->integer('pago_id_banco')->nullable();
+            $table->integer('pago_id_responsable')->nullable();
+        });
+
+        /* La persona declara su forma de pago al subir el comprobante, y el
+           detalle administrativo ofrece el formato a quien lo atendió. */
+        Schema::create('metodo_pago', function (Blueprint $table): void {
+            $table->increments('mepa_id_metodo_pago');
+            $table->string('mepa_metodo_pago', 55);
+        });
+
+        Schema::create('banco', function (Blueprint $table): void {
+            $table->increments('banc_id_banco');
+            $table->string('banc_banco', 75);
+        });
+
+        Schema::create('responsable', function (Blueprint $table): void {
+            $table->increments('resp_id_responsable');
+            $table->string('resp_nombre', 55);
+            $table->string('resp_apellido_paterno', 55);
+            $table->string('resp_apellido_materno', 55)->nullable();
+            $table->boolean('resp_activo')->default(true);
         });
 
         Schema::create('c_estado_pago', function (Blueprint $table): void {
@@ -534,6 +637,15 @@ class PagosPersistentesTest extends TestCase
                 'espa_hora' => '10:30:00',
                 'espa_comentario' => null,
             ],
+        ]);
+        DB::table('metodo_pago')->insert([
+            ['mepa_id_metodo_pago' => 1, 'mepa_metodo_pago' => 'Tarjeta de crédito'],
+            ['mepa_id_metodo_pago' => 2, 'mepa_metodo_pago' => 'Tarjeta de débito'],
+            ['mepa_id_metodo_pago' => 3, 'mepa_metodo_pago' => 'Depósito bancario'],
+            ['mepa_id_metodo_pago' => 4, 'mepa_metodo_pago' => 'Transferencia'],
+        ]);
+        DB::table('banco')->insert([
+            ['banc_id_banco' => 1, 'banc_banco' => 'BBVA'],
         ]);
         DB::table('privilegio')->insert([
             ['priv_id_privilegio' => 1, 'priv_privilegio' => 'Gestionar Pagos'],

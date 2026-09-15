@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\FormatoPagoDec;
+use App\Servicios\GestionResponsables;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\NotificacionResultado;
 use App\Support\Admin\RevisionPagos;
@@ -10,6 +12,7 @@ use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class PagoController extends Controller
 {
@@ -31,7 +34,9 @@ class PagoController extends Controller
     public function show(
         string $id,
         ConsultaPagos $consulta_pagos,
-        NotificacionResultado $notificacion_resultado
+        NotificacionResultado $notificacion_resultado,
+        GestionResponsables $gestion_responsables,
+        FormatoPagoDec $formato_pago
     ) {
         $pago = $this->obtenerPago($id, $consulta_pagos);
 
@@ -49,7 +54,72 @@ class PagoController extends Controller
             ? [$notificacion_resultado->accionReanudarPago($pago['id'])]
             : [];
 
-        return view('admin.pago-detalle', compact('pago', 'acciones'));
+        /* El formato de la DEC sólo se ofrece con el pago validado: antes no
+           hay nada que facturar. */
+        $formato = null;
+
+        if ($pago['estado_persistido'] === ConsultaPagos::COMPLETADO) {
+            $responsables = $gestion_responsables->activos();
+
+            $formato = [
+                'motivo' => $formato_pago->motivoNoDisponible($pago, $responsables),
+                'responsables' => $responsables,
+                'sugerido' => $this->responsableSugerido($pago, $responsables),
+            ];
+        }
+
+        return view('admin.pago-detalle', compact('pago', 'acciones', 'formato'));
+    }
+
+    /**
+     * Descarga el formato de pago de la DEC ya lleno.
+     *
+     * Es POST y no GET porque deja escrito en el pago quién lo atendió:
+     * volver a generarlo reproduce el mismo formato. La respuesta es el
+     * archivo, así que el navegador lo descarga sin salir del expediente.
+     */
+    public function formato(
+        Request $request,
+        string $id,
+        ConsultaPagos $consulta_pagos,
+        GestionResponsables $gestion_responsables,
+        FormatoPagoDec $formato_pago
+    ) {
+        $pago = $this->obtenerPago($id, $consulta_pagos);
+
+        if ($pago instanceof RedirectResponse) {
+            return $pago;
+        }
+
+        $destino = route('admin.pagos.show', ['id' => $pago['id']]);
+        $responsables = $gestion_responsables->activos();
+        $motivo = $formato_pago->motivoNoDisponible($pago, $responsables);
+
+        if ($motivo !== null) {
+            return $this->responder($request, 'warning', $motivo, $destino);
+        }
+
+        $datos = $request->validate([
+            'responsable' => ['required', 'integer', Rule::in(array_column($responsables, 'id'))],
+        ], [
+            'responsable.required' => 'Selecciona quién atendió el pago.',
+            'responsable.integer' => 'Selecciona quién atendió el pago.',
+            'responsable.in' => 'El responsable seleccionado ya no está activo.',
+        ]);
+
+        $responsable = collect($responsables)->firstWhere('id', (int) $datos['responsable']);
+
+        try {
+            $descarga = $formato_pago->descarga($pago, $responsable);
+        } catch (DomainException $exception) {
+            return $this->responder($request, 'error', $exception->getMessage(), $destino);
+        }
+
+        /* Quien genera varios formatos seguidos casi siempre los atiende la
+           misma persona: el siguiente expediente la trae preseleccionada. */
+        $request->session()->put('formato_pago.responsable', $responsable['id']);
+
+        return $descarga;
     }
 
     /**
@@ -231,6 +301,27 @@ class PagoController extends Controller
         }
 
         return $pago;
+    }
+
+    /**
+     * A quién preseleccionar en «Atendido por»: al que ya quedó en el pago,
+     * luego al último que eligió este administrador en su sesión y, si sólo
+     * hay uno activo, a ése. Sólo cuentan los que siguen activos.
+     *
+     * @param  array<string, mixed>  $pago
+     * @param  array<int, array<string, mixed>>  $responsables
+     */
+    private function responsableSugerido(array $pago, array $responsables): ?int
+    {
+        $activos = array_column($responsables, 'id');
+
+        foreach ([$pago['id_responsable'], session('formato_pago.responsable')] as $candidato) {
+            if ($candidato !== null && in_array((int) $candidato, $activos, true)) {
+                return (int) $candidato;
+            }
+        }
+
+        return count($activos) === 1 ? $activos[0] : null;
     }
 
     private function rutaComprobante(string $id, ConsultaPagos $consulta_pagos): ?string

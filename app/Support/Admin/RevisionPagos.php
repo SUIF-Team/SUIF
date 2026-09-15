@@ -50,10 +50,12 @@ class RevisionPagos
      * Registra una carga nueva únicamente para el pago ligado a la solicitud
      * más reciente de la persona autenticada.
      *
-     * $datos_pago trae el monto, la fecha y la hora que capturó la persona, ya
-     * validados por el controlador.
+     * $datos_pago trae lo que capturó la persona, ya validado por el
+     * controlador: monto, fecha y hora, la forma de pago con su banco y el
+     * comprobante que pide. uso_cfdi llega en null cuando ya había elección.
      *
-     * @param array{monto_pagado: string|float, fecha_pago: string, hora_pago: string} $datos_pago
+     * @param array{monto_pagado: string|float, fecha_pago: string, hora_pago: string,
+     *              metodo_pago: int, banco: ?int, uso_cfdi: ?bool} $datos_pago
      */
     public function registrarComprobanteDePersona(int $id_usuario, string $ruta_archivo, array $datos_pago): void
     {
@@ -97,14 +99,26 @@ class RevisionPagos
                Los segundos se completan a mano: PostgreSQL los rellena solo al
                guardar en TIME, pero SQLite —el motor de las pruebas— almacena
                la cadena tal cual. */
+            $cambios = [
+                'pago_comprobante_path' => $ruta_archivo,
+                'pago_monto_pagado' => $datos_pago['monto_pagado'],
+                'pago_fecha_pago' => $datos_pago['fecha_pago'],
+                'pago_hora_pago' => substr((string) $datos_pago['hora_pago'], 0, 5).':00',
+                /* La forma de pago se reemplaza en cada carga: al subsanar
+                   también puede corregirse. */
+                'pago_id_metodo_pago' => $datos_pago['metodo_pago'],
+                'pago_id_banco' => $datos_pago['banco'],
+            ];
+
+            /* La elección del comprobante es definitiva: sólo se escribe si el
+               pago todavía no tenía una. */
+            if ($pago->pago_uso_cfdi === null && $datos_pago['uso_cfdi'] !== null) {
+                $cambios['pago_uso_cfdi'] = $datos_pago['uso_cfdi'];
+            }
+
             DB::table('pago')
                 ->where('pago_id_pago', $pago->pago_id_pago)
-                ->update([
-                    'pago_comprobante_path' => $ruta_archivo,
-                    'pago_monto_pagado' => $datos_pago['monto_pagado'],
-                    'pago_fecha_pago' => $datos_pago['fecha_pago'],
-                    'pago_hora_pago' => substr((string) $datos_pago['hora_pago'], 0, 5).':00',
-                ]);
+                ->update($cambios);
 
             $this->registrarEstado((int) $pago->pago_id_pago, ConsultaPagos::PENDIENTE);
         });

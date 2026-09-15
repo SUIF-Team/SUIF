@@ -37,13 +37,15 @@ class ConsultaPagos
      */
     public function pago(int $id_pago): ?array
     {
-        /* Los datos fiscales sólo se traen aquí: la bandeja serializa cada
-           renglón en el HTML y no tiene por qué llevar el RFC y el correo de
-           todas las personas. Los dos joins son contra llaves primarias, así
-           que no multiplican renglones. */
+        /* Los datos fiscales y la forma de pago sólo se traen aquí: la bandeja
+           serializa cada renglón en el HTML y no tiene por qué llevar el RFC y
+           el correo de todas las personas. Los joins son contra llaves
+           primarias, así que no multiplican renglones. */
         $pago = $this->consultaBase()
             ->leftJoin('dato_fiscal as df', 'df.dafi_id_dato_fiscal', '=', 'pg.pago_id_dato_fiscal')
             ->leftJoin('regimen_fiscal as rf', 'rf.refi_id_regimen_fiscal', '=', 'df.dafi_id_regimen_fiscal')
+            ->leftJoin('metodo_pago as mp', 'mp.mepa_id_metodo_pago', '=', 'pg.pago_id_metodo_pago')
+            ->leftJoin('banco as bc', 'bc.banc_id_banco', '=', 'pg.pago_id_banco')
             ->leftJoinSub($this->correosDeFacturacion(), 'cf', function ($join): void {
                 $join->on('cf.comu_id_persona', '=', 'p.pers_id_persona');
             })
@@ -54,6 +56,10 @@ class ConsultaPagos
                 'df.dafi_id_codigo_postal',
                 'rf.refi_regimen_fiscal',
                 'cf.comu_descripcion as correo_facturacion',
+                'pg.pago_no_empleado',
+                'pg.pago_id_responsable',
+                'mp.mepa_metodo_pago',
+                'bc.banc_banco',
             ])
             ->where('pg.pago_id_pago', $id_pago)
             ->first();
@@ -379,6 +385,23 @@ class ConsultaPagos
                 $archivo_disponible,
                 $estado_solicitud
             ),
+        ] + ($con_datos_fiscales ? $this->datosDelExpediente($pago) : []);
+    }
+
+    /**
+     * Lo que sólo usa el expediente: la forma de pago que declaró la persona
+     * y lo que hace falta para llenar el formato de pago de la DEC.
+     */
+    private function datosDelExpediente(object $pago): array
+    {
+        return [
+            'metodo_pago' => $pago->mepa_metodo_pago,
+            'banco' => $pago->banc_banco,
+            'uso_cfdi' => ComprobanteFiscal::normalizarUsoCfdi($pago->pago_uso_cfdi),
+            'monto_pagado' => (float) $pago->pago_monto_pagado,
+            /* Marca del pago compartido de una referencia especial. */
+            'pago_grupal' => $pago->pago_no_empleado !== null,
+            'id_responsable' => $pago->pago_id_responsable === null ? null : (int) $pago->pago_id_responsable,
         ];
     }
 

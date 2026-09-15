@@ -552,3 +552,76 @@
         flex-direction: column-reverse;
     }
 }
+
+/* ─── Forma de pago y comprobante en el formulario ───────────────────── */
+
+/* Opciones en tarjeta, con el mismo borde que las de ticket o CFDI: la
+   etiqueta entera es el área de clic y se marca completa al elegirla. */
+.pago-opciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pago-radio {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #fff;
+    color: #172a44;
+    cursor: pointer;
+}
+
+.pago-radio input {
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+    accent-color: #172a44;
+}
+
+.pago-radio:has(input:checked) {
+    border-color: #172a44;
+    background: #f7f8fa;
+}
+
+.pago-radio:has(input:focus-visible) {
+    outline: 2px solid #172a44;
+    outline-offset: 2px;
+}
+
+.pago-radio__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.pago-radio__texto small {
+    color: #6b7280;
+    font-size: var(--fs-auxiliar);
+}
+
+.pago-campo--banco {
+    margin-top: 0.75rem;
+    max-width: 22rem;
+}
+
+.pago-campo select {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #d9dee7;
+    border-radius: 8px;
+    background: #fff;
+    color: #172a44;
+}
+
+.pago-campo select:focus-visible {
+    outline: 2px solid #172a44;
+    outline-offset: 1px;
+}
+
+@media (max-width: 900px) {
+    .pago-opciones {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

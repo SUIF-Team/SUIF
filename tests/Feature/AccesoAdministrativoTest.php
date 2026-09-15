@@ -31,6 +31,8 @@ class AccesoAdministrativoTest extends TestCase
 
     private const TARJETA_CONVOCATORIAS = 'Define el calendario y la cuota de recuperación de cada convocatoria.';
 
+    private const TARJETA_RESPONSABLES = 'Da de alta a quienes atienden los pagos en la DEC.';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -150,6 +152,26 @@ class AccesoAdministrativoTest extends TestCase
             ->assertDontSee(self::TARJETA_CONVOCATORIAS)
             ->assertDontSee('Solicitudes en revisión')
             ->assertDontSee('Certificados pendientes');
+    }
+
+    public function test_responsables_de_pago_se_ofrece_a_quien_gestiona_pagos(): void
+    {
+        /* Quién atendió un pago lo elige la DEC al generar el formato: la
+           tarjeta sigue al privilegio de pagos, no a un área en particular. */
+        $this->actingAs(Usuario::findOrFail(4))
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(self::TARJETA_RESPONSABLES);
+
+        $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(self::TARJETA_RESPONSABLES);
+
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee(self::TARJETA_RESPONSABLES);
     }
 
     public function test_cada_quien_aterriza_donde_trabaja_al_iniciar_sesion(): void

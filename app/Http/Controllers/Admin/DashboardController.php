@@ -69,6 +69,12 @@ class DashboardController extends Controller
                 'descripcion' => 'Consulta y resuelve los comprobantes de pago enviados.',
             ],
             [
+                'titulo' => 'Responsables de pago',
+                'ruta' => 'admin.responsables.index',
+                'permiso' => 'gestionar-pagos',
+                'descripcion' => 'Da de alta a quienes atienden los pagos en la DEC.',
+            ],
+            [
                 'titulo' => 'Sedes',
                 'ruta' => 'admin.sedes.index',
                 'permiso' => 'gestionar-sedes',

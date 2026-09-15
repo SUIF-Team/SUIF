@@ -188,3 +188,57 @@
     margin: 0 0 0.5rem;
     color: var(--text-dark);
 }
+
+/* ─── Formato de pago de la DEC ──────────────────────────────────────── */
+
+/* La tarjeta toma relleno y título de .admin-preregistro-detalle; aquí sólo
+   va el selector de quién atendió y el botón, en una línea que se parte en
+   pantallas angostas. */
+.admin-pago-formato h2 {
+    margin-bottom: 0.75rem;
+}
+
+.admin-pago-formato-formulario {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+/* Crece hasta un ancho de nombre y no más: estirado a toda la tarjeta, el
+   selector deja el botón lejos de lo que confirma. */
+.admin-pago-formato-campo {
+    flex: 0 1 26rem;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.admin-pago-formato-campo label {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.admin-pago-formato-campo select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    background: var(--surface-white);
+    color: var(--text-dark);
+}
+
+.admin-pago-formato-campo select:focus {
+    border-color: var(--unam-blue);
+    outline: 3px solid rgba(17, 47, 75, 0.16);
+    outline-offset: 0;
+}
+
+.admin-pago-formato-campo p {
+    margin: 0;
+}
+
+@media (max-width: 767.98px) {
+    .admin-pago-formato-formulario .admin-preregistro-boton {
+        width: 100%;
+    }
+}

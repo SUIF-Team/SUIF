@@ -12,7 +12,8 @@
     Parámetros:
     - $etiquetaBoton: texto del botón de envío.
     - $vistaFormulario: estado inicial que arma PagoController (monto
-      prellenado, lo capturado antes de un rechazo y la fecha máxima).
+      prellenado, catálogos de forma de pago y banco, lo capturado antes de
+      un rechazo, la elección de comprobante si ya existe y la fecha máxima).
     - $cuota y $moneda: la cuota de recuperación, para el texto de ayuda.
 --}}
 <div
@@ -92,6 +93,93 @@
                     @enderror
                 </div>
             </div>
+        </fieldset>
+
+        {{-- La forma de pago y el banco van al formato con el que la DEC emite
+             el comprobante. El banco sólo aplica con tarjeta: Vue lo oculta con
+             las demás formas y lo vuelve obligatorio con tarjeta. Sin
+             JavaScript queda a la vista y quien lo exige es el servidor. --}}
+        <fieldset class="pago-datos">
+            <legend class="pago-datos__titulo">¿Cómo pagaste?&nbsp;*</legend>
+
+            <div class="pago-opciones">
+                @foreach($vistaFormulario['metodosPago'] as $metodo)
+                    <label class="pago-radio">
+                        <input
+                            type="radio"
+                            name="metodo_pago"
+                            value="{{ $metodo['id'] }}"
+                            required
+                            v-model="metodoPago"
+                            @checked($vistaFormulario['metodoPago'] === (string) $metodo['id'])>
+                        <span class="pago-radio__texto"><strong>{{ $metodo['nombre'] }}</strong></span>
+                    </label>
+                @endforeach
+            </div>
+            @error('metodo_pago')
+                <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+            @enderror
+
+            <div class="pago-campo pago-campo--banco" v-show="esTarjeta">
+                <label for="banco">Banco de tu tarjeta</label>
+                <select id="banco" name="banco" v-model="banco" :required="esTarjeta">
+                    <option value="">Selecciona un banco</option>
+                    @foreach($vistaFormulario['bancos'] as $banco)
+                        <option value="{{ $banco['id'] }}" @selected($vistaFormulario['banco'] === (string) $banco['id'])>{{ $banco['nombre'] }}</option>
+                    @endforeach
+                </select>
+                @error('banco')
+                    <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                @enderror
+            </div>
+        </fieldset>
+
+        {{-- Se elige aquí para que la DEC ya sepa, al validar el pago, si
+             emite ticket o CFDI. Una vez guardada la elección no cambia: al
+             subsanar, o si la referencia especial ya la trae, se muestra fija. --}}
+        <fieldset class="pago-datos">
+            <legend class="pago-datos__titulo">¿Qué comprobante necesitas?&nbsp;*</legend>
+
+            @if($vistaFormulario['eleccion'])
+                <p class="pago-campo__ayuda">
+                    Elegiste
+                    <span class="pago-chip pago-chip--{{ $vistaFormulario['eleccion'] }}">{{ $vistaFormulario['eleccion'] === 'cfdi' ? 'CFDI' : 'Ticket' }}</span>
+                    y ya no puede modificarse.
+                </p>
+            @else
+                <div class="pago-opciones">
+                    <label class="pago-radio">
+                        <input
+                            type="radio"
+                            name="comprobante_fiscal"
+                            value="ticket"
+                            required
+                            v-model="comprobante"
+                            @checked($vistaFormulario['comprobanteFiscal'] === 'ticket')>
+                        <span class="pago-radio__texto">
+                            <strong>Ticket</strong>
+                            <small>Comprobante simple de tu pago, sin efectos fiscales.</small>
+                        </span>
+                    </label>
+                    <label class="pago-radio">
+                        <input
+                            type="radio"
+                            name="comprobante_fiscal"
+                            value="cfdi"
+                            required
+                            v-model="comprobante"
+                            @checked($vistaFormulario['comprobanteFiscal'] === 'cfdi')>
+                        <span class="pago-radio__texto">
+                            <strong>CFDI</strong>
+                            <small>Factura con uso «gastos en general». Al enviar capturas tus datos fiscales.</small>
+                        </span>
+                    </label>
+                </div>
+                <p class="pago-campo__ayuda">La opción que elijas no podrá modificarse después.</p>
+                @error('comprobante_fiscal')
+                    <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                @enderror
+            @endif
         </fieldset>
 
         {{-- Los pares v-if/v-else llevan v-cloak en la rama que no debe verse

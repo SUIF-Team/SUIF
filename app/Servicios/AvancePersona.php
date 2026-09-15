@@ -131,8 +131,8 @@ class AvancePersona
 
     /**
      * Comprobante que la persona pidió de su pago: 'ticket', 'cfdi' o null si
-     * todavía no elige. Null es un estado válido y no bloquea el trámite:
-     * pedir comprobante es opcional.
+     * todavía no elige. Desde que se elige al subir el comprobante, null sólo
+     * queda en pagos anteriores a ese cambio y no bloquea el trámite.
      */
     public function comprobanteElegido()
     {

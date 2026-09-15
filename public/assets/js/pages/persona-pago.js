@@ -1,8 +1,9 @@
 /*
  * Formulario del paso de pago.
  *
- * La persona declara cuánto, cuándo y a qué hora pagó, y adjunta el PDF que lo
- * respalda. Vue sólo adelanta lo que de todas formas valida el servidor y pinta
+ * La persona declara cuánto, cuándo, a qué hora y cómo pagó y qué comprobante
+ * necesita, y adjunta el PDF que lo respalda. Vue sólo adelanta lo que de todas
+ * formas valida el servidor, muestra el banco sólo con tarjeta y pinta
  * la confirmación del adjunto: el input de archivo va oculto (opacity: 0) para
  * poder estilizar el botón, y con él se esconde el texto nativo del navegador
  * con el nombre del archivo, así que sin esto la persona elige su PDF y la
@@ -69,6 +70,9 @@
                 fechaPago: vista.fechaPago || '',
                 horaPago: vista.horaPago || '',
                 maxFecha: vista.maxFecha || '',
+                metodoPago: vista.metodoPago || '',
+                banco: vista.banco || '',
+                comprobante: vista.comprobanteFiscal || '',
                 /* { nombre, peso } del PDF elegido, o null */
                 archivo: null,
                 error: null
@@ -115,11 +119,24 @@
                     : null;
             },
 
+            /* Qué formas de pago llevan banco lo decide el servidor: son las
+               que el formato de la DEC anota bajo «TARJETA». */
+            esTarjeta: function () {
+                var elegida = String(this.metodoPago);
+
+                return (vista.metodosPago || []).some(function (metodo) {
+                    return metodo.conTarjeta && String(metodo.id) === elegida;
+                });
+            },
+
             puedeEnviar: function () {
                 return this.archivo !== null
                     && this.montoPagado !== '' && this.avisoMonto === null
                     && this.fechaPago !== '' && this.avisoFecha === null
-                    && this.horaPago !== '';
+                    && this.horaPago !== ''
+                    && this.metodoPago !== ''
+                    && (!this.esTarjeta || this.banco !== '')
+                    && (vista.eleccion !== null || this.comprobante !== '');
             }
         },
         methods: {

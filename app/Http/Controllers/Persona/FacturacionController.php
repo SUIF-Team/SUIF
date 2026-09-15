@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Auth;
  * FacturacionController
  *
  * Responsabilidad: los datos con los que se emite el CFDI de la
- * certificación. Se llega aquí sólo desde el paso de pago, con el pago
- * validado y con CFDI ya elegido; cualquier otro camino se rechaza.
+ * certificación. Se llega aquí desde el paso de pago con CFDI ya elegido,
+ * normalmente justo después de subir el comprobante; cualquier otro camino
+ * se rechaza.
  */
 class FacturacionController extends Controller
 {
@@ -121,10 +122,8 @@ class FacturacionController extends Controller
      */
     private function mensajeBloqueo(AvancePersona $avance): ?string
     {
-        if ($avance->estadoPagoVista() !== 'validado') {
-            return 'Tu pago debe estar validado para capturar tus datos de facturación.';
-        }
-
+        /* No se espera a la validación del pago: la DEC necesita estos datos
+           para el formato con que emite el CFDI, que genera al validarlo. */
         if ($avance->comprobanteElegido() !== ComprobanteFiscal::CFDI) {
             return 'Selecciona la opción CFDI en tu pago para capturar tus datos de facturación.';
         }

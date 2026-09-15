@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
  * CFDI— y, cuando pide CFDI, los datos con los que se le factura.
  *
  * La elección vive en PAGO.PAGO_USO_CFDI, que es booleano: NULL es que
- * todavía no elige —pedir comprobante no es obligatorio y el trámite sigue
- * igual—, FALSE es ticket sin efectos fiscales y TRUE es CFDI de gastos en
- * general.
+ * todavía no elige —desde que se pide al subir el comprobante, sólo pasa en
+ * pagos anteriores a ese cambio—, FALSE es ticket sin efectos fiscales y TRUE
+ * es CFDI de gastos en general.
  *
  * Vive del lado de la persona y no en App\Support\Admin porque quien escribe
  * es ella: no hay decisión administrativa que registrar y ESTADO_PAGO no se
@@ -105,8 +105,9 @@ class ComprobanteFiscal
     public function guardarDatosFiscales(int $id_usuario, array $datos): void
     {
         DB::transaction(function () use ($id_usuario, $datos): void {
+            /* No espera a que se valide el pago: la elección se hace al subir
+               el comprobante y la DEC necesita estos datos al validarlo. */
             $pago = $this->pagoBloqueadoDeUsuario($id_usuario);
-            $this->verificarPagoValidado((int) $pago->pago_id_pago);
 
             if (self::normalizarUsoCfdi($pago->pago_uso_cfdi) !== true) {
                 throw new DomainException('Elige la opción CFDI antes de capturar tus datos de facturación.');
