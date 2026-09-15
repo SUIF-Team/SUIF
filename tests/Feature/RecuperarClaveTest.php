@@ -63,7 +63,7 @@ class RecuperarClaveTest extends TestCase
     {
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee('Recuperar contraseña')
+            ->assertSee('Recuperar clave de acceso')
             ->assertSee(route('clave.recuperar'));
 
         $this->get(route('clave.recuperar'))
