@@ -134,7 +134,7 @@ class SeleccionReferenciaTest extends TestCase
             ->post(route('persona.referencia.generar'));
 
         $respuesta->assertOk();
-        $respuesta->assertSee('referencia-alerta--error', false);
+        $respuesta->assertSee('notificacion--advertencia', false);
     }
 
     private function persona(): Usuario

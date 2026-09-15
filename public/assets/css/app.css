@@ -269,18 +269,6 @@ label:focus-within,
     }
 }
 
-/* Aviso en amarillo del trámite. Nació en el pre-registro y hoy lo usan tres
-   pantallas, así que la regla base vive aquí; las variantes (--identidad,
-   --formatos, --enviado, --bloqueo) siguen en persona-preregistro.css. */
-.pr-notice {
-    margin: 22px 0 22px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    background: #fff5df;
-    color: #936200;
-    font-size: var(--fs-auxiliar);
-}
-
 /* Aviso de privacidad que aparece al entrar, y el bloque simplificado que se
    reutiliza en el pre-registro. Viven aqui porque los cuatro layouts cargan
    este archivo. */

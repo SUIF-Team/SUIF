@@ -410,10 +410,9 @@
 /* Explica algo antes de actuar, a diferencia de la notificacion, que cuenta lo que
    acaba de pasar. El ambar queda reservado para la precaucion: informar es azul y lo
    ya hecho, verde. */
+/* Caja de bloque y no fila: su contenido es texto corrido —a veces dos párrafos o
+   una lista— y con flex cada hijo se habría ido a su propia columna. */
 .aviso {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
     margin: 1.375rem 0;
     padding: 0.75rem 1rem;
     border-radius: var(--radio-caja);

@@ -1,7 +1,7 @@
 /* Captura de la referencia especial: pagador y participantes.
-   Se apoya en persona-referencia.css —tarjeta, botones y avisos— y sólo agrega
-   lo que esta pantalla no tenía: la rejilla del pagador, los renglones de
-   participantes, el contador y el diálogo de confirmación. */
+   Se apoya en persona-referencia.css —tarjeta y composición— y en los componentes
+   compartidos; aquí queda la rejilla del pagador, los renglones de participantes,
+   el contador y el resumen de la confirmación. */
 
 .refesp-form {
     display: flex;
@@ -16,58 +16,15 @@
     margin-bottom: 1.75rem;
 }
 
-.refesp-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-/* Renglón compartido dentro de la rejilla del pagador: ocupa la fila entera y
-   la parte en columnas iguales. La razón social y el correo del CFDI son los
-   dos campos largos, y sueltos en la rejilla cada uno se llevaba un renglón
-   completo. Con auto-fit se apilan solos cuando la tarjeta se angosta. */
+/* Renglón compartido dentro de la rejilla del pagador: ocupa la fila entera y la
+   parte en columnas iguales. La razón social y el correo del CFDI son los dos
+   campos largos, y sueltos en la rejilla cada uno se llevaba un renglón completo.
+   Con auto-fit se apilan solos cuando la tarjeta se angosta. */
 .refesp-fila {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     gap: 1rem 1.25rem;
-}
-
-.refesp-campo label {
-    color: #374151;
-}
-
-.refesp-campo input,
-.refesp-campo select {
-    width: 100%;
-    padding: 0.6rem 0.75rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #fff;
-    color: #111827;
-}
-
-.refesp-campo input:focus-visible,
-.refesp-campo select:focus-visible {
-    outline: 2px solid #172a44;
-    outline-offset: 1px;
-}
-
-.refesp-campo input[readonly] {
-    background: #f3f4f6;
-    color: #4b5563;
-}
-
-.refesp-ayuda {
-    margin: 0;
-    color: #6b7280;
-    font-size: var(--fs-auxiliar);
-}
-
-.refesp-error {
-    margin: 0;
-    color: #9b1717;
-    font-size: var(--fs-auxiliar);
 }
 
 .refesp-subtitulo {
@@ -76,44 +33,56 @@
     font-size: var(--fs-subtitulo);
 }
 
+/* ─── Cuántos participantes ──────────────────────────────────────────── */
+
 .refesp-contador {
     display: inline-flex;
     align-items: stretch;
-    margin-bottom: 1.25rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
     overflow: hidden;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--borde-control);
+    border-radius: var(--radio-control);
 }
 
-.refesp-contador__boton {
-    width: 2.25rem;
+/* El anillo lo lleva el grupo y no cada botón: el recorte que junta las tres
+   piezas se comía el foco del teclado, así que no se veía ninguno. */
+.refesp-contador:focus-within {
+    outline: var(--foco-anillo);
+    outline-offset: var(--foco-separacion);
+}
+
+.refesp-contador .boton {
+    min-height: auto;
+    padding: 0.5rem 0.9rem;
     border: 0;
+    border-radius: 0;
     background: #f7f8fa;
     color: #172a44;
     font-size: var(--fs-subtitulo);
-    font-weight: 600;
-    cursor: pointer;
 }
 
-.refesp-contador__boton:hover:not([disabled]),
-.refesp-contador__boton:focus-visible:not([disabled]) {
-    background: #eceff4;
+.refesp-contador .boton:focus-visible {
+    outline: none;
 }
 
-.refesp-contador__boton[disabled] {
-    color: #9ca3af;
-    cursor: not-allowed;
+/* Esta hoja se carga después de los componentes, así que el apagado hay que
+   repetirlo aquí o el fondo de arriba lo taparía. */
+.refesp-contador .boton[disabled] {
+    background: var(--inactivo-fondo);
+    color: var(--inactivo-texto);
 }
 
 .refesp-contador__valor {
     min-width: 3rem;
     padding: 0.5rem 0.75rem;
-    border-inline: 1px solid #d9dee7;
+    border-inline: 1px solid var(--borde-control);
     color: #111827;
     font-size: var(--fs-ui);
     font-weight: 600;
     text-align: center;
 }
+
+/* ─── Participantes ──────────────────────────────────────────────────── */
 
 .refesp-personas {
     display: flex;
@@ -127,21 +96,21 @@
     grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
     gap: 0.75rem 1rem;
     margin: 0;
-    padding: 1rem 2.5rem 1rem 1rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    padding: 1rem 3.75rem 1rem 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-control);
 }
 
 .refesp-persona__legend {
     padding: 0 0.35rem;
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: var(--fs-micro);
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
-.refesp-persona .refesp-error {
+.refesp-persona .campo__error {
     grid-column: 1 / -1;
 }
 
@@ -149,84 +118,24 @@
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
-    width: 1.75rem;
-    height: 1.75rem;
-    border: 1px solid #e0d0d0;
     border-radius: 50%;
-    background: #fff;
-    color: #9b1717;
-    cursor: pointer;
-}
-
-.refesp-persona__quitar:hover,
-.refesp-persona__quitar:focus-visible {
-    background: #fff0f0;
 }
 
 .refesp-total {
     margin-top: 1.5rem;
 }
 
+/* ─── Barra de envío ─────────────────────────────────────────────────── */
+
 .refesp-barra {
     display: flex;
-    gap: 0.75rem;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     padding: 1rem 1.5rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
 }
 
-.refesp-barra .referencia-boton[disabled] {
-    background: #d1d5db;
-    color: #6b7280;
-    cursor: not-allowed;
-}
-
-/* Confirmación irreversible. Mismo diálogo accesible que el resto del trámite;
-   vive aquí porque los estilos de una pantalla no salen de su hoja. */
-.refesp-modal {
-    position: fixed;
-    z-index: 1200;
-    inset: 0;
-    padding: 1rem;
-    display: grid;
-    place-items: center;
-}
-
-.refesp-modal__fondo {
-    position: absolute;
-    inset: 0;
-    background: rgba(11, 26, 46, 0.58);
-}
-
-.refesp-modal__card {
-    position: relative;
-    width: min(100%, 32rem);
-    max-height: 90vh;
-    padding: 1.75rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    overflow-y: auto;
-    text-align: center;
-}
-
-.refesp-modal__card h2 {
-    margin: 0 0 0.6rem;
-    color: #16263f;
-    font-size: var(--fs-subtitulo);
-}
-
-.refesp-modal__card p {
-    margin: 0 0 1.25rem;
-    color: #6b6b66;
-}
-
-.refesp-modal__card strong {
-    color: #16263f;
-}
+/* ─── Resumen de la confirmación ─────────────────────────────────────── */
 
 .refesp-resumen {
     display: grid;
@@ -236,7 +145,7 @@
 }
 
 .refesp-resumen dt {
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .refesp-resumen dd {
@@ -255,23 +164,12 @@
     text-align: left;
 }
 
-.refesp-modal__acciones {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: space-between;
-}
-
-.refesp-modal-abierto {
-    overflow: hidden;
-}
-
 @media (max-width: 700px) {
-    .refesp-barra,
-    .refesp-modal__acciones {
+    .refesp-barra {
         flex-direction: column-reverse;
     }
 
-    .refesp-barra .referencia-boton {
+    .refesp-barra .boton {
         width: 100%;
     }
 }

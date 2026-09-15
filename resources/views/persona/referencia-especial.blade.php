@@ -30,16 +30,20 @@
 <section class="referencia-shell">
 
     @if($errors->any())
-        <div class="referencia-alerta referencia-alerta--error">
-            <strong>Revisa los datos de la referencia especial:</strong>
-            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        <div class="notificacion notificacion--error" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+            <div>
+                <strong>Revisa los datos de la referencia especial:</strong>
+                <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+            </div>
         </div>
     @endif
 
     <noscript>
-        <div class="referencia-alerta referencia-alerta--error">
-            La captura de participantes necesita JavaScript. Habilítalo o solicita una
-            <a href="{{ route('persona.referencia.individual') }}">referencia individual</a>.
+        <div class="notificacion notificacion--error" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+            <span>La captura de participantes necesita JavaScript. Habilítalo o solicita una
+            <a href="{{ route('persona.referencia.individual') }}">referencia individual</a>.</span>
         </div>
     </noscript>
 
@@ -57,7 +61,7 @@
         :mensaje="avisoError"
         tipo="error"
         :errores="erroresServidor"
-        clase="referencia-alerta referencia-alerta--error"></alertas>
+        clase="notificacion notificacion--error"></alertas>
 
     <form
         method="POST"
@@ -66,9 +70,9 @@
         @submit.prevent="abrirConfirmacion">
         @csrf
 
-        <div class="referencia-tarjeta">
+        <div class="tarjeta referencia-tarjeta">
             <h1>Datos para la expedición de la referencia especial</h1>
-            <p class="pr-notice">
+            <p class="aviso aviso--precaucion">
                 El pago debe provenir de la cuenta de quien aquí se registra: el comprobante fiscal se
                 emite a su nombre y no puede facturarse a terceros.
             </p>
@@ -77,9 +81,10 @@
                 {{-- Los dos datos largos del pagador van juntos y a mitades:
                      sueltos en la rejilla, cada uno se comía un renglón entero. --}}
                 <div class="refesp-fila">
-                    <div class="refesp-campo">
-                        <label for="razon_social">Nombre / razón social del tercero que realizará el pago *</label>
+                    <div class="campo">
+                        <label class="etiqueta" for="razon_social">Nombre / razón social del tercero que realizará el pago *</label>
                         <input
+                            class="control"
                             id="razon_social"
                             name="razon_social"
                             type="text"
@@ -89,9 +94,10 @@
                             v-model="pagador.razonSocial">
                     </div>
 
-                    <div class="refesp-campo">
-                        <label for="correo_cfdi">Correo para enviar el CFDI *</label>
+                    <div class="campo">
+                        <label class="etiqueta" for="correo_cfdi">Correo para enviar el CFDI *</label>
                         <input
+                            class="control"
                             id="correo_cfdi"
                             name="correo_cfdi"
                             type="email"
@@ -99,26 +105,30 @@
                             required
                             v-model="pagador.correoCfdi"
                             @input="normalizarCorreo"
+                            :aria-invalid="avisoCorreo ? 'true' : null"
                             aria-describedby="correo_cfdi-ayuda">
-                        <p id="correo_cfdi-ayuda" class="refesp-ayuda">
+                        <p id="correo_cfdi-ayuda" class="ayuda">
                             Puede ser distinto del correo con el que entras al sistema.
                         </p>
-                        <p class="refesp-error" role="alert" v-if="avisoCorreo" v-cloak>@{{ avisoCorreo }}</p>
+                        <p class="campo__error" role="alert" v-if="avisoCorreo" v-cloak>
+                            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>@{{ avisoCorreo }}
+                        </p>
                     </div>
                 </div>
 
-                <div class="refesp-campo">
-                    <label for="persona_moral">Tipo de persona *</label>
-                    <select id="persona_moral" name="persona_moral" required v-model="pagador.personaMoral">
+                <div class="campo">
+                    <label class="etiqueta" for="persona_moral">Tipo de persona *</label>
+                    <select class="control" id="persona_moral" name="persona_moral" required v-model="pagador.personaMoral">
                         <option value="1">Persona moral</option>
                         <option value="0">Persona física</option>
                     </select>
                 </div>
 
-                <div class="refesp-campo">
-                    <label for="rfc">RFC *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="rfc">RFC *</label>
                     {{-- text y no number: la homoclave lleva letras. --}}
                     <input
+                        class="control"
                         id="rfc"
                         name="rfc"
                         type="text"
@@ -127,14 +137,17 @@
                         required
                         v-model="pagador.rfc"
                         @input="normalizarRfc"
+                        :aria-invalid="avisoRfc ? 'true' : null"
                         aria-describedby="rfc-ayuda">
-                    <p id="rfc-ayuda" class="refesp-ayuda">12 caracteres si es persona moral, 13 si es física.</p>
-                    <p class="refesp-error" role="alert" v-if="avisoRfc" v-cloak>@{{ avisoRfc }}</p>
+                    <p id="rfc-ayuda" class="ayuda">12 caracteres si es persona moral, 13 si es física.</p>
+                    <p class="campo__error" role="alert" v-if="avisoRfc" v-cloak>
+                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>@{{ avisoRfc }}
+                    </p>
                 </div>
 
-                <div class="refesp-campo">
-                    <label for="regimen_fiscal">Régimen fiscal *</label>
-                    <select id="regimen_fiscal" name="regimen_fiscal" required v-model="pagador.regimenFiscal">
+                <div class="campo">
+                    <label class="etiqueta" for="regimen_fiscal">Régimen fiscal *</label>
+                    <select class="control" id="regimen_fiscal" name="regimen_fiscal" required v-model="pagador.regimenFiscal">
                         <option value="">Selecciona una opción</option>
                         @foreach($regimenes as $regimen)
                             <option value="{{ $regimen['id'] }}">{{ $regimen['nombre'] }}</option>
@@ -142,10 +155,11 @@
                     </select>
                 </div>
 
-                <div class="refesp-campo">
-                    <label for="codigo_postal">Código postal *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="codigo_postal">Código postal *</label>
                     {{-- text y no number: un código como 01000 perdería el cero. --}}
                     <input
+                        class="control"
                         id="codigo_postal"
                         name="codigo_postal"
                         type="text"
@@ -154,8 +168,11 @@
                         maxlength="5"
                         required
                         v-model="pagador.codigoPostal"
+                        :aria-invalid="avisoCodigoPostal ? 'true' : null"
                         @input="normalizarCodigoPostal">
-                    <p class="refesp-error" role="alert" v-if="avisoCodigoPostal" v-cloak>@{{ avisoCodigoPostal }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoCodigoPostal" v-cloak>
+                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>@{{ avisoCodigoPostal }}
+                    </p>
                 </div>
             </div>
 
@@ -166,20 +183,22 @@
             <div class="refesp-contador" v-cloak>
                 <button
                     type="button"
-                    class="refesp-contador__boton"
+                    class="boton"
                     :disabled="participantes.length <= 1"
                     @click="quitarUltimo"
                     aria-label="Quitar la última persona">−</button>
                 <output class="refesp-contador__valor" aria-live="polite">@{{ participantes.length }}</output>
                 <button
                     type="button"
-                    class="refesp-contador__boton"
+                    class="boton"
                     :disabled="participantes.length >= maximo"
                     @click="agregar()"
                     aria-label="Agregar una persona">+</button>
             </div>
 
-            <p class="refesp-error" role="alert" v-if="avisoDuplicados" v-cloak>@{{ avisoDuplicados }}</p>
+            <p class="campo__error" role="alert" v-if="avisoDuplicados" v-cloak>
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>@{{ avisoDuplicados }}
+            </p>
 
             <div class="refesp-personas" v-cloak aria-labelledby="refesp-participantes-titulo">
                 <fieldset class="refesp-persona" v-for="(persona, indice) in participantes" :key="indice">
@@ -187,22 +206,25 @@
                         Persona @{{ indice + 1 }}<span v-if="indice === 0"> (tú)</span>
                     </legend>
 
-                    <div class="refesp-campo">
-                        <label :for="'curp-' + indice">CURP *</label>
+                    <div class="campo">
+                        <label class="etiqueta" :for="'curp-' + indice">CURP *</label>
                         <input
+                            class="control"
                             :id="'curp-' + indice"
                             :name="'participantes[' + indice + '][curp]'"
                             type="text"
                             maxlength="18"
                             required
                             :readonly="indice === 0"
+                            :aria-invalid="avisoPersona(persona) ? 'true' : null"
                             v-model="persona.curp"
                             @input="normalizarCurp(persona)">
                     </div>
 
-                    <div class="refesp-campo">
-                        <label :for="'nombre-' + indice">Nombre *</label>
+                    <div class="campo">
+                        <label class="etiqueta" :for="'nombre-' + indice">Nombre *</label>
                         <input
+                            class="control"
                             :id="'nombre-' + indice"
                             :name="'participantes[' + indice + '][nombre]'"
                             type="text"
@@ -212,9 +234,10 @@
                             v-model="persona.nombre">
                     </div>
 
-                    <div class="refesp-campo">
-                        <label :for="'paterno-' + indice">Primer apellido *</label>
+                    <div class="campo">
+                        <label class="etiqueta" :for="'paterno-' + indice">Primer apellido *</label>
                         <input
+                            class="control"
                             :id="'paterno-' + indice"
                             :name="'participantes[' + indice + '][primer_apellido]'"
                             type="text"
@@ -224,9 +247,10 @@
                             v-model="persona.primer_apellido">
                     </div>
 
-                    <div class="refesp-campo">
-                        <label :for="'materno-' + indice">Segundo apellido *</label>
+                    <div class="campo">
+                        <label class="etiqueta" :for="'materno-' + indice">Segundo apellido *</label>
                         <input
+                            class="control"
                             :id="'materno-' + indice"
                             :name="'participantes[' + indice + '][segundo_apellido]'"
                             type="text"
@@ -238,18 +262,20 @@
 
                     <button
                         type="button"
-                        class="refesp-persona__quitar"
+                        class="boton boton--peligro boton--icono refesp-persona__quitar"
                         v-if="indice > 0"
                         @click="quitar(indice)"
                         :aria-label="'Quitar a la persona ' + (indice + 1)">
                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                     </button>
 
-                    <p class="refesp-error" role="alert" v-if="avisoPersona(persona)">@{{ avisoPersona(persona) }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoPersona(persona)">
+                        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>@{{ avisoPersona(persona) }}
+                    </p>
                 </fieldset>
             </div>
 
-            <p class="refesp-total pr-notice" v-cloak>
+            <p class="aviso refesp-total" v-cloak>
                 Total a pagar: <strong>$@{{ totalFormateado }} @{{ moneda }}</strong>
                 (@{{ participantes.length }} × $@{{ cuotaFormateada }}).
                 La Dirección emitirá la referencia por ese importe.
@@ -257,24 +283,24 @@
         </div>
 
         <div class="refesp-barra">
-            <a href="{{ route('persona.referencia.index') }}" class="referencia-boton referencia-boton--secundario">
+            <a href="{{ route('persona.referencia.index') }}" class="boton boton--secundario">
                 Volver
             </a>
             {{-- El botón nace habilitado y Vue lo apaga: si el script no carga,
                  el envío llega al servidor y ahí se rechaza con el mismo motivo. --}}
-            <button type="submit" class="referencia-boton" :disabled="!puedeEnviar">Continuar</button>
+            <button type="submit" class="boton boton--primario" :disabled="!puedeEnviar">Continuar</button>
         </div>
 
-        <div class="refesp-modal" v-if="confirmando" v-cloak @keydown.esc="cerrarConfirmacion">
-            <div class="refesp-modal__fondo" @click="cerrarConfirmacion"></div>
+        <div class="dialogo" v-if="confirmando" v-cloak @keydown.esc="cerrarConfirmacion">
+            <div class="dialogo__velo" @click="cerrarConfirmacion"></div>
             <section
-                class="refesp-modal__card"
+                class="dialogo__tarjeta"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="refesp-modal-titulo"
                 @keydown.tab="atraparFoco">
-                <h2 id="refesp-modal-titulo">¿Está seguro de que los datos son correctos?</h2>
-                <p>Una vez enviados los datos <strong>no se podrán corregir</strong>.</p>
+                <h2 class="dialogo__titulo" id="refesp-modal-titulo">¿Está seguro de que los datos son correctos?</h2>
+                <p class="dialogo__texto">Una vez enviados los datos <strong>no se podrán corregir</strong>.</p>
 
                 <dl class="refesp-resumen">
                     <div>
@@ -295,15 +321,15 @@
                     <li v-for="(persona, indice) in participantes" :key="indice">@{{ persona.curp }}</li>
                 </ul>
 
-                <div class="refesp-modal__acciones">
+                <div class="dialogo__acciones">
                     <button
                         type="button"
-                        class="referencia-boton referencia-boton--secundario"
+                        class="boton boton--secundario"
                         ref="cancelar"
                         @click="cerrarConfirmacion">
                         Volver
                     </button>
-                    <button type="button" class="referencia-boton" :disabled="enviando" @click="confirmar">
+                    <button type="button" class="boton boton--primario" :disabled="enviando" @click="confirmar">
                         @{{ enviando ? 'Enviando…' : 'Confirmar' }}
                     </button>
                 </div>

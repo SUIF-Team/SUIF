@@ -29,6 +29,7 @@
     id/form= escrita a mano.
 -->
 <link rel="stylesheet" href="../../public/assets/css/app.css">
+<link rel="stylesheet" href="../../public/assets/css/partials/componentes.css">
 <link rel="stylesheet" href="../../public/assets/css/pages/persona-preregistro.css">
 <style>
     body { font: 14px/1.5 system-ui, sans-serif; margin: 1.5rem; }
@@ -55,9 +56,9 @@
             "fecha_envio": null,
             "solicitud_cerrada": false,
             "documentos": [
-                {"slug":"solicitud-firmada","nombre":"Solicitud firmada","estado":"rechazado","etiqueta":"Rechazado","clase":"rejected","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"solicitud-vieja.pdf","observacion":"La firma no coincide.","es_formato":true,"ruta_ver":"#ver-1","ruta_formato":"#formato-1","ruta_subir":"#subir-1"},
-                {"slug":"curp","nombre":"CURP","estado":"pendiente","etiqueta":"Pendiente","clase":"pending","puede_reemplazar":true,"tiene_archivo":false,"nombre_original":null,"observacion":null,"es_formato":false,"ruta_ver":"#ver-2","ruta_formato":"#formato-2","ruta_subir":"#subir-2"},
-                {"slug":"identificacion-oficial","nombre":"Identificación oficial","estado":"cargado","etiqueta":"Cargado","clase":"loaded","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"ine.pdf","observacion":null,"es_formato":false,"ruta_ver":"#ver-3","ruta_formato":"#formato-3","ruta_subir":"#subir-3"}
+                {"slug":"solicitud-firmada","nombre":"Solicitud firmada","estado":"rechazado","etiqueta":"Rechazado","clase":"peligro","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"solicitud-vieja.pdf","observacion":"La firma no coincide.","es_formato":true,"ruta_ver":"#ver-1","ruta_formato":"#formato-1","ruta_subir":"#subir-1"},
+                {"slug":"curp","nombre":"CURP","estado":"pendiente","etiqueta":"Pendiente","clase":"neutro","puede_reemplazar":true,"tiene_archivo":false,"nombre_original":null,"observacion":null,"es_formato":false,"ruta_ver":"#ver-2","ruta_formato":"#formato-2","ruta_subir":"#subir-2"},
+                {"slug":"identificacion-oficial","nombre":"Identificación oficial","estado":"cargado","etiqueta":"Cargado","clase":"info","puede_reemplazar":true,"tiene_archivo":true,"nombre_original":"ine.pdf","observacion":null,"es_formato":false,"ruta_ver":"#ver-3","ruta_formato":"#formato-3","ruta_subir":"#subir-3"}
             ]
         }'></div>
 </div>
@@ -118,7 +119,7 @@ window.SUIF = {
     }
 
     function abrir(slug) {
-        return celda(slug).querySelector('a.pr-btn');
+        return celda(slug).querySelector('a.boton');
     }
 
     function adjuntar(slug) {

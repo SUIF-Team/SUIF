@@ -352,7 +352,7 @@
                 focoAnterior = document.activeElement;
                 this.confirmando = true;
 
-                document.body.classList.add('refesp-modal-abierto');
+                document.body.classList.add('dialogo-abierto');
 
                 /* Arranca el foco en Volver: la acción de al lado no tiene
                    vuelta atrás. */
@@ -366,7 +366,7 @@
             cerrarConfirmacion: function () {
                 this.confirmando = false;
                 formularioPendiente = null;
-                document.body.classList.remove('refesp-modal-abierto');
+                document.body.classList.remove('dialogo-abierto');
 
                 if (focoAnterior) {
                     focoAnterior.focus();
