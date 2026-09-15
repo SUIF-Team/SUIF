@@ -1,31 +1,19 @@
-/* Estado del pago: subir comprobante y seguimiento de su revisión. */
+/*
+ * Pago de la persona: subir el comprobante y seguir su revisión.
+ *
+ * Cajas de mensaje, chips, campos, botones, opciones y el diálogo viven en
+ * partials/componentes.css; aquí queda la composición de la pantalla y lo propio
+ * del comprobante.
+ */
 
-/* Sólo los avisos del formulario llevan v-cloak; los campos se ven siempre,
-   con JavaScript o sin él. */
+/* Sólo los avisos del formulario llevan v-cloak; los campos se ven siempre, con
+   JavaScript o sin él. */
 [v-cloak] {
     display: none;
 }
 
 .pago-shell {
     padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 5rem);
-}
-
-.pago-alerta {
-    margin-bottom: 1.25rem;
-    padding: 13px 16px;
-    border-radius: 10px;
-    background: #eef7f0;
-    color: #245f35;
-}
-
-.pago-alerta--error {
-    background: #fff0f0;
-    color: #9b1717;
-}
-
-.pago-alerta--error ul {
-    margin: 0.4rem 0 0;
-    padding-left: 1.1rem;
 }
 
 .pago-tarjetas {
@@ -37,9 +25,6 @@
 
 .pago-tarjeta {
     padding: 2rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
 }
 
 .pago-tarjeta--sola {
@@ -52,85 +37,42 @@
     color: #172a44;
 }
 
+/* El título de la tarjeta dice en qué punto está el pago. Va en el dorado
+   institucional y sin cursiva: la cursiva de Merriweather no se carga y el
+   navegador la inclinaba a mano. */
 .pago-tarjeta__titulo {
     margin: 0 0 0.6rem;
-    color: #b38612;
+    color: var(--unam-gold-dark);
     font-size: var(--fs-subtitulo);
-    font-style: italic;
 }
 
 .pago-tarjeta__titulo--error {
-    color: #b91c1c;
+    color: var(--peligro-texto);
 }
 
 .pago-muted {
     margin: 0 0 1.25rem;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .pago-estatus-linea {
     margin: 0;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
-.pago-chip {
+.pago-estatus-linea .estado {
     margin-left: 0.4rem;
-    padding: 0.3rem 0.85rem;
-    border-radius: 999px;
-    font-size: var(--fs-micro);
-    font-weight: 600;
-}
-
-.pago-chip--revision {
-    background: #ffe8cf;
-    color: #9a5b13;
-}
-
-.pago-chip--validado {
-    background: #d8ecdf;
-    color: #075b2c;
-}
-
-.pago-chip--rechazado {
-    background: #fcdede;
-    color: #9b1717;
-}
-
-/* Mismo tratamiento que el motivo del rechazo de un documento en el
-   pre-registro (.pr-observation, persona-preregistro.css): la persona
-   reconoce el aviso sin importar en qué etapa del trámite lo encuentre.
-   Se copia en lugar de reutilizarse porque esa hoja no se carga aquí. */
-.pago-observacion {
-    margin-top: 1.25rem;
-    padding: 1.125rem;
-    border: 1px solid #ebc7c7;
-    border-radius: 12px;
-    background: #fff8f8;
-    color: #8d1117;
-}
-
-.pago-observacion strong {
-    display: block;
-    margin-bottom: 0.4rem;
-    font-size: var(--fs-auxiliar);
-}
-
-/* El motivo lo escribe a mano quien revisa: sus saltos de línea se respetan. */
-.pago-observacion p {
-    margin: 0;
-    white-space: pre-line;
-    overflow-wrap: anywhere;
 }
 
 .pago-form {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
     align-items: center;
+    gap: 0.75rem;
 }
 
-/* Los datos declarados ocupan el ancho completo del formulario, que por lo
-   demás alinea el adjunto y el botón en una sola línea. */
+/* Los datos declarados ocupan el ancho completo del formulario, que por lo demás
+   alinea el adjunto y el botón en una sola línea. */
 .pago-datos {
     flex-basis: 100%;
     margin: 0 0 0.5rem;
@@ -139,8 +81,8 @@
 }
 
 .pago-datos__titulo {
-    padding: 0;
     margin-bottom: 0.75rem;
+    padding: 0;
     color: #172a44;
 }
 
@@ -150,54 +92,37 @@
     gap: 0.75rem;
 }
 
-.pago-campo {
+.pago-campo--banco {
+    margin-top: 0.75rem;
+    max-width: 22rem;
+}
+
+.pago-opciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pago-opciones .opcion {
+    align-items: flex-start;
+}
+
+.pago-opcion__texto {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.15rem;
 }
 
-.pago-campo label {
-    color: #374151;
-}
-
-.pago-campo input {
-    padding: 0.55rem 0.75rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #fff;
-    color: #172a44;
-}
-
-.pago-campo input:focus-visible {
-    outline: 2px solid #172a44;
-    outline-offset: 1px;
-}
-
-.pago-campo__ayuda {
-    margin: 0;
-    color: #6b7280;
+.pago-opcion__texto small {
+    color: var(--text-muted);
     font-size: var(--fs-auxiliar);
+    font-weight: 400;
 }
 
-.pago-mensaje-validacion {
-    margin: 0;
-    color: #9b1717;
-    font-size: var(--fs-auxiliar);
-}
-
+/* La etiqueta se ve como un botón y esconde su input dentro. */
 .pago-archivo {
     position: relative;
     overflow: hidden;
-    display: inline-flex;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.65rem 1.1rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #f7f8fa;
-    color: #172a44;
-    font-size: var(--fs-ui);
-    cursor: pointer;
 }
 
 .pago-archivo input {
@@ -207,153 +132,31 @@
     cursor: pointer;
 }
 
-.pago-boton {
-    min-width: 150px;
-    padding: 0.65rem 1.25rem;
-    border: 0;
-    border-radius: 8px;
-    background: #111827;
-    color: #fff;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.pago-boton:hover,
-.pago-boton:focus-visible {
-    background: #1f2937;
-}
-
-.pago-boton--bloqueado {
-    background: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-.pago-tracker {
-    padding: 2rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.pago-tracker__titulo {
-    margin: 0 0 1.5rem;
-    color: #172a44;
-}
-
-.pago-tracker__linea {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.pago-tracker__paso {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: 7rem;
-}
-
-.pago-tracker__paso span {
-    width: 2.2rem;
-    height: 2.2rem;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #e5e7eb;
-    color: #6b7280;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-}
-
-.pago-tracker__paso small {
-    color: #6b7280;
-}
-
-.pago-tracker__paso--completo span {
-    background: #16a34a;
-    color: #fff;
-}
-
-.pago-tracker__paso--activo span {
-    background: #d97706;
-    color: #fff;
-}
-
-.pago-tracker__paso--error span {
-    background: #dc2626;
-    color: #fff;
-}
-
-.pago-tracker__conector {
-    height: 2px;
-    flex: 1;
-    margin: 1.1rem -0.5rem 0;
-    background: #e5e7eb;
-}
-
-.pago-tracker__conector--completo {
-    background: #16a34a;
-}
-
-.pago-tracker__conector--error {
-    background: #dc2626;
-}
-
-@media (max-width: 900px) {
-    .pago-tarjetas {
-        grid-template-columns: 1fr;
-    }
-
-    .pago-tracker__linea {
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .pago-tracker__conector {
-        display: none;
-    }
-
-    .pago-datos__grid {
-        grid-template-columns: minmax(0, 1fr);
-    }
+/* Con el archivo ya elegido el botón cambia de papel: deja de pedir y confirma. */
+.pago-archivo--cargado {
+    border-color: var(--exito-solido);
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
 }
 
 /* ─── Confirmación de lo adjuntado ───────────────────────────────────── */
 
-/* El input va oculto, así que el label es quien muestra el foco del teclado. */
-.pago-archivo:focus-within {
-    outline: 2px solid #172a44;
-    outline-offset: 2px;
-}
-
-.pago-archivo--cargado {
-    border-color: #16a34a;
-    background: #d8ecdf;
-    color: #075b2c;
-    font-weight: 600;
-}
-
 .pago-adjunto {
     flex-basis: 100%;
     display: flex;
-    gap: 0.5rem;
     align-items: baseline;
+    gap: 0.5rem;
     margin: 0;
     padding: 0.6rem 0.85rem;
-    border-radius: 8px;
-    background: #d8ecdf;
-    color: #075b2c;
+    border-radius: var(--radio-control);
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
     font-size: var(--fs-auxiliar);
 }
 
 .pago-adjunto--error {
-    background: #fcdede;
-    color: #9b1717;
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
 }
 
 .pago-adjunto__detalle {
@@ -362,54 +165,29 @@
     overflow-wrap: anywhere;
 }
 
-.pago-adjunto__quitar {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
-    font-size: var(--fs-auxiliar);
-    text-decoration: underline;
-    cursor: pointer;
+/* ─── Seguimiento de la validación ───────────────────────────────────── */
+
+.pago-tracker {
+    padding: 2rem;
+    text-align: center;
 }
 
-.pago-boton[disabled] {
-    background: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-.pago-boton[disabled]:hover,
-.pago-boton[disabled]:focus-visible {
-    background: #e5e7eb;
+.pago-tracker__titulo {
+    margin: 0 0 1.5rem;
+    color: #172a44;
 }
 
 /* ─── Comprobante fiscal: ticket o CFDI ──────────────────────────────── */
 
-/* Tarjeta de ancho completo, entre las dos del estatus y el tracker: el
-   bloque lleva diálogo y una nota larga, y en media columna no cabría. */
+/* Tarjeta de ancho completo, entre las dos del estatus y el seguimiento: el bloque
+   lleva diálogo y una nota larga, y en media columna no cabría. */
 .pago-comprobante {
     margin-bottom: 1.5rem;
     padding: 2rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
 }
 
 .pago-comprobante__titulo {
     margin: 0 0 0.6rem;
-    color: #172a44;
-}
-
-.pago-comprobante__nota {
-    margin: 0 0 1.5rem;
-    padding: 0.9rem 1.1rem;
-    border-radius: 10px;
-    background: #f7f7f4;
-    color: #6b7280;
-    font-size: var(--fs-auxiliar);
-}
-
-.pago-comprobante__nota strong {
     color: #172a44;
 }
 
@@ -424,8 +202,8 @@
     flex-direction: column;
     gap: 0.5rem;
     padding: 1.25rem;
-    border: 1px solid #d9dee7;
-    border-radius: 10px;
+    border: 1px solid var(--borde-control);
+    border-radius: var(--radio-control);
 }
 
 .pago-opcion__titulo {
@@ -433,195 +211,28 @@
     color: #172a44;
 }
 
-.pago-opcion__texto {
-    margin: 0;
-    color: #6b7280;
-    font-size: var(--fs-auxiliar);
-}
-
-/* El botón se pega abajo para que las dos tarjetas queden parejas aunque
-   sus descripciones midan distinto. */
-.pago-opcion .pago-boton {
+/* El botón se pega abajo para que las dos tarjetas queden parejas aunque sus
+   descripciones midan distinto. */
+.pago-opcion .boton {
     margin-top: auto;
     align-self: flex-start;
 }
 
-.pago-comprobante__elegido {
-    margin: 0 0 0.75rem;
-    color: #6b7280;
-}
-
+.pago-comprobante__elegido,
 .pago-comprobante__aviso {
     margin: 0 0 1rem;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .pago-comprobante__aviso:last-child {
     margin-bottom: 0;
 }
 
-.pago-chip--ticket {
-    background: #eef1f5;
-    color: #374151;
-}
-
-.pago-chip--cfdi {
-    background: #d8ecdf;
-    color: #075b2c;
-}
-
-/* Variante clara del botón. Lleva inline-flex porque en «Llenar
-   formulario» el control es un enlace, no un <button>. */
-.pago-boton--secundario {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #d9dee7;
-    background: #fff;
-    color: #172a44;
-    text-decoration: none;
-}
-
-.pago-boton--secundario:hover,
-.pago-boton--secundario:focus-visible {
-    background: #f3f4f6;
-    color: #172a44;
-}
-
-/* ─── Confirmación de la elección ────────────────────────────────────── */
-
-/* Copiado de persona-sede.css y no reutilizado: esa hoja no se carga en
-   esta pantalla. Mismo motivo que .pago-observacion. */
-.pago-modal {
-    position: fixed;
-    z-index: 1200;
-    inset: 0;
-    padding: 1rem;
-    display: grid;
-    place-items: center;
-}
-
-.pago-modal__fondo {
-    position: absolute;
-    inset: 0;
-    background: rgba(11, 26, 46, 0.58);
-}
-
-.pago-modal__card {
-    position: relative;
-    width: min(100%, 30rem);
-    padding: 1.75rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-}
-
-.pago-modal__card h2 {
-    margin: 0 0 0.6rem;
-    color: #16263f;
-    font-size: var(--fs-subtitulo);
-}
-
-.pago-modal__card p {
-    margin: 0 0 1.25rem;
-    color: #6b6b66;
-}
-
-.pago-modal__card strong {
-    color: #16263f;
-}
-
-.pago-modal__acciones {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-.pago-modal-abierto {
-    overflow: hidden;
-}
-
 @media (max-width: 900px) {
+    .pago-tarjetas,
+    .pago-datos__grid,
+    .pago-opciones,
     .pago-comprobante__opciones {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 700px) {
-    .pago-modal__acciones {
-        flex-direction: column-reverse;
-    }
-}
-
-/* ─── Forma de pago y comprobante en el formulario ───────────────────── */
-
-/* Opciones en tarjeta, con el mismo borde que las de ticket o CFDI: la
-   etiqueta entera es el área de clic y se marca completa al elegirla. */
-.pago-opciones {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-}
-
-.pago-radio {
-    display: flex;
-    gap: 0.6rem;
-    align-items: flex-start;
-    padding: 0.75rem 0.9rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #fff;
-    color: #172a44;
-    cursor: pointer;
-}
-
-.pago-radio input {
-    flex-shrink: 0;
-    margin-top: 0.2rem;
-    accent-color: #172a44;
-}
-
-.pago-radio:has(input:checked) {
-    border-color: #172a44;
-    background: #f7f8fa;
-}
-
-.pago-radio:has(input:focus-visible) {
-    outline: 2px solid #172a44;
-    outline-offset: 2px;
-}
-
-.pago-radio__texto {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-
-.pago-radio__texto small {
-    color: #6b7280;
-    font-size: var(--fs-auxiliar);
-}
-
-.pago-campo--banco {
-    margin-top: 0.75rem;
-    max-width: 22rem;
-}
-
-.pago-campo select {
-    padding: 0.55rem 0.75rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #fff;
-    color: #172a44;
-}
-
-.pago-campo select:focus-visible {
-    outline: 2px solid #172a44;
-    outline-offset: 1px;
-}
-
-@media (max-width: 900px) {
-    .pago-opciones {
         grid-template-columns: minmax(0, 1fr);
     }
 }

@@ -23,18 +23,21 @@
 <section class="facturacion-shell">
 
     @if($errors->any())
-        <div class="facturacion-alerta facturacion-alerta--error">
-            <strong>Revisa tus datos de facturación:</strong>
-            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        <div class="notificacion notificacion--error" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+            <div>
+                <strong>Revisa tus datos de facturación:</strong>
+                <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+            </div>
         </div>
     @endif
 
-    <div class="facturacion-tarjeta" id="facturacion-app" data-vista='@json($formulario)'>
+    <div class="tarjeta facturacion-tarjeta" id="facturacion-app" data-vista='@json($formulario)'>
         <alertas
             :mensaje="avisoError"
             tipo="error"
             :errores="erroresServidor"
-            clase="facturacion-alerta facturacion-alerta--error"></alertas>
+            clase="notificacion notificacion--error"></alertas>
 
         <h1>Datos para tu CFDI</h1>
         <p class="facturacion-muted">
@@ -50,9 +53,10 @@
             @csrf
 
             <div class="facturacion-grid">
-                <div class="facturacion-campo">
-                    <label for="razon_social">Nombre o razón social *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="razon_social">Nombre o razón social *</label>
                     <input
+                        class="control"
                         id="razon_social"
                         name="razon_social"
                         type="text"
@@ -61,30 +65,30 @@
                         v-model="razonSocial"
                         value="{{ $formulario['razonSocial'] }}">
                     @error('razon_social')
-                        <p class="facturacion-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
-                    <p class="facturacion-mensaje-validacion" role="alert" v-if="avisoRazonSocial" v-cloak>@{{ avisoRazonSocial }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoRazonSocial" v-cloak>@{{ avisoRazonSocial }}</p>
                 </div>
 
-                <div class="facturacion-campo">
-                    <label for="persona_moral">Tipo de persona *</label>
-                    <select id="persona_moral" name="persona_moral" required v-model="personaMoral">
+                <div class="campo">
+                    <label class="etiqueta" for="persona_moral">Tipo de persona *</label>
+                    <select class="control" id="persona_moral" name="persona_moral" required v-model="personaMoral">
                         <option value="0" @selected($formulario['personaMoral'] === '0')>Persona física</option>
                         <option value="1" @selected($formulario['personaMoral'] === '1')>Persona moral</option>
                     </select>
                     @error('persona_moral')
-                        <p class="facturacion-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="facturacion-campo">
-                    <label for="rfc">RFC *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="rfc">RFC *</label>
                     {{-- text y no number: la homoclave lleva letras. --}}
                     <input
                         id="rfc"
                         name="rfc"
                         type="text"
-                        class="facturacion-campo__rfc"
+                        class="control facturacion-campo__rfc"
                         minlength="12"
                         maxlength="13"
                         required
@@ -92,20 +96,21 @@
                         @input="normalizarRfc"
                         value="{{ $formulario['rfc'] }}"
                         aria-describedby="rfc-ayuda">
-                    <p id="rfc-ayuda" class="facturacion-campo__ayuda">
+                    <p id="rfc-ayuda" class="ayuda">
                         12 caracteres si es persona moral, 13 si es persona física.
                     </p>
                     @error('rfc')
-                        <p class="facturacion-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
-                    <p class="facturacion-mensaje-validacion" role="alert" v-if="avisoRfc" v-cloak>@{{ avisoRfc }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoRfc" v-cloak>@{{ avisoRfc }}</p>
                 </div>
 
-                <div class="facturacion-campo">
-                    <label for="codigo_postal">Código postal *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="codigo_postal">Código postal *</label>
                     {{-- text y no number: un código como 01000 perdería el
                          cero de la izquierda. --}}
                     <input
+                        class="control"
                         id="codigo_postal"
                         name="codigo_postal"
                         type="text"
@@ -117,14 +122,14 @@
                         @input="normalizarCodigoPostal"
                         value="{{ $formulario['codigoPostal'] }}">
                     @error('codigo_postal')
-                        <p class="facturacion-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
-                    <p class="facturacion-mensaje-validacion" role="alert" v-if="avisoCodigoPostal" v-cloak>@{{ avisoCodigoPostal }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoCodigoPostal" v-cloak>@{{ avisoCodigoPostal }}</p>
                 </div>
 
-                <div class="facturacion-campo">
-                    <label for="regimen_fiscal">Régimen fiscal *</label>
-                    <select id="regimen_fiscal" name="regimen_fiscal" required v-model="regimenFiscal">
+                <div class="campo">
+                    <label class="etiqueta" for="regimen_fiscal">Régimen fiscal *</label>
+                    <select class="control" id="regimen_fiscal" name="regimen_fiscal" required v-model="regimenFiscal">
                         <option value="">Selecciona una opción</option>
                         @foreach($regimenes as $regimen)
                             <option
@@ -135,13 +140,14 @@
                         @endforeach
                     </select>
                     @error('regimen_fiscal')
-                        <p class="facturacion-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div class="facturacion-campo">
-                    <label for="correo_cfdi">Correo para enviar el CFDI *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="correo_cfdi">Correo para enviar el CFDI *</label>
                     <input
+                        class="control"
                         id="correo_cfdi"
                         name="correo_cfdi"
                         type="email"
@@ -150,17 +156,17 @@
                         v-model="correoCfdi"
                         value="{{ $formulario['correoCfdi'] }}"
                         aria-describedby="correo_cfdi-ayuda">
-                    <p id="correo_cfdi-ayuda" class="facturacion-campo__ayuda">
+                    <p id="correo_cfdi-ayuda" class="ayuda">
                         Puede ser distinto del correo con el que entras al sistema.
                     </p>
                     @error('correo_cfdi')
-                        <p class="facturacion-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
-                    <p class="facturacion-mensaje-validacion" role="alert" v-if="avisoCorreo" v-cloak>@{{ avisoCorreo }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoCorreo" v-cloak>@{{ avisoCorreo }}</p>
                 </div>
             </div>
 
-            <p class="facturacion-aviso">
+            <p class="aviso">
                 Revisa tus datos antes de enviarlos: <strong>una vez registrados no podrán
                 modificarse</strong>, porque con ellos se emite tu factura.
             </p>
@@ -168,10 +174,10 @@
             {{-- El botón nace habilitado en el HTML y se apaga desde Vue: si el
                  script no llega a cargar, el formulario se envía como siempre. --}}
             <div class="facturacion-acciones">
-                <a href="{{ route('persona.pago.index') }}" class="facturacion-boton facturacion-boton--secundario">
+                <a href="{{ route('persona.pago.index') }}" class="boton boton--secundario">
                     Volver a mi pago
                 </a>
-                <button type="submit" class="facturacion-boton" :disabled="!puedeEnviar || enviando">
+                <button type="submit" class="boton boton--primario" :disabled="!puedeEnviar || enviando">
                     @{{ enviando ? 'Registrando…' : 'Registrar datos fiscales' }}
                 </button>
             </div>

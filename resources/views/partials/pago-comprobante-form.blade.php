@@ -26,7 +26,7 @@
         :mensaje="avisoError"
         tipo="error"
         :errores="erroresServidor"
-        clase="pago-alerta pago-alerta--error"></alertas>
+        clase="notificacion notificacion--error"></alertas>
 
     <form
         method="POST"
@@ -40,9 +40,10 @@
             <legend class="pago-datos__titulo">Datos de tu pago</legend>
 
             <div class="pago-datos__grid">
-                <div class="pago-campo">
-                    <label for="monto_pagado">Monto pagado *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="monto_pagado">Monto pagado *</label>
                     <input
+                        class="control"
                         id="monto_pagado"
                         name="monto_pagado"
                         type="number"
@@ -54,18 +55,19 @@
                         v-model="montoPagado"
                         value="{{ $vistaFormulario['montoPagado'] }}"
                         aria-describedby="monto_pagado-ayuda">
-                    <p id="monto_pagado-ayuda" class="pago-campo__ayuda">
+                    <p id="monto_pagado-ayuda" class="ayuda">
                         Cuota de recuperación: ${{ $cuota }} {{ $moneda }}
                     </p>
                     @error('monto_pagado')
-                        <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
-                    <p class="pago-mensaje-validacion" role="alert" v-if="avisoMonto" v-cloak>@{{ avisoMonto }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoMonto" v-cloak>@{{ avisoMonto }}</p>
                 </div>
 
-                <div class="pago-campo">
-                    <label for="fecha_pago">Fecha de pago *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="fecha_pago">Fecha de pago *</label>
                     <input
+                        class="control"
                         id="fecha_pago"
                         name="fecha_pago"
                         type="date"
@@ -74,14 +76,15 @@
                         v-model="fechaPago"
                         value="{{ $vistaFormulario['fechaPago'] }}">
                     @error('fecha_pago')
-                        <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
-                    <p class="pago-mensaje-validacion" role="alert" v-if="avisoFecha" v-cloak>@{{ avisoFecha }}</p>
+                    <p class="campo__error" role="alert" v-if="avisoFecha" v-cloak>@{{ avisoFecha }}</p>
                 </div>
 
-                <div class="pago-campo">
-                    <label for="hora_pago">Hora de pago *</label>
+                <div class="campo">
+                    <label class="etiqueta" for="hora_pago">Hora de pago *</label>
                     <input
+                        class="control"
                         id="hora_pago"
                         name="hora_pago"
                         type="time"
@@ -89,7 +92,7 @@
                         v-model="horaPago"
                         value="{{ $vistaFormulario['horaPago'] }}">
                     @error('hora_pago')
-                        <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                        <p class="campo__error" role="alert">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
@@ -104,7 +107,7 @@
 
             <div class="pago-opciones">
                 @foreach($vistaFormulario['metodosPago'] as $metodo)
-                    <label class="pago-radio">
+                    <label class="opcion">
                         <input
                             type="radio"
                             name="metodo_pago"
@@ -112,24 +115,24 @@
                             required
                             v-model="metodoPago"
                             @checked($vistaFormulario['metodoPago'] === (string) $metodo['id'])>
-                        <span class="pago-radio__texto"><strong>{{ $metodo['nombre'] }}</strong></span>
+                        <span class="pago-opcion__texto"><strong>{{ $metodo['nombre'] }}</strong></span>
                     </label>
                 @endforeach
             </div>
             @error('metodo_pago')
-                <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                <p class="campo__error" role="alert">{{ $message }}</p>
             @enderror
 
-            <div class="pago-campo pago-campo--banco" v-show="esTarjeta">
-                <label for="banco">Banco de tu tarjeta</label>
-                <select id="banco" name="banco" v-model="banco" :required="esTarjeta">
+            <div class="campo pago-campo--banco" v-show="esTarjeta">
+                <label class="etiqueta" for="banco">Banco de tu tarjeta</label>
+                <select class="control" id="banco" name="banco" v-model="banco" :required="esTarjeta">
                     <option value="">Selecciona un banco</option>
                     @foreach($vistaFormulario['bancos'] as $banco)
                         <option value="{{ $banco['id'] }}" @selected($vistaFormulario['banco'] === (string) $banco['id'])>{{ $banco['nombre'] }}</option>
                     @endforeach
                 </select>
                 @error('banco')
-                    <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                    <p class="campo__error" role="alert">{{ $message }}</p>
                 @enderror
             </div>
         </fieldset>
@@ -141,14 +144,14 @@
             <legend class="pago-datos__titulo">¿Qué comprobante necesitas?&nbsp;*</legend>
 
             @if($vistaFormulario['eleccion'])
-                <p class="pago-campo__ayuda">
+                <p class="ayuda">
                     Elegiste
-                    <span class="pago-chip pago-chip--{{ $vistaFormulario['eleccion'] }}">{{ $vistaFormulario['eleccion'] === 'cfdi' ? 'CFDI' : 'Ticket' }}</span>
+                    <span class="estado estado--neutro">{{ $vistaFormulario['eleccion'] === 'cfdi' ? 'CFDI' : 'Ticket' }}</span>
                     y ya no puede modificarse.
                 </p>
             @else
                 <div class="pago-opciones">
-                    <label class="pago-radio">
+                    <label class="opcion">
                         <input
                             type="radio"
                             name="comprobante_fiscal"
@@ -156,12 +159,12 @@
                             required
                             v-model="comprobante"
                             @checked($vistaFormulario['comprobanteFiscal'] === 'ticket')>
-                        <span class="pago-radio__texto">
+                        <span class="pago-opcion__texto">
                             <strong>Ticket</strong>
                             <small>Comprobante simple de tu pago, sin efectos fiscales.</small>
                         </span>
                     </label>
-                    <label class="pago-radio">
+                    <label class="opcion">
                         <input
                             type="radio"
                             name="comprobante_fiscal"
@@ -169,22 +172,22 @@
                             required
                             v-model="comprobante"
                             @checked($vistaFormulario['comprobanteFiscal'] === 'cfdi')>
-                        <span class="pago-radio__texto">
+                        <span class="pago-opcion__texto">
                             <strong>CFDI</strong>
                             <small>Factura con uso «gastos en general». Al enviar capturas tus datos fiscales.</small>
                         </span>
                     </label>
                 </div>
-                <p class="pago-campo__ayuda">La opción que elijas no podrá modificarse después.</p>
+                <p class="ayuda">La opción que elijas no podrá modificarse después.</p>
                 @error('comprobante_fiscal')
-                    <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+                    <p class="campo__error" role="alert">{{ $message }}</p>
                 @enderror
             @endif
         </fieldset>
 
         {{-- Los pares v-if/v-else llevan v-cloak en la rama que no debe verse
              antes de montar: sin JavaScript se queda la variante inicial. --}}
-        <label class="pago-archivo" :class="{ 'pago-archivo--cargado': archivo }">
+        <label class="boton boton--secundario pago-archivo" :class="{ 'pago-archivo--cargado': archivo }">
             <i class="fa-solid fa-paperclip" aria-hidden="true" v-if="!archivo"></i>
             <i class="fa-solid fa-circle-check" aria-hidden="true" v-else v-cloak></i>
             <span v-if="!archivo">Seleccionar PDF</span>
@@ -199,7 +202,7 @@
         </label>
 
         @error('comprobante')
-            <p class="pago-mensaje-validacion" role="alert">{{ $message }}</p>
+            <p class="campo__error" role="alert">{{ $message }}</p>
         @enderror
 
         {{-- La confirmación de lo adjuntado: el input va oculto y sin esto la
@@ -214,12 +217,12 @@
                     <span>· @{{ archivo.peso }}</span>
                 </template>
             </span>
-            <button type="button" class="pago-adjunto__quitar" v-if="archivo" @click="quitarArchivo">Quitar</button>
+            <button type="button" class="boton boton--texto" v-if="archivo" @click="quitarArchivo">Quitar</button>
         </p>
 
         {{-- El botón nace habilitado en el HTML y se apaga desde aquí: si Vue no
              llega a cargar, el formulario se envía como siempre. --}}
-        <button type="submit" class="pago-boton" :disabled="!puedeEnviar || enviando">
+        <button type="submit" class="boton boton--primario" :disabled="!puedeEnviar || enviando">
             <span v-if="enviando" v-cloak>Enviando…</span>
             <span v-else>{{ $etiquetaBoton }}</span>
         </button>

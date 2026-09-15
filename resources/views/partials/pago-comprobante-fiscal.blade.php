@@ -18,14 +18,14 @@
 --}}
 <section
     id="comprobante-fiscal-app"
-    class="pago-comprobante"
+    class="tarjeta pago-comprobante"
     data-vista='@json($comprobanteFiscal)'>
 
     @if(!$comprobanteFiscal['eleccion'])
 
         <h2 class="pago-comprobante__titulo">¿Qué comprobante necesitas?</h2>
 
-        <p class="pago-comprobante__nota" id="comprobante-fiscal-nota">
+        <p class="aviso" id="comprobante-fiscal-nota">
             Elige si quieres un ticket o un CFDI de tu pago. La opción que elijas
             <strong>no se podrá modificar después</strong>.
         </p>
@@ -40,7 +40,7 @@
                 <input type="hidden" name="tipo" value="ticket">
                 <h3 class="pago-opcion__titulo">Ticket</h3>
                 <p class="pago-opcion__texto">Comprobante simple de tu pago, sin efectos fiscales.</p>
-                <button type="submit" class="pago-boton" aria-describedby="comprobante-fiscal-nota">
+                <button type="submit" class="boton boton--primario" aria-describedby="comprobante-fiscal-nota">
                     Quiero ticket
                 </button>
             </form>
@@ -54,7 +54,7 @@
                 <input type="hidden" name="tipo" value="cfdi">
                 <h3 class="pago-opcion__titulo">CFDI</h3>
                 <p class="pago-opcion__texto">Factura con uso «gastos en general». Después tendrás que capturar tus datos fiscales.</p>
-                <button type="submit" class="pago-boton" aria-describedby="comprobante-fiscal-nota">
+                <button type="submit" class="boton boton--primario" aria-describedby="comprobante-fiscal-nota">
                     Quiero CFDI
                 </button>
             </form>
@@ -62,30 +62,30 @@
 
         {{-- La elección no se puede deshacer, así que media un diálogo. Mismo
              patrón accesible que la confirmación de sede. --}}
-        <div class="pago-modal" v-if="confirmacion" v-cloak @keydown.esc="cerrarConfirmacion">
-            <div class="pago-modal__fondo" @click="cerrarConfirmacion"></div>
+        <div class="dialogo" v-if="confirmacion" v-cloak @keydown.esc="cerrarConfirmacion">
+            <div class="dialogo__velo" @click="cerrarConfirmacion"></div>
             <section
-                class="pago-modal__card"
+                class="dialogo__tarjeta"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="pago-modal-titulo"
                 aria-describedby="pago-modal-descripcion"
                 @keydown.tab="atraparFoco">
-                <h2 id="pago-modal-titulo">¿Confirmas que quieres @{{ etiquetaConfirmacion }}?</h2>
-                <p id="pago-modal-descripcion">
+                <h2 class="dialogo__titulo" id="pago-modal-titulo">¿Confirmas que quieres @{{ etiquetaConfirmacion }}?</h2>
+                <p class="dialogo__texto" id="pago-modal-descripcion">
                     @{{ descripcionConfirmacion }}
                     <strong>Una vez confirmada, esta opción ya no podrá modificarse.</strong>
                 </p>
 
-                <div class="pago-modal__acciones">
+                <div class="dialogo__acciones">
                     <button
                         type="button"
-                        class="pago-boton pago-boton--secundario"
+                        class="boton boton--secundario"
                         ref="cancelar"
                         @click="cerrarConfirmacion">
                         Cancelar
                     </button>
-                    <button type="button" class="pago-boton" :disabled="enviando" @click="confirmarEleccion">
+                    <button type="button" class="boton boton--primario" :disabled="enviando" @click="confirmarEleccion">
                         @{{ enviando ? 'Confirmando…' : 'Sí, confirmar' }}
                     </button>
                 </div>
@@ -98,7 +98,7 @@
 
         <p class="pago-comprobante__elegido">
             Elegiste
-            <span class="pago-chip pago-chip--{{ $comprobanteFiscal['eleccion'] }}">
+            <span class="estado estado--neutro">
                 {{ $comprobanteFiscal['eleccion'] === 'cfdi' ? 'CFDI' : 'Ticket' }}
             </span>
         </p>
@@ -109,7 +109,7 @@
             @if($comprobanteFiscal['tieneDatosFiscales'])
                 <p class="pago-comprobante__aviso">Tus datos de facturación ya quedaron registrados.</p>
             @else
-                <a href="{{ $comprobanteFiscal['urlFormulario'] }}" class="pago-boton pago-boton--secundario">
+                <a href="{{ $comprobanteFiscal['urlFormulario'] }}" class="boton boton--secundario">
                     Llenar formulario
                 </a>
             @endif

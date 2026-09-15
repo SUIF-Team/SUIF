@@ -67,7 +67,7 @@
                 focoAnterior = document.activeElement;
                 this.confirmacion = tipo;
 
-                document.body.classList.add('pago-modal-abierto');
+                document.body.classList.add('dialogo-abierto');
 
                 /* Arranca el foco en Cancelar: la acción de al lado no tiene
                    vuelta atrás. */
@@ -81,7 +81,7 @@
             cerrarConfirmacion: function () {
                 this.confirmacion = null;
                 formularioPendiente = null;
-                document.body.classList.remove('pago-modal-abierto');
+                document.body.classList.remove('dialogo-abierto');
 
                 if (focoAnterior) {
                     focoAnterior.focus();

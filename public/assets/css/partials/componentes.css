@@ -311,6 +311,50 @@
     cursor: not-allowed;
 }
 
+/* Los mismos pasos, en una línea horizontal con conectores entre ellos: es la
+   forma que usa el seguimiento del pago. Cambia la dirección, no los colores. */
+.pasos--linea {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.pasos--linea .paso {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 7rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: center;
+}
+
+.pasos__conector {
+    flex: 1;
+    height: 2px;
+    margin: 1.1rem -0.5rem 0;
+    background: var(--neutro-fondo);
+}
+
+.pasos__conector--exito {
+    background: var(--exito-solido);
+}
+
+.pasos__conector--peligro {
+    background: var(--peligro-solido);
+}
+
+@media (max-width: 900px) {
+    .pasos--linea {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .pasos__conector {
+        display: none;
+    }
+}
+
 /* ---------- Notificacion ---------- */
 
 /* Resultado de una accion. El icono lo pone la vista; aqui se reserva su hueco y su
