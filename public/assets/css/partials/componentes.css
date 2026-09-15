@@ -596,6 +596,36 @@ textarea.control {
     outline-offset: var(--foco-separacion);
 }
 
+/* ---------- Codigo destacado ---------- */
+
+/* La clave de acceso y la referencia bancaria: un dato que la persona tiene que
+   copiar tal cual. Estaban declarados dos veces con los mismos valores. */
+.codigo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 0.8rem 0.7rem 1.2rem;
+    border: 1px solid #dfc77f;
+    border-radius: 0.7rem;
+    background: #fffaf0;
+}
+
+.codigo__valor {
+    color: #172a44;
+    font-size: var(--fs-seccion);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    word-break: break-all;
+}
+
+@media (max-width: 767.98px) {
+    .codigo {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
 /* ---------- Tarjeta ---------- */
 
 .tarjeta {

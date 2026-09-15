@@ -181,24 +181,6 @@
     color: var(--text-muted);
 }
 
-.pr-clave__codigo {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.7rem 0.8rem 0.7rem 1.2rem;
-    border: 1px solid #dfc77f;
-    border-radius: 0.7rem;
-    background: #fffaf0;
-}
-
-.pr-clave__codigo > span {
-    color: #172a44;
-    font-size: var(--fs-seccion);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-}
-
 .pr-clave__ayuda {
     margin: 0.75rem 0 0;
     color: var(--text-muted);
@@ -214,11 +196,6 @@
 @media (max-width: 767px) {
     .pr-clave {
         padding: 2.5rem 0 2rem;
-    }
-
-    .pr-clave__codigo {
-        flex-direction: column;
-        align-items: stretch;
     }
 
     .pr-clave .pr-actions {

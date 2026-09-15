@@ -58,8 +58,8 @@
                         </div>
                     @endif
 
-                    <div class="pr-clave__codigo" aria-label="Clave de acceso generada">
-                        <span id="pr-key">{{ $estado['clave'] }}</span>
+                    <div class="codigo" aria-label="Clave de acceso generada">
+                        <span class="codigo__valor" id="pr-key">{{ $estado['clave'] }}</span>
                         <button type="button" class="boton boton--secundario" data-copy-key aria-describedby="pr-clave-ayuda">
                             <i class="fa-regular fa-copy" aria-hidden="true"></i>
                             <span>Copiar</span>

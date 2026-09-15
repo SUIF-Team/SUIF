@@ -17,15 +17,21 @@
 <section class="referencia-shell">
 
     @if(session('success'))
-        <div class="referencia-alerta">{{ session('success') }}</div>
+        <div class="notificacion notificacion--exito" role="status">
+            <i class="fa-solid fa-circle-check notificacion__icono" aria-hidden="true"></i>
+            <span>{{ session('success') }}</span>
+        </div>
     @endif
     @if(session('warning'))
-        <div class="referencia-alerta referencia-alerta--error">{{ session('warning') }}</div>
+        <div class="notificacion notificacion--advertencia" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+            <span>{{ session('warning') }}</span>
+        </div>
     @endif
 
     @if(!$referencia)
 
-        <div class="referencia-tarjeta referencia-tarjeta--sola">
+        <div class="tarjeta referencia-tarjeta referencia-tarjeta--sola">
             <h1>Obtén tu referencia bancaria</h1>
             <p class="referencia-muted">
                 Se te asignará una referencia única por ${{ $cuota }} {{ $moneda }}. Queda ligada a tu trámite y no se
@@ -35,7 +41,7 @@
             @if($hayDisponibles)
                 <form method="POST" action="{{ route('persona.referencia.generar') }}" class="referencia-form">
                     @csrf
-                    <button type="submit" class="referencia-boton">Obtener referencia</button>
+                    <button type="submit" class="boton boton--primario">Obtener referencia</button>
                 </form>
             @else
                 <p class="referencia-muted">
@@ -49,7 +55,7 @@
 
         {{-- Camino especial: el pago ya existe y liga a todo el grupo, pero el
              número lo emite la Dirección. Hasta entonces no hay nada que copiar. --}}
-        <div class="referencia-tarjeta referencia-tarjeta--sola">
+        <div class="tarjeta referencia-tarjeta referencia-tarjeta--sola">
             <h1>Tu referencia especial está en trámite</h1>
             <p class="referencia-muted">
                 Registramos la solicitud de <strong>{{ $referencia['razon_social'] }}</strong> para
@@ -66,7 +72,7 @@
     @else
 
         <div class="referencia-tarjetas">
-            <div class="referencia-tarjeta">
+            <div class="tarjeta referencia-tarjeta">
                 <h1>Tu referencia bancaria</h1>
                 @if($referencia['participantes'])
                     <p class="referencia-muted">
@@ -78,9 +84,9 @@
                     <p class="referencia-muted">Es única y personal: úsala tal cual aparece al realizar tu pago.</p>
                 @endif
 
-                <div class="referencia-codigo" aria-label="Referencia bancaria asignada">
-                    <span id="referencia-numero">{{ $referencia['referencia'] }}</span>
-                    <button type="button" class="referencia-copiar" data-copiar-referencia data-copiar-origen="#referencia-numero">
+                <div class="codigo referencia-codigo" aria-label="Referencia bancaria asignada">
+                    <span class="codigo__valor" id="referencia-numero">{{ $referencia['referencia'] }}</span>
+                    <button type="button" class="boton boton--secundario" data-copiar-referencia data-copiar-origen="#referencia-numero">
                         <i class="fa-regular fa-copy" aria-hidden="true"></i>
                         <span>Copiar</span>
                     </button>
@@ -100,11 +106,11 @@
                 </dl>
             </div>
 
-            <div class="referencia-tarjeta">
+            <div class="tarjeta referencia-tarjeta">
                 <h2 class="referencia-tarjeta__titulo">Pago en ventanilla</h2>
                 @if($referencia['ruta_formato'])
                     <p>Descarga el formato en PDF, imprímelo y preséntalo en la ventanilla del banco.</p>
-                    <a class="referencia-boton referencia-boton--secundario" href="{{ route('persona.referencia.formato') }}">
+                    <a class="boton boton--secundario" href="{{ route('persona.referencia.formato') }}">
                         <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                         <span>Descargar formato PDF</span>
                     </a>

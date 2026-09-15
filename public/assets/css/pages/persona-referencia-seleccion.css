@@ -1,13 +1,15 @@
 /* Selector del paso «Obtener referencia»: aviso de pago y las dos opciones.
    Se carga junto con persona-referencia.css, de donde salen .referencia-shell,
-   .referencia-tarjetas, .referencia-tarjeta, .referencia-boton y .referencia-muted. */
+   .referencia-tarjetas, .referencia-tarjeta y .referencia-muted. */
 
+/* Es la explicación larga del paso, no un aviso corto: conserva el tamaño del
+   texto corrido y toma los colores del papel «información». */
 .referencia-aviso {
     margin-bottom: 1.75rem;
     padding: 1.75rem 2rem;
-    border-radius: 12px;
-    background: rgba(233, 236, 241, 0.75);
-    color: #4b5563;
+    border-radius: var(--radio-caja);
+    background: var(--info-fondo);
+    color: var(--info-texto);
 }
 
 .referencia-aviso p {
@@ -16,10 +18,6 @@
 
 .referencia-aviso p:last-child {
     margin-bottom: 0;
-}
-
-.referencia-aviso strong {
-    color: #172a44;
 }
 
 .referencia-seleccion__titulo {
@@ -60,12 +58,4 @@
 .referencia-tarjeta__nota {
     margin: 0.6rem 0 0;
     font-size: var(--fs-auxiliar);
-}
-
-.referencia-boton--inhabilitado,
-.referencia-boton--inhabilitado:hover,
-.referencia-boton--inhabilitado:focus-visible {
-    background: #9ca3af;
-    color: #fff;
-    cursor: not-allowed;
 }

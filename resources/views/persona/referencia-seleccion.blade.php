@@ -18,15 +18,21 @@
 <section class="referencia-shell">
 
     @if(session('success'))
-        <div class="referencia-alerta">{{ session('success') }}</div>
+        <div class="notificacion notificacion--exito" role="status">
+            <i class="fa-solid fa-circle-check notificacion__icono" aria-hidden="true"></i>
+            <span>{{ session('success') }}</span>
+        </div>
     @endif
     @if(session('warning'))
-        <div class="referencia-alerta referencia-alerta--error">{{ session('warning') }}</div>
+        <div class="notificacion notificacion--advertencia" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+            <span>{{ session('warning') }}</span>
+        </div>
     @endif
 
     @if(!$solicitudAprobada)
 
-        <div class="referencia-tarjeta referencia-tarjeta--sola">
+        <div class="tarjeta referencia-tarjeta referencia-tarjeta--sola">
             <h1>Referencia bancaria</h1>
             <p class="referencia-muted">
                 Tu referencia estará disponible cuando el equipo administrativo apruebe tu solicitud y tu documentación.
@@ -58,7 +64,7 @@
 
         <div class="referencia-tarjetas referencia-tarjetas--seleccion">
 
-            <article class="referencia-tarjeta referencia-tarjeta--opcion">
+            <article class="tarjeta referencia-tarjeta referencia-tarjeta--opcion">
                 <div class="referencia-tarjeta__texto">
                     <p>
                         La <strong>referencia individual</strong> está dirigida a participantes que realizarán el
@@ -81,13 +87,13 @@
                 </div>
 
                 <div class="referencia-tarjeta__pie">
-                    <a class="referencia-boton" href="{{ route('persona.referencia.individual') }}">
+                    <a class="boton boton--primario" href="{{ route('persona.referencia.individual') }}">
                         Referencia Individual
                     </a>
                 </div>
             </article>
 
-            <article class="referencia-tarjeta referencia-tarjeta--opcion">
+            <article class="tarjeta referencia-tarjeta referencia-tarjeta--opcion">
                 <div class="referencia-tarjeta__texto">
                     <p>
                         La <strong>referencia especial</strong> está dirigida a <strong>empresas</strong> que desean
@@ -113,7 +119,7 @@
                 </div>
 
                 <div class="referencia-tarjeta__pie">
-                    <a class="referencia-boton" href="{{ route('persona.referencia.especial') }}"
+                    <a class="boton boton--primario" href="{{ route('persona.referencia.especial') }}"
                        aria-describedby="referencia-especial-nota">
                         Referencia Especial
                     </a>
