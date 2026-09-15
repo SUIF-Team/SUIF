@@ -583,8 +583,8 @@ class GestionSedesTest extends TestCase
             ->get(route('persona.sede.index'))
             ->assertOk()
             ->assertSee('v-model="buscar"', false)
-            ->assertSee('sede-boton--limpiar', false)
-            ->assertDontSee('sede-boton--filtrar', false);
+            ->assertSee('@click="limpiarBusqueda"', false)
+            ->assertDontSee('Filtrar', false);
     }
 
     public function test_el_comprobante_de_sede_se_entrega_en_pdf_solo_con_la_sede_confirmada(): void

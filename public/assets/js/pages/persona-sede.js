@@ -112,12 +112,12 @@
 
             claseCupo: function (horario) {
                 if (!horario.con_cupo) {
-                    return 'sede-cupo--lleno';
+                    return 'estado--peligro';
                 }
 
                 return horario.disponibles <= this.umbralCupoBajo
-                    ? 'sede-cupo--bajo'
-                    : 'sede-cupo--libre';
+                    ? 'estado--revision'
+                    : 'estado--exito';
             },
 
             horarioElegido: function (sede) {
@@ -154,7 +154,7 @@
                 /* Con el diálogo abierto el sondeo cambiaría la tarjeta que la
                    persona está confirmando; se reanuda al cerrarlo. */
                 this.detener();
-                document.body.classList.add('sede-modal-abierto');
+                document.body.classList.add('dialogo-abierto');
 
                 /* Arranca el foco en Cancelar: la acción de al lado no tiene
                    vuelta atrás. */
@@ -168,7 +168,7 @@
             cerrarConfirmacion: function () {
                 this.confirmacion = null;
                 formularioPendiente = null;
-                document.body.classList.remove('sede-modal-abierto');
+                document.body.classList.remove('dialogo-abierto');
 
                 if (focoAnterior) {
                     focoAnterior.focus();
@@ -203,7 +203,7 @@
                        persona en la lista. */
                     this.enviando = false;
                     this.confirmacion = null;
-                    document.body.classList.remove('sede-modal-abierto');
+                    document.body.classList.remove('dialogo-abierto');
                     this.avisoError = resultado.mensaje;
                     this.iniciar();
                 }.bind(this));

@@ -21,7 +21,8 @@
 @if($confirmada)
 <section class="sede-shell">
     @if($errors->any())
-        <div class="sede-alerta sede-alerta--error" role="alert">
+        <div class="notificacion notificacion--error" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
             <ul>
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -32,11 +33,13 @@
 
     <div class="sede-confirmada-layout">
         <div class="sede-confirmada">
-            <span class="sede-confirmada__icono" aria-hidden="true">✓</span>
+            <span class="sede-confirmada__icono" aria-hidden="true">
+                <i class="fa-solid fa-check"></i>
+            </span>
             <h1>¡Sede confirmada!</h1>
             <p class="sede-muted">Tu lugar quedó apartado para la evaluación.</p>
 
-            <div class="sede-resumen">
+            <div class="tarjeta sede-resumen">
                 <p class="sede-resumen__etiqueta">Sede seleccionada</p>
                 <h3 class="sede-resumen__nombre">{{ $sede['nombre'] }}</h3>
                 <dl class="sede-resumen__datos">
@@ -47,16 +50,16 @@
             </div>
 
             <div class="sede-acciones">
-                <a href="{{ route('persona.sede.comprobante') }}" class="sede-boton sede-boton--secundario">
+                <a href="{{ route('persona.sede.comprobante') }}" class="boton boton--secundario">
                     Generar comprobante
                 </a>
-                <a href="{{ route('persona.dashboard') }}" class="sede-boton">Continuar</a>
+                <a href="{{ route('persona.dashboard') }}" class="boton boton--primario">Continuar</a>
             </div>
         </div>
 
-        <aside class="sede-mapa" aria-labelledby="sede-mapa-titulo">
+        <aside class="tarjeta sede-mapa" aria-labelledby="sede-mapa-titulo">
             <h2 id="sede-mapa-titulo">Cómo llegar</h2>
-            <p class="sede-mapa__ayuda">Ubicación aproximada a partir de la dirección de la sede.</p>
+            <p class="ayuda sede-mapa__ayuda">Ubicación aproximada a partir de la dirección de la sede.</p>
             <div class="sede-mapa__marco">
                 <iframe
                     src="https://maps.google.com/maps?q={{ urlencode($sede['direccion']) }}&amp;hl=es&amp;z=16&amp;output=embed"
@@ -65,7 +68,7 @@
                     title="Mapa con la ubicación de {{ $sede['nombre'] }}"></iframe>
             </div>
             <a
-                class="sede-boton sede-boton--secundario sede-mapa__enlace"
+                class="boton boton--secundario sede-mapa__enlace"
                 href="{{ $mapa }}"
                 target="_blank"
                 rel="noopener noreferrer">
@@ -87,11 +90,12 @@
          catalogo todavia delante. Nace con lo que trajo el servidor. Esta
          pantalla ya declara en su <noscript> que necesita JavaScript, asi que
          la lista de $errors se queda ahi para ese caso. --}}
-    <alertas :mensaje="avisoError" tipo="error" clase="sede-alerta sede-alerta--error"></alertas>
+    <alertas :mensaje="avisoError" tipo="error" clase="notificacion notificacion--error"></alertas>
 
     @if($errors->any())
         <noscript>
-            <div class="sede-alerta sede-alerta--error" role="alert">
+            <div class="notificacion notificacion--error" role="alert">
+                <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
                 <ul>
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -105,24 +109,26 @@
     <p class="sede-muted">Selecciona dónde y cuándo presentarás tu evaluación. Cada sede puede aplicar el examen en varios horarios; los lugares se actualizan automáticamente.</p>
 
     <noscript>
-        <div class="sede-alerta sede-alerta--error" role="alert">
-            Esta pantalla necesita JavaScript para mostrar los horarios disponibles y sus lugares al día.
-            Habilítalo en tu navegador o escríbenos a {{ config('suif.soporte_correo') }}.
+        <div class="notificacion notificacion--error" role="alert">
+            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+            <span>Esta pantalla necesita JavaScript para mostrar los horarios disponibles y sus lugares al día.
+            Habilítalo en tu navegador o escríbenos a {{ config('suif.soporte_correo') }}.</span>
         </div>
     </noscript>
 
     {{-- La lista se acota mientras se escribe, como en las bandejas del admin,
          así que no hay botón de filtrar. El submit se intercepta porque Enter
          enviaría el formulario igual. --}}
-    <form class="sede-filtro" role="search" @submit.prevent>
+    <form class="filtros sede-filtro" role="search" @submit.prevent>
         <input
+            class="control"
             type="search"
             v-model="buscar"
             ref="buscador"
             placeholder="Buscar por nombre o dirección…"
             aria-label="Buscar sede por nombre o dirección"
             autocomplete="off">
-        <button type="button" class="sede-boton sede-boton--limpiar" v-if="buscar" @click="limpiarBusqueda">Limpiar</button>
+        <button type="button" class="boton boton--peligro" v-if="buscar" @click="limpiarBusqueda">Limpiar</button>
     </form>
 
     {{-- Lo anuncia el contador y no la lista: con el filtro en vivo, la lista
@@ -130,7 +136,7 @@
     <p class="sede-contador" role="status">Sedes programadas · @{{ sedesFiltradas.length }}</p>
 
     <div class="sede-lista">
-        <article v-for="sede in sedesFiltradas" :key="sede.id" class="sede-tarjeta">
+        <article v-for="sede in sedesFiltradas" :key="sede.id" class="tarjeta sede-tarjeta">
             <div class="sede-tarjeta__info">
                 <h2 class="sede-tarjeta__nombre">@{{ sede.nombre }}</h2>
                 <p class="sede-tarjeta__direccion">@{{ sede.direccion }}</p>
@@ -148,7 +154,7 @@
                     <label
                         v-for="horario in sede.horarios"
                         :key="horario.evaluacion_id"
-                        class="sede-horario"
+                        class="opcion sede-horario"
                         :class="{ 'sede-horario--lleno': !horario.con_cupo }">
                         <input
                             type="radio"
@@ -157,11 +163,11 @@
                             v-model="seleccion[sede.id]"
                             :disabled="!horario.con_cupo">
                         <span class="sede-horario__datos">
-                            <span class="sede-chip">@{{ etiquetaFecha(horario) }}</span>
+                            <span class="estado estado--info">@{{ etiquetaFecha(horario) }}</span>
                             <span class="sede-fecha">@{{ horario.hora_inicio }}–@{{ horario.hora_fin }} h</span>
                         </span>
                         <span class="sede-horario__cupo">
-                            <span class="sede-cupo" :class="claseCupo(horario)">
+                            <span class="estado" :class="claseCupo(horario)">
                                 @{{ horario.disponibles }} disponibles
                             </span>
                             <small>@{{ horario.con_cupo ? 'Lugares disponibles' : 'Sin cupo' }}</small>
@@ -170,45 +176,52 @@
                 </fieldset>
                 <button
                     type="submit"
-                    class="sede-boton"
-                    :class="{ 'sede-boton--deshabilitado': !puedeEnviar(sede) }"
+                    class="boton boton--primario"
                     :disabled="!puedeEnviar(sede)">
                     @{{ sede.con_cupo ? 'Seleccionar horario' : 'Sin cupo' }}
                 </button>
             </form>
         </article>
 
-        <p v-if="!sedesFiltradas.length" class="sede-muted">No hay sedes programadas que coincidan con tu búsqueda.</p>
+        <p v-if="!sedesFiltradas.length" class="vacio" role="status">
+            <i class="fa-regular fa-map" aria-hidden="true"></i>
+            No hay sedes programadas que coincidan con tu búsqueda.
+        </p>
     </div>
 
     {{-- La selección no se puede deshacer, así que se pide confirmación
          explícita antes de enviar el formulario. --}}
-    <div class="sede-modal" v-if="confirmacion" @keydown.esc="cerrarConfirmacion">
-        <div class="sede-modal__fondo" @click="cerrarConfirmacion"></div>
+    <div class="dialogo" v-if="confirmacion" @keydown.esc="cerrarConfirmacion">
+        <div class="dialogo__velo" @click="cerrarConfirmacion"></div>
         <section
-            class="sede-modal__card"
+            class="dialogo__tarjeta"
             role="dialog"
             aria-modal="true"
             aria-labelledby="sede-modal-titulo"
             aria-describedby="sede-modal-descripcion"
             @keydown.tab="atraparFoco">
-            <h2 id="sede-modal-titulo">¿Confirmas esta sede y horario?</h2>
-            <p id="sede-modal-descripcion">
+            <h2 class="dialogo__titulo" id="sede-modal-titulo">¿Confirmas esta sede y horario?</h2>
+            <p class="dialogo__texto" id="sede-modal-descripcion">
                 Tu lugar quedará apartado en el horario que elegiste.
                 <strong>Una vez confirmado ya no podrás cambiarlo.</strong>
             </p>
 
-            <dl class="sede-modal__datos">
+            <dl class="sede-dialogo__datos">
                 <dt>Sede</dt><dd>@{{ confirmacion.sede.nombre }}</dd>
                 <dt>Fecha</dt><dd>@{{ etiquetaFecha(confirmacion.horario) }}</dd>
                 <dt>Horario</dt><dd>@{{ confirmacion.horario.hora_inicio }}–@{{ confirmacion.horario.hora_fin }} h</dd>
             </dl>
 
-            <div class="sede-modal__acciones">
-                <button type="button" class="sede-boton sede-boton--secundario" ref="cancelar" @click="cerrarConfirmacion">
+            <div class="dialogo__acciones">
+                <button type="button" class="boton boton--secundario" ref="cancelar" @click="cerrarConfirmacion">
                     Cancelar
                 </button>
-                <button type="button" class="sede-boton" :disabled="enviando" @click="confirmarSeleccion">
+                <button
+                    type="button"
+                    class="boton boton--primario"
+                    :class="{ 'boton--cargando': enviando }"
+                    :disabled="enviando"
+                    @click="confirmarSeleccion">
                     @{{ enviando ? 'Confirmando…' : 'Sí, confirmar' }}
                 </button>
             </div>
