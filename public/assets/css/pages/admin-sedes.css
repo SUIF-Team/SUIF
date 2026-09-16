@@ -23,9 +23,7 @@
 }
 
 .admin-sedes-encabezado h1,
-.admin-sedes-encabezado p,
-.admin-sedes-tarjeta h2,
-.admin-sedes-tarjeta p {
+.admin-sedes-encabezado p {
     margin-top: 0;
 }
 
@@ -141,13 +139,6 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
-}
-
-.admin-sedes-subtitulo {
-    margin: 0.5rem 0 0.25rem;
-    color: var(--text-dark);
-    font-size: var(--fs-subtitulo);
-    font-weight: 600;
 }
 
 /* Los datos de aplicación de un grupo viven en un bloque con borde. */

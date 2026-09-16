@@ -5,11 +5,6 @@
  * aquí queda la composición de la pantalla.
  */
 
-/* Evita el parpadeo de los avisos antes de que monte Vue. */
-[v-cloak] {
-    display: none;
-}
-
 /* Mismo respiro que las demás pantallas de persona; el ancho se limita porque un
    formulario de seis campos estirado a todo un monitor se lee mal, y los márgenes
    automáticos lo centran dentro de .persona-main. */

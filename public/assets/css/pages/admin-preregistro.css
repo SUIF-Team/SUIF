@@ -16,12 +16,6 @@
     gap: 1.5rem;
 }
 
-.admin-preregistro-encabezado {
-    margin-bottom: 1.5rem;
-}
-
-.admin-preregistro-encabezado h1,
-.admin-preregistro-encabezado p,
 .admin-preregistro-perfil h1,
 .admin-preregistro-perfil p,
 .admin-preregistro-detalle h2,
@@ -31,7 +25,6 @@
     margin-top: 0;
 }
 
-.admin-preregistro-encabezado h1,
 .admin-preregistro-perfil h1,
 .admin-preregistro-detalle h2,
 .admin-preregistro-documentos h2,
@@ -40,71 +33,22 @@
     color: var(--text-dark);
 }
 
-.admin-preregistro-encabezado h1 {
-    margin-bottom: 0.35rem;
-}
-
-.admin-preregistro-encabezado p,
 .admin-preregistro-perfil p {
     color: var(--text-muted);
 }
 
-.admin-preregistro-sobretitulo {
-    margin-bottom: 0.35rem;
-    color: var(--unam-gold-dark);
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-/* ─── Bandeja de personas ────────────────────────────────────────────── */
-
-.admin-preregistro-lista {
-    display: grid;
-}
-
-.admin-preregistro-persona {
-    padding: 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.admin-preregistro-persona:last-child {
-    border-bottom: 0;
-}
-
-.admin-preregistro-persona-datos,
-.admin-preregistro-persona-acciones,
 .admin-preregistro-usuario,
 .admin-preregistro-documento-acciones {
     display: flex;
     align-items: center;
 }
 
-.admin-preregistro-persona-datos,
 .admin-preregistro-usuario {
     gap: 1rem;
 }
 
-.admin-preregistro-persona-acciones,
 .admin-preregistro-documento-acciones {
     gap: 0.5rem;
-}
-
-.admin-preregistro-persona h2 {
-    margin: 0 0 0.15rem;
-    color: var(--text-dark);
-    font-size: var(--fs-subtitulo);
-}
-
-.admin-preregistro-persona p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-avatar {
@@ -430,7 +374,9 @@
     color: var(--exito-texto);
 }
 
-.admin-preregistro-resultado-mensaje.paso--revision h2 {
+/* El paso «en revisión» del expediente se marca como actual —dorado— y no con
+   el papel de revisión: es dónde está el trámite, no su desenlace. */
+.admin-preregistro-resultado-mensaje.paso--actual h2 {
     color: var(--revision-texto);
 }
 
@@ -465,16 +411,10 @@
 }
 
 @media (max-width: 767.98px) {
-    .admin-preregistro-persona,
     .admin-preregistro-perfil,
     .admin-preregistro-documento {
         align-items: flex-start;
         flex-direction: column;
-    }
-
-    .admin-preregistro-persona-acciones {
-        width: 100%;
-        justify-content: space-between;
     }
 
     .admin-preregistro-perfil .estado {

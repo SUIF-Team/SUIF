@@ -5,9 +5,9 @@
 
 /* El atributo hidden lo apaga cualquier regla con display propio, así que
    había que repetir la excepción componente por componente (.pr-modal[hidden],
-   .admin-reversion-modal[hidden], .admin-sedes-modal[hidden]… hoy todos
-   .dialogo). Con las
-   pantallas que ya no recargan, ocultar y mostrar en sitio es constante: se
+   .admin-reversion-modal[hidden], .admin-sedes-modal[hidden]… hoy todos son
+   .dialogo). Con las pantallas que ya no recargan, ocultar y mostrar en sitio
+   es constante: se
    declara una vez y hidden vuelve a significar lo que dice. */
 [hidden] {
     display: none !important;
@@ -50,7 +50,6 @@
        docs/superpowers/specs/2026-09-05-ancho-contenedores-admin-design.md */
     --admin-ancho: 1200px;
     --navbar-height: 120px;
-    --alto-navbar: var(--navbar-height);
     --fondo-sistema: url('/assets/img/backgrounds/fondo-sistema.jpg');
 
     /* Papel semántico del color. Un estado se dice con estos valores y no con un

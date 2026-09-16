@@ -6,12 +6,6 @@
  * del comprobante.
  */
 
-/* Sólo los avisos del formulario llevan v-cloak; los campos se ven siempre, con
-   JavaScript o sin él. */
-[v-cloak] {
-    display: none;
-}
-
 .pago-shell {
     padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 5rem);
 }
