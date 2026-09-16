@@ -98,9 +98,22 @@ advertencias que vuelven como 422 y se pintan de error, y el encabezado pegado d
 
 ## Cómo se migra
 
-Un commit por capa: base (esta spec, tokens, componentes y su carga), persona
-pre-registro y documentos, resto de persona, bandejas y altas admin, expediente
-admin, auth y errores, textos, limpieza.
+Un commit por capa, para poder subir y revisar por partes. En el orden en que se
+hicieron:
+
+1. base: esta spec, los tokens, `partials/componentes.css` y su carga en los tres
+   layouts;
+2. persona: pre-registro y documentos · pago y facturación · referencia y su
+   selección · referencia especial · sede · dashboard · barra de avance;
+3. admin: expediente (la hoja base del panel) · altas · chips desde el servidor ·
+   bandejas · catálogo de referencias · reportes, tablero y flash;
+4. auth y errores;
+5. textos;
+6. limpieza.
+
+El expediente va antes que las bandejas aunque el plan lo ordenara al revés:
+`pages/admin-preregistro.css` es la hoja base que cargan casi todas las pantallas
+del panel, así que migrarla primero deja a las demás sin reglas viejas que ganen.
 
 La regla que ordena el trabajo: **las hojas de `pages/` se cargan después, así que una
 regla de página todavía gana**. Migrar una pantalla es cambiar su clase en Blade, JS y
@@ -108,9 +121,13 @@ PHP y borrar su regla vieja en el mismo commit. Si algo sigue viéndose como ant
 que quedó la regla.
 
 Los mapas de estado que arma PHP (`ConsultaPagos`, `ConsultaPreRegistros`,
-`ConsultaPersonasRegistradas`, `NotificacionResultado`, los dos `DashboardController`
-y `PreRegistroController`) devuelven el nombre del papel, como ya hace
-`ConvocatoriaController` con `primario`, `secundario` y `eliminar`.
+`ConsultaPersonasRegistradas`, `NotificacionResultado`, los dos `DashboardController`,
+`PreRegistroController`, `GestionSedes` y `GestionConvocatorias`) devuelven el nombre
+del papel, como ya hacía `ConvocatoriaController` con `primario` y `secundario`.
+
+Donde la clave del estado ya servía para filtrar (`con-cupo`, `vigente`) se agrega una
+llave aparte —`estado_papel`— en vez de cambiarla: son dos cosas distintas y una de
+ellas viaja en la URL.
 
 ## Verificación
 
