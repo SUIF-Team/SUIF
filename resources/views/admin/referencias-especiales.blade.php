@@ -24,14 +24,14 @@
                     Emítela por el importe total y el sistema avisará a todo el grupo.
                 </p>
             </div>
-            <a class="admin-referencias-boton admin-referencias-boton--primario" href="{{ route('admin.referencias.carga') }}">
+            <a class="boton boton--primario" href="{{ route('admin.referencias.carga') }}">
                 <span aria-hidden="true">+</span> Subir referencias
             </a>
         </header>
 
-        <section class="admin-referencias-tarjeta admin-referencias-tabla-contenedor" aria-label="Solicitudes pendientes">
-            <div class="admin-referencias-tabla-responsive">
-                <table class="admin-referencias-tabla">
+        <section class="tabla-contenedor" aria-label="Solicitudes pendientes">
+            <div class="tabla-responsive">
+                <table class="tabla admin-referencias-tabla">
                     <thead>
                         <tr>
                             <th>Solicitud</th>
@@ -51,7 +51,7 @@
                                 <td>{{ number_format($solicitud['participantes']) }}</td>
                                 <td>${{ number_format($solicitud['monto'], 2) }} {{ config('suif.moneda', 'MXN') }}</td>
                                 <td>
-                                    <a class="admin-referencias-enlace"
+                                    <a class="boton boton--texto"
                                        href="{{ route('admin.referencias.especiales.show', ['id' => $solicitud['id_pago']]) }}">
                                         Emitir referencia
                                     </a>
@@ -59,7 +59,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="admin-referencias-vacio">
+                                <td colspan="6" class="vacio">
                                     No hay referencias especiales pendientes de emisión.
                                 </td>
                             </tr>

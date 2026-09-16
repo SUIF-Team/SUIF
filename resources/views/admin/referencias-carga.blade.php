@@ -20,20 +20,20 @@
                 <h1 id="admin-referencias-carga-titulo">Subir referencias bancarias</h1>
                 <p>Carga en un solo archivo ZIP las referencias disponibles y los formatos con los que se paga en ventanilla.</p>
             </div>
-            <a class="admin-referencias-boton admin-referencias-boton--secundario" href="{{ route('admin.referencias.index') }}">
+            <a class="boton boton--secundario" href="{{ route('admin.referencias.index') }}">
                 Ver catálogo
             </a>
         </header>
 
         @if($errors->any())
-            <div class="admin-referencias-tarjeta admin-referencias-aviso admin-referencias-aviso--error">
+            <div class="notificacion notificacion--error">
                 <strong>Revisa el archivo:</strong>
                 <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
             </div>
         @endif
 
         @if($importacion)
-            <div class="admin-referencias-tarjeta admin-referencias-aviso">
+            <div class="aviso">
                 <strong>Resultado de la carga</strong>
                 <ul>
                     <li>{{ $importacion['nuevas'] }} referencias nuevas.</li>
@@ -44,26 +44,26 @@
         @endif
 
         <section class="admin-referencias-estadisticas" aria-label="Estado del catálogo">
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Referencias cargadas</h2>
                 <p class="admin-referencias-estadistica--azul">{{ number_format($resumen['total']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Disponibles</h2>
                 <p class="admin-referencias-estadistica--azul">{{ number_format($resumen['disponibles']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Listas para entregar</h2>
                 <p class="admin-referencias-estadistica--verde">{{ number_format($resumen['entregables']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Con formato PDF</h2>
                 <p class="admin-referencias-estadistica--naranja">{{ number_format($resumen['con_formato']) }}</p>
             </article>
         </section>
 
         <div class="admin-referencias-cargas">
-            <section class="admin-referencias-tarjeta admin-referencias-carga" aria-labelledby="admin-referencias-paquete-titulo">
+            <section class="tarjeta admin-referencias-carga" aria-labelledby="admin-referencias-paquete-titulo">
                 <h2 id="admin-referencias-paquete-titulo">Paquete de referencias (ZIP)</h2>
                 <p>
                     Un solo comprimido con el catálogo y los formatos que la persona imprime para
@@ -115,9 +115,9 @@
                     <alertas
                         :mensaje="avisoError"
                         tipo="error"
-                        clase="admin-referencias-aviso admin-referencias-aviso--error"></alertas>
+                        clase="notificacion notificacion--error"></alertas>
 
-                    <div class="admin-referencias-tarjeta admin-referencias-aviso" v-if="resultado" v-cloak>
+                    <div class="aviso" v-if="resultado" v-cloak>
                         <strong>Resultado de la carga</strong>
                         <ul>
                             <li>@{{ resultado.nuevas }} referencias nuevas.</li>
@@ -133,11 +133,13 @@
                         class="admin-referencias-formulario"
                         @submit.prevent="cargar($event)">
                         @csrf
-                        <label class="admin-referencias-archivo">
+                        {{-- El <input type="file"> no se puede estilar: la etiqueta hace de
+                             botón y el campo va transparente encima, así que no lleva .control. --}}
+                        <label class="boton boton--secundario admin-referencias-archivo">
                             <span>Seleccionar ZIP</span>
                             <input type="file" name="paquete" accept=".zip,application/zip" required :disabled="subiendo">
                         </label>
-                        <button type="submit" class="admin-referencias-boton admin-referencias-boton--primario" :disabled="subiendo">
+                        <button type="submit" class="boton boton--primario" :disabled="subiendo">
                             @{{ subiendo ? 'Cargando…' : 'Cargar referencias' }}
                         </button>
 

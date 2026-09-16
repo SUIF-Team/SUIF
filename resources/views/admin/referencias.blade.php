@@ -20,44 +20,44 @@
                 <h1 id="admin-referencias-titulo">Referencias bancarias</h1>
                 <p>Cada referencia se entrega a una sola persona y queda ligada a su trámite.</p>
             </div>
-            <a class="admin-referencias-boton admin-referencias-boton--primario" href="{{ route('admin.referencias.carga') }}">
+            <a class="boton boton--primario" href="{{ route('admin.referencias.carga') }}">
                 <span aria-hidden="true">+</span> Subir referencias
             </a>
         </header>
 
         <section class="admin-referencias-estadisticas" aria-label="Resumen del catálogo">
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Referencias cargadas</h2>
                 <p class="admin-referencias-estadistica--azul">{{ number_format($resumen['total']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Disponibles</h2>
                 <p class="admin-referencias-estadistica--azul">{{ number_format($resumen['disponibles']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Listas para entregar</h2>
                 <p class="admin-referencias-estadistica--verde">{{ number_format($resumen['entregables']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Asignadas</h2>
                 <p class="admin-referencias-estadistica--naranja">{{ number_format($resumen['asignadas']) }}</p>
             </article>
-            <article class="admin-referencias-tarjeta admin-referencias-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-referencias-estadistica">
                 <h2>Con formato PDF</h2>
                 <p class="admin-referencias-estadistica--azul">{{ number_format($resumen['con_formato']) }}</p>
             </article>
         </section>
 
-        <section class="admin-referencias-tarjeta admin-referencias-filtros" aria-label="Filtros de búsqueda">
-            <form method="GET" action="{{ route('admin.referencias.index') }}" class="admin-referencias-filtros-formulario"
+        <section class="tarjeta tarjeta--compacta" aria-label="Filtros de búsqueda">
+            <form method="GET" action="{{ route('admin.referencias.index') }}" class="filtros"
                   data-filtros-tabla="admin-referencias-tabla">
-                <div class="admin-referencias-campo">
-                    <label for="buscar">Referencia o CURP</label>
-                    <input id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
+                <div class="campo">
+                    <label class="etiqueta" for="buscar">Referencia o CURP</label>
+                    <input class="control" id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
                 </div>
-                <div class="admin-referencias-campo">
-                    <label for="estado">Estado</label>
-                    <select id="estado" name="estado" data-filtro-modo="token">
+                <div class="campo">
+                    <label class="etiqueta" for="estado">Estado</label>
+                    <select class="control" id="estado" name="estado" data-filtro-modo="token">
                         <option value="">Todas</option>
                         <option value="disponible" @selected(($filtros['estado'] ?? '') === 'disponible')>Disponibles</option>
                         <option value="asignada" @selected(($filtros['estado'] ?? '') === 'asignada')>Asignadas</option>
@@ -65,15 +65,15 @@
                     </select>
                 </div>
                 <div class="admin-referencias-filtros-acciones">
-                    <button class="admin-referencias-boton admin-referencias-boton--filtrar" type="submit">Filtrar</button>
-                    <a class="admin-referencias-boton admin-referencias-boton--limpiar" href="{{ route('admin.referencias.index') }}" data-filtros-limpiar>Limpiar</a>
+                    <button class="boton boton--primario" type="submit">Filtrar</button>
+                    <a class="boton boton--peligro" href="{{ route('admin.referencias.index') }}" data-filtros-limpiar>Limpiar</a>
                 </div>
             </form>
         </section>
 
-        <section class="admin-referencias-tarjeta admin-referencias-tabla-contenedor" aria-label="Catálogo de referencias">
-            <div class="admin-referencias-tabla-responsive tabla-desplazable">
-                <table id="admin-referencias-tabla" class="admin-referencias-tabla admin-referencias-tabla--centrada">
+        <section class="tabla-contenedor" aria-label="Catálogo de referencias">
+            <div class="tabla-responsive tabla-desplazable">
+                <table id="admin-referencias-tabla" class="tabla admin-referencias-tabla admin-referencias-tabla--centrada">
                     <thead>
                         <tr>
                             <th>Referencia</th>
@@ -101,7 +101,7 @@
                                         @if($referencia['monto'] !== null)
                                             ${{ number_format($referencia['monto'], 2) }} {{ config('suif.moneda', 'MXN') }}
                                         @else
-                                            <span class="admin-referencias-texto-atenuado">Cuota vigente</span>
+                                            <span class="atenuado">Cuota vigente</span>
                                         @endif
                                     </div>
                                 </td>
@@ -110,11 +110,11 @@
                                         @if($referencia['vigencia'])
                                             {{ \Illuminate\Support\Carbon::parse($referencia['vigencia'])->format('d/m/Y') }}
                                         @else
-                                            <span class="admin-referencias-texto-atenuado">Sin vigencia</span>
+                                            <span class="atenuado">Sin vigencia</span>
                                         @endif
 
                                         @if($referencia['fecha_emision'])
-                                            <div class="admin-referencias-texto-atenuado">
+                                            <div class="atenuado">
                                                 Emitida el {{ \Illuminate\Support\Carbon::parse($referencia['fecha_emision'])->format('d/m/Y') }}
                                             </div>
                                         @endif
@@ -123,16 +123,16 @@
                                 <td>
                                     <div class="admin-referencias-celda">
                                         @if($referencia['tiene_formato'])
-                                            <a class="admin-referencias-enlace" target="_blank" rel="noopener"
+                                            <a class="boton boton--texto" target="_blank" rel="noopener"
                                                href="{{ route('admin.referencias.formato', ['id' => $referencia['id']]) }}">Ver PDF</a>
                                         @else
-                                            <span class="admin-referencias-texto-atenuado">Sin PDF</span>
+                                            <span class="atenuado">Sin PDF</span>
                                         @endif
                                     </div>
                                 </td>
                                 <td>
                                     <div class="admin-referencias-celda">
-                                        <span class="admin-referencias-estado admin-referencias-estado--{{ $referencia['asignada'] ? 'asignada' : 'disponible' }}">
+                                        <span class="estado estado--{{ $referencia['asignada'] ? 'asignada' : 'disponible' }}">
                                             {{ $referencia['asignada'] ? 'Asignada' : 'Disponible' }}
                                         </span>
                                     </div>
@@ -146,7 +146,7 @@
                                                 <small>{{ \Illuminate\Support\Carbon::parse($referencia['fecha_asignacion'])->format('d/m/Y') }}</small>
                                             @endif
                                         @else
-                                            <span class="admin-referencias-texto-atenuado">—</span>
+                                            <span class="atenuado">—</span>
                                         @endif
                                     </div>
                                 </td>
@@ -156,7 +156,7 @@
                         {{-- El renglón se escribe siempre: con la tabla filtrándose
                              en el navegador, el aviso aparece sin volver al servidor. --}}
                         <tr data-tabla-vacia @unless($referencias->isEmpty()) hidden @endunless>
-                            <td colspan="6" class="admin-referencias-vacio" role="status">
+                            <td colspan="6" class="vacio" role="status">
                                 No hay referencias que coincidan con los filtros seleccionados.
                             </td>
                         </tr>

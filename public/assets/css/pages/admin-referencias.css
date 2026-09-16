@@ -1,4 +1,8 @@
-/* Catálogo de referencias bancarias y su pantalla de carga. */
+/* Catálogo de referencias bancarias, su pantalla de carga y las solicitudes de
+   referencia especial. La tarjeta, el botón, el campo, la tabla, el chip, el
+   vacío y las cajas de aviso son los compartidos; aquí queda la composición y
+   el reparto de anchos de la tabla del catálogo, que es la única del panel con
+   columnas de dato fijo. */
 
 .admin-referencias {
     padding: clamp(2rem, 5vw, 4rem) 1rem;
@@ -20,9 +24,7 @@
 }
 
 .admin-referencias-encabezado h1,
-.admin-referencias-encabezado p,
-.admin-referencias-tarjeta h2,
-.admin-referencias-tarjeta p {
+.admin-referencias-encabezado p {
     margin-top: 0;
 }
 
@@ -36,12 +38,7 @@
     color: var(--text-muted);
 }
 
-.admin-referencias-tarjeta {
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
-}
+/* ─── Cifras del resumen ─────────────────────────────────────────────── */
 
 .admin-referencias-estadisticas {
     display: grid;
@@ -49,11 +46,8 @@
     gap: 1rem;
 }
 
-.admin-referencias-estadistica {
-    padding: 1.25rem;
-}
-
 .admin-referencias-estadistica h2 {
+    margin-top: 0;
     margin-bottom: 0.5rem;
     color: var(--text-muted);
     font-family: var(--font-sans);
@@ -71,24 +65,10 @@
 }
 
 .admin-referencias-estadistica--azul { color: var(--unam-blue); }
-.admin-referencias-estadistica--verde { color: #287a45; }
-.admin-referencias-estadistica--naranja { color: #9a5b13; }
+.admin-referencias-estadistica--verde { color: var(--exito-texto); }
+.admin-referencias-estadistica--naranja { color: var(--revision-texto); }
 
-.admin-referencias-aviso {
-    padding: 1.1rem 1.4rem;
-    color: var(--text-dark);
-}
-
-.admin-referencias-aviso ul {
-    margin: 0.5rem 0 0;
-    padding-left: 1.2rem;
-}
-
-.admin-referencias-aviso--error {
-    border-color: #e7b7b7;
-    background: #fff5f5;
-    color: #9b1717;
-}
+/* ─── Carga del paquete ──────────────────────────────────────────────── */
 
 .admin-referencias-cargas {
     display: grid;
@@ -99,11 +79,8 @@
     max-width: 46rem;
 }
 
-.admin-referencias-carga {
-    padding: 1.75rem;
-}
-
 .admin-referencias-carga h2 {
+    margin-top: 0;
     margin-bottom: 0.4rem;
     color: var(--text-dark);
 }
@@ -119,7 +96,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
-    border-radius: 0.6rem;
+    border-radius: var(--radio-control);
     background: #f7f8fa;
     font-size: var(--fs-auxiliar);
 }
@@ -140,6 +117,14 @@
     color: #37475e;
 }
 
+/* Los datos de quien paga son seis renglones cortos: en columna estiran la
+   pantalla sin necesidad. */
+.admin-referencias-formato--columnas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1rem;
+}
+
 .admin-referencias-formulario {
     display: flex;
     flex-wrap: wrap;
@@ -147,17 +132,12 @@
     align-items: center;
 }
 
+/* El <input type="file"> del navegador no se puede estilar, así que se tapa con
+   su propia etiqueta y se deja transparente encima. */
 .admin-referencias-archivo {
     position: relative;
     overflow: hidden;
     max-width: 100%;
-    padding: 0.65rem 1.1rem;
-    border: 1px solid #d9dee7;
-    border-radius: 0.5rem;
-    background: #f7f8fa;
-    color: var(--text-dark);
-    font-size: var(--fs-ui);
-    cursor: pointer;
 }
 
 .admin-referencias-archivo span {
@@ -175,140 +155,36 @@
     cursor: pointer;
 }
 
-.admin-referencias-boton {
-    padding: 0.6rem 1.15rem;
-    display: inline-flex;
-    gap: 0.4rem;
+/* Avance de la carga del paquete. El ZIP admite 50 MB: sin barra, el botón se
+   quedaba mudo y no había forma de distinguir una subida lenta de una pantalla
+   colgada. Al llegar a 100 el servidor todavía tiene que abrir el ZIP, por eso
+   el texto de al lado cambia en vez de desaparecer. */
+.admin-referencias-progreso {
+    display: flex;
     align-items: center;
-    border: 1px solid transparent;
-    border-radius: 0.5rem;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    gap: 0.75rem;
+    margin: 0.85rem 0 0;
+    font-size: var(--fs-auxiliar);
+    color: var(--text-muted);
 }
 
-.admin-referencias-boton--primario {
-    background: var(--unam-blue);
-    color: #fff;
+.admin-referencias-progreso__barra {
+    flex: 1 1 220px;
+    height: 8px;
+    max-width: 320px;
 }
 
-.admin-referencias-boton--primario:hover,
-.admin-referencias-boton--primario:focus-visible {
-    background: var(--unam-blue-dark);
-    color: #fff;
-}
+/* ─── Catálogo ───────────────────────────────────────────────────────── */
 
-.admin-referencias-boton--secundario {
-    border-color: var(--border-light);
-    background: #fff;
-    color: var(--text-dark);
-}
-
-.admin-referencias-boton--secundario:hover,
-.admin-referencias-boton--secundario:focus-visible {
-    background: #f2f4f7;
-    color: var(--text-dark);
-}
-
-/* Filtrar y Limpiar comparten el aspecto de las demás bandejas
-   (admin-bandeja-preregistros.css). */
-.admin-referencias-boton--filtrar {
-    border-color: #bae6fd;
-    background: #e0f2fe;
-    color: #0276ad;
-}
-
-.admin-referencias-boton--filtrar:hover,
-.admin-referencias-boton--filtrar:focus-visible {
-    background: #bae6fd;
-    color: #025f8b;
-}
-
-.admin-referencias-boton--limpiar {
-    border-color: #fecaca;
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.admin-referencias-boton--limpiar:hover,
-.admin-referencias-boton--limpiar:focus-visible {
-    background: #fecaca;
-    color: #991b1b;
-}
-
-.admin-referencias-filtros {
-    padding: 1.25rem 1.5rem;
-}
-
-.admin-referencias-filtros-formulario,
 .admin-referencias-filtros-acciones {
     display: flex;
     gap: 0.75rem;
 }
 
-.admin-referencias-filtros-formulario {
-    flex-wrap: wrap;
-    align-items: flex-end;
-}
-
-.admin-referencias-campo {
-    min-width: 0;
-    display: flex;
-    flex: 1 1 12rem;
-    flex-direction: column;
-    gap: 0.45rem;
-}
-
-.admin-referencias-campo label {
-    color: var(--text-muted);
-}
-
-.admin-referencias-campo input,
-.admin-referencias-campo select {
-    padding: 0.55rem 0.7rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: #fff;
-    color: var(--text-dark);
-}
-
-/* Sin relleno y recortada, igual que .admin-sedes-tabla-contenedor: el
-   relleno lo ponen las celdas. Con 0.5rem aqui la barra gris del thead
-   quedaba con un anillo blanco de 8px alrededor en vez de llegar al canto. */
-.admin-referencias-tabla-contenedor {
-    padding: 0;
-    overflow: hidden;
-}
-
-.admin-referencias-tabla-responsive {
-    overflow-x: auto;
-}
-
-.admin-referencias-tabla {
-    width: 100%;
-    border-collapse: collapse;
-}
-
 .admin-referencias-tabla th,
 .admin-referencias-tabla td {
     padding: 0.85rem 0.9rem;
-    border-bottom: 1px solid var(--border-light);
-    text-align: left;
     vertical-align: top;
-}
-
-/* Misma barra gris que admin-sedes-tabla: era la unica familia de tabla
-   del panel sin fondo en el encabezado. */
-.admin-referencias-tabla th {
-    background: #f8fafc;
-    color: var(--text-muted);
-    text-align: center;
-}
-
-.admin-referencias-tabla tbody tr:last-child td {
-    border-bottom: 0;
 }
 
 .admin-referencias-tabla td small {
@@ -317,7 +193,7 @@
     color: var(--text-muted);
 }
 
-/* El encabezado va centrado y la tabla es width: 100%, asi que la columna
+/* El encabezado va centrado y la tabla es width: 100%, así que la columna
    recibe espacio sobrante y el dato quedaba pegado a su canto izquierdo. El
    bloque se centra; el texto de dentro sigue a la izquierda. */
 .admin-referencias-tabla--centrada td {
@@ -329,33 +205,32 @@
     display: inline-block;
     max-width: 100%;
     text-align: left;
-    /* La referencia es una cadena sin espacios: sin esto no encuentra donde
+    /* La referencia es una cadena sin espacios: sin esto no encuentra dónde
        partir y se derrama encima de la columna de al lado. Va break-word y no
-       anywhere: anywhere ademas encoge el ancho minimo de la columna y la
-       tabla llegaba a partir la pildora de Estado en tres renglones. */
+       anywhere: anywhere además encoge el ancho mínimo de la columna y la
+       tabla llegaba a partir la píldora de Estado en tres renglones. */
     overflow-wrap: break-word;
 }
 
 /* El bloque tiene que medir lo mismo en todas las filas: si cada celda se
-   centrara segun su propio ancho, los renglones cortos arrancarian mas a la
-   derecha y se perderia el borde izquierdo comun que se pidio.
-   Va width y no min-width a proposito: un titular mas largo de lo previsto
-   parte renglon dentro del bloque en vez de ensancharlo y descolocar su fila.
-   Anchos medidos sobre el contenido mas largo de cada columna (1ch = 7.78px
+   centrara según su propio ancho, los renglones cortos arrancarían más a la
+   derecha y se perdería el borde izquierdo común que se pidió.
+   Va width y no min-width a propósito: un titular más largo de lo previsto
+   parte renglón dentro del bloque en vez de ensancharlo y descolocar su fila.
+   Anchos medidos sobre el contenido más largo de cada columna (1ch = 7.78px
    en Open Sans 14px); la tabla al 100% reparte el sobrante y es ese sobrante
-   el que deja ver el centrado. Estado no aparece a proposito: es una pildora
-   suelta, no un dato que tenga que alinearse con el de arriba, y sin ancho
-   fijo el td la centra entera. */
+   el que deja ver el centrado. Estado no aparece a propósito: es una píldora
+   suelta, no un dato que tenga que alinearse con el de arriba. */
 /* La referencia mide 20.7ch y no tiene espacios donde partir: 22ch le dejan un
-   caracter de sobra para que nunca baje de renglon. */
+   carácter de sobra para que nunca baje de renglón. */
 .admin-referencias-tabla--centrada td:nth-child(1) .admin-referencias-celda { width: 22ch; }
 .admin-referencias-tabla--centrada td:nth-child(2) .admin-referencias-celda { width: 14ch; }
 .admin-referencias-tabla--centrada td:nth-child(3) .admin-referencias-celda { width: 18ch; }
 .admin-referencias-tabla--centrada td:nth-child(4) .admin-referencias-celda { width: 7ch; }
-/* Con la fecha en su propio renglon el piso de la columna es el CURP solo
-   (18.7ch) y no el CURP mas la fecha (28.6ch): de ahi salen los 9ch que se
-   fueron a Referencia. Un titular largo si parte renglon; es prosa, a
-   diferencia del CURP y la referencia, que son codigos. */
+/* Con la fecha en su propio renglón el piso de la columna es el CURP solo
+   (18.7ch) y no el CURP más la fecha (28.6ch): de ahí salen los 9ch que se
+   fueron a Referencia. Un titular largo sí parte renglón; es prosa, a
+   diferencia del CURP y la referencia, que son códigos. */
 .admin-referencias-tabla--centrada td:nth-child(6) .admin-referencias-celda { width: 20ch; }
 
 .admin-referencias-tabla-numero {
@@ -364,64 +239,15 @@
     letter-spacing: 0.04em;
 }
 
-.admin-referencias-texto-atenuado {
-    color: #9098a5;
-}
+/* ─── Referencia especial ────────────────────────────────────────────── */
 
-.admin-referencias-enlace {
-    color: var(--unam-blue);
-    font-weight: 600;
-}
-
-.admin-referencias-estado {
-    padding: 0.28rem 0.75rem;
-    display: inline-block;
-    border-radius: 999px;
-    font-size: var(--fs-micro);
-    font-weight: 600;
-}
-
-.admin-referencias-estado--disponible {
-    background: #d8ecdf;
-    color: #075b2c;
-}
-
-.admin-referencias-estado--asignada {
-    background: #e2e8f5;
-    color: #24406b;
-}
-
-.admin-referencias-vacio {
-    padding: 2.5rem 1rem;
-    color: var(--text-muted);
-    text-align: center;
-}
-
-/* Solicitudes de referencia especial. A diferencia del catálogo, cada tarjeta
-   lleva su propio título dentro: sin esto los h2 salen al tamaño que les da el
-   navegador y pesan más que el encabezado de la pantalla. */
-.admin-referencias-seccion {
-    padding: 1.25rem 1.4rem;
-}
-
+/* A diferencia del catálogo, cada tarjeta lleva su propio título dentro: sin
+   esto los h2 salen al tamaño que les da el navegador y pesan más que el
+   encabezado de la pantalla. */
 .admin-referencias-seccion h2 {
+    margin-top: 0;
     margin-bottom: 1rem;
     color: var(--text-dark);
-}
-
-/* Dentro de una tarjeta el aviso ya no es la tarjeta: necesita sus esquinas y
-   separarse de lo que venga debajo. */
-.admin-referencias-seccion .admin-referencias-aviso {
-    margin-bottom: 1rem;
-    border-radius: 0.6rem;
-}
-
-/* Los datos de quien paga son seis renglones cortos: en columna estiran la
-   pantalla sin necesidad. */
-.admin-referencias-formato--columnas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: 1rem;
 }
 
 @media (max-width: 767px) {
@@ -429,27 +255,4 @@
         flex-direction: column;
         align-items: stretch;
     }
-
-    .admin-referencias-boton {
-        justify-content: center;
-    }
-}
-
-/* Avance de la carga del paquete. El ZIP admite 50 MB: sin barra, el botón se
-   quedaba mudo y no había forma de distinguir una subida lenta de una pantalla
-   colgada. Al llegar a 100 el servidor todavía tiene que abrir el ZIP, por eso
-   el texto de al lado cambia en vez de desaparecer. */
-.admin-referencias-progreso {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 0.85rem 0 0;
-    font-size: 0.9rem;
-    color: var(--text-muted, #555);
-}
-
-.admin-referencias-progreso__barra {
-    flex: 1 1 220px;
-    height: 8px;
-    max-width: 320px;
 }
