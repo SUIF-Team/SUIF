@@ -330,9 +330,11 @@
 }
 
 /* El paso en curso se marca con el dorado institucional, no con otro color de
-   estado: no es un resultado, es dónde está la persona. */
+   estado: no es un resultado, es dónde está la persona. Va como barra lateral y no
+   como contorno: un contorno dorado es el anillo de foco, y dos señales iguales
+   para cosas distintas se leen mal. */
 .paso--actual {
-    box-shadow: inset 0 0 0 2px var(--unam-gold);
+    box-shadow: inset 4px 0 0 0 var(--unam-gold);
 }
 
 /* Apagado con su propio color y no con opacidad: la transparencia lavaba
@@ -625,9 +627,15 @@ textarea.control {
     opacity: 1;
 }
 
+/* Un campo ya trae su propio borde: el foco lo engrosa en dorado en lugar de
+   dibujar un anillo suelto. Son los mismos 2 px de perímetro que pide WCAG —1 del
+   borde y 1 del inset—, pero pegados al control. El anillo separado se leía como
+   alarma y, en Chrome, aparece también al hacer clic en un <select>, porque el
+   navegador lo considera foco visible en todo lo que acepta teclado. */
 .control:focus-visible {
-    outline: var(--foco-anillo);
-    outline-offset: var(--foco-separacion);
+    outline: none;
+    border-color: var(--unam-gold-dark);
+    box-shadow: inset 0 0 0 1px var(--unam-gold-dark);
 }
 
 .control[disabled],

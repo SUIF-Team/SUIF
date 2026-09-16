@@ -13,9 +13,12 @@
     padding: 0;
 }
 
+/* La celda va centrada, pero text-align no alcanza a los hijos de un flex: sin
+   esto los enlaces se pegaban a la izquierda y no coincidían con su encabezado. */
 .admin-administradores-acciones {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
     flex-wrap: wrap;
 }

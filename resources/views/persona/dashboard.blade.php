@@ -21,7 +21,7 @@
     <div class="pasos process-list" aria-label="Avance del proceso de certificación">
         @foreach ($pasos as $paso)
             <article
-                class="paso paso--{{ $paso['clase'] }} process-card{{ $paso['estado'] === 'in-progress' ? ' paso--actual' : '' }}{{ $paso['mostrarBoton'] ? ' process-card--interactive' : '' }}"
+                class="paso paso--{{ $paso['clase'] }} process-card{{ $paso['mostrarBoton'] ? ' process-card--interactive' : '' }}"
                 aria-labelledby="paso-{{ $paso['numero'] }}-titulo">
                 {{-- Las etapas completadas muestran palomita en lugar del número (Figma 1370:775). --}}
                 <div class="paso__numero" aria-hidden="true">
