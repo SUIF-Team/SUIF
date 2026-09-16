@@ -26,12 +26,12 @@
              confirmacion se pinta aqui. Sin Vue manda el <noscript>. --}}
         @if(session('success'))
             <noscript>
-                <div class="alert alert-success" role="status">{{ session('success') }}</div>
+                <div class="notificacion notificacion--exito" role="status">{{ session('success') }}</div>
             </noscript>
         @endif
 
-        <alertas :mensaje="avisoExito" tipo="success" clase="alert alert-success"></alertas>
-        <alertas :mensaje="avisoError" tipo="error" clase="alert alert-danger"></alertas>
+        <alertas :mensaje="avisoExito" tipo="success"></alertas>
+        <alertas :mensaje="avisoError" tipo="error"></alertas>
 
         <form
             method="POST"
@@ -40,28 +40,29 @@
             @submit.prevent="enviar($event)">
             @csrf
 
-            <div class="login-grupo">
-                <label for="curp" class="login-etiqueta">CURP</label>
+            <div class="campo">
+                <label for="curp" class="etiqueta">CURP</label>
                 <input
                     type="text"
                     id="curp"
                     name="curp"
                     value="{{ old('curp') }}"
-                    class="form-control login-campo{{ $errors->has('curp') ? ' is-invalid' : '' }}"
+                    class="control"
+                    aria-invalid="{{ $errors->has('curp') ? 'true' : 'false' }}"
                     maxlength="18"
                     autocomplete="username"
                     autocapitalize="characters"
                     aria-describedby="curp-ayuda{{ $errors->has('curp') ? ' curp-error' : '' }}"
                     placeholder="Ingresa tu CURP"
                     required>
-                <small id="curp-ayuda" class="login-ayuda">Escribe los 18 caracteres de tu CURP.</small>
+                <small id="curp-ayuda" class="ayuda">Escribe los 18 caracteres de tu CURP.</small>
                 @if($errors->has('curp'))
-                    <span id="curp-error" class="invalid-feedback" role="alert">{{ $errors->first('curp') }}</span>
+                    <span id="curp-error" class="campo__error" role="alert">{{ $errors->first('curp') }}</span>
                 @endif
             </div>
 
             <div class="login-acciones">
-                <button type="submit" class="btn login-boton" :disabled="enviando">
+                <button type="submit" class="boton boton--primario" :disabled="enviando">
                     <span v-if="enviando" v-cloak>Enviando…</span>
                     <span v-else>Enviar clave nueva</span>
                 </button>

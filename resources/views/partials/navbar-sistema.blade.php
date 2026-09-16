@@ -35,13 +35,13 @@
             @if (auth()->check())
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="navbar-sistema-salir">
+                    <button type="submit" class="boton boton--claro navbar-sistema-salir" aria-label="Salir">
                         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                         <span>Salir</span>
                     </button>
                 </form>
             @elseif (request()->routeIs('persona.*'))
-                <a href="{{ route('home') }}" class="navbar-sistema-salir">
+                <a href="{{ route('home') }}" class="boton boton--claro navbar-sistema-salir" aria-label="Salir">
                     <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
                     <span>Salir</span>
                 </a>

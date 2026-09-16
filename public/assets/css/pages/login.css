@@ -47,11 +47,10 @@
 
 /* Unica excepcion de escala del sistema: el saludo del panel izquierdo es
    una pieza de presentacion, no un titulo de pantalla, y con --fs-pagina el
-   panel se queda vacio. Sin cursiva: Merriweather no se carga en cursiva y
-   el navegador la falsearia. */
+   panel se queda vacio. Sin cursiva ni peso 400: de Merriweather solo se carga
+   el 700, y pedir otro peso lo falsea el navegador. */
 .login-bienvenida {
     font-size: clamp(2rem, 3.5vw, 3rem);
-    font-weight: 400;
 }
 
 .login-titulo-proceso {
@@ -141,61 +140,9 @@
     gap: 1.5rem;
 }
 
-.login-grupo {
-    display: grid;
-    gap: 0.45rem;
-}
-
-.login-etiqueta {
-    margin: 0;
-    color: #3b4550;
-}
-
-.login-campo {
-    min-height: 50px;
-    padding: 0.8rem 1rem;
-    border: 1px solid transparent;
-    border-radius: 0.55rem;
-    background: #ffffff;
-    color: #2b3138;
-    box-shadow: 0 0.25rem 0.75rem rgba(2, 16, 36, 0.06);
-}
-
-.login-campo:focus {
-    border-color: var(--unam-gold);
-    box-shadow: 0 0 0 0.22rem rgba(181, 139, 42, 0.2);
-}
-
-.login-campo::placeholder {
-    color: #90969d;
-}
-
-.login-ayuda {
-    color: #69727c;
-    font-size: var(--fs-auxiliar);
-}
-
 .login-acciones {
     margin-top: 0.85rem;
     text-align: center;
-}
-
-.login-boton {
-    min-width: 150px;
-    padding: 0.7rem 2.25rem;
-    border: 1px solid var(--unam-blue-dark);
-    border-radius: 0.45rem;
-    background: var(--unam-blue-dark);
-    color: #ffffff;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.login-boton:hover,
-.login-boton:focus-visible {
-    border-color: var(--unam-blue);
-    background: var(--unam-blue);
-    color: #ffffff;
-    transform: translateY(-1px);
 }
 
 .login-preregistro {

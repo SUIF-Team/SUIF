@@ -10,7 +10,7 @@
         <p class="error-mensaje">{{ $mensaje }}</p>
 
         <div class="error-acciones">
-            <a class="error-boton" href="{{ $rutaAccion }}">{{ $textoAccion }}</a>
+            <a class="boton boton--primario" href="{{ $rutaAccion }}">{{ $textoAccion }}</a>
         </div>
 
         <p class="error-soporte">

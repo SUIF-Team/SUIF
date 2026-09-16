@@ -14,15 +14,15 @@
 
 .error-tarjeta {
     padding: 2.5rem;
-    border-radius: 12px;
-    background: #ffffff;
+    border-radius: var(--radio-caja);
+    background: var(--surface-white);
     box-shadow: 0 10px 30px rgba(17, 47, 75, 0.12);
     text-align: center;
 }
 
 .error-codigo {
     margin: 0 0 0.75rem;
-    color: #b38612;
+    color: var(--unam-gold-dark);
     font-size: var(--fs-micro);
     font-weight: 600;
     letter-spacing: 0.04em;
@@ -31,47 +31,28 @@
 
 .error-titulo {
     margin: 0 0 1rem;
-    color: #112f4b;
+    color: var(--unam-blue);
 }
 
 .error-mensaje {
     margin: 0 0 1.75rem;
-    color: #4b5563;
+    color: var(--text-muted);
 }
 
 .error-acciones {
     margin-bottom: 1.75rem;
 }
 
-.error-boton {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.7rem 1.6rem;
-    border-radius: 8px;
-    background: #112f4b;
-    color: #ffffff;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-}
-
-.error-boton:hover,
-.error-boton:focus-visible {
-    background: #1c4570;
-    color: #ffffff;
-}
-
 .error-soporte {
     margin: 0;
     padding-top: 1.5rem;
-    border-top: 1px solid #e5e7eb;
-    color: #6b7280;
+    border-top: 1px solid var(--border-light);
+    color: var(--text-muted);
     font-size: var(--fs-auxiliar);
 }
 
 .error-soporte a {
-    color: #b38612;
+    color: var(--unam-gold-dark);
     font-weight: 600;
     overflow-wrap: anywhere;
 }
