@@ -291,6 +291,15 @@
     color: var(--revision-texto);
 }
 
+.paso--info .paso__numero {
+    background: var(--unam-blue);
+    color: var(--surface-white);
+}
+
+.paso--info .paso__estado {
+    color: var(--info-texto);
+}
+
 .paso--peligro .paso__numero {
     background: var(--peligro-solido);
     color: var(--surface-white);

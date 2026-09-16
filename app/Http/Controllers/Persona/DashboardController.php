@@ -205,7 +205,9 @@ class DashboardController extends Controller
         $textoBoton = $textoBoton
             ?: (in_array($estado, ['completed', 'review'], true) ? 'Ver' : 'Continuar');
 
-        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
+        $clase = $this->claseEstado($estado);
+
+        return compact('numero', 'titulo', 'descripcion', 'estado', 'clase', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
     }
 
     private function estadoGeneral(AvancePersona $avance, array $sesion)
@@ -238,8 +240,26 @@ class DashboardController extends Controller
     {
         return [
             'texto' => $this->etiquetaEstado($estado),
-            'clase' => $estado,
+            'clase' => $this->claseEstado($estado),
         ];
+    }
+
+    /**
+     * El papel del color de cada etapa, no su nombre interno: la vista pinta
+     * .estado--exito y .paso--exito, y quien lea esto sabe de qué color sale.
+     * Mismo patrón que ConvocatoriaController.
+     */
+    private function claseEstado($estado)
+    {
+        $clases = [
+            'completed' => 'exito',
+            'pending' => 'neutro',
+            'review' => 'revision',
+            'in-progress' => 'info',
+            'rejected' => 'peligro',
+        ];
+
+        return isset($clases[$estado]) ? $clases[$estado] : 'neutro';
     }
 
     private function etiquetaEstado($estado)

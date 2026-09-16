@@ -1,5 +1,6 @@
-/* Dashboard y estados del proceso de certificación de la persona. */
-/* Valores tomados del Figma "Página principal - Mi proceso" (nodos 1358:250 y 1370:763). */
+/* Dashboard de la persona: las siete etapas del trámite como pasos.
+   Composición del Figma «Página principal - Mi proceso» (nodos 1358:250 y
+   1370:763); el círculo, el chip de estado y el botón son los compartidos. */
 
 .persona-dashboard {
     min-height: 720px;
@@ -29,109 +30,58 @@
 
 .persona-dashboard__header p {
     margin: 0;
-    color: #6b6b66;
-}
-
-.dashboard-status,
-.process-badge {
-    border-radius: 999px;
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    line-height: 1.2;
-    white-space: nowrap;
+    color: var(--text-muted);
 }
 
 .dashboard-status {
     margin-top: 0.35rem;
-    padding: 0.3125rem 0.75rem;
-}
-
-.dashboard-status--completed {
-    background: #e8e8e0;
-    color: #6b6b66;
-}
-
-.dashboard-status--pending {
-    background: #e8e8e0;
-    color: #6b6b66;
-}
-
-.dashboard-status--in-progress {
-    background: #e5edf7;
-    color: #185fa5;
-}
-
-.dashboard-status--rejected {
-    background: #f9d8d5;
-    color: #982b25;
 }
 
 .process-list {
-    display: grid;
     gap: 0.875rem;
 }
 
+/* El paso del dashboard es el único que trae descripción y acciones, así que
+   aquí se vuelve rejilla: número · texto · acciones. */
 .process-card {
-    padding: 1.375rem 1.5rem;
     display: grid;
     grid-template-columns: 2.375rem minmax(0, 1fr) auto;
-    align-items: center;
     gap: 1.125rem;
-    border: 2px solid transparent;
-    border-radius: 14px;
-    background: #f4f3ed;
+    padding: 1.375rem 1.5rem;
+    border-radius: var(--radio-caja);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.process-card .paso__numero {
+    width: 2.375rem;
+    height: 2.375rem;
+    font-size: var(--fs-ui);
+}
+
+/* El color del papel tiñe la tarjeta entera: es lo que se ve de un vistazo al
+   entrar, antes de leer ninguna etiqueta. */
+.process-card.paso--exito {
+    background: var(--exito-fondo);
+}
+
+.process-card.paso--info {
+    border-color: var(--unam-blue);
+    background: var(--info-fondo);
+}
+
+.process-card.paso--revision {
+    border-color: var(--revision-texto);
+    background: var(--revision-fondo);
+}
+
+.process-card.paso--peligro {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
 }
 
 .process-card--interactive:hover {
     box-shadow: 0 0.55rem 1.35rem rgba(18, 40, 66, 0.09);
     transform: translateY(-1px);
-}
-
-.process-card--completed {
-    background: #e8f5ed;
-}
-
-.process-card--pending {
-    background: #f4f3ed;
-}
-
-.process-card--in-progress {
-    border-color: #16263f;
-    background: #e5edf7;
-}
-
-.process-card--rejected {
-    border-color: #b74c45;
-    background: #fff0ee;
-}
-
-.process-card__number {
-    width: 2.375rem;
-    height: 2.375rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #dbdbd4;
-    color: #6b6b66;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-}
-
-.process-card--completed .process-card__number {
-    background: #0f6e56;
-    color: #ffffff;
-}
-
-.process-card--in-progress .process-card__number {
-    background: #16263f;
-    color: #ffffff;
-}
-
-.process-card--rejected .process-card__number {
-    background: #a53630;
-    color: #ffffff;
 }
 
 .process-card__content {
@@ -146,7 +96,7 @@
 
 .process-card__content p {
     margin: 0;
-    color: #6b6b66;
+    color: var(--text-muted);
     font-size: var(--fs-auxiliar);
 }
 
@@ -155,66 +105,6 @@
     align-items: center;
     justify-content: flex-end;
     gap: 0.9rem;
-}
-
-.process-badge {
-    padding: 0.3125rem 0.75rem;
-    background: #e8e8e0;
-    color: #6b6b66;
-}
-
-.process-badge--completed {
-    background: #d6edde;
-    color: #0f6e56;
-}
-
-.process-badge--pending {
-    background: #e8e8e0;
-    color: #6b6b66;
-}
-
-.process-badge--in-progress {
-    background: #d4e0f7;
-    color: #185fa5;
-}
-
-.process-badge--rejected {
-    background: #f7d3cf;
-    color: #982b25;
-}
-
-.process-button {
-    min-width: 6.1rem;
-    padding: 0.625rem 1.125rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #16263f;
-    border-radius: 8px;
-    background: #16263f;
-    color: #ffffff;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-decoration: none;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.process-button:hover,
-.process-button:focus-visible {
-    border-color: #0d1727;
-    background: #0d1727;
-    color: #ffffff;
-    transform: translateY(-1px);
-}
-
-.process-button--demo {
-    cursor: default;
-}
-
-.process-button--demo:hover {
-    border-color: #16263f;
-    background: #16263f;
-    transform: none;
 }
 
 @media (max-width: 767.98px) {
@@ -258,31 +148,4 @@
         padding-left: 3.25rem;
         gap: 0.65rem;
     }
-
-    .process-badge {
-        font-size: var(--fs-micro);
-    }
-}
-
-/* El botón de consulta pesa menos que el de la etapa activa. */
-.process-button--ver {
-    background: transparent;
-    border: 1px solid #112f4b;
-    color: #112f4b;
-}
-
-.process-button--ver:hover,
-.process-button--ver:focus-visible {
-    background: #eef2f7;
-    color: #112f4b;
-}
-/* Etapa entregada, en manos del equipo administrativo. */
-.process-card--review {
-    background: #fffbeb;
-    border-color: #b38612;
-}
-
-.process-badge--review {
-    background: #fef3c7;
-    color: #92400e;
 }
