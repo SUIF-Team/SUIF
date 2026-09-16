@@ -723,6 +723,14 @@ textarea.control {
     background: #cbd5e1;
 }
 
+/* En pantalla angosta el envoltorio ya captura el gesto horizontal; anidarle
+   tambien el vertical atrapa el desplazamiento de la pagina. */
+@media (max-width: 500px) {
+    .tabla-desplazable {
+        max-height: none;
+    }
+}
+
 .filtros {
     display: flex;
     flex-wrap: wrap;

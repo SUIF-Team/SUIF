@@ -1,9 +1,9 @@
+/* Revisión del pago: comprobante, datos del CFDI, resolución y formato.
+   Se apoya en admin-preregistro.css —el marco del expediente— y en los
+   componentes compartidos. */
+
 .admin-pago-detalle-tarjeta {
     min-width: 0;
-}
-
-.admin-pago-progreso {
-    overflow: visible;
 }
 
 .admin-pago-comprobante {
@@ -14,7 +14,7 @@
     justify-content: space-between;
     gap: 1rem;
     border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
+    border-radius: var(--radio-control);
     background: #fcfbf9;
 }
 
@@ -34,54 +34,11 @@
     font-size: var(--fs-auxiliar);
 }
 
-.admin-pago-enlace-comprobante,
-.admin-pago-acciones .admin-preregistro-boton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-}
-
 .admin-pago-enlace-comprobante {
     flex: 0 0 auto;
-    color: var(--text-dark);
 }
 
 .admin-pago-datos .admin-preregistro-dato dd {
-    overflow-wrap: anywhere;
-}
-
-.admin-pago-archivo-no-disponible,
-.admin-pago-motivo {
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: #fcfbf9;
-}
-
-.admin-pago-archivo-no-disponible {
-    padding: 0.5rem 0.75rem;
-    color: var(--text-muted);
-    font-size: var(--fs-auxiliar);
-    font-weight: 600;
-}
-
-.admin-pago-motivo {
-    margin-top: 1.5rem;
-    padding: 1rem;
-}
-
-.admin-pago-motivo h3,
-.admin-pago-motivo p {
-    margin: 0;
-}
-
-.admin-pago-motivo h3 {
-    color: #a53630;
-}
-
-.admin-pago-motivo p {
-    margin-top: 0.4rem;
-    color: var(--text-dark);
     overflow-wrap: anywhere;
 }
 
@@ -95,39 +52,16 @@
     gap: 0.75rem;
 }
 
-/* La tarjeta toma relleno y tamano de titulo de .admin-preregistro-detalle,
-   igual que la tarjeta principal de esta pantalla; aqui solo va el rojo del
-   rechazo y el formulario. */
+/* La tarjeta toma relleno y tamaño de título de .admin-preregistro-detalle;
+   aquí sólo va el rojo del rechazo y la forma del formulario. */
 .admin-pago-rechazo-panel h2 {
     margin-bottom: 0.75rem;
-    color: #a53630;
+    color: var(--peligro-texto);
 }
 
 .admin-pago-rechazo-panel form {
     display: grid;
     gap: 0.4rem;
-}
-
-.admin-pago-rechazo-panel textarea {
-    width: 100%;
-    padding: 0.6rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: var(--surface-white);
-    color: var(--text-dark);
-    resize: vertical;
-}
-
-.admin-pago-rechazo-panel textarea:focus {
-    border-color: #a53630;
-    outline: 3px solid rgba(165, 54, 48, 0.16);
-    outline-offset: 0;
-}
-
-.admin-pago-rechazo-panel p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: var(--fs-auxiliar);
 }
 
 .admin-pago-rechazo-panel-acciones {
@@ -138,21 +72,10 @@
     justify-content: flex-end;
 }
 
-/* El deshabilitado de la hoja base usa cursor: wait, que aqui enganaria: el
-   boton no espera nada, falta capturar el motivo. */
-.admin-pago-rechazo-panel .admin-preregistro-boton[disabled] {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
 @media (max-width: 767.98px) {
     .admin-pago-progreso {
         display: grid;
         grid-template-columns: 1fr;
-    }
-
-    .admin-pago-progreso .admin-preregistro-paso {
-        min-width: 0;
     }
 
     .admin-pago-comprobante {
@@ -170,8 +93,9 @@
     }
 
     .admin-pago-resolucion form,
-    .admin-pago-resolucion .admin-preregistro-boton,
-    .admin-pago-rechazo-panel-acciones .admin-preregistro-boton {
+    .admin-pago-resolucion .boton,
+    .admin-pago-rechazo-panel-acciones .boton,
+    .admin-pago-formato-formulario .boton {
         width: 100%;
     }
 }
@@ -191,9 +115,6 @@
 
 /* ─── Formato de pago de la DEC ──────────────────────────────────────── */
 
-/* La tarjeta toma relleno y título de .admin-preregistro-detalle; aquí sólo
-   va el selector de quién atendió y el botón, en una línea que se parte en
-   pantallas angostas. */
 .admin-pago-formato h2 {
     margin-bottom: 0.75rem;
 }
@@ -209,36 +130,4 @@
    selector deja el botón lejos de lo que confirma. */
 .admin-pago-formato-campo {
     flex: 0 1 26rem;
-    display: grid;
-    gap: 0.4rem;
-}
-
-.admin-pago-formato-campo label {
-    color: var(--text-dark);
-    font-weight: 600;
-}
-
-.admin-pago-formato-campo select {
-    width: 100%;
-    padding: 0.6rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: var(--surface-white);
-    color: var(--text-dark);
-}
-
-.admin-pago-formato-campo select:focus {
-    border-color: var(--unam-blue);
-    outline: 3px solid rgba(17, 47, 75, 0.16);
-    outline-offset: 0;
-}
-
-.admin-pago-formato-campo p {
-    margin: 0;
-}
-
-@media (max-width: 767.98px) {
-    .admin-pago-formato-formulario .admin-preregistro-boton {
-        width: 100%;
-    }
 }

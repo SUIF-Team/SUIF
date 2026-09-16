@@ -440,9 +440,9 @@ class ConsultaPagos
     private function claseEstadoDetalle(string $estado): string
     {
         return match ($estado) {
-            self::COMPLETADO => 'admin-preregistro-estado--completado',
-            self::DECLINADO => 'admin-preregistro-estado--rechazado',
-            default => 'admin-preregistro-estado--revision',
+            self::COMPLETADO => 'estado--exito',
+            self::DECLINADO => 'estado--peligro',
+            default => 'estado--revision',
         };
     }
 
@@ -461,10 +461,10 @@ class ConsultaPagos
     private function clasePaso(string $estado): string
     {
         return match ($estado) {
-            'Completado', 'Aprobado' => 'admin-preregistro-paso--completado',
-            'Rechazado' => 'admin-preregistro-paso--rechazado',
-            'En revisión' => 'admin-preregistro-paso--actual',
-            default => 'admin-preregistro-paso--pendiente',
+            'Completado', 'Aprobado' => 'paso--exito',
+            'Rechazado' => 'paso--peligro',
+            'En revisión' => 'paso--actual',
+            default => '',
         };
     }
 

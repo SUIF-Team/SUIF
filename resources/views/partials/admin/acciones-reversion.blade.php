@@ -19,10 +19,10 @@
     sección entera desaparece.
 --}}
 @if(!empty($acciones))
-    <section class="admin-preregistro-tarjeta admin-preregistro-reversion" aria-labelledby="acciones-reversion-titulo">
+    <section class="tarjeta admin-preregistro-reversion" aria-labelledby="acciones-reversion-titulo">
         <div class="admin-preregistro-reversion-texto">
             <h2 id="acciones-reversion-titulo">Corregir la resolución</h2>
-            <p class="admin-preregistro-reversion-ayuda">
+            <p class="ayuda">
                 El historial conserva cada resolución: reanudar agrega un movimiento nuevo, no borra el anterior.
             </p>
         </div>
@@ -30,7 +30,7 @@
         <div class="admin-preregistro-reversion-acciones">
             @foreach($acciones as $accion)
                 <button
-                    class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                    class="boton boton--peligro"
                     type="button"
                     data-abrir-reversion="{{ $accion['id'] }}">
                     {{ $accion['etiqueta'] }}
@@ -40,22 +40,24 @@
     </section>
 
     @foreach($acciones as $accion)
-        <div class="admin-reversion-modal" data-modal-reversion="{{ $accion['id'] }}" hidden>
-            <div class="admin-reversion-modal-fondo" data-cerrar-reversion></div>
+        <div class="dialogo" data-modal-reversion="{{ $accion['id'] }}" hidden>
+            <div class="dialogo__velo" data-cerrar-reversion></div>
             <section
-                class="admin-reversion-modal-card"
+                class="dialogo__tarjeta"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="{{ $accion['id'] }}-titulo"
                 aria-describedby="{{ $accion['id'] }}-descripcion">
-                <h2 id="{{ $accion['id'] }}-titulo">{{ $accion['titulo_modal'] }}</h2>
-                <p id="{{ $accion['id'] }}-descripcion">{{ $accion['texto_modal'] }}</p>
-                <form method="POST" action="{{ $accion['ruta'] }}" class="admin-reversion-modal-acciones">
+                <h2 class="dialogo__titulo" id="{{ $accion['id'] }}-titulo">{{ $accion['titulo_modal'] }}</h2>
+                <p class="dialogo__texto" id="{{ $accion['id'] }}-descripcion">{{ $accion['texto_modal'] }}</p>
+                <form method="POST" action="{{ $accion['ruta'] }}" class="dialogo__acciones">
                     @csrf
-                    <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" data-cerrar-reversion>
+                    <button class="boton boton--secundario" type="button" data-cerrar-reversion>
                         Cancelar
                     </button>
-                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit">
+                    {{-- Confirma del color de la acción que abrió el diálogo:
+                         reanudar deshace una resolución ya notificada. --}}
+                    <button class="boton boton--peligro-solido" type="submit">
                         Sí, continuar
                     </button>
                 </form>

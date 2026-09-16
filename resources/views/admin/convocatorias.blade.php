@@ -92,7 +92,7 @@
         </section>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de convocatorias">
-            <div class="admin-sedes-tabla-responsive admin-tabla-bandeja">
+            <div class="admin-sedes-tabla-responsive tabla-desplazable">
                 <table id="admin-convocatorias-tabla" class="admin-sedes-tabla admin-sedes-tabla--centrada">
                     <thead>
                         <tr>

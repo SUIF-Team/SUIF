@@ -14,7 +14,7 @@
     @error('motivo_rechazo') data-rechazo-abierto @enderror
     aria-labelledby="detalle-pago-titulo"
     v-cloak>
-    <header class="admin-preregistro-tarjeta admin-preregistro-perfil">
+    <header class="tarjeta admin-preregistro-perfil">
         <div class="admin-preregistro-usuario">
             <span class="admin-preregistro-avatar" aria-hidden="true">{{ $pago['iniciales'] }}</span>
             <div>
@@ -22,27 +22,27 @@
                 <p>CURP: {{ $pago['curp'] }} · {{ $pago['entidad_federativa'] }}</p>
             </div>
         </div>
-        <span class="admin-preregistro-estado {{ $pago['clase_estado_detalle'] }}" role="status">
+        <span class="estado {{ $pago['clase_estado_detalle'] }}" role="status">
             {{ $pago['estatus'] }}
         </span>
     </header>
 
-    <nav class="admin-preregistro-progreso admin-pago-progreso" aria-label="Progreso del trámite">
-        <div class="admin-preregistro-paso {{ $pago['clase_paso_preregistro'] }}">
-            <span class="admin-preregistro-paso-titulo">Pre-registro</span>
-            <span class="admin-preregistro-paso-estado">{{ $pago['estado_preregistro'] }}</span>
+    <nav class="pasos pasos--linea admin-preregistro-progreso admin-pago-progreso" aria-label="Progreso del trámite">
+        <div class="paso {{ $pago['clase_paso_preregistro'] }}">
+            <span class="paso__titulo">Pre-registro</span>
+            <span class="paso__estado">{{ $pago['estado_preregistro'] }}</span>
         </div>
-        <div class="admin-preregistro-paso {{ $pago['clase_paso_documentacion'] }}">
-            <span class="admin-preregistro-paso-titulo">Documentación</span>
-            <span class="admin-preregistro-paso-estado">{{ $pago['estado_documentacion'] }}</span>
+        <div class="paso {{ $pago['clase_paso_documentacion'] }}">
+            <span class="paso__titulo">Documentación</span>
+            <span class="paso__estado">{{ $pago['estado_documentacion'] }}</span>
         </div>
-        <div class="admin-preregistro-paso {{ $pago['clase_paso_pago'] }}" @if($pago['puede_revisarse']) aria-current="step" @endif>
-            <span class="admin-preregistro-paso-titulo">Pago</span>
-            <span class="admin-preregistro-paso-estado">{{ $pago['estatus'] }}</span>
+        <div class="paso {{ $pago['clase_paso_pago'] }}" @if($pago['puede_revisarse']) aria-current="step" @endif>
+            <span class="paso__titulo">Pago</span>
+            <span class="paso__estado">{{ $pago['estatus'] }}</span>
         </div>
     </nav>
 
-    <main class="admin-preregistro-tarjeta admin-preregistro-detalle admin-pago-detalle-tarjeta" aria-labelledby="datos-pago-titulo">
+    <main class="tarjeta admin-preregistro-detalle admin-pago-detalle-tarjeta" aria-labelledby="datos-pago-titulo">
         <h2 id="datos-pago-titulo">Pago / Referencia bancaria</h2>
 
         <section class="admin-pago-comprobante" aria-labelledby="comprobante-titulo">
@@ -52,14 +52,14 @@
             </div>
             @if($pago['comprobante_disponible'])
                 <a
-                    class="admin-preregistro-previsualizar admin-pago-enlace-comprobante"
+                    class="boton boton--secundario admin-pago-enlace-comprobante"
                     href="{{ route('admin.pagos.comprobante', ['id' => $pago['id']]) }}"
                     target="_blank"
                     rel="noopener noreferrer">
                     Abrir comprobante
                 </a>
             @else
-                <span class="admin-pago-archivo-no-disponible">Archivo no disponible</span>
+                <span class="estado estado--neutro">Archivo no disponible</span>
             @endif
         </section>
 
@@ -135,14 +135,14 @@
                 </dl>
             </section>
         @elseif($pago['comprobante_solicitado'] === 'CFDI')
-            <p class="admin-preregistro-solo-lectura">
+            <p class="atenuado">
                 La persona eligió CFDI y todavía no captura sus datos de facturación.
             </p>
         @endif
 
         @if($pago['motivo_rechazo'])
-            <section class="admin-pago-motivo" aria-labelledby="motivo-rechazo-titulo">
-                <h3 id="motivo-rechazo-titulo">Motivo del rechazo</h3>
+            <section class="aviso-motivo" aria-labelledby="motivo-rechazo-titulo">
+                <h3 class="aviso-motivo__titulo" id="motivo-rechazo-titulo">Motivo del rechazo</h3>
                 <p>{{ $pago['motivo_rechazo'] }}</p>
             </section>
         @endif
@@ -155,7 +155,7 @@
                 :mensaje="avisoError"
                 tipo="error"
                 :errores="erroresServidor"
-                clase="admin-preregistro-alerta admin-preregistro-alerta--error"></alertas>
+                clase="notificacion notificacion--error"></alertas>
 
             <section id="acciones-pago" class="admin-pago-resolucion" aria-label="Acciones del pago">
                 <p id="acciones-pago-ayuda" class="visually-hidden">
@@ -166,13 +166,13 @@
                     action="{{ route('admin.pagos.validar', ['id' => $pago['id']]) }}"
                     v-on:submit.prevent="enviar($event)">
                     @csrf
-                    <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="enviando" aria-describedby="acciones-pago-ayuda">
+                    <button class="boton boton--exito" type="submit" :disabled="enviando" aria-describedby="acciones-pago-ayuda">
                         @{{ enviando ? 'Validando…' : 'Validar pago' }}
                     </button>
                 </form>
 
                 <button
-                    class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                    class="boton boton--peligro"
                     type="button"
                     aria-describedby="acciones-pago-ayuda"
                     :aria-expanded="rechazoAbierto ? 'true' : 'false'"
@@ -182,7 +182,7 @@
                 </button>
             </section>
         @else
-            <p class="admin-preregistro-solo-lectura">
+            <p class="atenuado">
                 {{ $pago['mensaje_revision_no_disponible'] ?: 'Este pago se muestra en modo de sólo lectura.' }}
             </p>
         @endif
@@ -193,7 +193,7 @@
     @if($pago['puede_revisarse'])
         <section
             id="panel-rechazo"
-            class="admin-preregistro-tarjeta admin-preregistro-detalle admin-pago-rechazo-panel"
+            class="tarjeta admin-preregistro-detalle admin-pago-rechazo-panel"
             v-if="rechazoAbierto"
             aria-labelledby="panel-rechazo-titulo">
             <h2 id="panel-rechazo-titulo">Motivo del rechazo</h2>
@@ -205,6 +205,7 @@
                 {{-- El valor lo escribe Blade con old(); admin-pago-detalle.js lo
                      lee del DOM antes de montar para sembrar el v-model. --}}
                 <textarea
+                    class="control"
                     id="motivo-rechazo"
                     name="motivo_rechazo"
                     rows="3"
@@ -213,16 +214,16 @@
                     ref="motivo"
                     v-model="motivo"
                     aria-describedby="motivo-rechazo-ayuda">{{ old('motivo_rechazo') }}</textarea>
-                <p id="motivo-rechazo-ayuda">Este mensaje se mostrará a la persona para que pueda subsanar su comprobante.</p>
+                <p id="motivo-rechazo-ayuda" class="ayuda">Este mensaje se mostrará a la persona para que pueda subsanar su comprobante.</p>
                 @error('motivo_rechazo')
-                    <p class="admin-preregistro-mensaje-validacion" role="alert">{{ $message }}</p>
+                    <p class="campo__error" role="alert">{{ $message }}</p>
                 @enderror
                 <div class="admin-pago-rechazo-panel-acciones">
-                    <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" v-on:click="cerrarRechazo">
+                    <button class="boton boton--secundario" type="button" v-on:click="cerrarRechazo">
                         Cancelar
                     </button>
                     <button
-                        class="admin-preregistro-boton admin-preregistro-boton--rechazar"
+                        class="boton boton--peligro"
                         type="submit"
                         :disabled="!motivoValido">
                         Confirmar rechazo

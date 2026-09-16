@@ -29,7 +29,7 @@
         </header>
 
         <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de responsables">
-            <div class="admin-sedes-tabla-responsive admin-tabla-bandeja">
+            <div class="admin-sedes-tabla-responsive tabla-desplazable">
                 <table class="admin-sedes-tabla admin-sedes-tabla--centrada">
                     <thead>
                         <tr>

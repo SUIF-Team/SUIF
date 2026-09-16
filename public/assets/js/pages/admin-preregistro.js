@@ -74,14 +74,16 @@
             },
             claseEstadoGeneral: function () {
                 if (this.estados.general === 'Aprobada') {
-                    return 'admin-preregistro-estado--completado';
+                    return 'estado--exito';
                 }
 
-                if (this.estados.general === 'Rechazada') {
-                    return 'admin-preregistro-estado--rechazado';
+                /* Cancelada cae aquí y no en revisión: la bandeja ya la pinta
+                   roja, y el expediente la mostraba ámbar. */
+                if (this.estados.general === 'Rechazada' || this.estados.general === 'Cancelada') {
+                    return 'estado--peligro';
                 }
 
-                return 'admin-preregistro-estado--revision';
+                return 'estado--revision';
             },
             pasoActual: function () {
                 if (this.estados.preregistro === 'En revisión') {
@@ -169,18 +171,18 @@
                 var estado = this.estados[paso];
 
                 if (estado === 'Completado') {
-                    return 'admin-preregistro-paso--completado';
+                    return 'paso--exito';
                 }
 
                 if (estado === 'En revisión') {
-                    return 'admin-preregistro-paso--actual';
+                    return 'paso--actual';
                 }
 
                 if (estado === 'Rechazado') {
-                    return 'admin-preregistro-paso--rechazado';
+                    return 'paso--peligro';
                 }
 
-                return 'admin-preregistro-paso--pendiente';
+                return '';
             },
             estadoDocumento: function (id) {
                 return this.estados_documentos[id] || null;
@@ -199,11 +201,11 @@
             },
             claseEstadoDocumento: function (estado) {
                 if (estado === 'Aprobado') {
-                    return 'admin-preregistro-documento-resuelto--aprobado';
+                    return 'estado--exito';
                 }
 
                 if (estado === 'Rechazado') {
-                    return 'admin-preregistro-documento-resuelto--rechazado';
+                    return 'estado--peligro';
                 }
 
                 return '';
@@ -240,7 +242,7 @@
             abrirDocumento: function (documento, evento) {
                 this.activadorDocumento = evento.currentTarget;
                 this.documentoPrevisualizado = documento;
-                document.body.classList.add('admin-preregistro-modal-abierto');
+                document.body.classList.add('dialogo-abierto');
 
                 this.$nextTick(function () {
                     this.$refs.botonCerrarVisor.focus();
@@ -251,7 +253,7 @@
 
                 this.documentoPrevisualizado = null;
                 this.activadorDocumento = null;
-                document.body.classList.remove('admin-preregistro-modal-abierto');
+                document.body.classList.remove('dialogo-abierto');
 
                 this.$nextTick(function () {
                     if (activador) {

@@ -141,7 +141,7 @@
             abrirRestaurar: function (persona, evento) {
                 this.persona_seleccionada = persona;
                 this.foco_restaurar = evento ? evento.currentTarget : null;
-                document.body.classList.add('admin-reversion-modal-abierto');
+                document.body.classList.add('dialogo-abierto');
 
                 this.$nextTick(function () {
                     if (this.$refs.cancelar_restaurar) {
@@ -174,7 +174,7 @@
 
             cerrarRestaurar: function () {
                 this.persona_seleccionada = null;
-                document.body.classList.remove('admin-reversion-modal-abierto');
+                document.body.classList.remove('dialogo-abierto');
 
                 if (this.foco_restaurar) {
                     this.foco_restaurar.focus();

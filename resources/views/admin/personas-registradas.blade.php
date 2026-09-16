@@ -81,29 +81,29 @@
 
         {{-- Modal único de confirmación controlado por Vue: las filas se
              re-renderizan al filtrar, así que el patrón de reversión en JS
-             llano perdería sus escuchadores. Los estilos vienen de
-             admin-preregistro.css, ya enlazado en esta vista. --}}
+             llano perdería sus escuchadores. Los estilos son los del
+             diálogo compartido, que cargan los tres layouts. --}}
         @can('gestionar-usuarios')
-            <div class="admin-reversion-modal" v-if="persona_seleccionada" v-on:keydown.esc="cerrarRestaurar">
-                <div class="admin-reversion-modal-fondo" v-on:click="cerrarRestaurar"></div>
+            <div class="dialogo" v-if="persona_seleccionada" v-on:keydown.esc="cerrarRestaurar">
+                <div class="dialogo__velo" v-on:click="cerrarRestaurar"></div>
                 <section
-                    class="admin-reversion-modal-card"
+                    class="dialogo__tarjeta"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="restaurar-clave-titulo"
                     aria-describedby="restaurar-clave-descripcion">
-                    <h2 id="restaurar-clave-titulo">¿Restaurar la clave de acceso?</h2>
-                    <p id="restaurar-clave-descripcion">Se generará una clave nueva para @{{ persona_seleccionada.nombre_completo }} y se enviará a su correo principal. La clave anterior dejará de funcionar.</p>
+                    <h2 class="dialogo__titulo" id="restaurar-clave-titulo">¿Restaurar la clave de acceso?</h2>
+                    <p class="dialogo__texto" id="restaurar-clave-descripcion">Se generará una clave nueva para @{{ persona_seleccionada.nombre_completo }} y se enviará a su correo principal. La clave anterior dejará de funcionar.</p>
                     <form
                         method="POST"
                         :action="persona_seleccionada.ruta_restaurar_clave"
-                        class="admin-reversion-modal-acciones"
+                        class="dialogo__acciones"
                         v-on:submit.prevent="restaurar($event)">
                         @csrf
-                        <button class="admin-preregistro-boton admin-preregistro-boton--neutral" type="button" ref="cancelar_restaurar" :disabled="restaurando" v-on:click="cerrarRestaurar">
+                        <button class="boton boton--secundario" type="button" ref="cancelar_restaurar" :disabled="restaurando" v-on:click="cerrarRestaurar">
                             Cancelar
                         </button>
-                        <button class="admin-preregistro-boton admin-preregistro-boton--aceptar" type="submit" :disabled="restaurando">
+                        <button class="boton boton--exito" type="submit" :disabled="restaurando">
                             @{{ restaurando ? 'Restaurando…' : 'Sí, restaurar' }}
                         </button>
                     </form>

@@ -35,15 +35,15 @@ class NotificacionResultado
                     ? 'Rechazado'
                     : ($es_aprobado ? 'Aprobado' : 'En revisión')),
             'clase_estado' => $es_rechazo
-                ? 'admin-preregistro-estado--rechazado'
+                ? 'estado--peligro'
                 : ($es_aprobado
-                    ? 'admin-preregistro-estado--completado'
-                    : 'admin-preregistro-estado--revision'),
+                    ? 'estado--exito'
+                    : 'estado--revision'),
             'clase_mensaje' => $es_rechazo
-                ? 'admin-preregistro-paso--rechazado'
+                ? 'paso--peligro'
                 : ($es_aprobado
-                    ? 'admin-preregistro-paso--completado'
-                    : 'admin-preregistro-paso--actual'),
+                    ? 'paso--exito'
+                    : 'paso--actual'),
             'pasos' => [
                 $this->paso(
                     'Pre-registro',
@@ -85,18 +85,18 @@ class NotificacionResultado
             'titulo' => $es_aprobado ? 'PAGO APROBADO' : 'PAGO RECHAZADO',
             'estado_general' => $es_aprobado ? 'Aprobado' : 'Rechazado',
             'clase_estado' => $es_aprobado
-                ? 'admin-preregistro-estado--completado'
-                : 'admin-preregistro-estado--rechazado',
+                ? 'estado--exito'
+                : 'estado--peligro',
             'clase_mensaje' => $es_aprobado
-                ? 'admin-preregistro-paso--completado'
-                : 'admin-preregistro-paso--rechazado',
+                ? 'paso--exito'
+                : 'paso--peligro',
             'pasos' => [
-                $this->paso('Pre-registro', 'Completado', 'admin-preregistro-paso--completado'),
-                $this->paso('Documentación', 'Completado', 'admin-preregistro-paso--completado'),
+                $this->paso('Pre-registro', 'Completado', 'paso--exito'),
+                $this->paso('Documentación', 'Completado', 'paso--exito'),
                 $this->paso(
                     'Pago',
                     $es_aprobado ? 'Aprobado' : 'Rechazado',
-                    $es_aprobado ? 'admin-preregistro-paso--completado' : 'admin-preregistro-paso--rechazado',
+                    $es_aprobado ? 'paso--exito' : 'paso--peligro',
                     true
                 ),
             ],
@@ -210,10 +210,10 @@ class NotificacionResultado
     private function clasePaso(string $estado): string
     {
         return match ($estado) {
-            'Completado' => 'admin-preregistro-paso--completado',
-            'En revisión' => 'admin-preregistro-paso--actual',
-            'Rechazado', 'Cancelado' => 'admin-preregistro-paso--rechazado',
-            default => 'admin-preregistro-paso--pendiente',
+            'Completado' => 'paso--exito',
+            'En revisión' => 'paso--actual',
+            'Rechazado', 'Cancelado' => 'paso--peligro',
+            default => '',
         };
     }
 }

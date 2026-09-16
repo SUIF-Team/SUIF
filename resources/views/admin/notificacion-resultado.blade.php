@@ -24,7 +24,7 @@
     data-vista='@json($datos_vista)'
     aria-labelledby="resultado-notificacion-titulo"
     v-cloak>
-    <header class="admin-preregistro-tarjeta admin-preregistro-perfil">
+    <header class="tarjeta admin-preregistro-perfil">
         <div class="admin-preregistro-usuario">
             <span class="admin-preregistro-avatar" aria-hidden="true">{{ $persona['iniciales'] }}</span>
             <div>
@@ -32,22 +32,22 @@
                 <p>CURP: {{ $persona['curp'] }} · {{ $persona['entidad_federativa'] }}</p>
             </div>
         </div>
-        <span class="admin-preregistro-estado {{ $notificacion['clase_estado'] }}" role="status">
+        <span class="estado {{ $notificacion['clase_estado'] }}" role="status">
             {{ $notificacion['estado_general'] }}
         </span>
     </header>
 
-    <nav class="admin-preregistro-progreso {{ $notificacion['clase_progreso'] }}" aria-label="Progreso del trámite">
+    <nav class="pasos pasos--linea admin-preregistro-progreso {{ $notificacion['clase_progreso'] }}" aria-label="Progreso del trámite">
         @foreach ($notificacion['pasos'] as $paso)
-            <div class="admin-preregistro-paso {{ $paso['clase'] }}" @if ($paso['actual']) aria-current="step" @endif>
-                <span class="admin-preregistro-paso-titulo">{{ $paso['titulo'] }}</span>
-                <span class="admin-preregistro-paso-estado">{{ $paso['estado'] }}</span>
+            <div class="paso {{ $paso['clase'] }}" @if ($paso['actual']) aria-current="step" @endif>
+                <span class="paso__titulo">{{ $paso['titulo'] }}</span>
+                <span class="paso__estado">{{ $paso['estado'] }}</span>
             </div>
         @endforeach
     </nav>
 
-    <main class="admin-preregistro-tarjeta admin-preregistro-resultado-principal">
-        <div class="admin-preregistro-paso admin-preregistro-resultado-mensaje {{ $notificacion['clase_mensaje'] }}" role="status" aria-live="polite">
+    <main class="tarjeta admin-preregistro-resultado-principal">
+        <div class="paso admin-preregistro-resultado-mensaje {{ $notificacion['clase_mensaje'] }}" role="status" aria-live="polite">
             <h2>{{ $notificacion['titulo'] }}</h2>
         </div>
     </main>

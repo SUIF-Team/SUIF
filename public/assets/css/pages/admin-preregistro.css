@@ -1,6 +1,7 @@
-[v-cloak] {
-    display: none;
-}
+/* Expediente del panel: perfil, progreso, datos, documentos y resolución.
+   La tarjeta, el chip de estado, los pasos, los botones, los campos y el
+   diálogo son los compartidos de partials/componentes.css; aquí queda la
+   composición de estas pantallas. */
 
 /* Estas pantallas no llevan contenedor interno: las tarjetas cuelgan directas de
    la sección, que además es el punto de montaje de Vue. La sección hace de marco
@@ -10,6 +11,9 @@
     width: min(100%, calc(var(--admin-ancho) + 2rem));
     margin: 0 auto;
     padding: clamp(2rem, 5vw, 4rem) 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .admin-preregistro-encabezado {
@@ -47,19 +51,14 @@
 
 .admin-preregistro-sobretitulo {
     margin-bottom: 0.35rem;
-    color: var(--unam-gold) !important;
+    color: var(--unam-gold-dark);
     font-size: var(--fs-micro);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
-.admin-preregistro-tarjeta {
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: var(--surface-white);
-    box-shadow: 0 1px 3px rgba(17, 47, 75, 0.08);
-}
+/* ─── Bandeja de personas ────────────────────────────────────────────── */
 
 .admin-preregistro-lista {
     display: grid;
@@ -123,61 +122,7 @@
     font-weight: 600;
 }
 
-.admin-preregistro-estado {
-    padding: 0.25rem 0.75rem;
-    display: inline-block;
-    border-radius: 0.25rem;
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.admin-preregistro-estado--revision {
-    background: #fdf6ec;
-    color: #8b6717;
-}
-
-.admin-preregistro-estado--completado {
-    background: #eafaf1;
-    color: #207a45;
-}
-
-.admin-preregistro-estado--rechazado {
-    background: #fde8e8;
-    color: #a53630;
-}
-
-.admin-preregistro-ver,
-.admin-preregistro-previsualizar,
-.admin-preregistro-icono,
-.admin-preregistro-boton {
-    border-radius: 0.25rem;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.admin-preregistro-ver {
-    padding: 0.5rem 0.85rem;
-    border: 1px solid var(--unam-blue);
-    background: var(--unam-blue);
-    color: #ffffff;
-    text-decoration: none;
-}
-
-.admin-preregistro-ver:hover,
-.admin-preregistro-ver:focus-visible {
-    border-color: var(--unam-blue-dark);
-    background: var(--unam-blue-dark);
-    color: #ffffff;
-}
-
-.admin-preregistro-flujo {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
+/* ─── Perfil y progreso ──────────────────────────────────────────────── */
 
 .admin-preregistro-perfil {
     padding: 1.5rem;
@@ -197,71 +142,15 @@
     font-size: var(--fs-auxiliar);
 }
 
-.admin-preregistro-progreso {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
+/* Los pasos del expediente son dos o tres y llevan título largo, así que se
+   reparten el ancho en vez de medir los 7 rem del seguimiento del pago. */
+.admin-preregistro-progreso .paso {
+    width: auto;
+    flex: 1 1 0;
+    min-width: min(80%, 12rem);
 }
 
-.admin-preregistro-paso {
-    min-width: min(80%, 16rem);
-    flex: 1 0 0;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    text-align: center;
-}
-
-.admin-preregistro-paso-titulo {
-    color: var(--text-dark);
-    font-size: var(--fs-ui);
-    font-weight: 600;
-}
-
-.admin-preregistro-paso-estado {
-    font-size: var(--fs-micro);
-    font-weight: 600;
-}
-
-.admin-preregistro-paso--completado {
-    border-color: transparent;
-    background: #eafaf1;
-}
-
-.admin-preregistro-paso--completado .admin-preregistro-paso-estado {
-    color: #207a45;
-}
-
-.admin-preregistro-paso--actual {
-    border: 2px solid var(--unam-gold);
-    background: var(--surface-white);
-}
-
-.admin-preregistro-paso--actual .admin-preregistro-paso-estado {
-    color: #8b6717;
-}
-
-.admin-preregistro-paso--rechazado {
-    border-color: #f3b0ae;
-    background: #fde8e8;
-}
-
-.admin-preregistro-paso--rechazado .admin-preregistro-paso-estado {
-    color: #a53630;
-}
-
-.admin-preregistro-paso--pendiente {
-    border-color: transparent;
-    background: #f4f4f4;
-}
-
-.admin-preregistro-paso--pendiente .admin-preregistro-paso-estado {
-    color: #a53630;
-}
+/* ─── Datos ──────────────────────────────────────────────────────────── */
 
 .admin-preregistro-detalle,
 .admin-preregistro-documentos,
@@ -310,55 +199,6 @@
     gap: 0.75rem;
 }
 
-.admin-preregistro-solo-lectura {
-    margin: 1.25rem 0 0;
-    color: var(--text-muted);
-}
-
-.admin-preregistro-boton {
-    padding: 0.625rem 1rem;
-    border: 1px solid currentColor;
-    background: var(--surface-white);
-    text-decoration: none;
-}
-
-.admin-preregistro-boton--aceptar {
-    border-color: #207a45;
-    color: #207a45;
-}
-
-.admin-preregistro-boton--aceptar:hover,
-.admin-preregistro-boton--aceptar:focus-visible {
-    background: #f5fcf7;
-}
-
-.admin-preregistro-boton--rechazar {
-    border-color: #a53630;
-    color: #a53630;
-}
-
-.admin-preregistro-boton--rechazar:hover,
-.admin-preregistro-boton--rechazar:focus-visible {
-    background: #fdf5f5;
-}
-
-/* Para el "Cancelar" que acompaña a una decisión: sin el borde a color no
-   compite con el botón que sí resuelve. */
-.admin-preregistro-boton--neutral {
-    border-color: var(--border-light);
-    color: var(--text-muted);
-}
-
-.admin-preregistro-boton--neutral:hover,
-.admin-preregistro-boton--neutral:focus-visible {
-    background: #f6f6f6;
-}
-
-.admin-preregistro-boton:disabled {
-    opacity: 0.65;
-    cursor: wait;
-}
-
 .admin-preregistro-contenido-principal {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
@@ -370,6 +210,8 @@
     display: grid;
     gap: 1.5rem;
 }
+
+/* ─── Documentos ─────────────────────────────────────────────────────── */
 
 .admin-preregistro-lista-documentos {
     margin: 0;
@@ -387,35 +229,10 @@
     border-bottom: 1px solid var(--border-light);
 }
 
-/* Estado de un documento resuelto en una revisión anterior. */
-.admin-preregistro-documento-resuelto {
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    background: var(--border-light);
-    color: var(--text-muted);
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.admin-preregistro-documento-resuelto--aprobado {
-    background: #d8f0e0;
-    color: #0f6e56;
-}
-
-.admin-preregistro-documento-resuelto--rechazado {
-    background: #fbdcdc;
-    color: #a32d2d;
-}
-
 /* El motivo del rechazo se captura por documento, en su propio renglón. */
 .admin-preregistro-documento-comentario {
     flex: 1 0 100%;
     margin-top: 0;
-}
-
-.admin-preregistro-documento-comentario textarea {
-    min-height: 4.25rem;
 }
 
 .admin-preregistro-documento:first-child {
@@ -432,71 +249,51 @@
     color: var(--text-dark);
 }
 
-.admin-preregistro-documento-meta,
-.admin-preregistro-documentos-vacio {
+.admin-preregistro-documento-meta {
     margin: 0.25rem 0 0;
     color: var(--text-muted);
     font-size: var(--fs-auxiliar);
 }
 
-.admin-preregistro-icono {
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
-    border: 1px solid var(--border-light);
-    background: var(--surface-white);
-}
-
+/* Aprobar y rechazar son dos botones que se marcan, no dos acciones que se
+   disparan: el dictamen no se envía hasta «Guardar». */
 .admin-preregistro-icono--aprobar:hover {
-    border-color: #207a45;
-    background: #f5fcf7;
-    color: #207a45;
+    border-color: var(--exito-solido);
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
 }
 
 .admin-preregistro-icono--rechazar:hover {
-    border-color: #a53630;
-    background: #fdf5f5;
-    color: #a53630;
+    border-color: var(--peligro-solido);
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
 }
 
-.admin-preregistro-icono--aprobar.esta-seleccionado {
-    border-color: #207a45;
-    background: #207a45;
-    color: #ffffff;
+.admin-preregistro-icono--aprobar.esta-seleccionado,
+.admin-preregistro-icono--aprobar.esta-seleccionado:hover {
+    border-color: var(--exito-solido);
+    background: var(--exito-solido);
+    color: var(--surface-white);
 }
 
-.admin-preregistro-icono--rechazar.esta-seleccionado {
-    border-color: #a53630;
-    background: #a53630;
-    color: #ffffff;
+.admin-preregistro-icono--rechazar.esta-seleccionado,
+.admin-preregistro-icono--rechazar.esta-seleccionado:hover {
+    border-color: var(--peligro-solido);
+    background: var(--peligro-solido);
+    color: var(--surface-white);
 }
 
-.admin-preregistro-previsualizar {
-    height: 2rem;
-    padding: 0 1rem;
-    border: 1px solid var(--border-light);
-    background: var(--surface-white);
-    color: var(--text-dark);
-}
-
-.admin-preregistro-previsualizar:hover,
-.admin-preregistro-previsualizar:focus-visible {
-    background: #f0f0f0;
-}
+/* ─── Visor del documento ────────────────────────────────────────────── */
 
 /* Por encima del navbar y del footer del sistema, que van en z-index 1030. */
 .admin-preregistro-modal {
     position: fixed;
-    z-index: 1050;
+    z-index: 1200;
     inset: 0;
     padding: 1rem;
     display: grid;
     place-items: center;
-    background: rgba(17, 47, 75, 0.65);
-}
-
-.admin-preregistro-modal-abierto {
-    overflow: hidden;
+    background: rgba(11, 26, 46, 0.58);
 }
 
 .admin-preregistro-modal-contenido {
@@ -506,9 +303,9 @@
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
-    border-radius: 0.5rem;
+    border-radius: var(--radio-caja);
     background: var(--surface-white);
-    box-shadow: 0 1rem 3rem rgba(17, 47, 75, 0.32);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
 .admin-preregistro-modal-encabezado {
@@ -536,26 +333,13 @@
     font-size: var(--fs-auxiliar);
 }
 
-.admin-preregistro-modal-cerrar {
-    padding: 0.45rem 0.7rem;
-    flex: 0 0 auto;
-    border: 1px solid var(--text-dark);
-    border-radius: 0.25rem;
-    background: var(--surface-white);
-    color: var(--text-dark);
-    cursor: pointer;
-}
-
-.admin-preregistro-modal-cerrar:hover,
-.admin-preregistro-modal-cerrar:focus-visible {
-    background: #f0f0f0;
-}
-
 .admin-preregistro-visor-pdf {
     width: 100%;
     height: 100%;
     border: 0;
 }
+
+/* ─── Acciones generales e interrupción ──────────────────────────────── */
 
 .admin-preregistro-acciones-generales {
     align-self: start;
@@ -566,15 +350,10 @@
     gap: 1rem;
 }
 
-.admin-preregistro-acciones-generales .admin-preregistro-boton {
+.admin-preregistro-acciones-generales .boton {
     width: 100%;
 }
 
-/* ─── Panel para interrumpir el trámite ──────────────────────────────── */
-
-/* Toma el grid, la etiqueta y el borde del textarea de
-   .admin-preregistro-campo-observacion; aquí sólo va su separación del
-   bloque de botones. */
 .admin-preregistro-interrupcion {
     padding-top: 1rem;
     border-top: 1px solid var(--border-light);
@@ -588,19 +367,6 @@
     margin-top: 0.25rem;
 }
 
-/* El deshabilitado de la hoja base usa cursor: wait, que aquí engañaría: el
-   botón no espera nada, falta capturar el motivo. */
-.admin-preregistro-interrupcion .admin-preregistro-boton[disabled] {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.admin-preregistro-mensaje-validacion {
-    margin: 1rem 0 0;
-    color: #a53630;
-    font-size: var(--fs-auxiliar);
-}
-
 .admin-preregistro-observaciones {
     padding: 1.25rem;
 }
@@ -611,100 +377,23 @@
 }
 
 .admin-preregistro-campo-observacion {
-    display: grid;
-    gap: 0.45rem;
     margin-top: 0.85rem;
-}
-
-.admin-preregistro-ayuda {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: var(--fs-auxiliar);
 }
 
 .admin-preregistro-campo-observacion:first-of-type {
     margin-top: 0;
 }
 
-.admin-preregistro-campo-observacion label {
-    color: #b3261e;
-}
-
-.admin-preregistro-campo-observacion input,
-.admin-preregistro-campo-observacion textarea {
-    width: 100%;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: #fcfbf9;
-    color: var(--text-dark);
-}
-
-.admin-preregistro-campo-observacion input {
-    min-height: 2.25rem;
-    padding: 0.5rem 0.65rem;
-}
-
-.admin-preregistro-campo-observacion textarea {
-    min-height: 5.75rem;
-    padding: 0.6rem;
-    resize: vertical;
-}
-
-.admin-preregistro-campo-observacion input:focus,
-.admin-preregistro-campo-observacion textarea:focus {
-    border-color: #b3261e;
-    outline: 3px solid rgba(179, 38, 30, 0.16);
-    outline-offset: 0;
-}
+/* ─── Barra de regreso ───────────────────────────────────────────────── */
 
 .admin-preregistro-barra-atras {
     padding: 1rem 1.5rem;
 }
 
-.admin-preregistro-enlace-atras {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-radius: 0.25rem;
-    color: var(--text-dark);
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.admin-preregistro-icono-atras {
-    width: 1.75rem;
-    height: 1.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #f0f0f0;
-    transition: background-color 0.2s ease;
-}
-
-.admin-preregistro-icono-atras svg {
-    width: 1.1rem;
-    height: 1.1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 2;
-}
-
-.admin-preregistro-enlace-atras:hover .admin-preregistro-icono-atras {
-    background: #e4e4e4;
-}
-
-.admin-preregistro-enlace-atras:focus-visible {
-    outline: 3px solid var(--unam-blue);
-    outline-offset: 0.25rem;
-}
+/* ─── Pantalla de resultado ──────────────────────────────────────────── */
 
 .admin-preregistro-resultado-flujo .admin-preregistro-progreso {
     display: grid;
-    overflow: visible;
     padding-bottom: 0;
 }
 
@@ -737,16 +426,42 @@
     text-align: center;
 }
 
-.admin-preregistro-resultado-mensaje.admin-preregistro-paso--completado h2 {
-    color: #207a45;
+.admin-preregistro-resultado-mensaje.paso--exito h2 {
+    color: var(--exito-texto);
 }
 
-.admin-preregistro-resultado-mensaje.admin-preregistro-paso--actual h2 {
-    color: #8b6717;
+.admin-preregistro-resultado-mensaje.paso--revision h2 {
+    color: var(--revision-texto);
 }
 
-.admin-preregistro-resultado-mensaje.admin-preregistro-paso--rechazado h2 {
-    color: #a53630;
+.admin-preregistro-resultado-mensaje.paso--peligro h2 {
+    color: var(--peligro-texto);
+}
+
+/* ─── Corregir la resolución ─────────────────────────────────────────── */
+
+/* El título pegado a su ayuda y los botones en la misma fila, para que el
+   bloque no se coma media pantalla. */
+.admin-preregistro-reversion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.admin-preregistro-reversion h2 {
+    margin-bottom: 0.25rem;
+}
+
+.admin-preregistro-reversion-texto {
+    flex: 1 1 22rem;
+}
+
+.admin-preregistro-reversion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 @media (max-width: 767.98px) {
@@ -762,7 +477,7 @@
         justify-content: space-between;
     }
 
-    .admin-preregistro-perfil .admin-preregistro-estado {
+    .admin-preregistro-perfil .estado {
         align-self: flex-start;
     }
 
@@ -784,7 +499,7 @@
         flex-direction: column;
     }
 
-    .admin-preregistro-boton {
+    .admin-preregistro-acciones .boton {
         width: 100%;
     }
 
@@ -801,157 +516,8 @@
     }
 }
 
-/* Acciones que revierten una resolución ya notificada (reanudar).
-   Viven aquí porque las cargan tanto la pantalla de resultado como el detalle
-   de pago; el modal de sedes no sirve, su hoja no se carga en ninguna. */
-/* La tarjeta toma relleno y tipografia de los grupos compartidos de arriba;
-   aqui solo va lo suyo: el titulo pegado a su ayuda y los botones en la misma
-   fila, para que el bloque no se coma media pantalla. */
-.admin-preregistro-reversion {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.admin-preregistro-reversion h2 {
-    margin-bottom: 0.25rem;
-}
-
-.admin-preregistro-reversion-texto {
-    flex: 1 1 22rem;
-}
-
-.admin-preregistro-reversion-ayuda {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: var(--fs-auxiliar);
-}
-
-.admin-preregistro-reversion-acciones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-.admin-reversion-modal[hidden] { display: none; }
-
-.admin-reversion-modal {
-    position: fixed;
-    z-index: 1200;
-    inset: 0;
-    padding: 1rem;
-    display: grid;
-    place-items: center;
-}
-
-.admin-reversion-modal-fondo {
-    position: absolute;
-    inset: 0;
-    background: rgba(11, 26, 46, 0.58);
-}
-
-.admin-reversion-modal-card {
-    position: relative;
-    width: min(100%, 31rem);
-    padding: 1.75rem;
-    border-radius: 0.75rem;
-    background: #fff;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-}
-
-.admin-reversion-modal-card h2 {
-    margin: 0 0 0.75rem;
-    font-size: var(--fs-subtitulo);
-}
-
-.admin-reversion-modal-card p {
-    margin: 0 0 1.5rem;
-    color: var(--text-muted);
-}
-
-.admin-reversion-modal-acciones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: flex-end;
-}
-
-.admin-reversion-modal-abierto { overflow: hidden; }
-
 @media (max-width: 640px) {
-    .admin-preregistro-reversion-acciones,
-    .admin-reversion-modal-acciones { flex-direction: column-reverse; }
-}
-
-/* Aviso de lo que el servidor rechaza en las pantallas de dictamen y de
-   revisión de pagos, ahora que resolver ya no recarga: el motivo tiene que
-   verse sin perder lo que el revisor llevaba escrito. */
-.admin-preregistro-alerta {
-    margin-bottom: 1.25rem;
-    padding: 13px 16px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.admin-preregistro-alerta--error {
-    background: #fff0f0;
-    color: #9b1717;
-}
-
-.admin-preregistro-alerta ul {
-    margin: 0.35rem 0 0;
-    padding-left: 1.15rem;
-}
-
-
-/* Bandeja: acota el alto de una tabla larga y deja su encabezado fijo. Se pone
-   en el envoltorio con overflow-x de cada familia de tabla, junto a su clase
-   propia. Vive aqui, y no en el CSS de una pantalla, porque la usan sedes y
-   referencias y son familias de tabla distintas.
-
-   Los valores son los de .admin-bandeja-preregistros-lista, que es la bandeja
-   que estandarizo el panel; aquella no puede reutilizarse tal cual porque no
-   es una tabla sino una rejilla de divs. */
-.admin-tabla-bandeja {
-    max-height: 28rem;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-}
-
-.admin-tabla-bandeja::-webkit-scrollbar {
-    width: 0.5rem;
-}
-
-.admin-tabla-bandeja::-webkit-scrollbar-track {
-    border-radius: 999px;
-    background: #f1f5f9;
-}
-
-.admin-tabla-bandeja::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: #cbd5e1;
-}
-
-/* El fondo opaco del th lo pone cada familia; aqui solo se fija arriba. Con
-   border-collapse: collapse el borde de una celda pegajosa pertenece a la
-   rejilla colapsada y se va con el scroll, por eso la linea se dibuja dentro
-   de la celda con un inset. El selector lleva dos clases a proposito: asi gana
-   al border-bottom de la familia sin depender del orden de carga. */
-.admin-tabla-bandeja thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    border-bottom: 0;
-    box-shadow: inset 0 -1px 0 var(--border-light);
-}
-
-/* Mismo corte que la bandeja de preregistros: el envoltorio ya captura el
-   gesto horizontal, y anidarle tambien el vertical atrapa el scroll de la
-   pagina. */
-@media (max-width: 500px) {
-    .admin-tabla-bandeja {
-        max-height: none;
+    .admin-preregistro-reversion-acciones {
+        flex-direction: column-reverse;
     }
 }

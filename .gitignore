@@ -84,3 +84,4 @@ public/index2.php
 # Documentos que suben las personas en tiempo de ejecución
 storage/app/preregistro/
 storage/framework/testing/
+storage/framework/lsp-*.php

@@ -19,13 +19,9 @@
             }
         },
         template: `
-            <footer class="admin-preregistro-tarjeta admin-preregistro-barra-atras">
-                <a class="admin-preregistro-enlace-atras" :href="destino" :aria-label="etiquetaAccesible || etiqueta">
-                    <span class="admin-preregistro-icono-atras" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <path d="M15 18l-6-6 6-6"></path>
-                        </svg>
-                    </span>
+            <footer class="tarjeta admin-preregistro-barra-atras">
+                <a class="boton boton--secundario" :href="destino" :aria-label="etiquetaAccesible || etiqueta">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                     <span>{{ etiqueta }}</span>
                 </a>
             </footer>
