@@ -178,7 +178,7 @@ class ConvocatoriaController extends Controller
             ],
             GestionConvocatorias::INTERRUMPIDA => [
                 'verbo' => 'Interrumpir',
-                'clase' => 'eliminar',
+                'clase' => 'peligro',
                 'aviso' => 'Dejará de admitir registro de inmediato. Se usa cuando la convocatoria se detiene antes de tiempo; quien ya se registró conserva su trámite.',
             ],
         ];

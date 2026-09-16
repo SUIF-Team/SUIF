@@ -12,7 +12,7 @@
     $direccionActual = old('direccion', $sede?->sede_direccion ?? '');
     $consultaMapa = $direccionActual !== '' ? $direccionActual : '19.324167,-99.184722';
 @endphp
-<section class="admin-sedes admin-sedes--formulario" data-admin-sede-formulario aria-labelledby="admin-sede-formulario-titulo">
+<section class="admin-sedes" data-admin-sede-formulario aria-labelledby="admin-sede-formulario-titulo">
     <div class="admin-sedes-contenedor">
         <header class="admin-sedes-encabezado">
             <div>
@@ -22,18 +22,21 @@
         </header>
 
         @if($errors->any())
-            <div class="admin-sedes-alerta" role="alert">
-                <p>Revisa la información capturada:</p>
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+            <div class="notificacion notificacion--error" role="alert">
+                <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                <div>
+                    <p>Revisa la información capturada:</p>
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
         <div class="admin-sedes-formulario-layout">
-            <aside class="admin-sedes-tarjeta admin-sedes-mapa">
+            <aside class="tarjeta tarjeta--amplia admin-sedes-mapa">
                 <h2>Mapa de referencia</h2>
                 <p>La vista se actualiza a partir de la dirección capturada.</p>
                 <div class="admin-sedes-mapa-marco">
@@ -46,7 +49,7 @@
                 </div>
             </aside>
 
-            <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" data-formulario-ajax>
+            <section class="tarjeta tarjeta--amplia admin-sedes-formulario-tarjeta" data-formulario-ajax>
                 <h2>Datos generales</h2>
                 {{-- data-formulario-ajax monta la app compartida de envío: el guardado
                      va por fetch y lo que el servidor rechace se dice aquí mismo,
@@ -57,7 +60,7 @@
                     :mensaje="avisoError"
                     tipo="error"
                     :errores="erroresServidor"
-                    clase="admin-sedes-alerta"></alertas>
+                    clase="notificacion notificacion--error"></alertas>
 
                 <form
                     method="POST"
@@ -69,9 +72,9 @@
                         @method('PUT')
                     @endif
 
-                    <div class="admin-sedes-campo admin-sedes-campo--completo">
-                        <label for="nombre">Nombre de sede *</label>
-                        <input
+                    <div class="campo admin-sedes-campo--completo">
+                        <label class="etiqueta" for="nombre">Nombre de sede *</label>
+                        <input class="control"
                             id="nombre"
                             name="nombre"
                             type="text"
@@ -81,9 +84,9 @@
                             placeholder="Ej. Sede Centro">
                     </div>
 
-                    <div class="admin-sedes-campo admin-sedes-campo--completo">
-                        <label for="direccion">Dirección completa *</label>
-                        <textarea
+                    <div class="campo admin-sedes-campo--completo">
+                        <label class="etiqueta" for="direccion">Dirección completa *</label>
+                        <textarea class="control"
                             id="direccion"
                             name="direccion"
                             maxlength="1000"
@@ -94,19 +97,19 @@
                     </div>
 
                     <div class="admin-sedes-formulario-grid">
-                        <div class="admin-sedes-campo">
-                            <label for="cupo">Aforo máximo por aplicación *</label>
-                            <input id="cupo" name="cupo" type="number" min="1" max="2147483647" required value="{{ old('cupo', $sede?->sede_cupo ?? '') }}" aria-describedby="cupo-ayuda">
-                            <p id="cupo-ayuda" class="admin-sedes-ayuda">Lugares disponibles en cada aplicación.</p>
+                        <div class="campo">
+                            <label class="etiqueta" for="cupo">Aforo máximo por aplicación *</label>
+                            <input class="control" id="cupo" name="cupo" type="number" min="1" max="2147483647" required value="{{ old('cupo', $sede?->sede_cupo ?? '') }}" aria-describedby="cupo-ayuda">
+                            <p id="cupo-ayuda" class="ayuda">Lugares disponibles en cada aplicación.</p>
                         </div>
                     </div>
 
                     <div class="admin-sedes-formulario-acciones">
                         @if($modoEdicion)
-                            <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="button" data-abrir-eliminacion>Eliminar</button>
+                            <button class="boton boton--peligro" type="button" data-abrir-eliminacion>Eliminar</button>
                         @endif
-                        <a class="admin-sedes-boton admin-sedes-boton--secundario" href="{{ route('admin.sedes.index') }}">Cancelar</a>
-                        <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit">Guardar</button>
+                        <a class="boton boton--secundario" href="{{ route('admin.sedes.index') }}">Cancelar</a>
+                        <button class="boton boton--primario" type="submit">Guardar</button>
                     </div>
                 </form>
             </section>
@@ -120,16 +123,16 @@
     </div>
 
     @if($modoEdicion)
-        <div class="admin-sedes-modal" data-modal-eliminacion hidden>
-            <div class="admin-sedes-modal-fondo" data-cerrar-eliminacion></div>
-            <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="eliminar-sede-titulo" aria-describedby="eliminar-sede-descripcion">
-                <h2 id="eliminar-sede-titulo">¿Eliminar esta sede?</h2>
-                <p id="eliminar-sede-descripcion">Se eliminará <strong>{{ $sede->sede_nombre }}</strong> y su programación. Esta acción no se puede deshacer.</p>
-                <form method="POST" action="{{ route('admin.sedes.destroy', $sede->sede_id_sede) }}" class="admin-sedes-modal-acciones">
+        <div class="dialogo" data-modal-eliminacion hidden>
+            <div class="dialogo__velo" data-cerrar-eliminacion></div>
+            <section class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="eliminar-sede-titulo" aria-describedby="eliminar-sede-descripcion">
+                <h2 class="dialogo__titulo" id="eliminar-sede-titulo">¿Eliminar esta sede?</h2>
+                <p class="dialogo__texto" id="eliminar-sede-descripcion">Se eliminará <strong>{{ $sede->sede_nombre }}</strong> y su programación. Esta acción no se puede deshacer.</p>
+                <form method="POST" action="{{ route('admin.sedes.destroy', $sede->sede_id_sede) }}" class="dialogo__acciones">
                     @csrf
                     @method('DELETE')
-                    <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" data-cerrar-eliminacion>Cancelar</button>
-                    <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="submit">Sí, eliminar</button>
+                    <button class="boton boton--secundario" type="button" data-cerrar-eliminacion>Cancelar</button>
+                    <button class="boton boton--peligro-solido" type="submit">Sí, eliminar</button>
                 </form>
             </section>
         </div>

@@ -23,14 +23,14 @@
                 <h1 id="admin-responsables-titulo">Responsables de pago</h1>
                 <p>Quienes atienden los pagos en la DEC. Su nombre aparece en «Atendido por» del formato de pago.</p>
             </div>
-            <a class="admin-sedes-boton admin-sedes-boton--primario" href="{{ route('admin.responsables.create') }}">
+            <a class="boton boton--primario" href="{{ route('admin.responsables.create') }}">
                 <span aria-hidden="true">+</span> Nuevo responsable
             </a>
         </header>
 
-        <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de responsables">
-            <div class="admin-sedes-tabla-responsive tabla-desplazable">
-                <table class="admin-sedes-tabla admin-sedes-tabla--centrada">
+        <section class="tabla-contenedor" aria-label="Lista de responsables">
+            <div class="tabla-responsive tabla-desplazable">
+                <table class="tabla tabla--centrada admin-sedes-tabla">
                     <thead>
                         <tr>
                             <th>Responsable</th>
@@ -43,13 +43,13 @@
                             <tr>
                                 <td class="admin-sedes-tabla-nombre">{{ $responsable['nombre_completo'] }}</td>
                                 <td>
-                                    <span class="admin-sedes-estado admin-sedes-estado--{{ $responsable['activo'] ? 'con-cupo' : 'sin-cupo' }}">
+                                    <span class="estado estado--{{ $responsable['activo'] ? 'con-cupo' : 'sin-cupo' }}">
                                         {{ $responsable['activo'] ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="admin-administradores-acciones">
-                                        <a class="admin-sedes-editar" href="{{ route('admin.responsables.edit', $responsable['id']) }}">Editar</a>
+                                        <a class="boton boton--texto" href="{{ route('admin.responsables.edit', $responsable['id']) }}">Editar</a>
                                         @unless($responsable['activo'])
                                             {{-- Reactivar no destruye nada: no pide confirmación. --}}
                                             <form method="POST" action="{{ route('admin.responsables.reactivar', $responsable['id']) }}">
@@ -62,7 +62,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="admin-sedes-vacio" role="status">
+                                <td colspan="3" class="vacio" role="status">
                                     Todavía no hay responsables. Da de alta a quien atiende los pagos para poder generar formatos.
                                 </td>
                             </tr>

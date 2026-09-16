@@ -23,23 +23,26 @@
         </header>
 
         @if($errors->any())
-            <div class="admin-sedes-alerta" role="alert">
-                <p>Revisa la información capturada:</p>
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+            <div class="notificacion notificacion--error" role="alert">
+                <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                <div>
+                    <p>Revisa la información capturada:</p>
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
-        <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" data-formulario-ajax>
+        <section class="tarjeta tarjeta--amplia admin-sedes-formulario-tarjeta" data-formulario-ajax>
             <h2>Datos del responsable</h2>
             <alertas
                 :mensaje="avisoError"
                 tipo="error"
                 :errores="erroresServidor"
-                clase="admin-sedes-alerta"></alertas>
+                clase="notificacion notificacion--error"></alertas>
 
             <form
                 method="POST"
@@ -51,9 +54,9 @@
                     @method('PUT')
                 @endif
 
-                <div class="admin-sedes-campo admin-sedes-campo--completo">
-                    <label for="nombre">Nombre(s) *</label>
-                    <input
+                <div class="campo admin-sedes-campo--completo">
+                    <label class="etiqueta" for="nombre">Nombre(s) *</label>
+                    <input class="control"
                         id="nombre"
                         name="nombre"
                         type="text"
@@ -63,9 +66,9 @@
                 </div>
 
                 <div class="admin-sedes-formulario-grid">
-                    <div class="admin-sedes-campo">
-                        <label for="apellido_paterno">Apellido paterno *</label>
-                        <input
+                    <div class="campo">
+                        <label class="etiqueta" for="apellido_paterno">Apellido paterno *</label>
+                        <input class="control"
                             id="apellido_paterno"
                             name="apellido_paterno"
                             type="text"
@@ -74,9 +77,9 @@
                             value="{{ old('apellido_paterno', $responsable['apellido_paterno'] ?? '') }}">
                     </div>
 
-                    <div class="admin-sedes-campo">
-                        <label for="apellido_materno">Apellido materno</label>
-                        <input
+                    <div class="campo">
+                        <label class="etiqueta" for="apellido_materno">Apellido materno</label>
+                        <input class="control"
                             id="apellido_materno"
                             name="apellido_materno"
                             type="text"
@@ -89,10 +92,10 @@
                     @if($responsable && $responsable['activo'])
                         {{-- Envía el formulario de baja, que va fuera de éste: un
                              formulario no puede ir dentro de otro. --}}
-                        <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="submit" form="baja-responsable">Dar de baja</button>
+                        <button class="boton boton--peligro" type="submit" form="baja-responsable">Dar de baja</button>
                     @endif
-                    <a class="admin-sedes-boton admin-sedes-boton--secundario" href="{{ route('admin.responsables.index') }}">Cancelar</a>
-                    <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit">Guardar</button>
+                    <a class="boton boton--secundario" href="{{ route('admin.responsables.index') }}">Cancelar</a>
+                    <button class="boton boton--primario" type="submit">Guardar</button>
                 </div>
             </form>
         </section>

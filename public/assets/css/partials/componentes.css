@@ -682,9 +682,21 @@ textarea.control {
     background: #f8fafc;
 }
 
+/* Las columnas de texto libre se quedan a la izquierda, que es como se leen mejor;
+   las de dato corto y parejo —cifras, fechas, pildoras, acciones— se centran. Lo
+   unico que cambia por tabla es cuantas columnas de texto libre hay al principio,
+   de ahi los dos modificadores. */
 .tabla--centrada th:nth-child(n + 2),
-.tabla--centrada td:nth-child(n + 2) {
+.tabla--centrada td:nth-child(n + 2),
+.tabla--centrada-desde-3 th:nth-child(n + 3),
+.tabla--centrada-desde-3 td:nth-child(n + 3) {
     text-align: center;
+}
+
+/* Una tabla ancha se desplaza dentro de su tarjeta y no arrastra la pagina. */
+.tabla-responsive {
+    width: 100%;
+    overflow-x: auto;
 }
 
 .tabla-contenedor {

@@ -363,7 +363,7 @@ class GestionSedesTest extends TestCase
             ->assertOk()
             ->assertSee('15/10/2026')
             ->assertSeeText('0 / 5')
-            ->assertSee('admin-sedes-estado--con-cupo', false);
+            ->assertSee('estado--exito', false);
 
         $this->actingAs(Usuario::findOrFail(2))
             ->put(route('admin.grupos.update', $idGrupo), [

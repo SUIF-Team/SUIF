@@ -30,11 +30,11 @@
                  <span> y no un <a> deshabilitado, que en HTML no existe: un
                  enlace inerte seguiría navegando con el teclado. --}}
             @if ($resumen['vigente'] === null)
-                <a class="admin-sedes-boton admin-sedes-boton--primario" href="{{ route('admin.convocatorias.create') }}">
+                <a class="boton boton--primario" href="{{ route('admin.convocatorias.create') }}">
                     <span aria-hidden="true">+</span> Nueva convocatoria
                 </a>
             @else
-                <span class="admin-sedes-boton admin-sedes-boton--deshabilitado"
+                <span class="boton"
                       aria-disabled="true"
                       title="Ya hay una convocatoria vigente. Ciérrala o interrúmpela para poder crear otra.">
                     <span aria-hidden="true">+</span> Nueva convocatoria
@@ -43,11 +43,11 @@
         </header>
 
         <section class="admin-sedes-estadisticas" aria-label="Resumen de convocatorias">
-            <article class="admin-sedes-tarjeta admin-sedes-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-sedes-estadistica">
                 <h2>Convocatorias registradas</h2>
                 <p class="admin-sedes-estadistica--azul">{{ number_format($resumen['registradas']) }}</p>
             </article>
-            <article class="admin-sedes-tarjeta admin-sedes-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-sedes-estadistica">
                 <h2>Convocatoria vigente</h2>
                 <p @class([
                     'admin-convocatorias-estadistica-texto',
@@ -56,28 +56,28 @@
                     {{ $resumen['vigente'] ?? 'Ninguna' }}
                 </p>
             </article>
-            <article class="admin-sedes-tarjeta admin-sedes-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-sedes-estadistica">
                 <h2>Registro</h2>
                 <p class="admin-convocatorias-estadistica-texto">
                     {{ $resumen['registro_abierto'] ? 'Abierto hoy' : 'Cerrado hoy' }}
                 </p>
             </article>
-            <article class="admin-sedes-tarjeta admin-sedes-estadistica">
+            <article class="tarjeta tarjeta--compacta admin-sedes-estadistica">
                 <h2>Solicitudes</h2>
                 <p class="admin-sedes-estadistica--verde">{{ number_format($resumen['solicitudes_vigente']) }}</p>
             </article>
         </section>
 
-        <section class="admin-sedes-tarjeta admin-sedes-filtros" aria-label="Filtros de búsqueda">
-            <form method="GET" action="{{ route('admin.convocatorias.index') }}" class="admin-sedes-filtros-formulario"
+        <section class="tarjeta tarjeta--compacta" aria-label="Filtros de búsqueda">
+            <form method="GET" action="{{ route('admin.convocatorias.index') }}" class="filtros"
                   data-filtros-tabla="admin-convocatorias-tabla">
-                <div class="admin-sedes-campo">
-                    <label for="buscar">Buscar convocatoria</label>
-                    <input id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
+                <div class="campo">
+                    <label class="etiqueta" for="buscar">Buscar convocatoria</label>
+                    <input class="control" id="buscar" name="buscar" type="search" value="{{ $filtros['buscar'] ?? '' }}">
                 </div>
-                <div class="admin-sedes-campo">
-                    <label for="estado">Estado</label>
-                    <select id="estado" name="estado">
+                <div class="campo">
+                    <label class="etiqueta" for="estado">Estado</label>
+                    <select class="control" id="estado" name="estado">
                         <option value="">Todos</option>
                         @foreach($estados as $opcion)
                             <option value="{{ $opcion }}" @selected(($filtros['estado'] ?? '') === $opcion)>{{ $opcion }}</option>
@@ -85,15 +85,15 @@
                     </select>
                 </div>
                 <div class="admin-sedes-filtros-acciones">
-                    <button class="admin-sedes-boton admin-sedes-boton--filtrar" type="submit">Filtrar</button>
-                    <a class="admin-sedes-boton admin-sedes-boton--limpiar" href="{{ route('admin.convocatorias.index') }}" data-filtros-limpiar>Limpiar</a>
+                    <button class="boton boton--primario" type="submit">Filtrar</button>
+                    <a class="boton boton--peligro" href="{{ route('admin.convocatorias.index') }}" data-filtros-limpiar>Limpiar</a>
                 </div>
             </form>
         </section>
 
-        <section class="admin-sedes-tarjeta admin-sedes-tabla-contenedor" aria-label="Lista de convocatorias">
-            <div class="admin-sedes-tabla-responsive tabla-desplazable">
-                <table id="admin-convocatorias-tabla" class="admin-sedes-tabla admin-sedes-tabla--centrada">
+        <section class="tabla-contenedor" aria-label="Lista de convocatorias">
+            <div class="tabla-responsive tabla-desplazable">
+                <table id="admin-convocatorias-tabla" class="tabla tabla--centrada admin-sedes-tabla">
                     <thead>
                         <tr>
                             <th>Convocatoria</th>
@@ -126,12 +126,12 @@
                                      lee en la pantalla de edición, que es donde
                                      además se puede cambiar. --}}
                                 <td>
-                                    <span class="admin-sedes-estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
+                                    <span class="estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
                                         {{ $convocatoria['estado'] }}
                                     </span>
                                 </td>
                                 <td>
-                                    <a class="admin-sedes-editar" href="{{ route('admin.convocatorias.edit', $convocatoria['id']) }}">Editar</a>
+                                    <a class="boton boton--texto" href="{{ route('admin.convocatorias.edit', $convocatoria['id']) }}">Editar</a>
                                 </td>
                             </tr>
                         @endforeach
@@ -139,7 +139,7 @@
                         {{-- El renglón se escribe siempre: con la tabla filtrándose
                              en el navegador, el aviso aparece sin volver al servidor. --}}
                         <tr data-tabla-vacia @unless($convocatorias->isEmpty()) hidden @endunless>
-                            <td colspan="8" class="admin-sedes-vacio" role="status">No se encontraron convocatorias con los filtros seleccionados.</td>
+                            <td colspan="8" class="vacio" role="status">No se encontraron convocatorias con los filtros seleccionados.</td>
                         </tr>
                     </tbody>
                 </table>

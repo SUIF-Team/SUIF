@@ -20,7 +20,7 @@
     $rolSeleccionado = (int) old('rol_id', $administrador['id_rol'] ?? 0);
     $entidadSeleccionada = old('entidad_federativa', $administrador['entidad_federativa'] ?? '009');
 @endphp
-<section class="admin-sedes admin-sedes--formulario" data-admin-administrador-formulario aria-labelledby="admin-administrador-formulario-titulo">
+<section class="admin-sedes" data-admin-administrador-formulario aria-labelledby="admin-administrador-formulario-titulo">
     <div class="admin-sedes-contenedor">
         <header class="admin-sedes-encabezado">
             <div>
@@ -30,17 +30,20 @@
         </header>
 
         @if($errors->any())
-            <div class="admin-sedes-alerta" role="alert">
-                <p>Revisa la información capturada:</p>
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+            <div class="notificacion notificacion--error" role="alert">
+                <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                <div>
+                    <p>Revisa la información capturada:</p>
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
-        <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" data-formulario-ajax>
+        <section class="tarjeta tarjeta--amplia admin-sedes-formulario-tarjeta" data-formulario-ajax>
             {{-- data-formulario-ajax monta la app compartida de envío: el guardado
                  va por fetch y lo que el servidor rechace se dice aquí mismo,
                  sin recargar ni volver a subir la pantalla. La raíz envuelve al
@@ -50,7 +53,7 @@
                 :mensaje="avisoError"
                 tipo="error"
                 :errores="erroresServidor"
-                clase="admin-sedes-alerta"></alertas>
+                clase="notificacion notificacion--error"></alertas>
 
             <form
                 method="POST"
@@ -65,24 +68,24 @@
                 <h2>Datos de la persona</h2>
 
                 <div class="admin-sedes-formulario-grid">
-                    <div class="admin-sedes-campo">
-                        <label for="nombre">Nombre *</label>
-                        <input id="nombre" name="nombre" type="text" maxlength="45" required
+                    <div class="campo">
+                        <label class="etiqueta" for="nombre">Nombre *</label>
+                        <input class="control" id="nombre" name="nombre" type="text" maxlength="45" required
                                value="{{ old('nombre', $administrador['nombre_pila'] ?? '') }}">
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="primer_apellido">Apellido paterno *</label>
-                        <input id="primer_apellido" name="primer_apellido" type="text" maxlength="45" required
+                    <div class="campo">
+                        <label class="etiqueta" for="primer_apellido">Apellido paterno *</label>
+                        <input class="control" id="primer_apellido" name="primer_apellido" type="text" maxlength="45" required
                                value="{{ old('primer_apellido', $administrador['primer_apellido'] ?? '') }}">
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="segundo_apellido">Apellido materno *</label>
-                        <input id="segundo_apellido" name="segundo_apellido" type="text" maxlength="45" required
+                    <div class="campo">
+                        <label class="etiqueta" for="segundo_apellido">Apellido materno *</label>
+                        <input class="control" id="segundo_apellido" name="segundo_apellido" type="text" maxlength="45" required
                                value="{{ old('segundo_apellido', $administrador['segundo_apellido'] ?? '') }}">
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="entidad_federativa">Entidad federativa *</label>
-                        <select id="entidad_federativa" name="entidad_federativa" required>
+                    <div class="campo">
+                        <label class="etiqueta" for="entidad_federativa">Entidad federativa *</label>
+                        <select class="control" id="entidad_federativa" name="entidad_federativa" required>
                             @foreach($entidades as $entidad)
                                 <option value="{{ $entidad['clave'] }}" @selected($entidadSeleccionada === $entidad['clave'])>
                                     {{ $entidad['nombre'] }}
@@ -95,21 +98,21 @@
                 <h2>Acceso al sistema</h2>
 
                 <div class="admin-sedes-formulario-grid">
-                    <div class="admin-sedes-campo">
-                        <label for="curp">CURP *</label>
+                    <div class="campo">
+                        <label class="etiqueta" for="curp">CURP *</label>
                         <input id="curp" name="curp" type="text" maxlength="18" minlength="18" required
                                class="admin-administradores-campo-curp"
                                value="{{ old('curp', $administrador['curp'] ?? '') }}"
                                aria-describedby="curp-ayuda">
-                        <p id="curp-ayuda" class="admin-sedes-ayuda">18 caracteres. Es el usuario con el que entra al sistema.</p>
+                        <p id="curp-ayuda" class="ayuda">18 caracteres. Es el usuario con el que entra al sistema.</p>
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="clave">Clave de acceso {{ $modoEdicion ? '' : '*' }}</label>
-                        <input id="clave" name="clave" type="password" minlength="8" maxlength="255"
+                    <div class="campo">
+                        <label class="etiqueta" for="clave">Clave de acceso {{ $modoEdicion ? '' : '*' }}</label>
+                        <input class="control" id="clave" name="clave" type="password" minlength="8" maxlength="255"
                                autocomplete="new-password"
                                @if(!$modoEdicion) required @endif
                                aria-describedby="clave-ayuda">
-                        <p id="clave-ayuda" class="admin-sedes-ayuda">
+                        <p id="clave-ayuda" class="ayuda">
                             @if($modoEdicion)
                                 Déjala vacía para conservar la que ya tiene.
                             @else
@@ -120,7 +123,7 @@
                 </div>
 
                 <h2>Tipo de administrador *</h2>
-                <p class="admin-sedes-ayuda">Determina qué módulos aparecen en su tablero y qué puede abrir.</p>
+                <p class="ayuda">Determina qué módulos aparecen en su tablero y qué puede abrir.</p>
 
                 <fieldset class="admin-administradores-roles">
                     <legend class="admin-administradores-roles-leyenda">Tipo de administrador</legend>
@@ -143,10 +146,10 @@
 
                 <div class="admin-sedes-formulario-acciones">
                     @if($modoEdicion && $administrador['activo'])
-                        <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="button" data-abrir-baja>Retirar acceso</button>
+                        <button class="boton boton--peligro" type="button" data-abrir-baja>Retirar acceso</button>
                     @endif
-                    <a class="admin-sedes-boton admin-sedes-boton--secundario" href="{{ route('admin.administradores.index') }}">Cancelar</a>
-                    <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit">Guardar</button>
+                    <a class="boton boton--secundario" href="{{ route('admin.administradores.index') }}">Cancelar</a>
+                    <button class="boton boton--primario" type="submit">Guardar</button>
                 </div>
             </form>
         </section>
@@ -159,20 +162,20 @@
     </div>
 
     @if($modoEdicion && $administrador['activo'])
-        <div class="admin-sedes-modal" data-modal-baja hidden>
-            <div class="admin-sedes-modal-fondo" data-cerrar-baja></div>
-            <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="baja-administrador-titulo" aria-describedby="baja-administrador-descripcion">
-                <h2 id="baja-administrador-titulo">¿Retirar el acceso de esta persona?</h2>
-                <p id="baja-administrador-descripcion">
+        <div class="dialogo" data-modal-baja hidden>
+            <div class="dialogo__velo" data-cerrar-baja></div>
+            <section class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="baja-administrador-titulo" aria-describedby="baja-administrador-descripcion">
+                <h2 class="dialogo__titulo" id="baja-administrador-titulo">¿Retirar el acceso de esta persona?</h2>
+                <p class="dialogo__texto" id="baja-administrador-descripcion">
                     <strong>{{ $administrador['nombre'] }}</strong> dejará de poder entrar al sistema de inmediato,
                     aunque tenga la sesión abierta. Su registro se conserva porque es el rastro de los expedientes
                     que dictaminó. Puedes devolverle el acceso después.
                 </p>
-                <form method="POST" action="{{ route('admin.administradores.destroy', $administrador['id_usuario']) }}" class="admin-sedes-modal-acciones">
+                <form method="POST" action="{{ route('admin.administradores.destroy', $administrador['id_usuario']) }}" class="dialogo__acciones">
                     @csrf
                     @method('DELETE')
-                    <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" data-cerrar-baja>Cancelar</button>
-                    <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="submit">Sí, retirar acceso</button>
+                    <button class="boton boton--secundario" type="button" data-cerrar-baja>Cancelar</button>
+                    <button class="boton boton--peligro-solido" type="submit">Sí, retirar acceso</button>
                 </form>
             </section>
         </div>

@@ -18,7 +18,7 @@
 @endsection
 
 @section('content')
-<section class="admin-sedes admin-convocatorias admin-sedes--formulario" data-admin-convocatoria-formulario aria-labelledby="admin-convocatoria-formulario-titulo">
+<section class="admin-sedes admin-convocatorias" data-admin-convocatoria-formulario aria-labelledby="admin-convocatoria-formulario-titulo">
     <div class="admin-sedes-contenedor">
         <header class="admin-sedes-encabezado">
             <div>
@@ -34,22 +34,25 @@
         </header>
 
         @if($errors->any())
-            <div class="admin-sedes-alerta" role="alert">
-                <p>Revisa la información capturada:</p>
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+            <div class="notificacion notificacion--error" role="alert">
+                <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                <div>
+                    <p>Revisa la información capturada:</p>
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
         @endif
 
         @if($modoEdicion)
-            <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" aria-labelledby="admin-convocatoria-estado-titulo">
+            <section class="tarjeta tarjeta--amplia admin-sedes-formulario-tarjeta" aria-labelledby="admin-convocatoria-estado-titulo">
                 <h2 id="admin-convocatoria-estado-titulo">Estado de la convocatoria</h2>
 
                 <div class="admin-convocatorias-estado-actual">
-                    <span class="admin-sedes-estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
+                    <span class="estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
                         {{ $convocatoria['estado'] }}
                     </span>
                     @if($convocatoria['estado_fecha'] !== '')
@@ -60,7 +63,7 @@
                     @endif
                 </div>
 
-                <p class="admin-sedes-ayuda">
+                <p class="ayuda">
                     Es lo que decide si la convocatoria admite registro. El cambio queda
                     registrado con su fecha y su hora; los movimientos anteriores se conservan.
                 </p>
@@ -68,7 +71,7 @@
                 <div class="admin-convocatorias-estado-acciones">
                     @foreach($transiciones as $transicion)
                         <button
-                            class="admin-sedes-boton admin-sedes-boton--{{ $transicion['clase'] }}"
+                            class="boton boton--{{ $transicion['clase'] }}"
                             type="button"
                             data-abrir-estado
                             data-estado="{{ $transicion['estado'] }}"
@@ -79,7 +82,7 @@
             </section>
         @endif
 
-        <section class="admin-sedes-tarjeta admin-sedes-formulario-tarjeta" data-formulario-ajax>
+        <section class="tarjeta tarjeta--amplia admin-sedes-formulario-tarjeta" data-formulario-ajax>
             <h2>Datos de la convocatoria</h2>
             {{-- data-formulario-ajax monta la app compartida de envío: el guardado
                  va por fetch y lo que el servidor rechace se dice aquí mismo,
@@ -90,7 +93,7 @@
                 :mensaje="avisoError"
                 tipo="error"
                 :errores="erroresServidor"
-                clase="admin-sedes-alerta"></alertas>
+                clase="notificacion notificacion--error"></alertas>
 
             <form
                 method="POST"
@@ -102,9 +105,9 @@
                     @method('PUT')
                 @endif
 
-                <div class="admin-sedes-campo admin-sedes-campo--completo">
-                    <label for="nombre">Nombre de la convocatoria *</label>
-                    <input
+                <div class="campo admin-sedes-campo--completo">
+                    <label class="etiqueta" for="nombre">Nombre de la convocatoria *</label>
+                    <input class="control"
                         id="nombre"
                         name="nombre"
                         type="text"
@@ -115,9 +118,9 @@
                 </div>
 
                 <div class="admin-sedes-formulario-grid">
-                    <div class="admin-sedes-campo">
-                        <label for="monto">Cuota de recuperación *</label>
-                        <input
+                    <div class="campo">
+                        <label class="etiqueta" for="monto">Cuota de recuperación *</label>
+                        <input class="control"
                             id="monto"
                             name="monto"
                             type="number"
@@ -127,7 +130,7 @@
                             required
                             value="{{ old('monto', $convocatoria['monto'] ?? '') }}"
                             aria-describedby="monto-ayuda">
-                        <p id="monto-ayuda" class="admin-sedes-ayuda">
+                        <p id="monto-ayuda" class="ayuda">
                             Es lo que la persona deberá pagar para continuar su trámite, en {{ config('suif.moneda') }}.
                         </p>
                     </div>
@@ -135,51 +138,51 @@
 
                 <h3 class="admin-convocatorias-subtitulo">Vigencia de la convocatoria</h3>
                 <div class="admin-sedes-formulario-grid">
-                    <div class="admin-sedes-campo">
-                        <label for="fecha_inicio">Inicio *</label>
-                        <input id="fecha_inicio" name="fecha_inicio" type="date" required
+                    <div class="campo">
+                        <label class="etiqueta" for="fecha_inicio">Inicio *</label>
+                        <input class="control" id="fecha_inicio" name="fecha_inicio" type="date" required
                             value="{{ old('fecha_inicio', $convocatoria['fecha_inicio'] ?? '') }}"
                             aria-describedby="fecha-inicio-ayuda">
-                        <p id="fecha-inicio-ayuda" class="admin-sedes-ayuda">Día en que se publica la convocatoria.</p>
+                        <p id="fecha-inicio-ayuda" class="ayuda">Día en que se publica la convocatoria.</p>
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="fecha_fin">Término *</label>
-                        <input id="fecha_fin" name="fecha_fin" type="date" required
+                    <div class="campo">
+                        <label class="etiqueta" for="fecha_fin">Término *</label>
+                        <input class="control" id="fecha_fin" name="fecha_fin" type="date" required
                             value="{{ old('fecha_fin', $convocatoria['fecha_fin'] ?? '') }}"
                             aria-describedby="fecha-fin-ayuda">
-                        <p id="fecha-fin-ayuda" class="admin-sedes-ayuda">Día en que concluye por completo.</p>
+                        <p id="fecha-fin-ayuda" class="ayuda">Día en que concluye por completo.</p>
                     </div>
                 </div>
 
                 <h3 class="admin-convocatorias-subtitulo">Ventana de registro</h3>
                 <div class="admin-sedes-formulario-grid">
-                    <div class="admin-sedes-campo">
-                        <label for="fecha_inicio_registro">Apertura del registro *</label>
-                        <input id="fecha_inicio_registro" name="fecha_inicio_registro" type="date" required
+                    <div class="campo">
+                        <label class="etiqueta" for="fecha_inicio_registro">Apertura del registro *</label>
+                        <input class="control" id="fecha_inicio_registro" name="fecha_inicio_registro" type="date" required
                             value="{{ old('fecha_inicio_registro', $convocatoria['fecha_inicio_registro'] ?? '') }}"
                             aria-describedby="registro-ayuda">
-                        <p id="registro-ayuda" class="admin-sedes-ayuda">Desde este día se habilita el pre-registro.</p>
+                        <p id="registro-ayuda" class="ayuda">Desde este día se habilita el pre-registro.</p>
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="fecha_fin_registro">Cierre del registro *</label>
-                        <input id="fecha_fin_registro" name="fecha_fin_registro" type="date" required
+                    <div class="campo">
+                        <label class="etiqueta" for="fecha_fin_registro">Cierre del registro *</label>
+                        <input class="control" id="fecha_fin_registro" name="fecha_fin_registro" type="date" required
                             value="{{ old('fecha_fin_registro', $convocatoria['fecha_fin_registro'] ?? '') }}">
                     </div>
-                    <div class="admin-sedes-campo">
-                        <label for="fin_fecha_entrega_docs">Límite para entregar documentos *</label>
-                        <input id="fin_fecha_entrega_docs" name="fin_fecha_entrega_docs" type="date" required
+                    <div class="campo">
+                        <label class="etiqueta" for="fin_fecha_entrega_docs">Límite para entregar documentos *</label>
+                        <input class="control" id="fin_fecha_entrega_docs" name="fin_fecha_entrega_docs" type="date" required
                             value="{{ old('fin_fecha_entrega_docs', $convocatoria['fin_fecha_entrega_docs'] ?? '') }}"
                             aria-describedby="docs-ayuda">
-                        <p id="docs-ayuda" class="admin-sedes-ayuda">No puede vencer antes de que cierre el registro.</p>
+                        <p id="docs-ayuda" class="ayuda">No puede vencer antes de que cierre el registro.</p>
                     </div>
                 </div>
 
                 <div class="admin-sedes-formulario-acciones">
                     @if($modoEdicion)
-                        <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="button" data-abrir-eliminacion>Eliminar</button>
+                        <button class="boton boton--peligro" type="button" data-abrir-eliminacion>Eliminar</button>
                     @endif
-                    <a class="admin-sedes-boton admin-sedes-boton--secundario" href="{{ route('admin.convocatorias.index') }}">Cancelar</a>
-                    <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit">Guardar</button>
+                    <a class="boton boton--secundario" href="{{ route('admin.convocatorias.index') }}">Cancelar</a>
+                    <button class="boton boton--primario" type="submit">Guardar</button>
                 </div>
             </form>
         </section>
@@ -195,29 +198,29 @@
         {{-- Un solo modal para los dos botones: el destino y el aviso los pone
              el que se pulsa. Cerrar o interrumpir le quita el registro a quien
              venga después, así que no se hace de un clic. --}}
-        <div class="admin-sedes-modal" data-modal-estado hidden>
-            <div class="admin-sedes-modal-fondo" data-cerrar-estado></div>
-            <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="cambiar-estado-titulo" aria-describedby="cambiar-estado-descripcion">
-                <h2 id="cambiar-estado-titulo" data-estado-titulo></h2>
-                <p id="cambiar-estado-descripcion">
+        <div class="dialogo" data-modal-estado hidden>
+            <div class="dialogo__velo" data-cerrar-estado></div>
+            <section class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="cambiar-estado-titulo" aria-describedby="cambiar-estado-descripcion">
+                <h2 class="dialogo__titulo" id="cambiar-estado-titulo" data-estado-titulo></h2>
+                <p class="dialogo__texto" id="cambiar-estado-descripcion">
                     <strong>{{ $convocatoria['nombre'] }}</strong> pasará de
                     «{{ $convocatoria['estado'] }}» a «<span data-estado-destino></span>».
                     <span data-estado-aviso></span>
                 </p>
-                <form method="POST" action="{{ route('admin.convocatorias.estado', $convocatoria['id']) }}" class="admin-sedes-modal-acciones">
+                <form method="POST" action="{{ route('admin.convocatorias.estado', $convocatoria['id']) }}" class="dialogo__acciones">
                     @csrf
                     <input type="hidden" name="estado" value="" data-estado-valor>
-                    <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" data-cerrar-estado>Cancelar</button>
-                    <button class="admin-sedes-boton admin-sedes-boton--primario" type="submit" data-estado-confirmar></button>
+                    <button class="boton boton--secundario" type="button" data-cerrar-estado>Cancelar</button>
+                    <button class="boton boton--primario" type="submit" data-estado-confirmar></button>
                 </form>
             </section>
         </div>
 
-        <div class="admin-sedes-modal" data-modal-eliminacion hidden>
-            <div class="admin-sedes-modal-fondo" data-cerrar-eliminacion></div>
-            <section class="admin-sedes-modal-card" role="dialog" aria-modal="true" aria-labelledby="eliminar-convocatoria-titulo" aria-describedby="eliminar-convocatoria-descripcion">
-                <h2 id="eliminar-convocatoria-titulo">¿Eliminar esta convocatoria?</h2>
-                <p id="eliminar-convocatoria-descripcion">
+        <div class="dialogo" data-modal-eliminacion hidden>
+            <div class="dialogo__velo" data-cerrar-eliminacion></div>
+            <section class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="eliminar-convocatoria-titulo" aria-describedby="eliminar-convocatoria-descripcion">
+                <h2 class="dialogo__titulo" id="eliminar-convocatoria-titulo">¿Eliminar esta convocatoria?</h2>
+                <p class="dialogo__texto" id="eliminar-convocatoria-descripcion">
                     Se eliminará <strong>{{ $convocatoria['nombre'] }}</strong> y su historial de estados.
                     Esta acción no se puede deshacer.
                     @if($convocatoria['solicitudes'] > 0)
@@ -225,11 +228,11 @@
                         no podrá eliminarse: ciérrala o interrúmpela desde la bandeja.
                     @endif
                 </p>
-                <form method="POST" action="{{ route('admin.convocatorias.destroy', $convocatoria['id']) }}" class="admin-sedes-modal-acciones">
+                <form method="POST" action="{{ route('admin.convocatorias.destroy', $convocatoria['id']) }}" class="dialogo__acciones">
                     @csrf
                     @method('DELETE')
-                    <button class="admin-sedes-boton admin-sedes-boton--secundario" type="button" data-cerrar-eliminacion>Cancelar</button>
-                    <button class="admin-sedes-boton admin-sedes-boton--eliminar" type="submit">Sí, eliminar</button>
+                    <button class="boton boton--secundario" type="button" data-cerrar-eliminacion>Cancelar</button>
+                    <button class="boton boton--peligro-solido" type="submit">Sí, eliminar</button>
                 </form>
             </section>
         </div>
