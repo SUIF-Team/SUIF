@@ -69,9 +69,12 @@ class SeleccionReferenciaTest extends TestCase
 
         $respuesta = $this->actingAs($this->persona())->get(route('persona.referencia.index'));
 
-        $respuesta->assertSee(route('persona.referencia.especial'));
-        /* Se ofrece como enlace, no como un botón apagado. */
-        $respuesta->assertDontSee('aria-disabled', false);
+        /* Se ofrece como un enlace que lleva a la captura, no como un botón
+           apagado: por eso se afirma la etiqueta completa y no sólo la ruta. */
+        $respuesta->assertSee(
+            '<a class="boton boton--primario" href="'.route('persona.referencia.especial').'"',
+            false
+        );
         $this->assertTrue(Route::has('persona.referencia.especial'));
     }
 
