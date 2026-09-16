@@ -101,7 +101,7 @@
                     <div class="campo">
                         <label class="etiqueta" for="curp">CURP *</label>
                         <input id="curp" name="curp" type="text" maxlength="18" minlength="18" required
-                               class="admin-administradores-campo-curp"
+                               class="control admin-administradores-campo-curp"
                                value="{{ old('curp', $administrador['curp'] ?? '') }}"
                                aria-describedby="curp-ayuda">
                         <p id="curp-ayuda" class="ayuda">18 caracteres. Es el usuario con el que entra al sistema.</p>
