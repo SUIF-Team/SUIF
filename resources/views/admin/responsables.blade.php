@@ -43,7 +43,7 @@
                             <tr>
                                 <td class="admin-sedes-tabla-nombre">{{ $responsable['nombre_completo'] }}</td>
                                 <td>
-                                    <span class="estado estado--{{ $responsable['activo'] ? 'con-cupo' : 'sin-cupo' }}">
+                                    <span class="estado estado--{{ $responsable['activo'] ? 'exito' : 'peligro' }}">
                                         {{ $responsable['activo'] ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </td>
@@ -54,7 +54,7 @@
                                             {{-- Reactivar no destruye nada: no pide confirmación. --}}
                                             <form method="POST" action="{{ route('admin.responsables.reactivar', $responsable['id']) }}">
                                                 @csrf
-                                                <button class="admin-administradores-reactivar" type="submit">Reactivar</button>
+                                                <button class="boton boton--texto" type="submit">Reactivar</button>
                                             </form>
                                         @endunless
                                     </div>

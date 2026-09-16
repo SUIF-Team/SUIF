@@ -104,7 +104,9 @@
                                 <td class="admin-sedes-tabla-nombre">{{ $administrador['nombre'] }}</td>
                                 <td><code class="admin-administradores-curp">{{ $administrador['curp'] }}</code></td>
                                 <td>
-                                    <span class="admin-administradores-tipo admin-administradores-tipo--{{ \Illuminate\Support\Str::slug($administrador['rol']) }}">
+                                    {{-- El chip de rol comparte forma con los de estado y conserva
+                                         su propia paleta: un área no es una etapa del trámite. --}}
+                                    <span class="estado estado--rol-{{ \Illuminate\Support\Str::of($administrador['rol'])->slug()->replace('admin-', '') }}">
                                         {{ $administrador['rol_etiqueta'] }}
                                     </span>
                                 </td>
@@ -114,7 +116,7 @@
                                         : '—' }}
                                 </td>
                                 <td>
-                                    <span class="estado estado--{{ $administrador['activo'] ? 'con-cupo' : 'sin-cupo' }}">
+                                    <span class="estado estado--{{ $administrador['activo'] ? 'exito' : 'peligro' }}">
                                         {{ $administrador['activo'] ? 'Con acceso' : 'Sin acceso' }}
                                     </span>
                                 </td>
@@ -126,7 +128,7 @@
                                                  confirmación porque no destruye nada. --}}
                                             <form method="POST" action="{{ route('admin.administradores.reactivar', $administrador['id_usuario']) }}">
                                                 @csrf
-                                                <button class="admin-administradores-reactivar" type="submit">Reactivar</button>
+                                                <button class="boton boton--texto" type="submit">Reactivar</button>
                                             </form>
                                         @endunless
                                     </div>

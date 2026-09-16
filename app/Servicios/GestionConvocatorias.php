@@ -289,6 +289,7 @@ class GestionConvocatorias
                     'fecha_fin' => $this->dia($fila->conv_fecha_fin),
                     'estado' => $estado ?? 'Sin estado',
                     'estado_clave' => $this->claveEstado($estado),
+                    'estado_papel' => $this->papelEstado($estado),
                     'estado_fecha' => $this->dia($fila->esco_fecha),
                     'estado_hora' => substr((string) $fila->esco_hora, 0, 5),
                     'solicitudes' => (int) $fila->solicitudes,
@@ -390,6 +391,21 @@ class GestionConvocatorias
             self::CERRADA => 'cerrada',
             self::INTERRUMPIDA => 'interrumpida',
             default => 'pendiente',
+        };
+    }
+
+    /**
+     * El papel del color: vigente en verde, cerrada en gris —terminó su ciclo,
+     * no es un error— e interrumpida en rojo, que sí es una convocatoria
+     * detenida antes de tiempo.
+     */
+    private function papelEstado(?string $estado): string
+    {
+        return match ($estado) {
+            self::VIGENTE => 'exito',
+            self::CERRADA => 'neutro',
+            self::INTERRUMPIDA => 'peligro',
+            default => 'revision',
         };
     }
 

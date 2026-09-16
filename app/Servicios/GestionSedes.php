@@ -183,6 +183,7 @@ class GestionSedes
                 'disponibles' => $sede['disponibles'],
                 'estado' => $sede['estado'],
                 'estado_clave' => $sede['estado_clave'],
+                'estado_papel' => $sede['estado_papel'],
             ])
             ->values();
     }
@@ -493,6 +494,8 @@ class GestionSedes
             'programada' => $programada,
             'con_cupo' => $con_cupo,
             'estado_clave' => !$programada ? 'pendiente' : ($con_cupo ? 'con-cupo' : 'sin-cupo'),
+            /* La clave sirve para filtrar; el papel dice de qué color se pinta. */
+            'estado_papel' => !$programada ? 'revision' : ($con_cupo ? 'exito' : 'peligro'),
             'estado' => !$programada ? 'Por programar' : ($con_cupo ? 'Con cupo' : 'Sin cupo'),
             'horarios' => $horarios,
         ];
@@ -631,6 +634,7 @@ class GestionSedes
                     'disponibles' => $disponibles,
                     'con_cupo' => $disponibles > 0,
                     'estado_clave' => $disponibles > 0 ? 'con-cupo' : 'sin-cupo',
+                    'estado_papel' => $disponibles > 0 ? 'exito' : 'peligro',
                     'estado' => $disponibles > 0 ? 'Con cupo' : 'Sin cupo',
                 ];
             });

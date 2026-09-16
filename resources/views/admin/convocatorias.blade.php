@@ -126,7 +126,7 @@
                                      lee en la pantalla de edición, que es donde
                                      además se puede cambiar. --}}
                                 <td>
-                                    <span class="estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
+                                    <span class="estado estado--{{ $convocatoria['estado_papel'] }}">
                                         {{ $convocatoria['estado'] }}
                                     </span>
                                 </td>

@@ -52,7 +52,7 @@
                 <h2 id="admin-convocatoria-estado-titulo">Estado de la convocatoria</h2>
 
                 <div class="admin-convocatorias-estado-actual">
-                    <span class="estado admin-convocatorias-estado--{{ $convocatoria['estado_clave'] }}">
+                    <span class="estado estado--{{ $convocatoria['estado_papel'] }}">
                         {{ $convocatoria['estado'] }}
                     </span>
                     @if($convocatoria['estado_fecha'] !== '')

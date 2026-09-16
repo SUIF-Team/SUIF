@@ -128,7 +128,7 @@
                 <fieldset class="admin-administradores-roles">
                     <legend class="admin-administradores-roles-leyenda">Tipo de administrador</legend>
                     @foreach($roles as $rol)
-                        <label class="admin-administradores-rol" for="rol-{{ $rol['id'] }}">
+                        <label class="opcion admin-administradores-rol" for="rol-{{ $rol['id'] }}">
                             <input
                                 id="rol-{{ $rol['id'] }}"
                                 type="radio"

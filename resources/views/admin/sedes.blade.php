@@ -86,7 +86,7 @@
                                      sólo interesa cuántos tiene registrados la sede. --}}
                                 <td>{{ count($sede['horarios']) }}</td>
                                 <td>
-                                    <span class="estado estado--{{ $sede['estado_clave'] }}">
+                                    <span class="estado estado--{{ $sede['estado_papel'] }}">
                                         {{ $sede['estado'] }}
                                     </span>
                                 </td>

@@ -99,7 +99,7 @@
                                     <small>{{ $grupo['disponibles'] }} disponibles</small>
                                 </td>
                                 <td>
-                                    <span class="estado estado--{{ $grupo['estado_clave'] }}">
+                                    <span class="estado estado--{{ $grupo['estado_papel'] }}">
                                         {{ $grupo['estado'] }}
                                     </span>
                                 </td>
