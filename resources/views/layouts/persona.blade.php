@@ -44,7 +44,7 @@
         <main id="contenido-principal" class="persona-main">
             @unless($sinSidebar)
                 <div class="persona-barra">
-                    <a href="{{ route('persona.dashboard') }}" class="persona-barra__volver">
+                    <a href="{{ route('persona.dashboard') }}" class="boton boton--secundario">
                         <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
                         <span>Volver a mi proceso</span>
                     </a>

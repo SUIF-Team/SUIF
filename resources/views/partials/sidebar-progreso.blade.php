@@ -69,36 +69,43 @@
         }
     }
 ?>
-<nav class="progreso" aria-label="Avance del trámite">
+<nav class="pasos progreso" aria-label="Avance del trámite">
     @foreach($pasos as $indice => $paso)
         <?php
-            $clases = 'progreso-paso';
+            /* Completo y activo no se excluyen: un paso terminado que además se
+               está viendo sale verde y con el anillo de «aquí estás». */
+            $clases = 'paso progreso-paso';
+            if ($paso['completo']) {
+                $clases .= ' paso--exito';
+            }
             if ($paso['activo']) {
-                $clases .= ' progreso-paso--activo';
-            } elseif ($paso['completo']) {
-                $clases .= ' progreso-paso--completo';
-            } else {
-                $clases .= ' progreso-paso--pendiente';
+                $clases .= ' paso--actual';
             }
             if (!$paso['disponible']) {
-                $clases .= ' progreso-paso--bloqueado';
+                $clases .= ' paso--bloqueado';
             }
         ?>
 
         @if($paso['disponible'])
             <a href="{{ route($paso['ruta']) }}" class="{{ $clases }}">
-                <span class="progreso-paso__numero">{{ $paso['completo'] ? '✓' : $indice + 1 }}</span>
+                <span class="paso__numero">
+                    @if($paso['completo'])
+                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    @else
+                        {{ $indice + 1 }}
+                    @endif
+                </span>
                 <span class="progreso-paso__texto">
-                    <strong>{{ $paso['titulo'] }}</strong>
-                    <small>{{ $paso['subtitulo'] }}</small>
+                    <strong class="paso__titulo">{{ $paso['titulo'] }}</strong>
+                    <small class="paso__estado">{{ $paso['subtitulo'] }}</small>
                 </span>
             </a>
         @else
             <span class="{{ $clases }}" aria-disabled="true" title="Completa los pasos anteriores para continuar.">
-                <span class="progreso-paso__numero" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                <span class="paso__numero" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
                 <span class="progreso-paso__texto">
-                    <strong>{{ $paso['titulo'] }}</strong>
-                    <small>{{ $paso['subtitulo'] }}</small>
+                    <strong class="paso__titulo">{{ $paso['titulo'] }}</strong>
+                    <small class="paso__estado">{{ $paso['subtitulo'] }}</small>
                 </span>
             </span>
         @endif
