@@ -236,14 +236,14 @@ body.pagina-sistema {
 
 /* Un solo anillo para todo lo que recibe foco, y sólo con el teclado. Antes sólo
    lo tenían <a> y <button>; los campos y las etiquetas que envuelven un input de
-   archivo no mostraban nada. La etiqueta va con :has(:focus-visible) y no con
-   :focus-within, que saltaba también al hacer clic y rodeaba su texto. */
+   archivo no mostraban nada. Un <label> que sólo agrupa rótulo y campo no entra:
+   el foco lo enseña el campo, y rodear la etiqueta entera con su texto se leía
+   como un error. Los <label> que sí son el control lo declaran ellos. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-label:has(:focus-visible),
 [tabindex]:focus-visible {
     outline: var(--foco-anillo);
     outline-offset: var(--foco-separacion);

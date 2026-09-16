@@ -39,7 +39,10 @@
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.boton:focus-visible {
+/* El :has() es para la etiqueta que hace de botón al subir un archivo: su input va
+   transparente encima y no hay otra cosa que marcar. */
+.boton:focus-visible,
+.boton:has(:focus-visible) {
     outline: var(--foco-anillo);
     outline-offset: var(--foco-separacion);
 }
