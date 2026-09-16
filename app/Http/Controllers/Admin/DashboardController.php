@@ -149,13 +149,13 @@ class DashboardController extends Controller
             $indicadores[] = [
                 'titulo' => 'Personas registradas',
                 'valor' => number_format($datos['personas_registradas']),
-                'clase' => 'admin-dashboard-indicador-azul',
+                'clase' => 'admin-dashboard-indicador--info',
                 'sin_datos' => false,
             ];
             $indicadores[] = [
                 'titulo' => 'Solicitudes en revisión',
                 'valor' => number_format($datos['solicitudes_en_revision']),
-                'clase' => 'admin-dashboard-indicador-naranja',
+                'clase' => 'admin-dashboard-indicador--revision',
                 'sin_datos' => false,
             ];
         }
@@ -164,7 +164,7 @@ class DashboardController extends Controller
             $indicadores[] = [
                 'titulo' => 'Pagos por validar',
                 'valor' => number_format($consulta_pagos->totalPorValidar()),
-                'clase' => 'admin-dashboard-indicador-naranja',
+                'clase' => 'admin-dashboard-indicador--revision',
                 'sin_datos' => false,
             ];
         }
@@ -175,7 +175,7 @@ class DashboardController extends Controller
             $indicadores[] = [
                 'titulo' => 'Referencias especiales por emitir',
                 'valor' => number_format($referencias_especiales->totalPendientes()),
-                'clase' => 'admin-dashboard-indicador-naranja',
+                'clase' => 'admin-dashboard-indicador--revision',
                 'sin_datos' => false,
             ];
         }
@@ -186,7 +186,7 @@ class DashboardController extends Controller
             $indicadores[] = [
                 'titulo' => 'Certificados pendientes',
                 'valor' => is_null($certificados) ? 'Sin datos persistidos' : number_format($certificados),
-                'clase' => 'admin-dashboard-indicador-verde',
+                'clase' => 'admin-dashboard-indicador--exito',
                 'sin_datos' => is_null($certificados),
             ];
         }

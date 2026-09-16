@@ -99,10 +99,9 @@ class ReportesTest extends TestCase
     }
 
     /**
-     * El botón de regreso es un componente compartido y sus clases viven en la
-     * hoja base de la zona administrativa. Sin ella el icono se dibujaba como
-     * un triángulo negro que ocupaba media pantalla: el path se rellena por
-     * omisión y el svg no trae medidas propias.
+     * El botón de regreso es un componente compartido y la barra que lo envuelve
+     * vive en la hoja base de la zona administrativa. Sin ella el bloque queda
+     * sin tarjeta ni separación, colgando del borde de la pantalla.
      */
     public function test_la_pantalla_carga_la_hoja_base_de_la_zona_administrativa(): void
     {

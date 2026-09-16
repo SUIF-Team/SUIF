@@ -15,10 +15,8 @@
 @section('title', 'SUIF — Reportes')
 
 @section('styles')
-{{-- admin-preregistro.css es la hoja base de la zona administrativa: de ahí
-     salen las clases del componente <back-navigation>. Sin ella el icono de
-     regreso se dibuja como un triángulo negro, porque el path se rellena por
-     omisión y el svg no tiene medidas propias. --}}
+{{-- admin-preregistro.css es la hoja base de la zona administrativa: de ahí sale
+     la barra que envuelve al componente <back-navigation>. --}}
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-reportes.css') }}">
 @endsection
@@ -33,15 +31,12 @@
             </div>
         </header>
 
-        @if (session('error'))
-            <div class="admin-reportes-tarjeta admin-reportes-aviso admin-reportes-aviso--error">
-                {{ session('error') }}
-            </div>
-        @endif
+        {{-- El error no se pinta aquí: layouts/admin ya incluye partials/alertas
+             para toda la zona administrativa, y salía dos veces. --}}
 
         <div class="admin-reportes-lista">
             @foreach ($tarjetas as $tarjeta)
-                <section class="admin-reportes-tarjeta admin-reportes-reporte"
+                <section class="tarjeta tarjeta--compacta admin-reportes-reporte"
                          aria-labelledby="admin-reportes-{{ $tarjeta['clave'] }}-titulo">
                     <div>
                         <h2 id="admin-reportes-{{ $tarjeta['clave'] }}-titulo">{{ $tarjeta['titulo'] }}</h2>
@@ -49,11 +44,11 @@
                     </div>
 
                     @if (! in_array('grupo', $tarjeta['filtros'], true))
-                        <form method="GET" action="{{ route($tarjeta['ruta']) }}" class="admin-reportes-formulario">
+                        <form method="GET" action="{{ route($tarjeta['ruta']) }}" class="filtros admin-reportes-formulario">
                             @if (in_array('convocatoria', $tarjeta['filtros'], true))
-                                <label class="admin-reportes-campo" for="convocatoria-{{ $tarjeta['clave'] }}">
-                                    <span>Convocatoria</span>
-                                    <select id="convocatoria-{{ $tarjeta['clave'] }}" name="convocatoria">
+                                <label class="campo admin-reportes-campo" for="convocatoria-{{ $tarjeta['clave'] }}">
+                                    <span class="etiqueta">Convocatoria</span>
+                                    <select class="control" id="convocatoria-{{ $tarjeta['clave'] }}" name="convocatoria">
                                         <option value="">Todas</option>
                                         @foreach ($convocatorias as $convocatoria)
                                             <option value="{{ $convocatoria['id'] }}">{{ $convocatoria['nombre'] }}</option>
@@ -63,9 +58,9 @@
                             @endif
 
                             @if (in_array('estado', $tarjeta['filtros'], true))
-                                <label class="admin-reportes-campo" for="estado-{{ $tarjeta['clave'] }}">
-                                    <span>Estado</span>
-                                    <select id="estado-{{ $tarjeta['clave'] }}" name="estado">
+                                <label class="campo admin-reportes-campo" for="estado-{{ $tarjeta['clave'] }}">
+                                    <span class="etiqueta">Estado</span>
+                                    <select class="control" id="estado-{{ $tarjeta['clave'] }}" name="estado">
                                         @foreach ($estados as $clave => $etiqueta)
                                             <option value="{{ $clave }}">{{ $etiqueta }}</option>
                                         @endforeach
@@ -77,13 +72,13 @@
                                 {{-- Un control nativo del navegador: entrega 'YYYY-MM' sin
                                      JavaScript ni catálogo de meses que mantener. Vacío trae
                                      todos los meses. --}}
-                                <label class="admin-reportes-campo" for="mes-{{ $tarjeta['clave'] }}">
-                                    <span>Mes del pago</span>
-                                    <input id="mes-{{ $tarjeta['clave'] }}" name="mes" type="month">
+                                <label class="campo admin-reportes-campo" for="mes-{{ $tarjeta['clave'] }}">
+                                    <span class="etiqueta">Mes del pago</span>
+                                    <input class="control" id="mes-{{ $tarjeta['clave'] }}" name="mes" type="month">
                                 </label>
                             @endif
 
-                            <button type="submit" class="admin-reportes-boton admin-reportes-boton--primario">
+                            <button type="submit" class="boton boton--primario">
                                 Descargar Excel
                             </button>
                         </form>
@@ -94,10 +89,10 @@
                              lleva su propio formaction, así que no hace falta nada
                              de JavaScript para elegir el destino. --}}
                         <form method="GET" action="{{ route('admin.reportes.grupos') }}"
-                              class="admin-reportes-formulario">
-                            <label class="admin-reportes-campo" for="grupo-{{ $tarjeta['clave'] }}">
-                                <span>Grupo</span>
-                                <select id="grupo-{{ $tarjeta['clave'] }}" name="grupo" required>
+                              class="filtros admin-reportes-formulario">
+                            <label class="campo admin-reportes-campo" for="grupo-{{ $tarjeta['clave'] }}">
+                                <span class="etiqueta">Grupo</span>
+                                <select class="control" id="grupo-{{ $tarjeta['clave'] }}" name="grupo" required>
                                     <option value="">Selecciona una aplicación</option>
                                     @foreach ($grupos as $grupo)
                                         <option value="{{ $grupo['id'] }}">
@@ -107,11 +102,11 @@
                                 </select>
                             </label>
                             <div class="admin-reportes-acciones">
-                                <button type="submit" class="admin-reportes-boton admin-reportes-boton--primario"
+                                <button type="submit" class="boton boton--primario"
                                         formaction="{{ route('admin.reportes.grupos') }}">
                                     Descargar Excel
                                 </button>
-                                <button type="submit" class="admin-reportes-boton admin-reportes-boton--secundario"
+                                <button type="submit" class="boton boton--secundario"
                                         formaction="{{ route('admin.reportes.grupos.lista') }}">
                                     Imprimir lista (PDF)
                                 </button>

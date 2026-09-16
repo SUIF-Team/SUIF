@@ -21,7 +21,7 @@
         @if (!empty($indicadores))
             <section class="admin-dashboard-indicadores" aria-label="Resumen administrativo">
                 @foreach ($indicadores as $indicador)
-                    <article class="admin-dashboard-indicador {{ $indicador['clase'] }}">
+                    <article class="tarjeta admin-dashboard-indicador {{ $indicador['clase'] }}">
                         <h2>{{ $indicador['titulo'] }}</h2>
                         <p @class(['admin-dashboard-indicador-sin-datos' => $indicador['sin_datos']])>
                             {{ $indicador['valor'] }}
@@ -31,7 +31,7 @@
             </section>
         @endif
 
-        <section class="admin-dashboard-acciones" aria-labelledby="admin-dashboard-acciones-titulo">
+        <section class="tarjeta tarjeta--amplia admin-dashboard-acciones" aria-labelledby="admin-dashboard-acciones-titulo">
             <h2 id="admin-dashboard-acciones-titulo">Acciones</h2>
 
             <div class="admin-dashboard-acciones-grid">
@@ -42,9 +42,9 @@
                             <p>{{ $accion['descripcion'] }}</p>
                         </div>
                         @if (!empty($accion['ruta']))
-                            <a class="admin-dashboard-accion-disponible" href="{{ route($accion['ruta']) }}">Abrir</a>
+                            <a class="boton boton--primario" href="{{ route($accion['ruta']) }}">Abrir</a>
                         @else
-                            <span class="admin-dashboard-accion-pendiente" aria-disabled="true">Próximamente</span>
+                            <span class="boton" aria-disabled="true">Próximamente</span>
                         @endif
                     </article>
                 @endforeach

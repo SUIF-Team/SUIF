@@ -389,6 +389,14 @@
     margin: 0;
 }
 
+/* Los mensajes flash del panel cuelgan sueltos bajo la navbar, sin pantalla que
+   los contenga: aqui toman el ancho de la zona administrativa. */
+.notificaciones-sistema {
+    width: min(100%, var(--admin-ancho));
+    margin: 1.5rem auto -0.5rem;
+    padding: 0 1rem;
+}
+
 .notificacion ul {
     margin: 0.25rem 0 0;
     padding-left: 1.25rem;
