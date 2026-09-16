@@ -429,15 +429,24 @@ async function principal() {
         assert.strictEqual(evaluar('visible', { errores: { curp: 'Falta' } }), true);
     });
 
-    await prueba('Alertas: mapea el tipo a la clase de Bootstrap', () => {
-        assert.strictEqual(evaluar('clases', { tipo: 'success' }), 'alert alert-success');
-        assert.strictEqual(evaluar('clases', { tipo: 'error' }), 'alert alert-danger');
-        assert.strictEqual(evaluar('clases', { tipo: 'warning' }), 'alert alert-warning');
-        assert.strictEqual(evaluar('clases', { tipo: 'raro' }), 'alert alert-info');
+    await prueba('Alertas: mapea el tipo al papel de la notificación', () => {
+        assert.strictEqual(evaluar('clases', { tipo: 'success' }), 'notificacion notificacion--exito');
+        assert.strictEqual(evaluar('clases', { tipo: 'error' }), 'notificacion notificacion--error');
+        assert.strictEqual(evaluar('clases', { tipo: 'warning' }), 'notificacion notificacion--advertencia');
+        assert.strictEqual(evaluar('clases', { tipo: 'raro' }), 'notificacion notificacion--info');
     });
 
-    await prueba('Alertas: la clase recibida gana, para el portal de la persona', () => {
-        assert.strictEqual(evaluar('clases', { tipo: 'error', clase: 'pr-alert pr-error' }), 'pr-alert pr-error');
+    await prueba('Alertas: la clase recibida gana, para la pantalla que la envía', () => {
+        assert.strictEqual(
+            evaluar('clases', { tipo: 'error', clase: 'notificacion notificacion--advertencia' }),
+            'notificacion notificacion--advertencia'
+        );
+    });
+
+    await prueba('Alertas: el ícono acompaña al color', () => {
+        assert.strictEqual(evaluar('icono', { tipo: 'success' }), 'fa-solid fa-circle-check');
+        assert.strictEqual(evaluar('icono', { tipo: 'error' }), 'fa-solid fa-circle-exclamation');
+        assert.strictEqual(evaluar('icono', { tipo: 'warning' }), 'fa-solid fa-circle-exclamation');
     });
 
     await prueba('Alertas: el fallo interrumpe al lector de pantalla, el éxito no', () => {

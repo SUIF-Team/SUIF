@@ -1,3 +1,8 @@
+/* Bandejas administrativas: pre-registros, pagos y personas registradas.
+   No son tablas sino una rejilla de tarjetas —cada renglón lleva avatar, dos
+   líneas de texto y una acción—, así que aquí vive su composición; el filtro,
+   el campo, el botón, el chip, el vacío y la caja de aviso son los compartidos. */
+
 .admin-bandeja-preregistros {
     padding: clamp(2rem, 5vw, 4rem) 1rem;
 }
@@ -28,66 +33,18 @@
     color: var(--text-muted);
 }
 
-.admin-bandeja-preregistros-tarjeta {
-    padding: 1.5rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.07);
-}
-
-/* La tarjeta del listado va sin relleno para que la barra de encabezados
-   y las filas lleguen al borde, igual que el thead de las tablas de
-   sedes y referencias. El relleno lo ponen la barra y cada fila. */
-.admin-bandeja-preregistros-solicitudes {
-    padding: 0;
-    overflow: hidden;
-}
-
-.admin-bandeja-preregistros-filtros {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    gap: 1.25rem;
-}
-
-.admin-bandeja-preregistros-campo {
-    display: flex;
-    flex: 1 1 12rem;
-    flex-direction: column;
-    gap: 0.45rem;
-}
-
+/* Los cuatro filtros no pesan igual: el término de búsqueda se lleva más
+   renglón que los tres selectores. */
 .admin-bandeja-preregistros-campo-tipo,
 .admin-bandeja-preregistros-campo-estado,
 .admin-bandeja-preregistros-campo-orden {
+    flex: 1 1 12rem;
     flex-grow: 0.8;
 }
 
 .admin-bandeja-preregistros-campo-termino {
+    flex: 1 1 12rem;
     flex-grow: 1.2;
-}
-
-.admin-bandeja-preregistros-campo label {
-    color: #334155;
-}
-
-.admin-bandeja-preregistros-campo input,
-.admin-bandeja-preregistros-campo select {
-    width: 100%;
-    min-height: 2.7rem;
-    padding: 0.625rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: var(--surface-white);
-    color: var(--text-dark);
-}
-
-.admin-bandeja-preregistros-campo input:focus,
-.admin-bandeja-preregistros-campo select:focus {
-    border-color: var(--unam-gold);
-    outline: 3px solid rgba(181, 139, 42, 0.22);
-    outline-offset: 0;
 }
 
 .admin-bandeja-preregistros-acciones-filtro {
@@ -95,51 +52,7 @@
     gap: 0.75rem;
 }
 
-.admin-bandeja-preregistros-boton,
-.admin-bandeja-preregistros-expediente {
-    min-height: 2.7rem;
-    padding: 0.55rem 1rem;
-    border: 1px solid transparent;
-    border-radius: 0.5rem;
-    font-size: var(--fs-ui);
-    font-weight: 600;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-
-.admin-bandeja-preregistros-boton-limpiar {
-    border-color: #fecaca;
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.admin-bandeja-preregistros-boton-limpiar:hover,
-.admin-bandeja-preregistros-boton-limpiar:focus-visible {
-    background: #fecaca;
-    color: #991b1b;
-}
-
-.admin-bandeja-preregistros-lista {
-    max-height: 28rem;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-}
-
-.admin-bandeja-preregistros-lista::-webkit-scrollbar {
-    width: 0.5rem;
-}
-
-.admin-bandeja-preregistros-lista::-webkit-scrollbar-track {
-    border-radius: 999px;
-    background: #f1f5f9;
-}
-
-.admin-bandeja-preregistros-lista::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: #cbd5e1;
-}
+/* ─── Lista ──────────────────────────────────────────────────────────── */
 
 .admin-bandeja-preregistros-fila {
     display: grid;
@@ -152,7 +65,7 @@
     grid-template-columns: minmax(0, 2fr) minmax(8rem, 1fr);
 }
 
-/* La lista es un scroll de 28rem: sin sticky la barra se va con el
+/* La lista es un desplazamiento de 28rem: sin sticky la barra se va con el
    contenido y las filas quedan colgando del canto de la tarjeta. */
 .admin-bandeja-preregistros-encabezados {
     position: sticky;
@@ -221,75 +134,15 @@
     justify-content: center;
 }
 
-.admin-bandeja-preregistros-estado {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+/* Los chips de una columna miden lo mismo aunque su texto no: alineados unos
+   bajo otros, el ancho desigual se lee como desorden. */
+.admin-bandeja-preregistros-estado-contenedor .estado {
     min-width: 7.5rem;
-    padding: 0.3rem 0.8rem;
-    border-radius: 999px;
-    font-size: var(--fs-micro);
-    font-weight: 600;
-    text-align: center;
-}
-
-.admin-bandeja-preregistros-estado-revision {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.admin-bandeja-preregistros-estado-aceptado {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.admin-bandeja-preregistros-estado-proceso {
-    background: #e0f2fe;
-    color: #0369a1;
-}
-
-.admin-bandeja-preregistros-estado-rechazado {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.admin-bandeja-preregistros-expediente {
-    border-color: #94a3b8;
-    background: transparent;
-    color: #334155;
-}
-
-.admin-bandeja-preregistros-expediente:hover,
-.admin-bandeja-preregistros-expediente:focus-visible {
-    background: #f1f5f9;
-    color: #1e293b;
-}
-
-.admin-bandeja-preregistros-accion-no-disponible {
-    color: var(--text-muted);
-    font-size: var(--fs-auxiliar);
-    font-weight: 600;
-}
-
-.admin-bandeja-preregistros-vacio {
-    margin: 0;
-    padding: 1.5rem 1rem;
-    color: var(--text-muted);
-    text-align: center;
 }
 
 @media (max-width: 767.98px) {
     .admin-bandeja-preregistros {
         padding-top: 2rem;
-    }
-
-    .admin-bandeja-preregistros-filtros {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .admin-bandeja-preregistros-campo {
-        flex-basis: auto;
     }
 
     .admin-bandeja-preregistros-acciones-filtro {
@@ -303,21 +156,12 @@
 }
 
 @media (max-width: 500px) {
-    .admin-bandeja-preregistros-tarjeta {
-        padding: 1rem;
-    }
-
     .admin-bandeja-preregistros-acciones-filtro {
         flex-direction: column;
     }
 
-    .admin-bandeja-preregistros-boton {
+    .admin-bandeja-preregistros-acciones-filtro .boton {
         width: 100%;
-    }
-
-    .admin-bandeja-preregistros-lista {
-        max-height: none;
-        overflow: visible;
     }
 
     .admin-bandeja-preregistros-encabezados {
@@ -337,33 +181,7 @@
         padding-left: 3.5rem;
     }
 
-    .admin-bandeja-preregistros-expediente {
+    .admin-bandeja-preregistros-accion .boton {
         width: 100%;
     }
-}
-
-/* Aviso de las acciones que se resuelven sin salir de la bandeja. Restaurar
-   una clave es la que importa: cuando el correo no sale, este mensaje trae la
-   única copia de la clave generada, así que tiene que quedarse a la vista. */
-.admin-bandeja-preregistros-alerta {
-    margin-bottom: 1.25rem;
-    padding: 13px 16px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.admin-bandeja-preregistros-alerta--success {
-    background: #eef7ef;
-    color: #1d6b2c;
-}
-
-.admin-bandeja-preregistros-alerta--warning {
-    background: #fdf4e3;
-    color: #7a5410;
-}
-
-.admin-bandeja-preregistros-alerta--error {
-    background: #fff0f0;
-    color: #9b1717;
 }

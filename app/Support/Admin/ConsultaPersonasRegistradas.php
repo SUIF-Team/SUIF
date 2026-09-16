@@ -170,9 +170,9 @@ class ConsultaPersonasRegistradas
     private function claseEstado(string $estado): string
     {
         return match ($estado) {
-            'Aprobada' => 'admin-bandeja-preregistros-estado-aceptado',
-            'Rechazada', 'Cancelada' => 'admin-bandeja-preregistros-estado-rechazado',
-            default => 'admin-bandeja-preregistros-estado-revision',
+            'Aprobada' => 'estado--exito',
+            'Rechazada', 'Cancelada' => 'estado--peligro',
+            default => 'estado--revision',
         };
     }
 }

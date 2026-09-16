@@ -352,7 +352,6 @@ class ConsultaPagos
             'estatus' => $estatus,
             'estado_persistido' => $estado_persistido,
             'clase_estado' => $this->claseEstado($estado_persistido),
-            'clase_estado_detalle' => $this->claseEstadoDetalle($estado_persistido),
             'fecha_envio_comprobante' => $fecha_envio,
             'estado_preregistro' => $this->estadoPreRegistro($estado_solicitud),
             'estado_documentacion' => $this->estadoDocumentacion($estado_solicitud),
@@ -429,15 +428,6 @@ class ConsultaPagos
     }
 
     private function claseEstado(string $estado): string
-    {
-        return match ($estado) {
-            self::COMPLETADO => 'admin-bandeja-preregistros-estado-aceptado',
-            self::DECLINADO => 'admin-bandeja-preregistros-estado-rechazado',
-            default => 'admin-bandeja-preregistros-estado-revision',
-        };
-    }
-
-    private function claseEstadoDetalle(string $estado): string
     {
         return match ($estado) {
             self::COMPLETADO => 'estado--exito',

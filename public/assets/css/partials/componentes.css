@@ -385,6 +385,10 @@
     padding-top: 0.125rem;
 }
 
+.notificacion p {
+    margin: 0;
+}
+
 .notificacion ul {
     margin: 0.25rem 0 0;
     padding-left: 1.25rem;

@@ -22,7 +22,7 @@
                 <p>CURP: {{ $pago['curp'] }} · {{ $pago['entidad_federativa'] }}</p>
             </div>
         </div>
-        <span class="estado {{ $pago['clase_estado_detalle'] }}" role="status">
+        <span class="estado {{ $pago['clase_estado'] }}" role="status">
             {{ $pago['estatus'] }}
         </span>
     </header>

@@ -62,20 +62,31 @@
                     return this.clase;
                 }
 
-                var sufijos = { success: 'success', error: 'danger', warning: 'warning' };
+                var papeles = { success: 'exito', error: 'error', warning: 'advertencia' };
 
-                return 'alert alert-' + (sufijos[this.tipo] || 'info');
+                return 'notificacion notificacion--' + (papeles[this.tipo] || 'info');
+            },
+
+            /* El ícono acompaña al color: sin él, quien no distingue el verde del
+               rojo sólo tiene el texto. */
+            icono: function () {
+                return this.tipo === 'success'
+                    ? 'fa-solid fa-circle-check'
+                    : 'fa-solid fa-circle-exclamation';
             }
         },
         template: `
             <div v-if="visible" :class="clases" :role="rol">
-                <template v-if="mensaje">{{ mensaje }}</template>
-                <template v-if="hayErrores">
-                    <strong>Revisa la información:</strong>
-                    <ul>
-                        <li v-for="error in listaErrores" :key="error.campo">{{ error.texto }}</li>
-                    </ul>
-                </template>
+                <i class="notificacion__icono" :class="icono" aria-hidden="true"></i>
+                <div>
+                    <p v-if="mensaje">{{ mensaje }}</p>
+                    <template v-if="hayErrores">
+                        <strong>Revisa la información:</strong>
+                        <ul>
+                            <li v-for="error in listaErrores" :key="error.campo">{{ error.texto }}</li>
+                        </ul>
+                    </template>
+                </div>
             </div>
         `
     };

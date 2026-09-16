@@ -424,9 +424,9 @@ class ConsultaPreRegistros
     private function claseEstado(string $estado_solicitud): string
     {
         return match ($estado_solicitud) {
-            'Aprobada' => 'admin-bandeja-preregistros-estado-aceptado',
-            'Rechazada', 'Cancelada' => 'admin-bandeja-preregistros-estado-rechazado',
-            default => 'admin-bandeja-preregistros-estado-revision',
+            'Aprobada' => 'estado--exito',
+            'Rechazada', 'Cancelada' => 'estado--peligro',
+            default => 'estado--revision',
         };
     }
 

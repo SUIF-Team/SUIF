@@ -129,8 +129,8 @@ class ConsultaPersonasRegistradasTest extends TestCase
         $this->actingAs(Usuario::findOrFail(3))
             ->get(route('admin.personas.registradas.index'))
             ->assertOk()
-            ->assertDontSee('admin-bandeja-preregistros-boton-filtrar', false)
-            ->assertSee('<div class="admin-bandeja-preregistros-lista">', false)
+            ->assertDontSee('>Filtrar<', false)
+            ->assertSee('<div class="tabla-desplazable">', false)
             ->assertSee('<p class="visually-hidden" role="status" v-if="personasFiltradas.length">', false)
             ->assertSee('id="bandeja-personas-registradas-termino"', false);
     }

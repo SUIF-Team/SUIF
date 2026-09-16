@@ -23,24 +23,22 @@
             <p>Consulta y gestiona a las personas registradas en el sistema y el estado actual de su solicitud.</p>
         </header>
 
-        <alertas
-            :mensaje="aviso.mensaje"
-            :tipo="aviso.tipo"
-            :clase="'admin-bandeja-preregistros-alerta admin-bandeja-preregistros-alerta--' + aviso.tipo"></alertas>
+        {{-- Sin clase propia: el componente ya elige el papel a partir del tipo. --}}
+        <alertas :mensaje="aviso.mensaje" :tipo="aviso.tipo"></alertas>
 
         @include('admin.partials.bandeja-filtros', [
             'prefijo_filtros' => 'bandeja-personas-registradas',
             'estados_filtro' => array_merge(['Todos'], $datos_vista['estados']),
         ])
 
-        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-label="Personas">
+        <section class="tabla-contenedor" aria-label="Personas">
             {{-- La región viva es el conteo y no la lista: con el filtro
                  aplicándose al escribir, releer la bandeja entera en cada
                  pausa no le sirve a nadie. El caso vacío lo anuncia el
                  mensaje del final, que ya tiene su propio role="status". --}}
             <p class="visually-hidden" role="status" v-if="personasFiltradas.length">@{{ resumenResultados }}</p>
 
-            <div class="admin-bandeja-preregistros-lista">
+            <div class="tabla-desplazable">
                 {{-- El @can duplica el middleware de la ruta a propósito:
                      quien no puede gestionar usuarios ve la bandeja sin la
                      columna de acción, exactamente como antes. --}}
@@ -61,19 +59,19 @@
                         </div>
                     </div>
                     <div class="admin-bandeja-preregistros-estado-contenedor">
-                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(persona)">@{{ persona.estado }}</span>
+                        <span class="estado" :class="claseEstado(persona)">@{{ persona.estado }}</span>
                     </div>
                     @can('gestionar-usuarios')
                         <div class="admin-bandeja-preregistros-accion">
                             <button
                                 type="button"
-                                class="admin-bandeja-preregistros-expediente"
+                                class="boton boton--secundario"
                                 v-on:click="abrirRestaurar(persona, $event)">Restaurar clave</button>
                         </div>
                     @endcan
                 </article>
 
-                <p v-if="!personasFiltradas.length" class="admin-bandeja-preregistros-vacio" role="status">
+                <p v-if="!personasFiltradas.length" class="vacio" role="status">
                     No se encontraron personas con los filtros seleccionados.
                 </p>
             </div>
