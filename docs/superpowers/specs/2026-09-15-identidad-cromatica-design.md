@@ -45,10 +45,15 @@ controles, mientras `--border-light` sigue siendo el de las tarjetas.
 
 ### Foco
 
-Un solo anillo: `--foco-anillo` (3px sólido `--unam-gold-dark`) con
-`--foco-separacion` de 2px, y `--foco-anillo-claro` (`--unam-gold`) sobre fondo azul.
-Se aplica además a campos, `select`, `textarea`, etiquetas que envuelven un input de
-archivo y a cualquier elemento con `tabindex`, que antes no mostraban nada.
+Un solo anillo: `--foco-anillo` (2px sólido `--unam-gold-dark`, el grosor mínimo que
+pide WCAG 2.2 para el perímetro del foco) con `--foco-separacion` de 2px, y
+`--foco-anillo-claro` (`--unam-gold`) sobre fondo azul. Se aplica además a campos,
+`select`, `textarea`, etiquetas que envuelven un input de archivo y a cualquier
+elemento con `tabindex`, que antes no mostraban nada.
+
+Y **sólo con el teclado**: la etiqueta usa `:has(:focus-visible)` y no `:focus-within`,
+que no distingue el clic del tabulador y además rodeaba la etiqueta entera junto con su
+texto. Un anillo que salta al hacer clic deja de leerse como «aquí está el foco».
 
 ### Componentes
 
@@ -60,7 +65,7 @@ sistema cargan después de `app.css` y antes de las hojas de `pages/`.
 | `.boton` + `--primario`, `--secundario`, `--peligro`, `--peligro-solido`, `--exito`, `--texto`, `--icono`, `--claro` | ~60 apariencias | Alto 44px, radio 8px, 14px/600; hover que oscurece un paso; primario navy `--unam-blue` |
 | `.boton[disabled]`, `.boton--cargando` | 7 aspectos de apagado | `--inactivo-fondo` / `--inactivo-texto`; el hover no reacciona |
 | `.estado` + los cinco papeles y `--rol-*` | 12 familias de chip | Píldora, 12px/600, relleno 4px 12px |
-| `.pasos` / `.paso` | 4 sistemas de avance | Número en círculo con el color sólido del papel; el paso en curso lleva anillo dorado |
+| `.pasos` / `.paso` + `--linea`, `--oscuro` | 4 sistemas de avance | El papel tiñe la tarjeta y el círculo; el paso en curso lleva anillo dorado y el bloqueado se apaga con color propio, no con opacidad. `--linea` es el seguimiento del pago —sin tarjeta— y `--oscuro` el lateral de persona, donde la tarjeta clara no funciona |
 | `.notificacion` + `--exito`, `--error`, `--advertencia`, `--info` | 15 cajas | Fondo del papel, borde 1px, ícono y `role` |
 | `.aviso` + `--precaucion`, `--hecho` | `.pr-notice` y sus variantes | Información en azul, precaución en ámbar, hecho en verde |
 | `.aviso-motivo` | 4 cajas de «motivo del rechazo» | La de persona: #fff8f8 / #8d1117, borde #ebc7c7 (9:1), respeta saltos de línea |

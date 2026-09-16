@@ -825,12 +825,13 @@ class PreRegistroController extends Controller
             $this->registrarEstadoSolicitud($idSolicitud, 'En revisión');
         });
 
+        /* Sin mensaje a propósito: la pantalla a la que se llega ya anuncia el
+           envío —con su fecha y con role="status"— en el aviso bajo la tabla.
+           Confirmarlo además arriba dejaba dos cajas verdes diciendo lo mismo. */
         return $this->responder(
             $request,
             'success',
-            count($porRevisar) === count($documentos)
-            ? 'Tus documentos fueron enviados a revisión.'
-            : 'Los documentos que corregiste fueron enviados a revisión.',
+            '',
             route('persona.documentos.index'),
             ['vista' => $this->pantallaDocumentos($request)['vista']]
         );

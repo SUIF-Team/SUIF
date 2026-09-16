@@ -40,10 +40,10 @@ class NotificacionResultado
                     ? 'estado--exito'
                     : 'estado--revision'),
             'clase_mensaje' => $es_rechazo
-                ? 'paso--peligro'
+                ? 'admin-preregistro-resultado-mensaje--peligro'
                 : ($es_aprobado
-                    ? 'paso--exito'
-                    : 'paso--actual'),
+                    ? 'admin-preregistro-resultado-mensaje--exito'
+                    : 'admin-preregistro-resultado-mensaje--revision'),
             'pasos' => [
                 $this->paso(
                     'Pre-registro',
@@ -88,8 +88,8 @@ class NotificacionResultado
                 ? 'estado--exito'
                 : 'estado--peligro',
             'clase_mensaje' => $es_aprobado
-                ? 'paso--exito'
-                : 'paso--peligro',
+                ? 'admin-preregistro-resultado-mensaje--exito'
+                : 'admin-preregistro-resultado-mensaje--peligro',
             'pasos' => [
                 $this->paso('Pre-registro', 'Completado', 'paso--exito'),
                 $this->paso('Documentación', 'Completado', 'paso--exito'),

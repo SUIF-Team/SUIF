@@ -7,8 +7,7 @@
    había que repetir la excepción componente por componente (.pr-modal[hidden],
    .admin-reversion-modal[hidden], .admin-sedes-modal[hidden]… hoy todos son
    .dialogo). Con las pantallas que ya no recargan, ocultar y mostrar en sitio
-   es constante: se
-   declara una vez y hidden vuelve a significar lo que dice. */
+   es constante: se declara una vez y hidden vuelve a significar lo que dice. */
 [hidden] {
     display: none !important;
 }
@@ -86,9 +85,10 @@
     /* Foco visible. El anillo anterior —dorado al 55%— se mezclaba con el fondo y
        daba 1.74:1 sobre la crema del sistema, por debajo del 3:1 que pide WCAG
        para un indicador. Solido, el mismo dorado oscuro llega a 4.88:1; sobre
-       fondo azul (navbar y pie) se usa la variante clara. */
-    --foco-anillo: 3px solid var(--unam-gold-dark);
-    --foco-anillo-claro: 3px solid var(--unam-gold);
+       fondo azul (navbar y pie) se usa la variante clara. Mide 2 px, el grosor
+       minimo que pide WCAG 2.2 para el perimetro del foco. */
+    --foco-anillo: 2px solid var(--unam-gold-dark);
+    --foco-anillo-claro: 2px solid var(--unam-gold);
     --foco-separacion: 2px;
 }
 
@@ -234,15 +234,16 @@ body.pagina-sistema {
     color: #ffffff;
 }
 
-/* Un solo anillo para todo lo que recibe foco. Antes sólo lo tenían <a> y <button>:
-   los campos, las etiquetas que envuelven un input de archivo y las tarjetas de
-   opción se enfocaban sin señal alguna, o con la del navegador. */
+/* Un solo anillo para todo lo que recibe foco, y sólo con el teclado. Antes sólo
+   lo tenían <a> y <button>; los campos y las etiquetas que envuelven un input de
+   archivo no mostraban nada. La etiqueta va con :has(:focus-visible) y no con
+   :focus-within, que saltaba también al hacer clic y rodeaba su texto. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-label:focus-within,
+label:has(:focus-visible),
 [tabindex]:focus-visible {
     outline: var(--foco-anillo);
     outline-offset: var(--foco-separacion);

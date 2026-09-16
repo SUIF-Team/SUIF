@@ -58,27 +58,6 @@
     font-size: var(--fs-ui);
 }
 
-/* El color del papel tiñe la tarjeta entera: es lo que se ve de un vistazo al
-   entrar, antes de leer ninguna etiqueta. */
-.process-card.paso--exito {
-    background: var(--exito-fondo);
-}
-
-.process-card.paso--info {
-    border-color: var(--unam-blue);
-    background: var(--info-fondo);
-}
-
-.process-card.paso--revision {
-    border-color: var(--revision-texto);
-    background: var(--revision-fondo);
-}
-
-.process-card.paso--peligro {
-    border-color: var(--peligro-borde);
-    background: var(--peligro-fondo);
-}
-
 .process-card--interactive:hover {
     box-shadow: 0 0.55rem 1.35rem rgba(18, 40, 66, 0.09);
     transform: translateY(-1px);

@@ -22,7 +22,7 @@
         <span class="estado" :class="claseEstadoGeneral" role="status">@{{ estados.general }}</span>
     </header>
 
-    <nav class="pasos pasos--linea admin-preregistro-progreso" aria-label="Progreso del trámite">
+    <nav class="pasos admin-preregistro-progreso" aria-label="Progreso del trámite">
         <div class="paso" :class="clasePaso('preregistro')" :aria-current="pasoActual === 'preregistro' ? 'step' : null">
             <span class="paso__titulo">Pre-registro</span>
             <span class="paso__estado">@{{ estados.preregistro }}</span>

@@ -102,9 +102,9 @@
     }
 }
 
-/* Los pasos son los compartidos (.pasos/.paso): tarjetas claras sobre el azul
-   del lateral, iguales a las del dashboard. Aquí sólo la dirección y el hueco
-   que empuja el soporte al pie. */
+/* Los pasos son los compartidos en su variante oscura (.pasos--oscuro):
+   misma anatomía y mismos papeles que en el dashboard, con superficies para
+   el azul del lateral. Aquí sólo el hueco que empuja el soporte al pie. */
 .progreso {
     gap: 0.65rem;
     margin-bottom: auto;
@@ -117,7 +117,7 @@
 
 /* Sólo los navegables: el paso bloqueado es un <span> y no reacciona. */
 a.progreso-paso:hover {
-    background: #f7f7f4;
+    background: #263042;
 }
 
 .progreso-paso__texto {

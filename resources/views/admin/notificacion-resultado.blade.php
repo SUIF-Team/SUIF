@@ -37,7 +37,7 @@
         </span>
     </header>
 
-    <nav class="pasos pasos--linea admin-preregistro-progreso {{ $notificacion['clase_progreso'] }}" aria-label="Progreso del trámite">
+    <nav class="pasos admin-preregistro-progreso {{ $notificacion['clase_progreso'] }}" aria-label="Progreso del trámite">
         @foreach ($notificacion['pasos'] as $paso)
             <div class="paso {{ $paso['clase'] }}" @if ($paso['actual']) aria-current="step" @endif>
                 <span class="paso__titulo">{{ $paso['titulo'] }}</span>
@@ -47,7 +47,7 @@
     </nav>
 
     <main class="tarjeta admin-preregistro-resultado-principal">
-        <div class="paso admin-preregistro-resultado-mensaje {{ $notificacion['clase_mensaje'] }}" role="status" aria-live="polite">
+        <div class="admin-preregistro-resultado-mensaje {{ $notificacion['clase_mensaje'] }}" role="status" aria-live="polite">
             <h2>{{ $notificacion['titulo'] }}</h2>
         </div>
     </main>

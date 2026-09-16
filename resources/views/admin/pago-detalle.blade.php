@@ -27,7 +27,7 @@
         </span>
     </header>
 
-    <nav class="pasos pasos--linea admin-preregistro-progreso admin-pago-progreso" aria-label="Progreso del trámite">
+    <nav class="pasos admin-preregistro-progreso admin-pago-progreso" aria-label="Progreso del trámite">
         <div class="paso {{ $pago['clase_paso_preregistro'] }}">
             <span class="paso__titulo">Pre-registro</span>
             <span class="paso__estado">{{ $pago['estado_preregistro'] }}</span>

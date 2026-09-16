@@ -152,7 +152,7 @@
                                     <td data-titulo="Formato">
                                         @if(in_array($slug, $formatos))
                                             <div class="pr-fila__acciones">
-                                                <a class="boton boton--primario" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
+                                                <a class="boton boton--secundario" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
                                                     <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                                                     <span>Generar</span>
                                                 </a>
@@ -179,7 +179,7 @@
                                             @if($puedeReemplazar)
                                                 <form method="POST" id="pr-subir-{{ $slug }}" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
                                                     @csrf
-                                                    <label class="boton boton--primario pr-file">
+                                                    <label class="boton boton--secundario pr-file">
                                                         <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                                         <span>{{ $docEstado === 'rechazado' ? 'Subsanar' : ($doc ? 'Reemplazar' : 'Adjuntar') }}</span>
                                                         <input type="file" name="archivo" accept="application/pdf" required>

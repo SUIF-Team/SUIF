@@ -273,6 +273,11 @@
     font-weight: 600;
 }
 
+.paso--exito {
+    border-color: var(--exito-borde);
+    background: var(--exito-fondo);
+}
+
 .paso--exito .paso__numero {
     background: var(--exito-solido);
     color: var(--surface-white);
@@ -280,6 +285,11 @@
 
 .paso--exito .paso__estado {
     color: var(--exito-texto);
+}
+
+.paso--revision {
+    border-color: var(--revision-borde);
+    background: var(--revision-fondo);
 }
 
 .paso--revision .paso__numero {
@@ -291,6 +301,11 @@
     color: var(--revision-texto);
 }
 
+.paso--info {
+    border-color: var(--info-borde);
+    background: var(--info-fondo);
+}
+
 .paso--info .paso__numero {
     background: var(--unam-blue);
     color: var(--surface-white);
@@ -298,6 +313,11 @@
 
 .paso--info .paso__estado {
     color: var(--info-texto);
+}
+
+.paso--peligro {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
 }
 
 .paso--peligro .paso__numero {
@@ -315,9 +335,57 @@
     box-shadow: inset 0 0 0 2px var(--unam-gold);
 }
 
+/* Apagado con su propio color y no con opacidad: la transparencia lavaba
+   también el texto y sobre fondo oscuro dejaba la tarjeta en un gris sucio. */
 .paso--bloqueado {
-    opacity: 0.55;
+    border-color: var(--border-light);
+    background: #f2f1ec;
+    color: var(--text-muted);
     cursor: not-allowed;
+}
+
+.paso--bloqueado .paso__numero {
+    background: #e2e0d9;
+    color: var(--text-muted);
+}
+
+/* Sobre fondo azul oscuro —el lateral de persona— la tarjeta clara no funciona:
+   cambian las superficies, no la anatomía ni los papeles del color. */
+.pasos--oscuro .paso {
+    border-color: #2b3444;
+    background: #1f2937;
+    color: var(--surface-white);
+}
+
+.pasos--oscuro .paso__numero {
+    background: #3a4457;
+    color: #cbd5e1;
+}
+
+.pasos--oscuro .paso__estado {
+    color: #9ca3af;
+}
+
+/* El círculo del completado conserva su verde: la variante cambia la superficie
+   de la tarjeta, no el papel del estado. */
+.pasos--oscuro .paso--exito .paso__numero {
+    background: var(--exito-solido);
+    color: var(--surface-white);
+}
+
+.pasos--oscuro .paso--exito .paso__estado {
+    color: #86efac;
+}
+
+.pasos--oscuro .paso--bloqueado {
+    border-color: #232b3a;
+    background: #1a2130;
+    color: #8b95a5;
+}
+
+.pasos--oscuro .paso--bloqueado .paso__numero {
+    background: #2b3444;
+    color: #8b95a5;
 }
 
 /* Los mismos pasos, en una línea horizontal con conectores entre ellos: es la

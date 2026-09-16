@@ -69,7 +69,7 @@
         }
     }
 ?>
-<nav class="pasos progreso" aria-label="Avance del trámite">
+<nav class="pasos pasos--oscuro progreso" aria-label="Avance del trámite">
     @foreach($pasos as $indice => $paso)
         <?php
             /* Completo y activo no se excluyen: un paso terminado que además se

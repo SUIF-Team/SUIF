@@ -86,12 +86,24 @@
     font-size: var(--fs-auxiliar);
 }
 
-/* Los pasos del expediente son dos o tres y llevan título largo, así que se
-   reparten el ancho en vez de medir los 7 rem del seguimiento del pago. */
+/* Los pasos del expediente no llevan número: son título y estado, y se leen en
+   fila. Conservan la tarjeta del componente —el recuadro es lo que separa un paso
+   del siguiente— y se reparten el ancho. */
+.admin-preregistro-progreso {
+    flex-direction: row;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
 .admin-preregistro-progreso .paso {
-    width: auto;
-    flex: 1 1 0;
-    min-width: min(80%, 12rem);
+    flex: 1 0 0;
+    min-width: min(80%, 16rem);
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    text-align: center;
 }
 
 /* ─── Datos ──────────────────────────────────────────────────────────── */
@@ -357,30 +369,41 @@
     justify-content: center;
 }
 
+/* El desenlace no es una etapa del trámite, así que no es un .paso: es el cartel
+   que dice cómo terminó, y toma entero el papel de su resultado. Como .paso era una
+   fila flex, su título no se estiraba y el centrado no se veía. */
 .admin-preregistro-resultado-mensaje {
     width: min(100%, 52rem);
     min-width: 0;
     padding: clamp(1.5rem, 5vw, 3rem);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radio-caja);
+    text-align: center;
 }
 
 .admin-preregistro-resultado-mensaje h2 {
     margin: 0;
+    color: inherit;
     font-size: var(--fs-pagina);
     letter-spacing: 0.04em;
-    text-align: center;
 }
 
-.admin-preregistro-resultado-mensaje.paso--exito h2 {
+.admin-preregistro-resultado-mensaje--exito {
+    border-color: var(--exito-borde);
+    background: var(--exito-fondo);
     color: var(--exito-texto);
 }
 
-/* El paso «en revisión» del expediente se marca como actual —dorado— y no con
-   el papel de revisión: es dónde está el trámite, no su desenlace. */
-.admin-preregistro-resultado-mensaje.paso--actual h2 {
+/* En revisión conserva el ámbar: es donde está el trámite, todavía sin desenlace. */
+.admin-preregistro-resultado-mensaje--revision {
+    border-color: var(--revision-borde);
+    background: var(--revision-fondo);
     color: var(--revision-texto);
 }
 
-.admin-preregistro-resultado-mensaje.paso--peligro h2 {
+.admin-preregistro-resultado-mensaje--peligro {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
     color: var(--peligro-texto);
 }
 

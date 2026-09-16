@@ -69,7 +69,7 @@
 
                                 <td data-titulo="Formato">
                                     <div class="pr-fila__acciones" v-if="doc.es_formato">
-                                        <a class="boton boton--primario" :href="doc.ruta_formato">
+                                        <a class="boton boton--secundario" :href="doc.ruta_formato">
                                             <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                                             <span>Generar</span>
                                         </a>
@@ -103,7 +103,7 @@
                                             enctype="multipart/form-data"
                                             class="pr-upload-form"
                                             @submit.prevent="subir(doc, $event)">
-                                            <label class="boton boton--primario pr-file">
+                                            <label class="boton boton--secundario pr-file">
                                                 <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                                 <span>{{ etiquetaCarga(doc) }}</span>
                                                 <input

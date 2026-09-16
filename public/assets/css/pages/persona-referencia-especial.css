@@ -44,9 +44,9 @@
     border-radius: var(--radio-control);
 }
 
-/* El anillo lo lleva el grupo y no cada botón: el recorte que junta las tres
-   piezas se comía el foco del teclado, así que no se veía ninguno. */
-.refesp-contador:focus-within {
+/* El anillo lo lleva el grupo y no cada botón —el recorte que junta las tres
+   piezas se comía el foco del teclado—, y sólo cuando el foco llega tecleando. */
+.refesp-contador:has(:focus-visible) {
     outline: var(--foco-anillo);
     outline-offset: var(--foco-separacion);
 }
