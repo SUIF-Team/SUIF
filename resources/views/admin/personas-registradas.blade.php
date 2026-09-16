@@ -102,7 +102,7 @@
                             Cancelar
                         </button>
                         <button class="boton boton--exito" type="submit" :disabled="restaurando">
-                            @{{ restaurando ? 'Restaurando…' : 'Sí, restaurar' }}
+                            @{{ restaurando ? 'Restaurando…' : 'Restaurar clave' }}
                         </button>
                     </form>
                 </section>

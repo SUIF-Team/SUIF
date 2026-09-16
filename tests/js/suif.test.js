@@ -88,7 +88,7 @@ async function principal() {
     });
 
     await prueba('mensajeError: 422, 403 y 404 tienen su propio texto', () => {
-        assert.strictEqual(SUIF.mensajeError({ estado: 422, datos: {} }), 'Revisa la información marcada.');
+        assert.strictEqual(SUIF.mensajeError({ estado: 422, datos: {} }), 'Hay datos por corregir.');
         assert.ok(SUIF.mensajeError({ estado: 403, datos: {} }).includes('permiso'));
         assert.ok(SUIF.mensajeError({ estado: 404, datos: {} }).includes('disponible'));
     });

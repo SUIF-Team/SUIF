@@ -25,7 +25,7 @@
             <div class="notificacion notificacion--error" role="alert">
                 <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
                 <div>
-                    <p>Revisa la información capturada:</p>
+                    <p>Corrige estos datos:</p>
                     <ul>
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -127,12 +127,12 @@
             <div class="dialogo__velo" data-cerrar-eliminacion></div>
             <section class="dialogo__tarjeta" role="dialog" aria-modal="true" aria-labelledby="eliminar-sede-titulo" aria-describedby="eliminar-sede-descripcion">
                 <h2 class="dialogo__titulo" id="eliminar-sede-titulo">¿Eliminar esta sede?</h2>
-                <p class="dialogo__texto" id="eliminar-sede-descripcion">Se eliminará <strong>{{ $sede->sede_nombre }}</strong> y su programación. Esta acción no se puede deshacer.</p>
+                <p class="dialogo__texto" id="eliminar-sede-descripcion">Se eliminará <strong>{{ $sede->sede_nombre }}</strong> y su programación. Después ya no podrás recuperarla.</p>
                 <form method="POST" action="{{ route('admin.sedes.destroy', $sede->sede_id_sede) }}" class="dialogo__acciones">
                     @csrf
                     @method('DELETE')
                     <button class="boton boton--secundario" type="button" data-cerrar-eliminacion>Cancelar</button>
-                    <button class="boton boton--peligro-solido" type="submit">Sí, eliminar</button>
+                    <button class="boton boton--peligro-solido" type="submit">Eliminar sede</button>
                 </form>
             </section>
         </div>

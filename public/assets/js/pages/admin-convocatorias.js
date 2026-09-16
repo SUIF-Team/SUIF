@@ -111,7 +111,7 @@
                 tituloEstado.textContent = '¿' + boton.dataset.verbo + ' esta convocatoria?';
                 destinoEstado.textContent = boton.dataset.estado;
                 avisoEstado.textContent = boton.dataset.aviso;
-                confirmarEstado.textContent = 'Sí, ' + boton.dataset.verbo.toLowerCase();
+                confirmarEstado.textContent = boton.dataset.verbo;
             }
         );
     }

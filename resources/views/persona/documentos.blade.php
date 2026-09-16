@@ -20,7 +20,7 @@
                 <div class="notificacion notificacion--error" role="alert">
                     <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
                     <div>
-                        <strong>Revisa la información:</strong>
+                        <strong>Corrige estos datos:</strong>
                         <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                     </div>
                 </div>
@@ -252,7 +252,7 @@
                             </p>
                             <div class="dialogo__acciones">
                                 <button type="button" class="boton boton--secundario" data-cerrar-envio>Cancelar</button>
-                                <button type="button" class="boton boton--primario" data-confirmar-envio>Sí, enviar</button>
+                                <button type="button" class="boton boton--primario" data-confirmar-envio>Enviar documentos</button>
                             </div>
                         </section>
                     </div>

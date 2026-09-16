@@ -120,7 +120,7 @@
                         Interrumpir trámite
                     </button>
                     <button class="boton boton--exito" type="submit" :disabled="enviando || !todosDocumentosResueltos || !comentariosCompletos">
-                        @{{ enviando ? 'Guardando...' : 'Guardar' }}
+                        @{{ enviando ? 'Guardando…' : 'Guardar' }}
                     </button>
                 </div>
 
@@ -161,7 +161,7 @@
                             formaction="{{ route('admin.documentos.interrumpir', ['id' => $persona['id'], 'origen' => $contexto_bandeja['origen']]) }}"
                             formmethod="POST"
                             :disabled="enviando || !motivoInterrupcionValido">
-                            @{{ enviando ? 'Procesando...' : 'Confirmar interrupción' }}
+                            @{{ enviando ? 'Procesando…' : 'Confirmar interrupción' }}
                         </button>
                     </div>
                 </div>

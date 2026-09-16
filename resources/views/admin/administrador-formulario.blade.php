@@ -33,7 +33,7 @@
             <div class="notificacion notificacion--error" role="alert">
                 <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
                 <div>
-                    <p>Revisa la información capturada:</p>
+                    <p>Corrige estos datos:</p>
                     <ul>
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -175,7 +175,7 @@
                     @csrf
                     @method('DELETE')
                     <button class="boton boton--secundario" type="button" data-cerrar-baja>Cancelar</button>
-                    <button class="boton boton--peligro-solido" type="submit">Sí, retirar acceso</button>
+                    <button class="boton boton--peligro-solido" type="submit">Retirar acceso</button>
                 </form>
             </section>
         </div>

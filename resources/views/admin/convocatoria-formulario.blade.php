@@ -37,7 +37,7 @@
             <div class="notificacion notificacion--error" role="alert">
                 <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
                 <div>
-                    <p>Revisa la información capturada:</p>
+                    <p>Corrige estos datos:</p>
                     <ul>
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -222,7 +222,7 @@
                 <h2 class="dialogo__titulo" id="eliminar-convocatoria-titulo">¿Eliminar esta convocatoria?</h2>
                 <p class="dialogo__texto" id="eliminar-convocatoria-descripcion">
                     Se eliminará <strong>{{ $convocatoria['nombre'] }}</strong> y su historial de estados.
-                    Esta acción no se puede deshacer.
+                    Después ya no podrás recuperarla.
                     @if($convocatoria['solicitudes'] > 0)
                         Tiene {{ number_format($convocatoria['solicitudes']) }} solicitudes registradas, así que
                         no podrá eliminarse: ciérrala o interrúmpela desde la bandeja.
@@ -232,7 +232,7 @@
                     @csrf
                     @method('DELETE')
                     <button class="boton boton--secundario" type="button" data-cerrar-eliminacion>Cancelar</button>
-                    <button class="boton boton--peligro-solido" type="submit">Sí, eliminar</button>
+                    <button class="boton boton--peligro-solido" type="submit">Eliminar convocatoria</button>
                 </form>
             </section>
         </div>

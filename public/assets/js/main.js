@@ -406,7 +406,7 @@
 
         switch (respuesta.estado) {
             case 422:
-                return 'Revisa la información marcada.';
+                return 'Hay datos por corregir.';
             case 429:
                 return 'Demasiados intentos. Espera un momento antes de volver a intentarlo.';
             case 403:

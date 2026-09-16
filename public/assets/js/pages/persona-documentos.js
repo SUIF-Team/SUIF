@@ -180,7 +180,7 @@
                                     :disabled="enviando" @click="cerrarModal">Cancelar</button>
                             <button type="button" class="boton boton--primario" :class="{ 'boton--cargando': enviando }"
                                     :disabled="enviando" @click="confirmarEnvio">
-                                {{ enviando ? 'Enviando…' : 'Sí, enviar' }}
+                                {{ enviando ? 'Enviando…' : 'Enviar documentos' }}
                             </button>
                         </div>
                     </section>

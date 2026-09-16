@@ -33,7 +33,7 @@
         <div class="notificacion notificacion--error" role="alert">
             <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
             <div>
-                <strong>Revisa los datos de la referencia especial:</strong>
+                <strong>Corrige estos datos:</strong>
                 <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
             </div>
         </div>
@@ -299,8 +299,8 @@
                 aria-modal="true"
                 aria-labelledby="refesp-modal-titulo"
                 @keydown.tab="atraparFoco">
-                <h2 class="dialogo__titulo" id="refesp-modal-titulo">¿Está seguro de que los datos son correctos?</h2>
-                <p class="dialogo__texto">Una vez enviados los datos <strong>no se podrán corregir</strong>.</p>
+                <h2 class="dialogo__titulo" id="refesp-modal-titulo">¿Confirmas que los datos son correctos?</h2>
+                <p class="dialogo__texto"><strong>Después ya no podrás corregirlos.</strong></p>
 
                 <dl class="refesp-resumen">
                     <div>
@@ -330,7 +330,7 @@
                         Volver
                     </button>
                     <button type="button" class="boton boton--primario" :disabled="enviando" @click="confirmar">
-                        @{{ enviando ? 'Enviando…' : 'Confirmar' }}
+                        @{{ enviando ? 'Enviando…' : 'Enviar solicitud' }}
                     </button>
                 </div>
             </section>

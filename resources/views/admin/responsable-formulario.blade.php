@@ -26,7 +26,7 @@
             <div class="notificacion notificacion--error" role="alert">
                 <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
                 <div>
-                    <p>Revisa la información capturada:</p>
+                    <p>Corrige estos datos:</p>
                     <ul>
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>

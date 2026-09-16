@@ -81,7 +81,7 @@
                 <div>
                     <p v-if="mensaje">{{ mensaje }}</p>
                     <template v-if="hayErrores">
-                        <strong>Revisa la información:</strong>
+                        <strong>Corrige estos datos:</strong>
                         <ul>
                             <li v-for="error in listaErrores" :key="error.campo">{{ error.texto }}</li>
                         </ul>

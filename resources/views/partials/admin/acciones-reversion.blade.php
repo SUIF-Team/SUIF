@@ -58,7 +58,7 @@
                     {{-- Confirma del color de la acción que abrió el diálogo:
                          reanudar deshace una resolución ya notificada. --}}
                     <button class="boton boton--peligro-solido" type="submit">
-                        Sí, continuar
+                        {{ $accion['etiqueta'] }}
                     </button>
                 </form>
             </section>

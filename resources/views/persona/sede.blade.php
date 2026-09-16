@@ -222,7 +222,7 @@
                     :class="{ 'boton--cargando': enviando }"
                     :disabled="enviando"
                     @click="confirmarSeleccion">
-                    @{{ enviando ? 'Confirmando…' : 'Sí, confirmar' }}
+                    @{{ enviando ? 'Confirmando…' : 'Confirmar sede y horario' }}
                 </button>
             </div>
         </section>

@@ -86,7 +86,7 @@
                         Cancelar
                     </button>
                     <button type="button" class="boton boton--primario" :disabled="enviando" @click="confirmarEleccion">
-                        @{{ enviando ? 'Confirmando…' : 'Sí, confirmar' }}
+                        @{{ enviando ? 'Confirmando…' : 'Confirmar comprobante' }}
                     </button>
                 </div>
             </section>

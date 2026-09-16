@@ -51,12 +51,12 @@
                 con tu solicitud.
             </p>
             <p>
-                La Referencia generada será <strong>exclusivamente</strong> para realizar <strong>su pago</strong>.
+                La referencia que se genere servirá <strong>exclusivamente</strong> para <strong>tu pago</strong>.
             </p>
             <p>
-                Si un tercero va a realizar el pago de la Certificación para usted y otras personas, por favor, lea
-                la descripción en la opción de <strong>&ldquo;Referencia Especial&rdquo;</strong>; si este no es el
-                caso, continúe en la opción <strong>&ldquo;Referencia Individual&rdquo;</strong>.
+                Si un tercero va a pagar la certificación por ti y por otras personas, lee la descripción de
+                <strong>«Referencia especial»</strong>; si no es tu caso, continúa en
+                <strong>«Referencia individual»</strong>.
             </p>
         </div>
 

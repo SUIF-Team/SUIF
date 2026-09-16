@@ -181,7 +181,7 @@ class DocumentoController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'tipo' => 'error',
-                    'mensaje' => 'Revisa la información marcada.',
+                    'mensaje' => 'Hay datos por corregir.',
                     'errors' => $validador->errors()->toArray(),
                 ], 422);
             }

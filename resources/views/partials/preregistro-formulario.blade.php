@@ -32,7 +32,7 @@
         <span>
             Verifica que tus datos sean correctos antes de continuar. Podrás
             editarlos mientras tu documentación no haya entrado a revisión;
-            una vez que la envíes, tus datos quedan fijos y ya no se podrán
+            una vez que la envíes, después ya no podrás
             modificar.
         </span>
     </p>

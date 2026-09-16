@@ -20,7 +20,7 @@
 
         <div class="campo admin-bandeja-preregistros-campo-termino">
             <label class="etiqueta" for="{{ $prefijo_filtros }}-termino">Término de búsqueda</label>
-            <input class="control" id="{{ $prefijo_filtros }}-termino" v-model="filtros.termino" type="search" placeholder="Escribe aquí tu búsqueda..." autocomplete="off">
+            <input class="control" id="{{ $prefijo_filtros }}-termino" v-model="filtros.termino" type="search" placeholder="Escribe aquí tu búsqueda…" autocomplete="off">
         </div>
 
         <div class="campo admin-bandeja-preregistros-campo-estado">
