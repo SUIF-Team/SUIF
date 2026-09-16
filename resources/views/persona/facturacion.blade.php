@@ -48,7 +48,6 @@
         <form
             method="POST"
             action="{{ route('persona.facturacion.store') }}"
-            class="facturacion-form"
             @submit.prevent="enviar($event)">
             @csrf
 

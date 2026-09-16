@@ -70,7 +70,8 @@ class SeleccionReferenciaTest extends TestCase
         $respuesta = $this->actingAs($this->persona())->get(route('persona.referencia.index'));
 
         $respuesta->assertSee(route('persona.referencia.especial'));
-        $respuesta->assertDontSee('referencia-boton--inhabilitado', false);
+        /* Se ofrece como enlace, no como un botón apagado. */
+        $respuesta->assertDontSee('aria-disabled', false);
         $this->assertTrue(Route::has('persona.referencia.especial'));
     }
 
