@@ -3,35 +3,27 @@
 namespace Tests\Feature;
 
 use App\Models\Usuario;
-use DOMDocument;
-use DOMElement;
-use DOMXPath;
+use App\Servicios\FormatoPagoDec;
+use App\Support\Admin\ConsultaPagos;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Testing\TestResponse;
 use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
-use ZipArchive;
 
 /**
  * El formato de pago con que la DEC emite el CFDI o el ticket: cuándo se
- * ofrece, qué escribe en cada celda de la plantilla y a quién deja como
- * responsable del pago.
+ * ofrece, qué escribe en cada campo y a quién deja como responsable del pago.
  *
- * Las celdas se leen del .xlsx que devuelve la descarga: si la plantilla de la
- * DEC cambia y algo deja de caer donde debe, estas pruebas lo dicen.
+ * La descarga es un PDF, que no se puede leer de vuelta: lo que lleva cada
+ * campo se comprueba en FormatoPagoDec::datos(), y la vista, con esos datos,
+ * para la casilla marcada y el escapado.
  */
 class FormatoPagoTest extends TestCase
 {
     use SiembraAdministradores;
 
-    private const NS_HOJA = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-
-    private const NS_DIBUJO = 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing';
-
-    private const HOJA = 'xl/worksheets/sheet4.xml';
-
-    private const DIBUJO = 'xl/drawings/drawing4.xml';
+    /* La única casilla con «X» en la vista del formato. */
+    private const MARCADA = '<div>X</div>';
 
     protected function setUp(): void
     {
@@ -90,28 +82,32 @@ class FormatoPagoTest extends TestCase
         $respuesta = $this->actingAs(Usuario::findOrFail(4))
             ->post(route('admin.pagos.formato', 1), ['responsable' => 2])
             ->assertOk()
-            ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            ->assertHeader('Content-Disposition', 'attachment; filename="formato-pago-1234567890.xlsx"')
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename="formato-pago-1234567890.pdf"')
             ->assertSessionHas('formato_pago.responsable', 2);
 
-        $hoja = $this->parte($respuesta, self::HOJA);
-
-        $this->assertSame('SIN EFECTOS FISCALES', $this->celda($hoja, 'G11'));
-        $this->assertSame('ANA CANDIDATA PRUEBA', $this->celda($hoja, 'B20'));
-        $this->assertSame('CERTIFICACIÓN UIF 2026', $this->celda($hoja, 'B24'));
-        $this->assertSame('7000.00', $this->celda($hoja, 'H24'));
-        $this->assertSame('1234567890', $this->celda($hoja, 'G25'));
-        $this->assertSame('TOMÁS IBARRA LUNA', $this->celda($hoja, 'G29'));
-
-        /* Con ticket la sección de facturación se queda como en la plantilla,
-           y con transferencia no hay banco que anotar. */
-        $this->assertNull($this->celda($hoja, 'B10'));
-        $this->assertNull($this->celda($hoja, 'C15'));
-        $this->assertNull($this->celda($hoja, 'B28'));
-
-        $this->assertSame('G27', $this->casillaMarcada($this->parte($respuesta, self::DIBUJO)));
-
+        $this->assertStringStartsWith('%PDF', $respuesta->getContent());
         $this->assertSame(2, (int) DB::table('pago')->where('pago_id_pago', 1)->value('pago_id_responsable'));
+
+        $datos = $this->datos('Tomás Ibarra Luna');
+
+        $this->assertSame('SIN EFECTOS FISCALES', $datos['uso']);
+        $this->assertSame('ANA CANDIDATA PRUEBA', $datos['participante']);
+        $this->assertSame('CERTIFICACIÓN UIF 2026', $datos['evento']);
+        $this->assertSame('$7,000.00', $datos['importe']);
+        $this->assertSame('1234567890', $datos['referencia']);
+        $this->assertSame('TOMÁS IBARRA LUNA', $datos['atendido_por']);
+
+        /* Con ticket la sección de facturación sale con guiones, y con
+           transferencia no hay banco que anotar. */
+        foreach (['nombre_fiscal', 'rfc', 'codigo_postal', 'regimen', 'banco'] as $campo) {
+            $this->assertSame('—', $datos[$campo], $campo);
+        }
+
+        $vista = $this->view('pdf.pago.formato', $datos)
+            ->assertSeeInOrder(['TRANSFERENCIA', self::MARCADA], false);
+
+        $this->assertSame(1, substr_count((string) $vista, self::MARCADA), 'Sólo una casilla puede ir marcada.');
     }
 
     public function test_el_cfdi_llena_la_seccion_de_facturacion_y_el_banco_de_la_tarjeta(): void
@@ -124,21 +120,20 @@ class FormatoPagoTest extends TestCase
             'pago_id_banco' => 1,
         ]);
 
-        $respuesta = $this->actingAs(Usuario::findOrFail(4))
-            ->post(route('admin.pagos.formato', 1), ['responsable' => 1])
-            ->assertOk();
+        $datos = $this->datos('Rocío Durán Vega');
 
-        $hoja = $this->parte($respuesta, self::HOJA);
+        $this->assertSame('ANA CANDIDATA PRUEBA', $datos['nombre_fiscal']);
+        $this->assertSame('CAPA900101AB1', $datos['rfc']);
+        $this->assertSame('GASTOS EN GENERAL', $datos['uso']);
+        /* El código postal conserva el cero inicial. */
+        $this->assertSame('01000', $datos['codigo_postal']);
+        $this->assertSame('626 RÉGIMEN SIMPLIFICADO DE CONFIANZA', $datos['regimen']);
+        $this->assertSame('BBVA', $datos['banco']);
 
-        $this->assertSame('ANA CANDIDATA PRUEBA', $this->celda($hoja, 'B10'));
-        $this->assertSame('CAPA900101AB1', $this->celda($hoja, 'B11'));
-        $this->assertSame('GASTOS EN GENERAL', $this->celda($hoja, 'G11'));
-        /* Texto y no número: el código postal conserva el cero inicial. */
-        $this->assertSame('01000', $this->celda($hoja, 'B13'));
-        $this->assertSame('626 RÉGIMEN SIMPLIFICADO DE CONFIANZA', $this->celda($hoja, 'C15'));
-        $this->assertSame('BBVA', $this->celda($hoja, 'B28'));
+        $vista = $this->view('pdf.pago.formato', $datos)
+            ->assertSeeInOrder(['DÉBITO', self::MARCADA, 'TRANSFERENCIA'], false);
 
-        $this->assertSame('C27', $this->casillaMarcada($this->parte($respuesta, self::DIBUJO)));
+        $this->assertSame(1, substr_count((string) $vista, self::MARCADA), 'Sólo una casilla puede ir marcada.');
     }
 
     public function test_en_un_pago_grupal_el_participante_es_quien_paga(): void
@@ -150,15 +145,13 @@ class FormatoPagoTest extends TestCase
             'pago_no_empleado' => 3,
         ]);
 
-        $respuesta = $this->actingAs(Usuario::findOrFail(4))
-            ->post(route('admin.pagos.formato', 1), ['responsable' => 1])
-            ->assertOk();
+        $datos = $this->datos('Rocío Durán Vega');
 
-        $hoja = $this->parte($respuesta, self::HOJA);
+        $this->assertSame('GRUPO RUIZ & ASOCIADOS', $datos['participante']);
+        $this->assertSame('GRUPO RUIZ & ASOCIADOS', $datos['nombre_fiscal']);
 
-        /* El & llega escapado al XML y se lee de vuelta tal cual. */
-        $this->assertSame('GRUPO RUIZ & ASOCIADOS', $this->celda($hoja, 'B20'));
-        $this->assertSame('GRUPO RUIZ & ASOCIADOS', $this->celda($hoja, 'B10'));
+        /* assertSee escapa lo que busca: el & tiene que llegar como &amp;. */
+        $this->view('pdf.pago.formato', $datos)->assertSee('GRUPO RUIZ & ASOCIADOS');
     }
 
     public function test_no_acepta_un_responsable_dado_de_baja(): void
@@ -208,48 +201,6 @@ class FormatoPagoTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['PAGO APROBADO', 'Generar comprobante', 'Corregir la resolución'])
             ->assertSee('Descargar formato');
-    }
-
-    /**
-     * Lo que escribe el formato va en Arial 8 sin negritas, centrado y abajo.
-     * Sólo el evento va en negritas, y el evento y el régimen conservan su
-     * alineación porque son los textos largos. Esos estilos vienen de la
-     * plantilla: una versión nueva de la DEC que no los traiga falla aquí.
-     */
-    public function test_lo_que_escribe_el_formato_va_en_arial_8(): void
-    {
-        $this->estadoPago('Completado');
-        $this->datosFiscales('Ana Candidata Prueba');
-        DB::table('pago')->where('pago_id_pago', 1)->update([
-            'pago_uso_cfdi' => true,
-            'pago_id_metodo_pago' => 2,
-            'pago_id_banco' => 1,
-        ]);
-
-        $respuesta = $this->actingAs(Usuario::findOrFail(4))
-            ->post(route('admin.pagos.formato', 1), ['responsable' => 1])
-            ->assertOk();
-
-        $hoja = $this->parte($respuesta, self::HOJA);
-        $estilos = $this->parte($respuesta, 'xl/styles.xml');
-
-        foreach (['B10', 'B11', 'G11', 'B13', 'C15', 'B20', 'B24', 'H24', 'G25', 'B28', 'G29'] as $referencia) {
-            $this->assertNotNull($this->celda($hoja, $referencia), "$referencia no se escribió.");
-
-            $estilo = $this->estilo($hoja, $estilos, $referencia);
-
-            $this->assertSame('Arial 8', $estilo['fuente'], $referencia);
-            $this->assertSame($referencia === 'B24', $estilo['negritas'], $referencia);
-
-            if (!in_array($referencia, ['B24', 'C15'], true)) {
-                $this->assertSame('center bottom', $estilo['alineacion'], $referencia);
-            }
-        }
-
-        $dibujo = $this->parte($respuesta, self::DIBUJO);
-
-        $this->assertStringContainsString('<a:latin typeface="Arial"/>', $dibujo);
-        $this->assertStringNotContainsString(' b="1"', $dibujo);
     }
 
     /* ── Apoyos ───────────────────────────────────────────────────────── */
@@ -337,95 +288,14 @@ class FormatoPagoTest extends TestCase
         DB::table('pago')->where('pago_id_pago', 1)->update(['pago_id_dato_fiscal' => 1]);
     }
 
-    private function parte(TestResponse $respuesta, string $nombre): string
-    {
-        $ruta = tempnam(sys_get_temp_dir(), 'suif-prueba-');
-        file_put_contents($ruta, $respuesta->getContent());
-
-        $zip = new ZipArchive();
-        $this->assertTrue($zip->open($ruta) === true, 'La descarga no es un .xlsx válido.');
-        $xml = (string) $zip->getFromName($nombre);
-        $zip->close();
-        unlink($ruta);
-
-        return $xml;
-    }
-
     /**
-     * Lo que el formato escribió en la celda, o null si la dejó como venía
-     * en la plantilla.
-     */
-    private function celda(string $xml, string $referencia): ?string
-    {
-        $documento = new DOMDocument();
-        $documento->loadXML($xml);
-        $xpath = new DOMXPath($documento);
-        $xpath->registerNamespace('m', self::NS_HOJA);
-
-        $celda = $xpath->query('//m:c[@r="'.$referencia.'"]')->item(0);
-
-        if (!$celda instanceof DOMElement) {
-            return null;
-        }
-
-        $escrita = $celda->getAttribute('t') === 'inlineStr'
-            || ($celda->getAttribute('t') === '' && $celda->hasChildNodes());
-
-        return $escrita ? $celda->textContent : null;
-    }
-
-    /**
-     * La celda sobre la que está la única casilla con «X», o null si no hay.
-     */
-    private function casillaMarcada(string $xml): ?string
-    {
-        $documento = new DOMDocument();
-        $documento->loadXML($xml);
-        $xpath = new DOMXPath($documento);
-        $xpath->registerNamespace('xdr', self::NS_DIBUJO);
-
-        $marcadas = $xpath->query('//xdr:twoCellAnchor[xdr:sp/xdr:txBody]');
-
-        $this->assertLessThanOrEqual(1, $marcadas->length, 'Sólo una casilla puede ir marcada.');
-
-        if ($marcadas->length === 0) {
-            return null;
-        }
-
-        $ancla = $marcadas->item(0);
-        $columna = (int) $xpath->query('xdr:from/xdr:col', $ancla)->item(0)->textContent;
-        $renglon = (int) $xpath->query('xdr:from/xdr:row', $ancla)->item(0)->textContent;
-
-        return chr(ord('A') + $columna).($renglon + 1);
-    }
-
-    /**
-     * Fuente y alineación con que la plantilla pinta la celda.
+     * Lo que el formato escribe en cada campo para el pago sembrado, con el
+     * pago tal como lo arma el expediente.
      *
-     * @return array{fuente: string, negritas: bool, alineacion: string}
+     * @return array<string, string|null>
      */
-    private function estilo(string $hoja, string $estilos, string $referencia): array
+    private function datos(string $atendido_por): array
     {
-        $documento = new DOMDocument();
-        $documento->loadXML($hoja);
-        $xpath = new DOMXPath($documento);
-        $xpath->registerNamespace('m', self::NS_HOJA);
-        $indice = (int) $xpath->evaluate('string(//m:c[@r="'.$referencia.'"]/@s)');
-
-        $documento = new DOMDocument();
-        $documento->loadXML($estilos);
-        $xpath = new DOMXPath($documento);
-        $xpath->registerNamespace('m', self::NS_HOJA);
-
-        $xf = $xpath->query('/m:styleSheet/m:cellXfs/m:xf')->item($indice);
-        $fuente = $xpath->query('/m:styleSheet/m:fonts/m:font')->item((int) $xf->getAttribute('fontId'));
-
-        return [
-            'fuente' => $xpath->evaluate('string(m:name/@val)', $fuente).' '.$xpath->evaluate('string(m:sz/@val)', $fuente),
-            'negritas' => $xpath->query('m:b', $fuente)->length > 0,
-            /* Sin atributos, Excel alinea el texto a la izquierda y abajo. */
-            'alineacion' => ($xpath->evaluate('string(m:alignment/@horizontal)', $xf) ?: 'general')
-                .' '.($xpath->evaluate('string(m:alignment/@vertical)', $xf) ?: 'bottom'),
-        ];
+        return app(FormatoPagoDec::class)->datos(app(ConsultaPagos::class)->pago(1), $atendido_por);
     }
 }

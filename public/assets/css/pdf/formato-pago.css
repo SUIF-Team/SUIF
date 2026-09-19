@@ -1,0 +1,215 @@
+/*
+    formato-pago.css
+    Hoja de estilo del formato de pago de la DEC que genera Dompdf.
+
+    Copia la hoja «PROGRAMAS NACIONALES» del Excel de la DEC: carta vertical
+    con sus márgenes, ocho columnas y cada renglón a la altura que traía, todo
+    en puntos. Arial negro sobre blanco; Helvetica es la Arial de Dompdf, con
+    la misma métrica. La hoja ocupa media carta y cierra con la línea punteada
+    por donde se corta.
+
+    Dompdf no puede resolver un <link> a una URL sin habilitar enable_remote,
+    así que la plantilla incrusta este archivo. Todo va en pt: Dompdf no
+    interpreta rem ni vh, y maqueta con tablas porque no entiende flex ni grid.
+*/
+
+@page {
+    margin: 0.44in 0.7in 0.46in 0.7in;
+}
+
+body {
+    margin: 0;
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 8pt;
+    line-height: 1.15;
+    color: #000;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td {
+    padding: 0 1.5pt;
+    vertical-align: bottom;
+}
+
+/* ── Encabezado: renglones 1 a 5 ──────────────────────────────────────── */
+
+/* Tres columnas simétricas para que el texto quede centrado en la hoja,
+   como las celdas combinadas A:H, y los logos donde los dibuja el Excel. */
+.encabezado {
+    width: 501pt;
+}
+
+.encabezado td {
+    height: 66pt;
+    padding: 0.8pt 0 0 0;
+    vertical-align: top;
+}
+
+.encabezado__escudo {
+    width: 100pt;
+    padding-left: 3.8pt;
+}
+
+.encabezado__escudo img {
+    width: 50.3pt;
+    height: 53.6pt;
+}
+
+.encabezado__texto {
+    width: 301pt;
+    text-align: center;
+    font-size: 10pt;
+    font-weight: bold;
+    line-height: 13.2pt;
+}
+
+.encabezado .encabezado__texto {
+    padding-top: 0;
+}
+
+.encabezado__dec {
+    width: 100pt;
+}
+
+.encabezado__dec img {
+    width: 61.9pt;
+    height: 43.1pt;
+}
+
+/* Renglón 6. En el Excel las letras van separadas con espacios; Dompdf los
+   colapsaría, así que el espaciado lo pone el CSS. */
+.titulo {
+    width: 501pt;
+    height: 13.2pt;
+    margin: 0;
+    text-align: center;
+    font-size: 9pt;
+    font-weight: bold;
+    line-height: 13.2pt;
+    letter-spacing: 2.3pt;
+    word-spacing: 2.5pt;
+}
+
+/* ── Hoja: renglones 7 a 30 ───────────────────────────────────────────── */
+
+.hoja {
+    width: 501pt;
+    table-layout: fixed;
+}
+
+/* Anchos de las columnas A–H de la hoja, en puntos. */
+.regla td {
+    height: 0;
+    padding: 0;
+    line-height: 0;
+    font-size: 0;
+}
+
+.col-a { width: 64.8pt; }
+.col-b { width: 73.2pt; }
+.col-c { width: 39.6pt; }
+.col-d { width: 49.2pt; }
+.col-e { width: 48.6pt; }
+.col-f { width: 51.6pt; }
+.col-g { width: 73.2pt; }
+.col-h { width: 100.8pt; }
+
+/* Alto de los renglones, como en la hoja. */
+.r8 td { height: 7.8pt; }
+.r11 td { height: 10.8pt; }
+.r13 td { height: 13.2pt; }
+.r17 td { height: 16.8pt; }
+.r18 td { height: 18pt; }
+.r27 td { height: 27pt; }
+
+/* Barras de sección: el rectángulo redondeado del Excel mide 454.2 × 13.2 pt
+   y arranca a 17 pt del margen. El texto va centrado en la hoja y no en la
+   barra, como en el Excel; de ahí el relleno a la izquierda. */
+.seccion {
+    width: 439.9pt;
+    height: 11.7pt;
+    margin-left: 17pt;
+    padding-left: 12.8pt;
+    border: 0.75pt solid #000;
+    border-radius: 2.2pt;
+    text-align: center;
+    font-size: 10pt;
+    font-weight: bold;
+    line-height: 11.7pt;
+}
+
+.seccion__nota {
+    font-size: 5pt;
+}
+
+/* Rótulo a la derecha de su columna, pegado al renglón que nombra. */
+.rotulo {
+    text-align: right;
+}
+
+.rotulo--negritas {
+    font-weight: bold;
+}
+
+.rotulo--grande {
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+/* Texto suelto a la izquierda: «EVENTO:», «FORMA DE PAGO:» y las formas. */
+.texto {
+    text-align: left;
+}
+
+/* El renglón donde se escribe: el dato centrado sobre la línea. */
+.valor {
+    border-bottom: 0.75pt solid #000;
+    text-align: center;
+}
+
+.valor--evento {
+    font-weight: bold;
+    vertical-align: middle;
+}
+
+.uso {
+    padding-left: 6pt;
+    text-align: left;
+}
+
+.regimen__rotulo {
+    text-align: center;
+    vertical-align: middle;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.regimen {
+    padding-left: 3pt;
+    vertical-align: middle;
+}
+
+/* Casilla de 9.8 × 9 pt a 21.8 pt del borde de su columna. El ancho y el
+   alto no cuentan el borde. */
+.casilla {
+    padding: 0 0 1pt 21.8pt;
+}
+
+.casilla div {
+    width: 8.3pt;
+    height: 7.5pt;
+    border: 0.75pt solid #000;
+    text-align: center;
+    line-height: 7.5pt;
+}
+
+.firma {
+    text-align: center;
+}
+
+.corte {
+    border-bottom: 0.75pt dotted #000;
+}

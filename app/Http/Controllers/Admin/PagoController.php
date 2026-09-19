@@ -97,11 +97,7 @@ class PagoController extends Controller
 
         $responsable = collect($responsables)->firstWhere('id', (int) $datos['responsable']);
 
-        try {
-            $descarga = $formato_pago->descarga($pago, $responsable);
-        } catch (DomainException $exception) {
-            return $this->responder($request, 'error', $exception->getMessage(), $destino);
-        }
+        $descarga = $formato_pago->descarga($pago, $responsable);
 
         /* Quien genera varios formatos seguidos casi siempre los atiende la
            misma persona: el siguiente expediente la trae preseleccionada. */
