@@ -69,7 +69,7 @@
                     <p>Es fundamental leer todos los apartados normativos antes de iniciar tu proceso de pre-registro en la plataforma.</p>
                 </div>
                 <div class="convocation-download">
-                    <h3>Documento oficial</h3>
+                    <h3>Descarga la convocatoria</h3>
                     <a href="#" class="btn btn-pill document-button">
                         <i class="fas fa-arrow-down me-2" aria-hidden="true"></i>Descargar PDF
                     </a>
