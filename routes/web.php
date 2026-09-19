@@ -221,6 +221,9 @@ Route::middleware(['auth', 'can:acceder-admin'])
 
         Route::middleware('can:validar-registro')->group(function () {
             Route::get('/reportes/registros', [AdminReporteController::class, 'registros'])->name('reportes.registros');
+            /* El alta en la plataforma del examen es del padrón de la UIF,
+               aunque se pida por grupo como la lista de asistencia. */
+            Route::get('/reportes/plataformas', [AdminReporteController::class, 'plataformas'])->name('reportes.plataformas');
         });
 
         /* La lista de un grupo es la programación de una sede: mismo permiso

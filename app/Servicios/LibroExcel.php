@@ -22,6 +22,9 @@ use Throwable;
  *
  * A diferencia de los PDF del sistema, no hay una clase por documento con
  * vista() y datos(): un PDF necesita plantilla Blade y una hoja de cálculo no.
+ * La excepción son los formatos que nos entregan desde fuera con un acomodo
+ * fijo, como el registro para la plataforma del examen: ésos arman su propia
+ * hoja y aquí sólo se entregan, con entregar().
  */
 class LibroExcel
 {
@@ -58,15 +61,28 @@ class LibroExcel
         }
 
         $libro = new Spreadsheet();
+        $this->escribir($libro, $encabezados, $filas, $anchos, $ajustar);
 
+        return $this->entregar($libro, $nombre_archivo);
+    }
+
+    /**
+     * Entrega como descarga un libro ya armado.
+     *
+     * Es pública para los formatos que llegan de fuera con su propio acomodo
+     * —RegistroPlataformas—: esos arman su hoja, pero la escritura, la
+     * liberación de memoria y los encabezados de la respuesta son los mismos
+     * que los de cualquier reporte.
+     */
+    public function entregar(Spreadsheet $libro, string $nombre_archivo): Response
+    {
         try {
-            $contenido = $this->escribir($libro, $encabezados, $filas, $anchos, $ajustar);
+            $contenido = $this->volcar($libro);
         } finally {
             /* Sin esto las hojas quedan enlazadas al libro por referencias
                circulares y el recolector no las suelta: en un worker que
                atiende varias descargas seguidas, la memoria se acumula. */
             $libro->disconnectWorksheets();
-            unset($libro);
         }
 
         return response($contenido, 200, [
@@ -89,7 +105,7 @@ class LibroExcel
         array $filas,
         array $anchos,
         array $ajustar
-    ): string {
+    ): void {
         $hoja = $libro->getActiveSheet();
         $hoja->setTitle('Reporte');
 
@@ -128,8 +144,6 @@ class LibroExcel
         /* Con el encabezado congelado la tabla se lee sin perder de vista qué
            es cada columna, que es justo lo que se hace con un reporte largo. */
         $hoja->freezePane('A2');
-
-        return $this->volcar($libro);
     }
 
     /**

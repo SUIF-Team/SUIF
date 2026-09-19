@@ -211,24 +211,42 @@ class GestionSedes
      * horario sin el pago validado, de modo que estar en esta lista ya implica
      * haber pagado.
      *
+     * Trae también lo que pide el alta en la plataforma del examen —folio,
+     * RFC y correo principal—, porque son las mismas personas: quien pasa
+     * lista y quien da de alta deben trabajar sobre el mismo padrón.
+     *
      * @return array{grupo: array<string, mixed>, personas: array<int, array<string, string>>}
      */
     public function listaDeGrupo(int $idGrupo): array
     {
         $grupo = $this->grupo($idGrupo);
 
+        /* El correo principal más reciente de cada persona, igual que
+           GestionClaves::correoPrincipal(), pero para todo el grupo en una
+           sola consulta en lugar de una por renglón. */
+        $correos = DB::table('comunicacion as co')
+            ->join('tipo_comunicacion as tc', 'tc.tico_id_tipo_comunicacion', '=', 'co.comu_id_tipo_comunicacion')
+            ->where('tc.tico_tipo_comunicacion', 'Correo principal')
+            ->selectRaw('co.comu_id_persona, MAX(co.comu_id_comunicacion) as id_comunicacion')
+            ->groupBy('co.comu_id_persona');
+
         $personas = DB::table('solicitud as so')
             ->join('evaluacion as e', 'e.eval_id_evaluacion', '=', 'so.soli_id_evaluacion')
             ->join('persona as p', 'p.pers_id_persona', '=', 'so.soli_id_persona')
+            ->leftJoinSub($correos, 'uc', 'uc.comu_id_persona', '=', 'p.pers_id_persona')
+            ->leftJoin('comunicacion as correo', 'correo.comu_id_comunicacion', '=', 'uc.id_comunicacion')
             ->where('e.grup_id_grupo', $idGrupo)
             ->orderBy('p.pers_apellido_paterno')
             ->orderBy('p.pers_apellido_materno')
             ->orderBy('p.pers_nombre')
             ->select([
+                'so.soli_id_solicitud',
                 'p.pers_curp',
+                'p.pers_rfc',
                 'p.pers_nombre',
                 'p.pers_apellido_paterno',
                 'p.pers_apellido_materno',
+                'correo.comu_descripcion',
             ])
             ->get()
             ->values()
@@ -240,6 +258,15 @@ class GestionSedes
                     $fila->pers_apellido_materno,
                     $fila->pers_nombre
                 ),
+                'folio' => (string) $fila->soli_id_solicitud,
+                'nombre' => trim((string) $fila->pers_nombre),
+                'apellidos' => NombrePersona::administrativo(
+                    $fila->pers_apellido_paterno,
+                    $fila->pers_apellido_materno,
+                    null
+                ),
+                'correo' => trim((string) $fila->comu_descripcion),
+                'rfc' => trim((string) $fila->pers_rfc),
             ])
             ->all();
 

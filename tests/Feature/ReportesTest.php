@@ -8,8 +8,10 @@ use App\Servicios\GestionSedes;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPreRegistros;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
+use ZipArchive;
 
 /**
  * Los reportes descargables: quién puede bajar cada uno y qué trae dentro.
@@ -68,6 +70,7 @@ class ReportesTest extends TestCase
         /* La UIF valida registros: baja el padrón y nada más. */
         $this->actingAs(Usuario::findOrFail(3));
         $this->get(route('admin.reportes.registros'))->assertOk();
+        $this->get(route('admin.reportes.plataformas', ['grupo' => 1]))->assertOk();
         $this->get(route('admin.reportes.pagos'))->assertForbidden();
         $this->get(route('admin.reportes.cfdi'))->assertForbidden();
         $this->get(route('admin.reportes.grupos', ['grupo' => 1]))->assertForbidden();
@@ -77,6 +80,7 @@ class ReportesTest extends TestCase
         $this->get(route('admin.reportes.pagos'))->assertOk();
         $this->get(route('admin.reportes.cfdi'))->assertOk();
         $this->get(route('admin.reportes.registros'))->assertForbidden();
+        $this->get(route('admin.reportes.plataformas', ['grupo' => 1]))->assertForbidden();
         $this->get(route('admin.reportes.grupos', ['grupo' => 1]))->assertForbidden();
     }
 
@@ -86,6 +90,7 @@ class ReportesTest extends TestCase
             ->get(route('admin.reportes.index'))
             ->assertOk()
             ->assertSee('Registros totales al sistema')
+            ->assertSee('Alta en plataforma de examen')
             ->assertDontSee('Referencias bancarias')
             ->assertDontSee('Solicitudes de CFDI')
             ->assertDontSee('Lista de asistencia por grupo');
@@ -95,7 +100,8 @@ class ReportesTest extends TestCase
             ->assertOk()
             ->assertSee('Referencias bancarias')
             ->assertSee('Solicitudes de CFDI')
-            ->assertDontSee('Registros totales al sistema');
+            ->assertDontSee('Registros totales al sistema')
+            ->assertDontSee('Alta en plataforma de examen');
     }
 
     /**
@@ -122,7 +128,7 @@ class ReportesTest extends TestCase
 
     /**
      * Un administrador que sólo gestiona convocatorias entra a la zona
-     * administrativa, pero ninguno de los cuatro reportes es suyo: ni ve la
+     * administrativa, pero ninguno de los reportes es suyo: ni ve la
      * tarjeta en el tablero ni puede abrir la pantalla escribiendo la URL.
      */
     public function test_un_administrador_sin_reportes_no_ve_ni_abre_la_pantalla(): void
@@ -150,6 +156,7 @@ class ReportesTest extends TestCase
             route('admin.reportes.cfdi'),
             route('admin.reportes.registros'),
             route('admin.reportes.grupos', ['grupo' => 1]),
+            route('admin.reportes.plataformas', ['grupo' => 1]),
         ] as $ruta) {
             $respuesta = $this->get($ruta);
 
@@ -212,6 +219,8 @@ class ReportesTest extends TestCase
         $this->get(route('admin.reportes.grupos', ['grupo' => 9999]))->assertNotFound();
         $this->get(route('admin.reportes.grupos'))->assertNotFound();
         $this->get(route('admin.reportes.grupos.lista', ['grupo' => 9999]))->assertNotFound();
+        $this->get(route('admin.reportes.plataformas', ['grupo' => 9999]))->assertNotFound();
+        $this->get(route('admin.reportes.plataformas'))->assertNotFound();
     }
 
     /* ── Contenido ────────────────────────────────────────────────────── */
@@ -456,6 +465,117 @@ class ReportesTest extends TestCase
         $this->assertSame('ZPAG900101MDFABC08', $lista['personas'][1]['curp']);
     }
 
+    public function test_la_lista_de_grupo_trae_los_datos_del_alta_en_plataforma(): void
+    {
+        $ana = app(GestionSedes::class)->listaDeGrupo(1)['personas'][0];
+
+        $this->assertSame($this->folioDe(5), $ana['folio']);
+        $this->assertSame('Ana', $ana['nombre']);
+        $this->assertSame('Alvarez Pagada', $ana['apellidos']);
+        $this->assertSame('ALPA900101AB1', $ana['rfc']);
+        /* El principal más reciente: ni el que tenía antes ni el alterno. */
+        $this->assertSame('ana@ejemplo.mx', $ana['correo']);
+    }
+
+    /**
+     * Aquí sí se abre el archivo: el acomodo es el requisito, porque lo fija
+     * la plataforma del examen y no SUIF.
+     */
+    public function test_el_alta_en_plataforma_replica_la_plantilla(): void
+    {
+        $respuesta = $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.reportes.plataformas', ['grupo' => 1]));
+
+        $respuesta->assertOk();
+        $this->assertStringContainsString(
+            'registro-plataformas-centro-de-aplicacion-copilco-2026-11-20.xlsx',
+            $respuesta->headers->get('Content-Disposition')
+        );
+
+        $ruta = tempnam(sys_get_temp_dir(), 'suif-prueba-');
+        file_put_contents($ruta, $respuesta->getContent());
+
+        try {
+            $hoja = IOFactory::load($ruta)->getActiveSheet();
+
+            $this->assertSame('Hoja1', $hoja->getTitle());
+            /* El programa y el período son los de la convocatoria vigente,
+               aunque en el grupo haya alguien de la anterior. */
+            $this->assertSame('Convocatoria 2026', $hoja->getCell('A1')->getValue());
+            $this->assertSame('02/03/2026 al 31/12/2026', $hoja->getCell('E1')->getValue());
+            $this->assertSame('Campos necesarios para alta en plataformas', $hoja->getCell('A2')->getValue());
+            $this->assertEquals(18, $hoja->getStyle('A2')->getFont()->getSize());
+            $this->assertArrayHasKey('A1:D1', $hoja->getMergeCells());
+
+            $this->assertSame([[
+                'Nombre',
+                'Apellidos',
+                'Correo',
+                'RFC (fungirá como contraseña)',
+                'folio de registro (fungirá como Usuario)',
+            ]], $hoja->rangeToArray('A4:E4'));
+
+            $this->assertSame([
+                ['Ana', 'Alvarez Pagada', 'ana@ejemplo.mx', 'ALPA900101AB1', $this->folioDe(5)],
+                ['Diego', 'Zamora Pendiente', 'diego@ejemplo.mx', 'ZAPD900101CD2', $this->folioDe(8)],
+            ], $hoja->rangeToArray('A5:E6'));
+
+            /* La tabla de Excel se lee del XML: es la parte del formato que
+               más fácil se pierde y la que da el filtro y las bandas. */
+            $zip = new ZipArchive();
+            $zip->open($ruta);
+            $tabla = '';
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                if (str_starts_with((string) $zip->getNameIndex($i), 'xl/tables/')) {
+                    $tabla = (string) $zip->getFromIndex($i);
+                }
+            }
+
+            $zip->close();
+
+            $this->assertStringContainsString('ref="A4:E6"', $tabla);
+            $this->assertStringContainsString('TableStyleMedium9', $tabla);
+        } finally {
+            @unlink($ruta);
+        }
+    }
+
+    public function test_el_alta_en_plataforma_avisa_si_el_grupo_no_tiene_personas(): void
+    {
+        DB::table('grupo')->insert([
+            'grup_id_grupo' => 2,
+            'sede_id_sede' => 1,
+            'grup_fecha_inicio' => '2026-11-21',
+            'grup_fecha_fin' => '2026-11-21',
+            'grup_hora_inicio' => '09:00:00',
+            'grup_hora_fin' => '13:00:00',
+        ]);
+        DB::table('evaluacion')->insert(['eval_id_evaluacion' => 2, 'grup_id_grupo' => 2]);
+
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.reportes.plataformas', ['grupo' => 2]))
+            ->assertRedirect(route('admin.reportes.index'))
+            ->assertSessionHas('error', 'El grupo no tiene personas citadas.');
+    }
+
+    public function test_el_alta_en_plataforma_avisa_si_no_hay_convocatoria_vigente(): void
+    {
+        /* La 2026 se cierra: su último estado deja de ser Vigente. */
+        DB::table('estado_convocatoria')->insert([
+            'esco_id_c_estado_convocatoria' => 2,
+            'esco_id_convocatoria' => 1,
+        ]);
+
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.reportes.plataformas', ['grupo' => 1]))
+            ->assertRedirect(route('admin.reportes.index'))
+            ->assertSessionHas(
+                'error',
+                'No hay una convocatoria vigente: de ella salen el programa y el período del registro.'
+            );
+    }
+
     /* ── Siembra ──────────────────────────────────────────────────────── */
 
     /**
@@ -470,11 +590,12 @@ class ReportesTest extends TestCase
             route('admin.reportes.registros'),
             route('admin.reportes.grupos', ['grupo' => 1]),
             route('admin.reportes.grupos.lista', ['grupo' => 1]),
+            route('admin.reportes.plataformas', ['grupo' => 1]),
         ];
     }
 
     /**
-     * Un rol administrativo que no toca ninguno de los cuatro reportes.
+     * Un rol administrativo que no toca ninguno de los reportes.
      *
      * El reparto del trait no trae ninguno así, y es justo el caso que separa
      * «entrar a /admin» de «poder descargar un reporte».
@@ -518,14 +639,28 @@ class ReportesTest extends TestCase
                 'conv_id_convocatoria' => 1,
                 'conv_nombre' => 'Convocatoria 2026',
                 'conv_fecha_inicio_registro' => '2026-01-01',
+                'conv_fecha_inicio' => '2026-03-02',
                 'conv_fecha_fin' => '2026-12-31',
             ],
             [
                 'conv_id_convocatoria' => 2,
                 'conv_nombre' => 'Convocatoria 2025',
                 'conv_fecha_inicio_registro' => '2025-01-01',
+                'conv_fecha_inicio' => '2025-03-03',
                 'conv_fecha_fin' => '2025-12-31',
             ],
+        ]);
+
+        /* La 2026 es la vigente: de ella sale el encabezado del alta en la
+           plataforma del examen. */
+        DB::table('c_estado_convocatoria')->insert([
+            ['esco_id_c_estado_convocatoria' => 1, 'esco_estado_convocatoria' => 'Vigente'],
+            ['esco_id_c_estado_convocatoria' => 2, 'esco_estado_convocatoria' => 'Cerrada'],
+        ]);
+
+        DB::table('estado_convocatoria')->insert([
+            ['esco_id_c_estado_convocatoria' => 2, 'esco_id_convocatoria' => 2],
+            ['esco_id_c_estado_convocatoria' => 1, 'esco_id_convocatoria' => 1],
         ]);
 
         DB::table('sede')->insert([
@@ -555,7 +690,8 @@ class ReportesTest extends TestCase
         DB::table('codigo_postal')->insert(['copo_id_codigo_postal' => '06600']);
 
         DB::table('tipo_comunicacion')->insert([
-            ['tico_id_tipo_comunicacion' => 1, 'tico_tipo_comunicacion' => 'Correo Electrónico'],
+            ['tico_id_tipo_comunicacion' => 1, 'tico_tipo_comunicacion' => 'Correo principal'],
+            ['tico_id_tipo_comunicacion' => 2, 'tico_tipo_comunicacion' => 'Correo alterno'],
             ['tico_id_tipo_comunicacion' => 4, 'tico_tipo_comunicacion' => 'Correo facturación'],
         ]);
 
@@ -663,7 +799,33 @@ class ReportesTest extends TestCase
                 'comu_id_tipo_comunicacion' => 4,
                 'comu_descripcion' => 'facturas@papelera.mx',
             ],
+            /* Las dos personas del grupo 1. Ana cambió su correo principal: el
+               alta en la plataforma tiene que llevar el más reciente, no el
+               anterior ni el alterno. */
+            [
+                'comu_id_persona' => $this->personaDe($pagada),
+                'comu_id_tipo_comunicacion' => 1,
+                'comu_descripcion' => 'ana.anterior@ejemplo.mx',
+            ],
+            [
+                'comu_id_persona' => $this->personaDe($pagada),
+                'comu_id_tipo_comunicacion' => 2,
+                'comu_descripcion' => 'ana.alterno@ejemplo.mx',
+            ],
+            [
+                'comu_id_persona' => $this->personaDe($pagada),
+                'comu_id_tipo_comunicacion' => 1,
+                'comu_descripcion' => 'ana@ejemplo.mx',
+            ],
+            [
+                'comu_id_persona' => $this->personaDe($sinDatos),
+                'comu_id_tipo_comunicacion' => 1,
+                'comu_descripcion' => 'diego@ejemplo.mx',
+            ],
         ]);
+
+        DB::table('persona')->where('pers_id_persona', $this->personaDe($pagada))->update(['pers_rfc' => 'ALPA900101AB1']);
+        DB::table('persona')->where('pers_id_persona', $this->personaDe($sinDatos))->update(['pers_rfc' => 'ZAPD900101CD2']);
     }
 
     private function crearPago(
@@ -764,6 +926,17 @@ class ReportesTest extends TestCase
                 ->value('esso_id_c_estado_solicitud'),
             'esso_id_solicitud' => $idSolicitud,
         ]);
+    }
+
+    /**
+     * Folio de la solicitud que tiene a la persona citada al grupo 1.
+     */
+    private function folioDe(int $idUsuario): string
+    {
+        return (string) DB::table('solicitud')
+            ->where('soli_id_persona', $this->personaDe($idUsuario))
+            ->where('soli_id_evaluacion', 1)
+            ->value('soli_id_solicitud');
     }
 
     /**

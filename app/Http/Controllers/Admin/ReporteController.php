@@ -8,6 +8,7 @@ use App\Servicios\GestionConvocatorias;
 use App\Servicios\GestionSedes;
 use App\Servicios\LibroExcel;
 use App\Servicios\ListaAsistencia;
+use App\Servicios\RegistroPlataformas;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPreRegistros;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,7 +22,8 @@ use Illuminate\Support\Facades\Gate;
  *
  * Responsabilidad: entregar en Excel la información que hoy sólo se puede leer
  * en pantalla —pagos, registros, listas de grupo y datos de facturación— para
- * cortar caja, pasar lista y facturar fuera del sistema.
+ * cortar caja, pasar lista, facturar y dar de alta en la plataforma del examen
+ * fuera del sistema.
  *
  * Cada reporte lleva los datos de un módulo distinto, así que cada uno exige
  * el permiso de su módulo y no un permiso único de «reportes»: la DEC no tiene
@@ -72,7 +74,18 @@ class ReporteController extends Controller
                 'titulo' => 'Lista de asistencia por grupo',
                 'descripcion' => 'Las personas citadas a una aplicación, con espacio para su firma.',
                 'ruta' => 'admin.reportes.grupos',
+                /* La misma lista impresa, para recoger las firmas en la sede. */
+                'ruta_pdf' => 'admin.reportes.grupos.lista',
                 'permiso' => 'gestionar-sedes',
+                'filtros' => ['grupo'],
+            ],
+            [
+                'clave' => 'plataformas',
+                'titulo' => 'Alta en plataforma de examen',
+                'descripcion' => 'Las personas citadas a una aplicación, con los datos para darlas de alta '
+                    .'en la plataforma del examen.',
+                'ruta' => 'admin.reportes.plataformas',
+                'permiso' => 'validar-registro',
                 'filtros' => ['grupo'],
             ],
         ], fn (array $tarjeta): bool => Gate::allows($tarjeta['permiso'])));
@@ -239,6 +252,35 @@ class ReporteController extends Controller
             'X-Content-Type-Options' => 'nosniff',
             'Cache-Control' => 'private, no-store, max-age=0',
         ]);
+    }
+
+    /**
+     * El registro para dar de alta a las personas del grupo en la plataforma
+     * del examen. El programa y el período salen de la convocatoria vigente:
+     * sólo puede haber una a la vez.
+     *
+     * Un grupo sin personas o sin convocatoria vigente no es un 404 sino un
+     * aviso: el grupo existe; lo que falta es con qué llenar el registro.
+     */
+    public function plataformas(
+        Request $request,
+        GestionSedes $sedes,
+        GestionConvocatorias $convocatorias,
+        RegistroPlataformas $registro
+    ) {
+        $lista = $this->lista($request, $sedes);
+
+        try {
+            return $registro->descarga(
+                $lista['grupo'],
+                $lista['personas'],
+                $convocatorias->bandeja()['convocatorias']->firstWhere('estado', GestionConvocatorias::VIGENTE)
+            );
+        } catch (DomainException $error) {
+            return redirect()
+                ->route('admin.reportes.index')
+                ->with('error', $error->getMessage());
+        }
     }
 
     /**
