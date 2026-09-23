@@ -60,6 +60,53 @@ sudo -u postgres dropdb suif_verifica
   otro host o almacenamiento institucional queda a cargo del responsable de
   infraestructura.
 
+## Respaldo automático del `.env`
+
+El `.env` ya no está en git, así que la única copia es la del servidor.
+`respaldos/` trae cuatro archivos para respaldarlo solo:
+
+| Archivo | Qué es |
+|---|---|
+| `suif-env-respaldo.sh` | Copia `/var/www/SUIF/.env` a `/root/respaldos/env/env-AAAAMMDD-HHMMSS` (carpeta 700, archivos 600). Si no cambió desde la última copia no crea otra; conserva las 20 más recientes. Si el `.env` falta o está vacío, falla sin tocar las copias. |
+| `suif-env-respaldo.service` | Unidad `oneshot` que corre el script como root: el `.env` es `root:apache 640` y `postgres` no puede leerlo, por eso no se reutiliza el respaldo de la base. |
+| `suif-env-respaldo.path` | Vigila el `.env` y dispara el respaldo **cada vez que cambia** (una edición, un `key:generate`). |
+| `suif-env-respaldo.timer` | Red de seguridad: una corrida diaria a las 02:45. Como el script no duplica copias iguales, no cuesta nada. |
+
+### Instalación (una sola vez)
+
+Como root, en `/var/www/SUIF`:
+
+```bash
+install -m 755 deploy/respaldos/suif-env-respaldo.sh /usr/local/bin/suif-env-respaldo.sh
+cp deploy/respaldos/suif-env-respaldo.service deploy/respaldos/suif-env-respaldo.path deploy/respaldos/suif-env-respaldo.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now suif-env-respaldo.path suif-env-respaldo.timer
+```
+
+Primera corrida y prueba del disparo por cambio. `printf '' >> .env` abre y
+cierra el archivo sin alterarlo: el `.path` debe dispararse y el script
+responder «Sin cambios»:
+
+```bash
+systemctl start suif-env-respaldo.service && ls -l /root/respaldos/env/
+printf '' >> /var/www/SUIF/.env && sleep 2 && journalctl -u suif-env-respaldo --no-pager -n 5
+systemctl list-timers | grep suif; systemctl is-active suif-env-respaldo.path
+```
+
+### Restauración
+
+```bash
+ls -l /root/respaldos/env/
+install -m 640 -o root -g apache /root/respaldos/env/env-AAAAMMDD-HHMMSS /var/www/SUIF/.env
+cd /var/www/SUIF && php artisan config:clear && php artisan config:cache
+```
+
+Las copias viven en el mismo servidor: salvan de un borrado o una mala
+edición, no de perder la máquina. Si se perdieran todas, el `.env` se
+reconstruye desde `.env.example`, con una llave nueva (`key:generate`, cierra
+las sesiones) y una contraseña nueva para el rol `suif` (con
+`sudo -u postgres`, como en «Sacar `.env` de git y rotar las credenciales»).
+
 ## Dependencias nuevas de Composer
 
 Cuando un `git pull` trae un `composer.json` con un paquete que la VM todavía

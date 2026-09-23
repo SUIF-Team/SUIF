@@ -1,0 +1,10 @@
+[Unit]
+Description=Respaldo diario del .env de SUIF (red de seguridad del .path)
+
+[Timer]
+OnCalendar=*-*-* 02:45:00
+Persistent=true
+Unit=suif-env-respaldo.service
+
+[Install]
+WantedBy=timers.target
