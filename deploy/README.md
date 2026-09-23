@@ -360,19 +360,21 @@ aplica la reversa.**
    php artisan down && git rm -q --cached .env && git fetch origin && git switch fix/env-fuera-de-git && ls -l .env && git status --short
    ```
    Debe listar `.env` y `git status` ya no debe mencionarlo, ni a los
-   `.env.*`. Si el `git switch` falla, deshaz y reabre:
-   `git restore --staged .env && php artisan up`.
+   `.env.*`. **Sólo si el `git switch` falla**, deshaz y reabre:
+   `git restore --staged .env && php artisan up`. Si salió bien, no lo corras
+   (respondería «did not match» sin hacer nada) y sigue al paso 3.
 3. **Rotar la contraseña de la base.** La contraseña se genera aquí y viaja a
    `psql` y a `sed` por la entrada estándar, así que no queda en el historial
    de bash ni en la lista de procesos. La sesión apaga el registro de
    sentencias —también el de sentencias fallidas— para que el `ALTER ROLE` no
-   quede en el log de PostgreSQL. El `tr` quita comillas y retornos de carro
-   que pudiera tener el `.env`:
+   quede en el log de PostgreSQL. La contraseña sale de `/dev/urandom` con
+   `od` (el servidor no trae `openssl`). El `tr` quita comillas y retornos de
+   carro que pudiera tener el `.env`:
    ```bash
-   PW=$(openssl rand -hex 24) && DBUSER=$(grep -E '^DB_USERNAME=' .env | cut -d= -f2- | tr -d '"\r') && grep -q '^DB_PASSWORD=' .env && echo "rol: $DBUSER"
+   PW=$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n') && DBUSER=$(grep -E '^DB_USERNAME=' .env | cut -d= -f2- | tr -d '"\r') && grep -q '^DB_PASSWORD=' .env && echo "rol: $DBUSER, largo: ${#PW}"
    ```
-   Debe imprimir `rol: ` seguido del usuario de la base (`suif`). Si no
-   imprime nada, falta `DB_PASSWORD` en el `.env`: detente.
+   Debe imprimir `rol: suif, largo: 48`. Si no imprime nada, falta
+   `DB_PASSWORD` en el `.env`: detente.
    ```bash
    printf "SET log_statement = 'none'; SET log_min_duration_statement = -1; SET log_min_error_statement = panic; ALTER ROLE \"%s\" PASSWORD '%s';\n" "$DBUSER" "$PW" | sudo -u postgres psql -q -v ON_ERROR_STOP=1 && printf 's|^DB_PASSWORD=.*|DB_PASSWORD=%s|\n' "$PW" | sed -i -f /dev/stdin .env && unset PW && echo ROTADA
    ```
