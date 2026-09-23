@@ -194,9 +194,10 @@ a ella es irreversible. Las fotos de configuración `/root/cfg-*.txt` se
 guardan sin las líneas de contraseñas, llaves ni URLs, y se borran al
 terminar.
 
-`.env` está versionado en el repositorio (es un problema aparte, pendiente de
-resolver): después del paso 5, `git status` lo mostrará como modificado. Es
-esperado y no estorba al cambio de rama ni a la reversa.
+En esta rama `.env` todavía está versionado (lo resuelve la sección «Sacar
+`.env` de git y rotar las credenciales»): después del paso 5, `git status` lo
+mostrará como modificado. Es esperado y no estorba al cambio de rama ni a la
+reversa.
 
 0. **Chequeo previo**, con el sitio arriba. Los dos destinos no deben tener
    archivos propios (sólo un `.gitignore`), y `git status` sólo debe mostrar
@@ -310,3 +311,144 @@ rm -f /root/cfg-*.txt
 `database/scripts/README.md` y `suif_limpia_datos.sql` todavía nombran las
 rutas viejas (`storage/app/preregistro`, `storage/app/referencias`); son del
 responsable de la base y hay que avisarle para que los actualice.
+
+## Sacar `.env` de git y rotar las credenciales
+
+`.env` estuvo versionado desde julio de 2026 y, desde `ffc4ff1` (18 ago), con
+la `APP_KEY` y la contraseña de la base de producción, en un repositorio
+público. La rama `fix/env-fuera-de-git` deja de rastrearlo e ignora cualquier
+copia (`.env.*`, salvo `.env.example`). El historial no se reescribe: después
+de rotar, los valores viejos ya no abren nada.
+
+Rotar la `APP_KEY` cierra todas las sesiones: cada quien vuelve a iniciar
+sesión. SUIF no cifra datos en la base ni firma URLs, así que no se pierde nada
+más. El respaldo diario no usa contraseña (peer auth como `postgres`), así que
+rotar la de la base no lo afecta.
+
+Como root, en `/var/www/SUIF`, en este orden. **Si algo no cuadra, detente y
+aplica la reversa.**
+
+0. **Diagnóstico**, con el sitio arriba:
+   ```bash
+   git branch --show-current && git status --short
+   ```
+   Debe decir `refactor/configuracion-laravel13`, con ` M .env` más los
+   archivos sueltos ya conocidos.
+   ```bash
+   ss -ltnp | grep -E ':5432\b'
+   ```
+   Si PostgreSQL escucha sólo en `127.0.0.1`/`::1`, la contraseña filtrada no
+   servía desde fuera del servidor. Si escucha en `0.0.0.0` o en una IP
+   pública, anótalo: hay que revisar `pg_hba.conf` y el firewall aparte.
+   ```bash
+   sudo -u postgres psql -Atc 'show shared_preload_libraries'; test -e /var/lib/pgsql/.pgpass && echo "HAY .pgpass"; ls -la .env*
+   ```
+   Si la primera línea menciona `pgaudit` o `pg_stat_statements`, detente:
+   registrarían el `ALTER ROLE` con la contraseña y hay que apagarlos antes.
+   Si aparece `HAY .pgpass`, el respaldo usa la contraseña del rol y habrá que
+   actualizarla también. El `ls` muestra qué copias del `.env` hay para el
+   paso 6.
+1. **Respaldo** del `.env`, sólo legible por root. No lo repitas después del
+   paso 3: pisaría el respaldo con el `.env` ya rotado.
+   ```bash
+   install -m 600 .env /root/env-antes-rotacion.bak
+   ```
+2. **Mantenimiento y rama nueva.** El `git rm --cached` va antes del cambio de
+   rama: sin él, git se niega a cambiar porque `.env` está modificado; con él,
+   el archivo se queda en disco y sólo deja de estar rastreado.
+   ```bash
+   php artisan down && git rm -q --cached .env && git fetch origin && git switch fix/env-fuera-de-git && ls -l .env && git status --short
+   ```
+   Debe listar `.env` y `git status` ya no debe mencionarlo, ni a los
+   `.env.*`. Si el `git switch` falla, deshaz y reabre:
+   `git restore --staged .env && php artisan up`.
+3. **Rotar la contraseña de la base.** La contraseña se genera aquí y viaja a
+   `psql` y a `sed` por la entrada estándar, así que no queda en el historial
+   de bash ni en la lista de procesos. La sesión apaga el registro de
+   sentencias —también el de sentencias fallidas— para que el `ALTER ROLE` no
+   quede en el log de PostgreSQL. El `tr` quita comillas y retornos de carro
+   que pudiera tener el `.env`:
+   ```bash
+   PW=$(openssl rand -hex 24) && DBUSER=$(grep -E '^DB_USERNAME=' .env | cut -d= -f2- | tr -d '"\r') && grep -q '^DB_PASSWORD=' .env && echo "rol: $DBUSER"
+   ```
+   Debe imprimir `rol: ` seguido del usuario de la base (`suif`). Si no
+   imprime nada, falta `DB_PASSWORD` en el `.env`: detente.
+   ```bash
+   printf "SET log_statement = 'none'; SET log_min_duration_statement = -1; SET log_min_error_statement = panic; ALTER ROLE \"%s\" PASSWORD '%s';\n" "$DBUSER" "$PW" | sudo -u postgres psql -q -v ON_ERROR_STOP=1 && printf 's|^DB_PASSWORD=.*|DB_PASSWORD=%s|\n' "$PW" | sed -i -f /dev/stdin .env && unset PW && echo ROTADA
+   ```
+   Debe imprimir `ROTADA`. Desde aquí y hasta el paso 5 la app no conecta con
+   la configuración en caché; el sitio sigue en mantenimiento.
+4. **Rotar la `APP_KEY`.** `key:generate` termina «bien» aunque no logre
+   reemplazar la llave (pasa si el valor está entre comillas), así que al
+   final se compara con el respaldo:
+   ```bash
+   php artisan config:clear && php artisan key:generate --force && ! grep -qxF "$(grep '^APP_KEY=' /root/env-antes-rotacion.bak)" .env && echo LLAVE-ROTADA
+   ```
+   Debe imprimir `LLAVE-ROTADA`; si no, la llave sigue siendo la filtrada.
+5. **Comprobar, probar y reabrir.** El `tinker` confirma que la nueva
+   contraseña conecta; la cadena se detiene antes de `up` si algo falla. El
+   `.env` queda de root y sólo legible por Apache:
+   ```bash
+   php artisan config:clear && php artisan tinker --execute='echo "conexion ".DB::scalar("select 1").PHP_EOL;' && php artisan test && php artisan config:cache && php artisan route:cache && php artisan view:cache && chown root:apache .env && chmod 640 .env && chown -R apache:apache storage/logs storage/framework && php artisan up && echo LISTO
+   ```
+   Debe imprimir `conexion 1` y, al final, `LISTO`.
+6. **Sacar del sitio las copias viejas del `.env`.** Tienen las credenciales
+   ya muertas; se guardan fuera del directorio web por si hicieran falta. Mueve
+   los nombres que el `ls` del paso 0 haya mostrado, además de `.env` y
+   `.env.example`, que se quedan:
+   ```bash
+   install -d -m 700 /root/env-viejos && for f in .env.save .env.server .env.servidor; do [ -f "$f" ] && mv -vn "$f" /root/env-viejos/; done; ls -la .env*
+   ```
+7. **Humo en el navegador:** iniciar sesión como persona y como
+   administrador (las sesiones anteriores ya no sirven), abrir el tablero y
+   ver un documento.
+
+**Reversa de credenciales**, si el paso 3, 4 o 5 falló. Devuelve a la base la
+contraseña anterior —la filtrada: es sólo para salir del paso, y hay que
+repetir la rotación en cuanto se entienda la falla— y restaura el `.env`:
+```bash
+OLD=$(grep -E '^DB_PASSWORD=' /root/env-antes-rotacion.bak | cut -d= -f2- | tr -d '"\r') && DBUSER=$(grep -E '^DB_USERNAME=' /root/env-antes-rotacion.bak | cut -d= -f2- | tr -d '"\r')
+```
+```bash
+printf "SET log_statement = 'none'; SET log_min_duration_statement = -1; SET log_min_error_statement = panic; ALTER ROLE \"%s\" PASSWORD '%s';\n" "$DBUSER" "$OLD" | sudo -u postgres psql -q -v ON_ERROR_STOP=1 && unset OLD && cp /root/env-antes-rotacion.bak .env && php artisan optimize:clear && php artisan up
+```
+Volver además a la rama anterior sólo hace falta si el problema es el código
+de la rama. Allí `.env` sigue rastreado y git lo pisaría sin avisar, así que se
+aparta el archivo, se cambia de rama y se restaura:
+```bash
+mv .env /root/env-tmp && git switch refactor/configuracion-laravel13 && cp /root/env-antes-rotacion.bak .env && rm -f /root/env-tmp && php artisan optimize:clear
+```
+
+### Aviso para quien tenga un clon del repositorio
+
+Al traer un commit que deja de rastrear un archivo, git **borra** ese archivo
+del disco si no tenía cambios locales. Antes de hacer `pull` o `switch` a
+`fix/env-fuera-de-git` —o a `main` cuando se fusione—:
+```bash
+cp .env ../suif-env-respaldo
+```
+```bash
+git pull
+```
+```bash
+[ -f .env ] || cp ../suif-env-respaldo .env
+```
+Si tu `.env` tiene cambios, `git pull` se niega («Please commit your changes
+or stash them»). No uses `stash`: al recuperarlo sale un conflicto. Deja de
+rastrearlo y vuelve a intentar:
+```bash
+git rm -q --cached .env && git pull
+```
+Ese `.env` era el de producción, y sus credenciales ya no sirven. Para
+desarrollo, parte de `.env.example`, apunta a una base local y genera una
+llave propia con `php artisan key:generate`.
+
+**Cuidado con las ramas y commits anteriores a este cambio** (`main` hasta que
+se fusione, `git checkout` a un commit viejo, `git bisect`): todavía rastrean
+`.env`, y como ahora está ignorado, git lo **sobrescribe sin avisar** con la
+versión del repositorio. Aparta el archivo antes de cambiar y devuélvelo
+después, o usa `git switch --no-overwrite-ignore`, que en ese caso se niega
+en lugar de pisarlo.
+
+Al fusionar a `main` una rama que haya modificado `.env` después de este
+cambio sale un conflicto modify/delete: se resuelve con `git rm .env`.

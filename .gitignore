@@ -3,7 +3,11 @@
 # =============================================================================
 
 # ─── Secretos y configuración local ──────────────────────────────────────────
+# Cualquier copia del .env (.env.save, .env.servidor, .env.bak…) trae los
+# mismos secretos; sólo la plantilla se versiona.
 .env
+.env.*
+!.env.example
 
 # ─── Dependencias de Composer ─────────────────────────────────────────────────
 vendor/
@@ -70,7 +74,6 @@ test.php
 prueba.php
 debug.php
 public/index2.php
-.env
 
 storage/framework/testing/
 storage/framework/lsp-*.php
