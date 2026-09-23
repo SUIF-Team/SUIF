@@ -5,31 +5,74 @@ namespace App\Http\Controllers\Persona;
 use App\Http\Controllers\Controller;
 use App\Servicios\AvancePersona;
 use App\Servicios\CatalogoReferencias;
+use App\Servicios\ComprobanteFiscal;
+use App\Servicios\ReferenciaEspecial;
 use DomainException;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
  * ReferenciaController
  *
- * Migrado desde: app/controllers/ReferenciaController.php
  * Responsabilidad: entrega y consulta de la referencia bancaria de pago.
+ *
+ * El paso arranca en un selector —index()— que explica los dos caminos de pago
+ * y encamina a la persona. El individual entrega una referencia propia del
+ * catálogo; el especial —especial()— captura al pagador y a sus participantes
+ * para que la DEC emita una sola referencia por el total del grupo.
  */
 class ReferenciaController extends Controller
 {
-    public function index(CatalogoReferencias $catalogo)
+    /**
+     * Selector entre referencia individual y referencia especial.
+     */
+    public function index()
     {
         $avance = new AvancePersona(Auth::id());
-        $referencia = $avance->tienePago() ? $catalogo->referenciaDePersona((int) Auth::id()) : null;
 
-        /* El inventario sólo importa mientras no haya referencia entregada. */
-        $pendiente = $referencia === null && $avance->solicitudAprobada();
+        /* Con la referencia ya entregada el selector no decide nada: la persona
+           necesita su número y su formato, no volver a elegir camino. Lo mismo
+           si el pago compartido ya existe y sólo falta que la DEC lo emita:
+           elegir de nuevo no la llevaría a ningún lado. */
+        if ($avance->tienePago()) {
+            return redirect()->route('persona.referencia.individual');
+        }
+
+        return view('persona.referencia-seleccion', [
+            'solicitudAprobada' => $avance->solicitudAprobada(),
+        ]);
+    }
+
+    /**
+     * Camino individual: obtener la referencia propia, consultarla y bajar el PDF.
+     *
+     * También es la pantalla donde termina el camino especial: una vez que hay
+     * pago, lo que la persona necesita ver es su referencia —o el aviso de que
+     * todavía se está emitiendo—, venga del camino que venga.
+     */
+    public function individual(CatalogoReferencias $catalogo)
+    {
+        $avance = new AvancePersona(Auth::id());
+
+        /* Sin solicitud aprobada no hay nada que obtener; el aviso de espera
+           vive en el selector. Se conserva lo que traiga la sesión: si venimos
+           de una asignación rechazada porque la aprobación se revocó, el motivo
+           tiene que llegar hasta allá y no morir en este rebote. */
+        if (!$avance->solicitudAprobada()) {
+            session()->reflash();
+
+            return redirect()->route('persona.referencia.index');
+        }
+
+        $referencia = $avance->tienePago() ? $catalogo->referenciaDePersona((int) Auth::id()) : null;
 
         return view('persona.referencia', [
             'referencia' => $referencia,
-            'solicitudAprobada' => $avance->solicitudAprobada(),
-            'hayDisponibles' => $pendiente && $catalogo->resumen()['disponibles'] > 0,
+            /* El inventario sólo importa mientras no haya referencia entregada. */
+            'hayDisponibles' => $referencia === null && $catalogo->resumen()['entregables'] > 0,
             'cuota' => number_format(
                 (float) ($referencia['monto'] ?? config('suif.cuota_recuperacion', 7000)),
                 2,
@@ -43,19 +86,191 @@ class ReferenciaController extends Controller
     /**
      * Entrega una referencia libre del catálogo y la liga a la solicitud.
      */
-    public function generar(CatalogoReferencias $catalogo): RedirectResponse
+    public function generar(Request $request, CatalogoReferencias $catalogo)
     {
         try {
             $catalogo->asignar((int) Auth::id());
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.referencia.index')
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                route('persona.referencia.individual')
+            );
         }
 
-        return redirect()
-            ->route('persona.referencia.index')
-            ->with('success', 'Tu referencia bancaria quedó asignada. Es única y personal.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tu referencia bancaria quedó asignada. Es única y personal.',
+            route('persona.referencia.individual')
+        );
+    }
+
+    /**
+     * Camino especial: datos del tercero que paga y de las personas que cubre.
+     */
+    public function especial(ComprobanteFiscal $comprobante_fiscal)
+    {
+        $avance = new AvancePersona(Auth::id());
+
+        if (!$avance->solicitudAprobada()) {
+            return redirect()->route('persona.referencia.index');
+        }
+
+        /* Con pago ya ligado no hay nada que capturar: o tiene su referencia o
+           está esperando a que la DEC la emita, y las dos cosas se ven allá. */
+        if ($avance->tienePago()) {
+            return redirect()->route('persona.referencia.individual');
+        }
+
+        return view('persona.referencia-especial', [
+            'regimenes' => $comprobante_fiscal->regimenesFiscales(),
+            'vista' => [
+                'pagador' => [
+                    'razonSocial' => old('razon_social', ''),
+                    'personaMoral' => (string) old('persona_moral', '1'),
+                    'regimenFiscal' => (string) old('regimen_fiscal', ''),
+                    'codigoPostal' => old('codigo_postal', ''),
+                    'rfc' => old('rfc', ''),
+                    /* No se sugiere el correo de la cuenta, como sí hace
+                       persona/facturacion: aquí el CFDI es de un tercero y
+                       prellenarlo invita a mandarle la factura de la empresa al
+                       buzón personal de quien capturó. */
+                    'correoCfdi' => old('correo_cfdi', ''),
+                ],
+                'participantes' => $this->participantesCapturados($avance),
+                'minimo' => ReferenciaEspecial::MINIMO_PARTICIPANTES,
+                'maximo' => ReferenciaEspecial::MAXIMO_PARTICIPANTES,
+                'cuota' => (float) config('suif.cuota_recuperacion', 7000),
+                'moneda' => config('suif.moneda', 'MXN'),
+            ],
+        ]);
+    }
+
+    /**
+     * Registra la solicitud de referencia especial. La emisión es de la DEC.
+     */
+    public function solicitarEspecial(Request $request, ReferenciaEspecial $referencia_especial)
+    {
+        $request->merge([
+            'razon_social' => trim((string) $request->input('razon_social')),
+            'rfc' => mb_strtoupper(trim((string) $request->input('rfc')), 'UTF-8'),
+            'codigo_postal' => trim((string) $request->input('codigo_postal')),
+            'correo_cfdi' => mb_strtolower(trim((string) $request->input('correo_cfdi')), 'UTF-8'),
+        ]);
+
+        /* Mismas reglas que persona/facturacion: es el mismo renglón de
+           DATO_FISCAL y las longitudes salen de sus columnas. */
+        $datos = $request->validate([
+            'razon_social' => ['required', 'string', 'max:35'],
+            'persona_moral' => ['required', 'in:0,1'],
+            'regimen_fiscal' => ['required', 'integer', 'exists:regimen_fiscal,refi_id_regimen_fiscal'],
+            'codigo_postal' => ['required', 'digits:5'],
+            'rfc' => [
+                'required',
+                'string',
+                'regex:/^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/u',
+                $request->input('persona_moral') === '1' ? 'size:12' : 'size:13',
+            ],
+            /* El 65 sale de COMUNICACION.COMU_DESCRIPCION, igual que en
+               persona/facturacion. */
+            'correo_cfdi' => ['required', 'email', 'max:65'],
+            'participantes' => [
+                'required',
+                'array',
+                'min:'.ReferenciaEspecial::MINIMO_PARTICIPANTES,
+                'max:'.ReferenciaEspecial::MAXIMO_PARTICIPANTES,
+            ],
+            'participantes.*.curp' => ['required', 'string', 'size:18', 'regex:/^[A-Za-z0-9]{18}$/'],
+            'participantes.*.nombre' => ['required', 'string', 'max:45'],
+            'participantes.*.primer_apellido' => ['required', 'string', 'max:45'],
+            'participantes.*.segundo_apellido' => ['required', 'string', 'max:45'],
+        ], [
+            'razon_social.required' => 'Escribe el nombre o la razón social de quien realizará el pago.',
+            'razon_social.max' => 'El nombre o razón social no debe exceder los 35 caracteres.',
+            'persona_moral.required' => 'Indica si quien paga es persona moral o persona física.',
+            'persona_moral.in' => 'Indica si quien paga es persona moral o persona física.',
+            'regimen_fiscal.required' => 'Selecciona el régimen fiscal de quien paga.',
+            'regimen_fiscal.integer' => 'Selecciona un régimen fiscal válido.',
+            'regimen_fiscal.exists' => 'El régimen fiscal seleccionado no existe.',
+            'codigo_postal.required' => 'Escribe el código postal del domicilio fiscal de quien paga.',
+            'codigo_postal.digits' => 'El código postal debe tener exactamente 5 dígitos.',
+            'rfc.required' => 'Escribe el RFC de quien realizará el pago.',
+            'rfc.size' => 'El RFC de una persona moral tiene 12 caracteres y el de una persona física 13.',
+            'rfc.regex' => 'Escribe el RFC con homoclave, como aparece en la constancia de situación fiscal.',
+            'correo_cfdi.required' => 'Escribe el correo al que se enviará el CFDI del pago.',
+            'correo_cfdi.email' => 'Escribe un correo válido.',
+            'correo_cfdi.max' => 'El correo no debe exceder los 65 caracteres.',
+            'participantes.required' => 'Captura a las personas a las que se les pagará la certificación.',
+            'participantes.min' => 'La referencia especial cubre al menos :min participantes.',
+            'participantes.max' => 'La referencia especial admite como máximo :max participantes.',
+            'participantes.*.curp.required' => 'Falta la CURP de un participante.',
+            'participantes.*.curp.size' => 'La CURP debe tener 18 caracteres.',
+            'participantes.*.curp.regex' => 'La CURP sólo puede contener letras y números.',
+            'participantes.*.nombre.required' => 'Falta el nombre de un participante.',
+            'participantes.*.primer_apellido.required' => 'Falta el primer apellido de un participante.',
+            'participantes.*.segundo_apellido.required' => 'Falta el segundo apellido de un participante.',
+        ]);
+
+        try {
+            $resultado = $referencia_especial->solicitar(
+                (int) Auth::id(),
+                $datos,
+                array_values($datos['participantes'])
+            );
+        } catch (DomainException $exception) {
+            if (!$request->expectsJson()) {
+                return redirect()
+                    ->route('persona.referencia.especial')
+                    ->withInput()
+                    ->withErrors(['participantes' => $exception->getMessage()]);
+            }
+
+            return $this->responder(
+                $request,
+                'error',
+                $exception->getMessage(),
+                route('persona.referencia.especial'),
+                [],
+                'participantes'
+            );
+        }
+
+        return $this->responder(
+            $request,
+            'success',
+            'Registramos tu solicitud para '.$resultado['participantes'].' participantes. '
+            .'La Dirección emitirá la referencia y te avisaremos por correo en cuanto esté lista.',
+            route('persona.referencia.individual')
+        );
+    }
+
+    /**
+     * Nombre registrado de una CURP que puede compartir la referencia especial.
+     *
+     * Lo consulta el formulario mientras se teclea, para que nadie capture a
+     * mano un nombre que el envío va a comparar contra la base de todas formas.
+     * Responde encontrada/no encontrada y nada más: el motivo del rechazo es
+     * asunto del trámite de la otra persona. Molde: SedeController::disponibilidad().
+     */
+    public function buscarPersona(Request $request, ReferenciaEspecial $referencia_especial): JsonResponse
+    {
+        $curp = mb_strtoupper(trim((string) $request->query('curp')), 'UTF-8');
+
+        /* Mismo formato que exige el POST; una CURP mal formada no llega a la
+           base. */
+        if (preg_match('/^[A-Z0-9]{18}$/', $curp) !== 1) {
+            return response()->json(['encontrada' => false]);
+        }
+
+        $persona = $referencia_especial->buscarParticipante((int) Auth::id(), $curp);
+
+        return response()->json(
+            $persona === null
+                ? ['encontrada' => false]
+                : ['encontrada' => true, 'persona' => $persona]
+        );
     }
 
     /**
@@ -82,5 +297,39 @@ class ReferenciaController extends Controller
         $respuesta->headers->addCacheControlDirective('no-store');
 
         return $respuesta;
+    }
+
+    /**
+     * Lo que se pinta en la lista de participantes: lo que la persona había
+     * capturado si el servidor rechazó el envío, y si no, ella misma. Quien
+     * pide la referencia siempre queda incluida, así que su renglón no se
+     * escribe a mano.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function participantesCapturados(AvancePersona $avance): array
+    {
+        $capturados = old('participantes');
+
+        if (is_array($capturados) && $capturados !== []) {
+            return array_values(array_map(fn ($fila): array => [
+                'curp' => (string) ($fila['curp'] ?? ''),
+                'nombre' => (string) ($fila['nombre'] ?? ''),
+                'primer_apellido' => (string) ($fila['primer_apellido'] ?? ''),
+                'segundo_apellido' => (string) ($fila['segundo_apellido'] ?? ''),
+            ], $capturados));
+        }
+
+        $persona = DB::table('persona')
+            ->where('pers_id_persona', $avance->idPersona())
+            ->select('pers_curp', 'pers_nombre', 'pers_apellido_paterno', 'pers_apellido_materno')
+            ->first();
+
+        return [[
+            'curp' => (string) ($persona->pers_curp ?? ''),
+            'nombre' => (string) ($persona->pers_nombre ?? ''),
+            'primer_apellido' => (string) ($persona->pers_apellido_paterno ?? ''),
+            'segundo_apellido' => (string) ($persona->pers_apellido_materno ?? ''),
+        ]];
     }
 }

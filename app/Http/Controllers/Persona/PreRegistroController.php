@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Persona;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ClaveAcceso;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Usuario;
+use App\Servicios\AvancePersona;
+use App\Servicios\GestionClaves;
+use App\Servicios\GestionConvocatorias;
 use App\Servicios\FormatoPreRegistro;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Validation\ValidationException;
 
 class PreRegistroController extends Controller
 {
@@ -44,6 +49,12 @@ class PreRegistroController extends Controller
         /* Quien ya tiene solicitud ve el resumen de sus datos, no el formulario. */
         if ($this->solicitudActual() && $estado['fase'] !== 'clave') {
             $estado['fase'] = 'registrado';
+
+            /* Sesiones anteriores a que avanzar() limpiara la clave. */
+            if (!empty($estado['clave'])) {
+                $estado['clave'] = null;
+                $request->session()->put('suif.preregistro', $estado);
+            }
         }
 
              return view('persona.preregistro', [
@@ -65,16 +76,115 @@ class PreRegistroController extends Controller
             return redirect()->route('persona.preregistro.index');
         }
 
+        return view('persona.documentos', $this->pantallaDocumentos($request));
+    }
+
+    /**
+     * Todo lo que necesita la pantalla de documentación.
+     *
+     * Vive aparte porque subirDocumento() y enviarRevision() responden con el
+     * mismo estado ya recalculado: la pantalla lo sustituye entero en lugar de
+     * parchar renglón por renglón, igual que hace el catálogo de sedes con su
+     * sondeo. Así una carga no puede dejar la tabla contando una historia y la
+     * base de datos otra.
+     */
+    private function pantallaDocumentos(Request $request): array
+    {
+        $idSolicitud = $this->solicitudActual();
+
         $estado = $this->estado($request);
         $estado['documentos'] = $this->documentosGuardados($idSolicitud);
         $estado['fase'] = $this->faseSegunDocumentos($estado['documentos']);
 
-        return view('persona.documentos', [
+        /* El estado de la solicitud completa lo resuelve el mismo servicio que
+           alimenta el panel y la barra de avance, para no abrir otra verdad. */
+        $avance = new AvancePersona(auth()->id());
+
+        return [
             'estado' => $estado,
             'documentos' => $this->documentos,
             'formatos' => $this->formatos,
             'verFormatos' => $request->query('ver') === 'formatos',
-        ]);
+            'solicitudAprobada' => $avance->solicitudAprobada(),
+            'solicitudRechazada' => $avance->solicitudCerrada(),
+            'motivoInterrupcion' => $avance->motivoSolicitudCerrada(),
+            'fechaEnvio' => $this->fechaDelEstado($estado['documentos'], 'revision'),
+            'fechaAprobacion' => $this->fechaDelEstado($estado['documentos'], 'aprobado'),
+            'vista' => $this->vistaDocumentos($estado, $avance),
+        ];
+    }
+
+    /**
+     * La parte de la pantalla que maneja Vue, ya lista para serializar.
+     *
+     * Las etiquetas y las clases de estado se arman aquí y no en la plantilla
+     * porque después de una carga por AJAX ya no hay Blade que las calcule: si
+     * se quedaran allá, la fila reemplazada volvería sin su color ni su texto.
+     */
+    private function vistaDocumentos(array $estado, AvancePersona $avance): array
+    {
+        /* El papel semántico del chip, no un nombre de color: «cargado» informa
+           —el documento subió y nadie lo ha revisado— y por eso no es verde. */
+        $clases = [
+            'pendiente' => 'neutro',
+            'cargado' => 'info',
+            'revision' => 'revision',
+            'aprobado' => 'exito',
+            'rechazado' => 'peligro',
+        ];
+        $etiquetas = [
+            'pendiente' => 'Pendiente',
+            'cargado' => 'Cargado',
+            'revision' => 'En revisión',
+            'aprobado' => 'Aprobado',
+            'rechazado' => 'Rechazado',
+        ];
+
+        $documentos = [];
+        $porEnviar = 0;
+
+        foreach ($this->documentos as $slug => $nombre) {
+            $guardado = $estado['documentos'][$slug] ?? null;
+            $situacion = $guardado ? $guardado['estado'] : 'pendiente';
+
+            /* Misma regla que subirDocumento(): mientras alguien lo revisa o ya
+               lo aprobó, el archivo dejó de ser de la persona. */
+            $puedeReemplazar = !in_array($situacion, ['revision', 'aprobado'], true);
+
+            /* Mismo criterio que enviarRevision(): los aprobados no se
+               reenvían, así que el conteo del diálogo no miente cuando la
+               persona está subsanando. */
+            if ($situacion !== 'aprobado') {
+                $porEnviar++;
+            }
+
+            $documentos[] = [
+                'slug' => $slug,
+                'nombre' => $nombre,
+                'estado' => $situacion,
+                'etiqueta' => $etiquetas[$situacion],
+                'clase' => $clases[$situacion],
+                'puede_reemplazar' => $puedeReemplazar,
+                'tiene_archivo' => (bool) $guardado,
+                'nombre_original' => $guardado ? $guardado['nombre_original'] : null,
+                'observacion' => $situacion === 'rechazado' && $guardado
+                    ? ($guardado['observacion'] ?: null)
+                    : null,
+                'es_formato' => in_array($slug, $this->formatos, true),
+                'ruta_ver' => route('persona.preregistro.documentos.ver', $slug),
+                'ruta_formato' => route('persona.preregistro.formatos.generar', $slug),
+                'ruta_subir' => route('persona.preregistro.documentos.store', $slug),
+            ];
+        }
+
+        return [
+            'fase' => $estado['fase'],
+            'documentos' => $documentos,
+            'por_enviar' => $porEnviar,
+            'ruta_enviar' => route('persona.preregistro.documentos.enviar'),
+            'fecha_envio' => $this->fechaDelEstado($estado['documentos'], 'revision'),
+            'solicitud_cerrada' => $avance->solicitudCerrada(),
+        ];
     }
 
         /**
@@ -113,8 +223,14 @@ class PreRegistroController extends Controller
         /* Se vuelve a comprobar aquí: el permiso pudo cambiar entre que
            se abrió el formulario y se envió. */
         if (!$idPersona || !$this->puedeEditar()) {
-            return redirect()->route('persona.preregistro.index')
-                ->withErrors(['datos' => 'Tus datos ya no se pueden modificar porque tu documentación está en revisión.']);
+            return $this->responder(
+                $request,
+                'error',
+                'Tus datos ya no se pueden modificar porque tu documentación está en revisión.',
+                route('persona.preregistro.index'),
+                [],
+                'datos'
+            );
         }
 
         $request->merge([
@@ -168,11 +284,15 @@ class PreRegistroController extends Controller
         $estado['fase'] = 'registrado';
         $request->session()->put('suif.preregistro', $estado);
 
-        return redirect()->route('persona.preregistro.index')
-            ->with('success', 'Tus datos fueron actualizados correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tus datos fueron actualizados correctamente.',
+            route('persona.preregistro.index')
+        );
     }
 
-       public function guardarDatos(Request $request)
+       public function guardarDatos(Request $request, GestionClaves $gestion_claves)
     {
         /* Se normaliza la CURP antes de validar para que la comprobación
            de duplicados no dependa de cómo la haya escrito la persona. */
@@ -196,6 +316,9 @@ class PreRegistroController extends Controller
             'grado_estudios' => 'required|in:'.$grados,
             'actividad_vulnerable' => 'required|in:si,no',
             'responsable_cumplimiento' => 'required|in:si,no',
+            /* Artículo 20 de la LGPDPPSO: el aviso se pone a disposición antes
+               de recabar los datos. La confirmación no se persiste. */
+            'aviso_privacidad' => 'accepted',
         ], [
             'required' => 'El campo :attribute es obligatorio.',
             'email' => 'Escribe un correo válido.',
@@ -209,6 +332,7 @@ class PreRegistroController extends Controller
             'rfc.size' => 'El RFC debe contener exactamente 13 caracteres.',
             'rfc.regex' => 'Escribe tu RFC con homoclave, como aparece en tu constancia fiscal.',
             'rfc.unique' => 'Ese RFC ya tiene un pre-registro. Inicia sesión con tu clave de acceso.',
+            'aviso_privacidad.accepted' => 'Debes confirmar que leíste el aviso de privacidad.',
         ]);
 
         /* Formato uniforme sin importar cómo lo haya escrito la persona. */
@@ -221,7 +345,7 @@ class PreRegistroController extends Controller
         $datos['correo_alterno'] = mb_strtolower(trim($datos['correo_alterno']), 'UTF-8');
 
         $estado = $this->estado($request);
-        $clave = empty($estado['clave']) ? $this->generarClave() : $estado['clave'];
+        $clave = empty($estado['clave']) ? $gestion_claves->generar() : $estado['clave'];
 
         /* Alta real de la persona en la base de datos. */
         $idUsuario = $this->registrarPersona($datos, $clave);
@@ -238,11 +362,17 @@ class PreRegistroController extends Controller
         $estado['datos'] = $datos;
         $estado['clave'] = $clave;
         $estado['fase'] = 'clave';
+        /* Si el correo no salió, la pantalla de la clave lo advierte:
+           esa pantalla pasa a ser el único lugar donde verla. */
+        $estado['correo_enviado'] = $this->enviarClave($datos['correo_principal'], $clave);
         $request->session()->put('suif.preregistro', $estado);
-        $this->enviarClave($datos['correo_principal'], $clave);
 
-        return redirect()->route('persona.preregistro.index')
-            ->with('success', 'Tus datos fueron guardados correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'Tus datos fueron guardados correctamente.',
+            route('persona.preregistro.index')
+        );
     }
 
     /**
@@ -254,6 +384,19 @@ class PreRegistroController extends Controller
     private function registrarPersona(array $datos, $clave)
     {
        return DB::transaction(function () use ($datos, $clave) {
+            /* Lo primero, antes de dar de alta a nadie: si no hay convocatoria
+               abierta no hay trámite que iniciar. SOLICITUD la apunta con una
+               columna obligatoria, así que descubrirlo hasta el final dejaría
+               reventar la inserción con un error de base de datos en la cara de
+               quien se está registrando. */
+            $idConvocatoria = app(GestionConvocatorias::class)->idConvocatoriaAbierta();
+
+            if ($idConvocatoria === null) {
+                throw ValidationException::withMessages([
+                    'datos' => 'En este momento no hay una convocatoria abierta a registro.',
+                ]);
+            }
+
             $idRol = DB::table('rol')
                 ->where('rol_tipo_rol', 'Persona')
                 ->value('rol_id_rol');
@@ -321,12 +464,6 @@ class PreRegistroController extends Controller
 
                 /* La SOLICITUD es la que amarra al persona con su trámite:
                convocatoria, pago, documentos, evaluación y certificado. */
-            $idConvocatoria = DB::table('convocatoria')
-                ->whereDate('conv_fecha_inicio_registro', '<=', now()->toDateString())
-                ->whereDate('conv_fecha_fin_registro', '>=', now()->toDateString())
-                ->orderByDesc('conv_id_convocatoria')
-                ->value('conv_id_convocatoria');
-
             $idSolicitud = DB::table('solicitud')->insertGetId([
                 'soli_id_persona' => $idPersona,
                 'soli_id_convocatoria' => $idConvocatoria,
@@ -469,6 +606,10 @@ class PreRegistroController extends Controller
 
         if ($estado['fase'] === 'clave') {
             $estado['fase'] = 'formatos';
+            /* La persona confirmó que guardó su clave: no debe quedar
+               en claro dentro de la sesión. */
+            $estado['clave'] = null;
+            unset($estado['correo_enviado']);
         } elseif ($estado['fase'] === 'formatos') {
             $estado['fase'] = 'documentos';
         }
@@ -529,8 +670,31 @@ class PreRegistroController extends Controller
         $idSolicitud = $this->solicitudActual();
 
         if (!$idSolicitud) {
-            return redirect()->route('persona.documentos.index')
-                ->withErrors(['documentos' => 'No encontramos tu solicitud. Vuelve a iniciar sesión.']);
+            return $this->responder(
+                $request,
+                'error',
+                'No encontramos tu solicitud. Vuelve a iniciar sesión.',
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
+        }
+
+        /* Espejo de la regla de la vista: un documento en revisión o aprobado
+           dejó de ser de la persona hasta que el revisor lo devuelva. Se
+           comprueba antes de guardar el archivo para no dejarlo huérfano. */
+        $guardados = $this->documentosGuardados($idSolicitud);
+        $estadoActual = isset($guardados[$documento]) ? $guardados[$documento]['estado'] : 'pendiente';
+
+        if (in_array($estadoActual, ['revision', 'aprobado'], true)) {
+            return $this->responder(
+                $request,
+                'error',
+                'Ese documento ya no se puede reemplazar: está en revisión o fue aprobado.',
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
         }
 
         $idTipo = DB::table('tipo_documento')
@@ -539,7 +703,8 @@ class PreRegistroController extends Controller
 
         $ruta = $request->file('archivo')->storeAs(
             'preregistro/cargas/'.$idSolicitud,
-            $documento.'-'.time().'.pdf'
+            $documento.'-'.time().'.pdf',
+            'local'
         );
 
         /* El nombre original puede venir más largo que la columna. */
@@ -579,8 +744,13 @@ class PreRegistroController extends Controller
             $this->registrarEstadoDocumento($idDocumento, 'Cargado');
         });
 
-        return redirect()->route('persona.documentos.index')
-            ->with('success', 'Documento cargado. Revísalo antes de continuar.');
+        return $this->responder(
+            $request,
+            'success',
+            'Documento cargado. Revísalo antes de continuar.',
+            route('persona.documentos.index'),
+            ['vista' => $this->pantallaDocumentos($request)['vista']]
+        );
     }
 
         public function verDocumento(Request $request, $documento)
@@ -600,13 +770,13 @@ class PreRegistroController extends Controller
             abort(404);
         }
 
-        $archivo = storage_path('app/'.$ruta);
+        $disco = Storage::disk('local');
 
-        if (!is_file($archivo)) {
+        if (!$disco->exists($ruta)) {
             abort(404);
         }
 
-        return response()->file($archivo, [
+        return response()->file($disco->path($ruta), [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$documento.'.pdf"',
             'Cache-Control' => 'private, no-store, max-age=0',
@@ -620,8 +790,14 @@ class PreRegistroController extends Controller
 
         foreach (array_keys($this->documentos) as $slug) {
             if (empty($documentos[$slug])) {
-                return redirect()->route('persona.documentos.index')
-                    ->withErrors(['documentos' => 'Debes cargar todos los documentos antes de continuar.']);
+                return $this->responder(
+                    $request,
+                    'error',
+                    'Debes cargar todos los documentos antes de continuar.',
+                    route('persona.documentos.index'),
+                    [],
+                    'documentos'
+                );
             }
         }
 
@@ -633,8 +809,14 @@ class PreRegistroController extends Controller
         );
 
         if (!$porRevisar) {
-            return redirect()->route('persona.documentos.index')
-                ->withErrors(['documentos' => 'Todos tus documentos ya fueron aprobados.']);
+            return $this->responder(
+                $request,
+                'error',
+                'Todos tus documentos ya fueron aprobados.',
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
         }
 
         DB::transaction(function () use ($idSolicitud, $porRevisar) {
@@ -645,22 +827,16 @@ class PreRegistroController extends Controller
             $this->registrarEstadoSolicitud($idSolicitud, 'En revisión');
         });
 
-        return redirect()->route('persona.documentos.index')
-            ->with('success', count($porRevisar) === count($documentos)
-                ? 'Tus documentos fueron enviados a revisión.'
-                : 'Los documentos que corregiste fueron enviados a revisión.');
-    }
-
-    public function reiniciar(Request $request)
-    {
-        if (!config('app.debug')) {
-            abort(404);
-        }
-
-        $request->session()->forget('suif.preregistro');
-        $request->session()->forget('suif.persona.estado.preregistro_completo');
-
-        return redirect()->route('persona.preregistro.index');
+        /* Sin mensaje a propósito: la pantalla a la que se llega ya anuncia el
+           envío —con su fecha y con role="status"— en el aviso bajo la tabla.
+           Confirmarlo además arriba dejaba dos cajas verdes diciendo lo mismo. */
+        return $this->responder(
+            $request,
+            'success',
+            '',
+            route('persona.documentos.index'),
+            ['vista' => $this->pantallaDocumentos($request)['vista']]
+        );
     }
 
     private function estado(Request $request)
@@ -669,23 +845,22 @@ class PreRegistroController extends Controller
             'fase' => 'datos',
             'datos' => [],
             'clave' => null,
+            'correo_enviado' => true,
             'documentos' => [],
         ], (array) $request->session()->get('suif.preregistro', []));
     }
 
-    private function generarClave()
-    {
-        return strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4));
-    }
-
-    private function enviarClave($correo, $clave)
+    private function enviarClave($correo, $clave): bool
     {
         try {
-            Mail::raw('Tu clave de acceso SUIF es: '.$clave, function ($mensaje) use ($correo) {
-                $mensaje->to($correo)->subject('Clave de acceso para SUIF');
-            });
+            Mail::to($correo)->send(new ClaveAcceso($clave));
+
+            return true;
         } catch (\Throwable $exception) {
+            /* Solo el motivo del fallo: la clave jamás debe ir al log. */
             Log::warning('No fue posible enviar la clave de pre-registro.', ['error' => $exception->getMessage()]);
+
+            return false;
         }
     }
    
@@ -821,6 +996,14 @@ class PreRegistroController extends Controller
             return 'revision';
         }
 
+        /* Tras reenviar una subsanación conviven documentos aprobados y
+           documentos que volvieron a revisión: la etapa sigue en manos del
+           administrador y la persona ya no tiene nada que enviar. Mismo
+           criterio que AvancePersona::documentacionEstado(). */
+        if (!array_diff($unicos, ['aprobado', 'revision']) && in_array('revision', $estados, true)) {
+            return 'revision';
+        }
+
         return 'documentos';
     }
 
@@ -851,7 +1034,7 @@ class PreRegistroController extends Controller
             ->join('c_estado_documento as ce', 'ce.esdo_id_c_estado_documento', '=', 'ed.esdo_id_c_estado_documento')
             ->whereIn('ed.esdo_id_documento', $filas->pluck('docu_id_documento'))
             ->orderBy('ed.esdo_id_estado_documento')
-            ->select('ed.esdo_id_documento', 'ed.esdo_comentarios', 'ce.esdo_estado_documento')
+            ->select('ed.esdo_id_documento', 'ed.esdo_comentarios', 'ed.esdo_fecha', 'ce.esdo_estado_documento')
             ->get()
             ->keyBy('esdo_id_documento');
 
@@ -883,10 +1066,37 @@ class PreRegistroController extends Controller
                 'nombre_original' => $fila->docu_nombre,
                 'estado' => isset($equivalencias[$nombreEstado]) ? $equivalencias[$nombreEstado] : 'cargado',
                 'observacion' => $estado ? $estado->esdo_comentarios : null,
+                'fecha' => $estado ? $estado->esdo_fecha : null,
             ];
         }
 
         return $resultado;
+    }
+
+    /**
+     * Fecha en que los documentos entraron a un estado, para poder decirle a
+     * la persona cuándo envió o cuándo le aceptaron su expediente. Se toma la
+     * más reciente porque una subsanación mueve unos documentos y otros no.
+     */
+    private function fechaDelEstado(array $documentos, $estado)
+    {
+        $fechas = [];
+
+        foreach ($documentos as $doc) {
+            if ($doc['estado'] === $estado && !empty($doc['fecha'])) {
+                $fechas[] = $doc['fecha'];
+            }
+        }
+
+        if (!$fechas) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse(max($fechas))->format('d/m/Y');
+        } catch (\Exception $error) {
+            return null;
+        }
     }
 
     private function entidades()

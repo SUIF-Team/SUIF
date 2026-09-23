@@ -1,0 +1,67 @@
+{{--
+    Acciones que revierten una resolución ya notificada: reanudar un trámite o
+    un pago resueltos.
+
+    Recibe $acciones, un arreglo de ['id', 'ruta', 'etiqueta', 'titulo_modal',
+    'texto_modal'] armado por App\Support\Admin\NotificacionResultado. Cada una
+    confirma en su propio modal antes de enviar, porque deshacer una decisión
+    que la persona ya vio no debería ocurrir por un clic de más.
+
+    Va dentro del flujo de cada pantalla para heredar su tarjeta y su
+    separación, así que las apps Vue de esas pantallas lo compilan como
+    plantilla. Es inocuo —aquí sólo hay HTML ya resuelto por Blade—, pero
+    obliga a cargar admin-reversion.js DESPUÉS del script que monta Vue: al
+    montar, Vue reemplaza estos nodos y los escuchadores se perderían.
+
+    Las acciones llegan ya filtradas por permiso: revertir le toca a quien
+    dictó la resolución, así que la documentación la reabre la UIF y el pago la
+    DEC, y no se destapan con el mismo permiso. Cuando no queda ninguna, la
+    sección entera desaparece.
+--}}
+@if(!empty($acciones))
+    <section class="tarjeta admin-preregistro-reversion" aria-labelledby="acciones-reversion-titulo">
+        <div class="admin-preregistro-reversion-texto">
+            <h2 id="acciones-reversion-titulo">Corregir la resolución</h2>
+            <p class="ayuda">
+                El historial conserva cada resolución: reanudar agrega un movimiento nuevo, no borra el anterior.
+            </p>
+        </div>
+
+        <div class="admin-preregistro-reversion-acciones">
+            @foreach($acciones as $accion)
+                <button
+                    class="boton boton--peligro"
+                    type="button"
+                    data-abrir-reversion="{{ $accion['id'] }}">
+                    {{ $accion['etiqueta'] }}
+                </button>
+            @endforeach
+        </div>
+    </section>
+
+    @foreach($acciones as $accion)
+        <div class="dialogo" data-modal-reversion="{{ $accion['id'] }}" hidden>
+            <div class="dialogo__velo" data-cerrar-reversion></div>
+            <section
+                class="dialogo__tarjeta"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="{{ $accion['id'] }}-titulo"
+                aria-describedby="{{ $accion['id'] }}-descripcion">
+                <h2 class="dialogo__titulo" id="{{ $accion['id'] }}-titulo">{{ $accion['titulo_modal'] }}</h2>
+                <p class="dialogo__texto" id="{{ $accion['id'] }}-descripcion">{{ $accion['texto_modal'] }}</p>
+                <form method="POST" action="{{ $accion['ruta'] }}" class="dialogo__acciones">
+                    @csrf
+                    <button class="boton boton--secundario" type="button" data-cerrar-reversion>
+                        Cancelar
+                    </button>
+                    {{-- Confirma del color de la acción que abrió el diálogo:
+                         reanudar deshace una resolución ya notificada. --}}
+                    <button class="boton boton--peligro-solido" type="submit">
+                        {{ $accion['etiqueta'] }}
+                    </button>
+                </form>
+            </section>
+        </div>
+    @endforeach
+@endif

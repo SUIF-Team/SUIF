@@ -35,10 +35,10 @@
 .period-label {
     display: block;
     color: var(--unam-gold-dark);
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.16em;
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
 }
 
 .home-eyebrow {
@@ -67,6 +67,7 @@
     margin-bottom: 2.5rem;
     color: var(--text-muted);
     font-size: 1.06rem;
+    text-align: justify;
 }
 
 .btn-outline-institutional {
@@ -261,6 +262,7 @@
     margin: 0;
     opacity: 0.92;
     font-size: 0.94rem;
+    text-align: justify;
 }
 
 .document-button {
@@ -403,6 +405,7 @@
 .faq-accordion .accordion-body {
     padding: 0 0 1.5rem;
     color: var(--text-muted);
+    text-align: justify;
 }
 
 @media (max-width: 1199.98px) {

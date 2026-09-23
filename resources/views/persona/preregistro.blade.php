@@ -9,15 +9,28 @@
 @section('content')
 <section class="pr-shell">
     <div class="pr-layout">
-        <main class="pr-card">
-            @if(session('success'))<div class="pr-alert">{{ session('success') }}</div>@endif
-            @if($errors->any())<div class="pr-alert pr-error"><strong>Revisa la información:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        <main class="tarjeta pr-card">
+            @if(session('success'))
+                <div class="notificacion notificacion--exito" role="status">
+                    <i class="fa-solid fa-circle-check notificacion__icono" aria-hidden="true"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="notificacion notificacion--error" role="alert">
+                    <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                    <div>
+                        <strong>Corrige estos datos:</strong>
+                        <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    </div>
+                </div>
+            @endif
 
             @if($estado['fase'] === 'datos')
                 <h1>Datos de identificación</h1>
                 <p class="pr-muted">Todos los campos son obligatorios. No podrás avanzar hasta completarlos.</p>
 
-                <div class="pr-notice pr-notice--identidad">
+                <div class="aviso">
                     <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial, sin incluir acentos.</strong></p>
                     <p>No importa si los escribes en mayúsculas: el sistema ajusta el formato automáticamente. Tu CURP se guardará siempre en mayúsculas.</p>
                 </div>
@@ -27,6 +40,7 @@
                     'textoBoton' => 'Continuar',
                     'mostrarCancelar' => false,
                     'avisoClave' => true,
+                    'mostrarAviso' => true,
                     'botonDeshabilitado' => true,
                 ])
 
@@ -35,11 +49,18 @@
                     <span class="pr-clave__icon" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
                     <p class="pr-clave__eyebrow">Pre-registro iniciado</p>
                     <h1 id="pr-clave-titulo">Tus datos fueron registrados correctamente</h1>
-                    <p class="pr-clave__texto">Guarda tu clave de acceso. También la enviamos a tu correo principal para que puedas retomar el proceso.</p>
+                    @if($estado['correo_enviado'] ?? true)
+                        <p class="pr-clave__texto">Guarda tu clave de acceso. También la enviamos a tu correo principal para que puedas retomar el proceso.</p>
+                    @else
+                        <div class="notificacion notificacion--advertencia" role="alert">
+                            <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                            <span>No pudimos enviar el correo con tu clave. Cópiala y guárdala ahora desde esta pantalla: es el único lugar donde podrás verla.</span>
+                        </div>
+                    @endif
 
-                    <div class="pr-clave__codigo" aria-label="Clave de acceso generada">
-                        <span id="pr-key">{{ $estado['clave'] }}</span>
-                        <button type="button" class="pr-clave__copiar" data-copy-key aria-describedby="pr-clave-ayuda">
+                    <div class="codigo" aria-label="Clave de acceso generada">
+                        <span class="codigo__valor" id="pr-key">{{ $estado['clave'] }}</span>
+                        <button type="button" class="boton boton--secundario" data-copy-key aria-describedby="pr-clave-ayuda">
                             <i class="fa-regular fa-copy" aria-hidden="true"></i>
                             <span>Copiar</span>
                         </button>
@@ -47,7 +68,7 @@
                     <p id="pr-clave-ayuda" class="pr-clave__ayuda">La necesitarás para consultar y continuar tu trámite.</p>
                     <form method="POST" action="{{ route('persona.preregistro.avanzar') }}" class="pr-actions">
                         @csrf
-                        <button class="pr-btn" type="submit">Continuar</button>
+                        <button class="boton boton--primario" type="submit">Continuar</button>
                     </form>
                 </section>
 
@@ -55,7 +76,7 @@
                 <h1>Editar mis datos</h1>
                 <p class="pr-muted">Modifica solo lo necesario. Podrás hacerlo hasta que tu documentación entre a revisión.</p>
 
-                <div class="pr-notice pr-notice--identidad">
+                <div class="aviso">
                     <p><strong>Escribe tus datos exactamente como aparecen en tu identificación oficial</strong>, sin incluir acentos.</p>
                 </div>
 
@@ -64,6 +85,7 @@
                     'textoBoton' => 'Guardar cambios',
                     'mostrarCancelar' => true,
                     'avisoClave' => false,
+                    'mostrarAviso' => false,
                     'botonDeshabilitado' => false,
                 ])
 
@@ -86,9 +108,9 @@
 
                 <div class="pr-actions">
                     @if($puedeEditar)
-                        <a class="pr-btn pr-btn--secondary" href="{{ route('persona.preregistro.editar') }}">Editar mis datos</a>
+                        <a class="boton boton--secundario" href="{{ route('persona.preregistro.editar') }}">Editar mis datos</a>
                     @endif
-                    <a class="pr-btn" href="{{ route('persona.documentos.index') }}">Continuar a documentación</a>
+                    <a class="boton boton--primario" href="{{ route('persona.documentos.index') }}">Continuar a documentación</a>
                 </div>
 
                 @unless($puedeEditar)

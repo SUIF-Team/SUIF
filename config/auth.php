@@ -6,10 +6,6 @@ return [
     |--------------------------------------------------------------------------
     | Authentication Defaults
     |--------------------------------------------------------------------------
-    |
-    | Reemplaza core/Auth.php — la autenticación ahora usa
-    | Illuminate\Support\Facades\Auth y los guards de Laravel.
-    |
     */
 
     'defaults' => [
@@ -26,11 +22,6 @@ return [
     'guards' => [
         'web' => [
             'driver'   => 'session',
-            'provider' => 'users',
-        ],
-
-        'api' => [
-            'driver'   => 'token',
             'provider' => 'users',
         ],
     ],
@@ -52,13 +43,19 @@ return [
     |--------------------------------------------------------------------------
     | Resetting Passwords
     |--------------------------------------------------------------------------
+    | Nadie consume este broker: la recuperación de clave de SUIF
+    | (RecuperacionClaveController) envía una clave nueva al correo en vez de
+    | un enlace con token. La tabla password_reset_tokens no está en el
+    | esquema; si algún día se usa el broker, deberá crearla el responsable
+    | de la base (database/scripts/).
     */
 
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table'    => 'password_resets',
+            'table'    => 'password_reset_tokens',
             'expire'   => 60,
+            'throttle' => 60,
         ],
     ],
 

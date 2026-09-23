@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Comprobación de admin-bandeja-preregistros.js</title>
+<!--
+    El filtrado de las tres bandejas Vue —Pre-registro, Personas registradas y
+    Pagos— vive en JavaScript, y el proyecto no tiene corredor para eso: no hay
+    package.json ni empaquetador. Esta es la comprobación, y se corre abriendo
+    el archivo en un navegador.
+
+    NECESITA RED: Vue viene del mismo CDN que partials/scripts.blade.php, con
+    su misma etiqueta y su mismo integrity. Sin conexión el veredicto lo dice.
+
+    Carga el script real —no una copia— sobre tres registros de mentira. Lo que
+    comprueba es CUÁNDO se aplica cada filtro, que es lo que cambió: los select
+    de golpe, el término con 120 ms de respiro, y que pulsar Limpiar dentro de
+    ese respiro no deje que un temporizador tardío reponga lo borrado.
+
+    El markup del partial no se comprueba aquí: esto es una copia suya y
+    afirmarlo sería tautológico. De eso se encarga ConsultaPersonasRegistradasTest.
+-->
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 1.5rem; }
+    #armazon { display: none; }
+    li { font-family: ui-monospace, monospace; }
+    .falla { color: #b00020; font-weight: 700; }
+    #veredicto { font-size: 1.1rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>admin-bandeja-preregistros.js</h1>
+<p id="veredicto">Ejecutando…</p>
+<ol id="resultados"></ol>
+
+<div id="armazon">
+    <section
+        data-bandeja-administrativa="preregistros"
+        data-campo-estado="estado_bandeja"
+        data-campo-fecha="fecha_registro"
+        data-vista='{"personas":[
+            {"id":1,"nombre":"Ana","primer_apellido":"Álvarez","segundo_apellido":"Prueba","nombre_completo":"Álvarez Prueba Ana","curp":"ROLA900101MDFABC01","rfc":"ROLA900101","fecha_registro":"2026-01-15 10:00:00","estado_bandeja":"Aprobada","clase_estado":"","ruta_expediente":"#1"},
+            {"id":2,"nombre":"Beto","primer_apellido":"Bravo","segundo_apellido":"Prueba","nombre_completo":"Bravo Prueba Beto","curp":"ROLB900101MDFABC02","rfc":"ROLB900101","fecha_registro":"2026-01-16 10:00:00","estado_bandeja":"Aprobada","clase_estado":"","ruta_expediente":"#2"},
+            {"id":3,"nombre":"Ana","primer_apellido":"Cruz","segundo_apellido":"Prueba","nombre_completo":"Cruz Prueba Ana","curp":"ROLC900101MDFABC03","rfc":"ROLC900101","fecha_registro":"2026-01-17 10:00:00","estado_bandeja":"En revisión","clase_estado":"","ruta_expediente":"#3"}
+        ]}'>
+
+        <!-- Espejo del partial admin/partials/bandeja-filtros.blade.php -->
+        <form v-on:submit.prevent>
+            <select id="campo" v-model="filtros.campo">
+                <option value="nombre">Nombre(s)</option>
+                <option value="primer_apellido">Apellido paterno</option>
+                <option value="curp">CURP</option>
+            </select>
+            <input id="termino" v-model="filtros.termino" type="search">
+            <select id="estado" v-model="filtros.estado">
+                <option value="Todos">Todos</option>
+                <option value="Aprobada">Aprobada</option>
+                <option value="En revisión">En revisión</option>
+            </select>
+            <select id="orden" v-model="filtros.orden">
+                <option value="reciente">Más reciente primero</option>
+                <option value="az">Nombre (A-Z)</option>
+                <option value="za">Nombre (Z-A)</option>
+            </select>
+            <button id="limpiar" type="button" v-on:click="limpiar">Limpiar</button>
+        </form>
+
+        <p id="conteo" v-if="personasFiltradas.length">{{ resumenResultados }}</p>
+
+        <div id="lista">
+            <article v-for="persona in personasFiltradas" :key="persona.id" class="fila">
+                <h3>{{ persona.nombre_completo }}</h3>
+            </article>
+            <p id="vacio" v-if="!personasFiltradas.length" role="status">No se encontraron solicitudes.</p>
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js" integrity="sha384-arPHRzOKPl8g3Rbe/cQBWYPnq4HcxfPFSFWD3qvI/hc2XQf+4GkVqkOlWgjN5mD3" crossorigin="anonymous"></script>
+<script src="../../public/assets/js/components/BackNavigation.js"></script>
+<script src="../../public/assets/js/components/Alertas.js"></script>
+<script src="../../public/assets/js/pages/admin-bandeja-preregistros.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var fallas = 0;
+    var veredicto = document.getElementById('veredicto');
+
+    function comprobar(nombre, real, esperado) {
+        var pasa = real === esperado;
+        var renglon = document.createElement('li');
+
+        renglon.textContent = (pasa ? 'OK   ' : 'FALLA') + '  ' + nombre
+            + (pasa ? '' : '  → «' + real + '», esperaba «' + esperado + '»');
+
+        if (!pasa) {
+            renglon.className = 'falla';
+            fallas += 1;
+        }
+
+        document.getElementById('resultados').appendChild(renglon);
+    }
+
+    function visibles() {
+        return Array.prototype.slice.call(document.querySelectorAll('#lista .fila h3'))
+            .map(function (titulo) { return titulo.textContent.trim(); })
+            .join(',');
+    }
+
+    function campo(id) {
+        return document.getElementById(id);
+    }
+
+    function escribir(valor) {
+        campo('termino').value = valor;
+        campo('termino').dispatchEvent(new Event('input'));
+    }
+
+    function elegir(id, valor) {
+        campo(id).value = valor;
+        campo(id).dispatchEvent(new Event('change'));
+    }
+
+    if (!window.Vue) {
+        veredicto.textContent = 'No se pudo cargar Vue desde el CDN. Esta comprobación necesita red.';
+        veredicto.className = 'falla';
+        return;
+    }
+
+    var TODAS = 'Álvarez Prueba Ana,Bravo Prueba Beto,Cruz Prueba Ana';
+
+    /* Cada paso corre y después espera lo que diga «espera». Los tiempos son
+       parte de lo que se comprueba: 40 ms cae dentro del respiro de 120 y
+       200 ms cae fuera. */
+    var pasos = [
+        { espera: 40, hacer: function () {
+            comprobar('al arrancar están las tres', visibles(), TODAS);
+            comprobar('el conteo se anuncia', campo('conteo').textContent, '3 resultados');
+            escribir('ana');
+        }},
+        { espera: 200, hacer: function () {
+            comprobar('el término no se aplica dentro del respiro', visibles(), TODAS);
+        }},
+        { espera: 40, hacer: function () {
+            comprobar('el término se aplica pasado el respiro', visibles(), 'Álvarez Prueba Ana,Cruz Prueba Ana');
+            comprobar('el conteo acompaña', campo('conteo').textContent, '2 resultados');
+            elegir('campo', 'primer_apellido');
+        }},
+        { espera: 40, hacer: function () {
+            /* El select no espera: cambia el campo y «ana» deja de casar. */
+            comprobar('el select de campo se aplica de golpe', visibles(), '');
+            comprobar('sale el aviso de vacío', campo('vacio') !== null, true);
+            campo('limpiar').click();
+        }},
+        { espera: 40, hacer: function () {
+            comprobar('limpiar restituye sin esperar', visibles(), TODAS);
+            elegir('estado', 'En revisión');
+        }},
+        { espera: 40, hacer: function () {
+            comprobar('el select de estado se aplica de golpe', visibles(), 'Cruz Prueba Ana');
+            comprobar('el conteo en singular', campo('conteo').textContent, '1 resultado');
+            elegir('estado', 'Todos');
+            elegir('orden', 'za');
+        }},
+        { espera: 40, hacer: function () {
+            comprobar('orden Z-A', visibles(), 'Cruz Prueba Ana,Bravo Prueba Beto,Álvarez Prueba Ana');
+            elegir('orden', 'reciente');
+        }},
+        { espera: 10, hacer: function () {
+            /* La carrera: escribir y limpiar dentro de los 120 ms. Si el
+               temporizador guardara el valor en vez de leerlo al dispararse,
+               repondría «ana» después del borrado. */
+            escribir('ana');
+        }},
+        { espera: 300, hacer: function () {
+            campo('limpiar').click();
+        }},
+        { espera: 0, hacer: function () {
+            comprobar('limpiar gana al temporizador pendiente', visibles(), TODAS);
+            comprobar('el campo quedó vacío', campo('termino').value, '');
+
+            veredicto.textContent = fallas === 0 ? 'Todo pasó.' : fallas + ' comprobación(es) fallaron.';
+            veredicto.className = fallas === 0 ? '' : 'falla';
+        }}
+    ];
+
+    document.getElementById('armazon').style.display = '';
+
+    (function siguiente(i) {
+        if (i >= pasos.length) {
+            return;
+        }
+
+        pasos[i].hacer();
+        window.setTimeout(function () { siguiente(i + 1); }, pasos[i].espera);
+    }(0));
+}());
+</script>
+</body>
+</html>

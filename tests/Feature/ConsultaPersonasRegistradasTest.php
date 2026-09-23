@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Usuario;
 use App\Support\Admin\ConsultaPagos;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use App\Support\Admin\ConsultaPreRegistros;
@@ -51,16 +52,31 @@ class ConsultaPersonasRegistradasTest extends TestCase
         $this->assertSame(2, app(ConsultaPagos::class)->totalPorValidar());
     }
 
-    public function test_el_filtro_solo_ofrece_los_tres_estados_de_revision(): void
+    /**
+     * Las dos bandejas filtran por los mismos tres estados. El catálogo tiene
+     * seis, pero «Pre-registro» y «Documentación» son etapas de captura que no
+     * llegan a la bandeja, y «Cancelada» dejó de ofrecerse cuando se retiró la
+     * acción de cancelar un trámite: sólo quedan expedientes históricos.
+     */
+    public function test_cada_bandeja_ofrece_los_estados_que_le_corresponden(): void
     {
-        $esperados = ['En revisión', 'Aprobada', 'Rechazada'];
+        $this->assertSame(
+            ['En revisión', 'Aprobada', 'Rechazada'],
+            app(ConsultaPersonasRegistradas::class)->estados()
+        );
 
-        $this->assertSame($esperados, app(ConsultaPersonasRegistradas::class)->estados());
-        $this->assertSame($esperados, app(ConsultaPreRegistros::class)->estados());
+        $this->assertSame(
+            ['En revisión', 'Aprobada', 'Rechazada'],
+            app(ConsultaPreRegistros::class)->estados()
+        );
     }
 
     public function test_dashboard_y_bandeja_renderizan_datos_reales_sin_expediente_general(): void
     {
+        /* La zona administrativa exige sesión: sin ella todo /admin redirige
+           al login. El usuario 3 es el Superusuario, que ve el tablero entero. */
+        $this->actingAs(Usuario::findOrFail(3));
+
         $this->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Personas registradas')
@@ -78,16 +94,45 @@ class ConsultaPersonasRegistradasTest extends TestCase
                 'Pagos',
                 'Sedes',
                 'Grupos',
+                'Gestión de usuarios',
                 'Certificados',
             ]);
 
         $this->get(route('admin.personas.registradas.index'))
             ->assertOk()
-            ->assertSee('Ada Lovelace')
-            ->assertSee('Cuenta Candidata')
+            /* Apellido paterno, materno y nombre(s): el orden de toda la zona
+               administrativa. La bandeja sigue llegando con lo más reciente
+               arriba y el alfabético se elige en el selector de orden.
+               La segunda persona se busca por CURP y no por su nombre porque
+               el renglón lo pinta Vue: el nombre sólo llega al HTML dentro del
+               @json de data-vista, y ahí «Histórica» se escribe Hist\u00f3rica.
+               Un assertSee con el acento no lo encontraría. */
+            ->assertSee('Lovelace Byron Ada')
+            ->assertSee('LEGA900101MDFABC05')
+            ->assertSee('id="bandeja-personas-registradas-orden"', false)
             ->assertSee('Aprobada')
-            ->assertDontSee('Grace Hopper')
+            ->assertDontSee('Hopper Murray Grace')
             ->assertDontSee('Ver expediente');
+    }
+
+    /**
+     * La barra de filtros se quedó sin botón: la bandeja se acota mientras se
+     * escribe, así que no quedaba nada que pulsar. Y la región viva pasó a ser
+     * el conteo en lugar de la lista, porque releerla entera en cada pausa de
+     * tecleo no le sirve a quien usa lector de pantalla.
+     *
+     * Es la única bandeja Vue con una prueba que renderice el partial, así que
+     * aquí se afirma el markup que las tres comparten.
+     */
+    public function test_la_barra_de_filtros_no_tiene_boton_y_la_region_viva_es_el_conteo(): void
+    {
+        $this->actingAs(Usuario::findOrFail(3))
+            ->get(route('admin.personas.registradas.index'))
+            ->assertOk()
+            ->assertDontSee('>Filtrar<', false)
+            ->assertSee('<div class="tabla-desplazable">', false)
+            ->assertSee('<p class="visually-hidden" role="status" v-if="personasFiltradas.length">', false)
+            ->assertSee('id="bandeja-personas-registradas-termino"', false);
     }
 
     public function test_bandeja_de_preregistros_incluye_a_toda_persona_con_clave_sin_importar_el_estado(): void
@@ -96,7 +141,11 @@ class ConsultaPersonasRegistradasTest extends TestCase
 
         $this->assertCount(3, $personas);
         $this->assertSame(['50', '20', '11'], array_column($personas, 'id'));
-        $this->assertSame(['Aprobada', 'Pre-registro', 'En revisión'], array_column($personas, 'estado_bandeja'));
+        /* La segunda solicitud está en 'Pre-registro' en el catálogo: la
+           bandeja la presenta como 'En revisión' porque su filtro no ofrece
+           las etapas previas al envío. Los dos valores iguales no son un
+           descuido. Ver ConsultaPreRegistros::etiquetaEstado(). */
+        $this->assertSame(['Aprobada', 'En revisión', 'En revisión'], array_column($personas, 'estado_bandeja'));
     }
 
     private function crearEsquemaTemporal(): void
@@ -110,6 +159,20 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
+            $table->boolean('usua_activo')->default(true);
+        });
+
+        /* Los permisos del tablero se resuelven contra PRIVILEGIO_ROL, así que
+           la zona administrativa no responde sin estas dos tablas. */
+        Schema::create('privilegio', function (Blueprint $table): void {
+            $table->integer('priv_id_privilegio')->primary();
+            $table->string('priv_privilegio', 35);
+        });
+
+        Schema::create('privilegio_rol', function (Blueprint $table): void {
+            $table->increments('ropr_id_privilegio_rol');
+            $table->integer('ropr_id_privilegio');
+            $table->integer('ropr_id_rol');
         });
 
         Schema::create('persona', function (Blueprint $table): void {
@@ -151,6 +214,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->integer('esso_id_estado_solicitud')->primary();
             $table->integer('esso_id_c_estado_solicitud');
             $table->integer('esso_id_solicitud');
+            $table->string('esso_motivo_rechazo', 255)->nullable();
         });
 
         /* El dashboard cuenta los pagos por validar con ConsultaPagos. */
@@ -161,6 +225,20 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->string('pago_referencia_bancaria', 20)->nullable();
             $table->date('pago_fecha_pago')->nullable();
             $table->time('pago_hora_pago')->nullable();
+            $table->boolean('pago_uso_cfdi')->nullable();
+            $table->integer('pago_id_dato_fiscal')->nullable();
+            /* Marca del pago compartido de una referencia especial. */
+            $table->integer('pago_no_empleado')->nullable();
+        });
+
+        /* ConsultaPagos cruza PAGO con el catálogo para mostrar, junto al monto
+           declarado, el que se cobró. */
+        Schema::create('referencia_bancaria', function (Blueprint $table): void {
+            $table->increments('reba_id_referencia_bancaria');
+            $table->integer('reba_id_pago')->nullable();
+            $table->string('reba_referencia', 20);
+            $table->decimal('reba_monto', 10, 4)->nullable();
+            $table->date('reba_vigencia')->nullable();
         });
 
         Schema::create('c_estado_pago', function (Blueprint $table): void {
@@ -182,8 +260,28 @@ class ConsultaPersonasRegistradasTest extends TestCase
     {
         DB::table('rol')->insert([
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
-            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
+            ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Superusuario'],
             ['rol_id_rol' => 3, 'rol_tipo_rol' => 'Candidato'],
+        ]);
+
+        /* El usuario 3 es el Superusuario con el que se abre el tablero: tiene
+           el catálogo completo, así que ve todas las tarjetas. */
+        DB::table('privilegio')->insert([
+            ['priv_id_privilegio' => 1, 'priv_privilegio' => 'Validación Registro'],
+            ['priv_id_privilegio' => 2, 'priv_privilegio' => 'Gestionar Pagos'],
+            ['priv_id_privilegio' => 3, 'priv_privilegio' => 'Generación Reportes'],
+            ['priv_id_privilegio' => 4, 'priv_privilegio' => 'Gestionar usuarios'],
+            ['priv_id_privilegio' => 5, 'priv_privilegio' => 'Gestionar Referencias'],
+            ['priv_id_privilegio' => 6, 'priv_privilegio' => 'Gestionar Sedes'],
+        ]);
+
+        DB::table('privilegio_rol')->insert([
+            ['ropr_id_privilegio' => 1, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 2, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 3, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 4, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 5, 'ropr_id_rol' => 2],
+            ['ropr_id_privilegio' => 6, 'ropr_id_rol' => 2],
         ]);
 
         DB::table('usuario')->insert([
@@ -293,6 +391,11 @@ class ConsultaPersonasRegistradasTest extends TestCase
             ['pago_id_pago' => 3, 'pago_comprobante_path' => 'solicitudes/50/comprobante.pdf'],
             ['pago_id_pago' => 4, 'pago_comprobante_path' => 'solicitudes/30/comprobante.pdf'],
             ['pago_id_pago' => 5, 'pago_comprobante_path' => ''],
+        ]);
+
+        DB::table('referencia_bancaria')->insert([
+            ['reba_id_pago' => 1, 'reba_referencia' => 'REF-0001', 'reba_monto' => 7000],
+            ['reba_id_pago' => 2, 'reba_referencia' => 'REF-0002', 'reba_monto' => 7000],
         ]);
 
         DB::table('c_estado_pago')->insert([

@@ -3,8 +3,8 @@
 @section('title', 'SUIF — Bandeja de pre-registros')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-preregistro.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-bandeja-preregistros.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-bandeja-preregistros.css') }}">
 @endsection
 
 @section('content')
@@ -28,10 +28,14 @@
             'estados_filtro' => array_merge(['Todos'], $datos_vista['estados']),
         ])
 
-        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="solicitudes-titulo">
-            <h2 id="solicitudes-titulo">Solicitudes</h2>
+        <section class="tabla-contenedor" aria-label="Solicitudes">
+            {{-- La región viva es el conteo y no la lista: con el filtro
+                 aplicándose al escribir, releer la bandeja entera en cada
+                 pausa no le sirve a nadie. El caso vacío lo anuncia el
+                 mensaje del final, que ya tiene su propio role="status". --}}
+            <p class="visually-hidden" role="status" v-if="personasFiltradas.length">@{{ resumenResultados }}</p>
 
-            <div class="admin-bandeja-preregistros-lista" aria-live="polite">
+            <div class="tabla-desplazable">
                 <div class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-encabezados" aria-hidden="true">
                     <span>Persona</span>
                     <span>Estado</span>
@@ -48,14 +52,14 @@
                         </div>
                     </div>
                     <div class="admin-bandeja-preregistros-estado-contenedor">
-                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(persona)">@{{ persona.estado_bandeja }}</span>
+                        <span class="estado" :class="claseEstado(persona)">@{{ persona.estado_bandeja }}</span>
                     </div>
                     <div class="admin-bandeja-preregistros-accion">
-                        <a class="admin-bandeja-preregistros-expediente" :href="persona.ruta_expediente">Ver expediente</a>
+                        <a class="boton boton--secundario" :href="persona.ruta_expediente">Ver expediente</a>
                     </div>
                 </article>
 
-                <p v-if="!personasFiltradas.length" class="admin-bandeja-preregistros-vacio" role="status">
+                <p v-if="!personasFiltradas.length" class="vacio" role="status">
                     No se encontraron solicitudes con los filtros seleccionados.
                 </p>
             </div>
@@ -70,7 +74,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
-<script src="{{ asset('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
 @endsection

@@ -1,9 +1,13 @@
 # =============================================================================
-# SUIF — .gitignore (Laravel 5.5)
+# SUIF — .gitignore (Laravel 13)
 # =============================================================================
 
 # ─── Secretos y configuración local ──────────────────────────────────────────
+# Cualquier copia del .env (.env.save, .env.servidor, .env.bak…) trae los
+# mismos secretos; sólo la plantilla se versiona.
 .env
+.env.*
+!.env.example
 
 # ─── Dependencias de Composer ─────────────────────────────────────────────────
 vendor/
@@ -19,22 +23,13 @@ storage/framework/views/*
 !storage/framework/sessions/.gitkeep
 !storage/framework/views/.gitkeep
 
-# ─── Archivos subidos / generados en runtime ─────────────────────────────────
-# Migrado: storage/comprobantes/* → storage/app/comprobantes/*
-storage/app/comprobantes/*
-storage/app/documentos/*
-storage/app/referencias/*
-storage/app/facturas/*
-storage/app/certificados/*
+# ─── Archivos generados en runtime ───────────────────────────────────────────
+# Lo que sube la gente vive en storage/app/private; lo ignora su propio
+# .gitignore, como en el esqueleto de Laravel.
 storage/fonts/*
 storage/logs/*
 
 # Conservar estructura de carpetas en Git
-!storage/app/comprobantes/.gitkeep
-!storage/app/documentos/.gitkeep
-!storage/app/referencias/.gitkeep
-!storage/app/facturas/.gitkeep
-!storage/app/certificados/.gitkeep
 !storage/fonts/.gitkeep
 !storage/logs/.gitkeep
 
@@ -43,6 +38,8 @@ storage/logs/*
 *.tmp
 *.swp
 *.bak
+*.backup
+*.phar
 
 # ─── IDEs y editores ─────────────────────────────────────────────────────────
 .idea/
@@ -77,8 +74,6 @@ test.php
 prueba.php
 debug.php
 public/index2.php
-.env
 
-# Documentos que suben las personas en tiempo de ejecución
-storage/app/preregistro/
 storage/framework/testing/
+storage/framework/lsp-*.php

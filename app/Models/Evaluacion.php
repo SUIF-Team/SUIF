@@ -23,9 +23,4 @@ class Evaluacion extends Model
             'eval_resultado' => 'integer',
         ];
     }
-
-    public function grupo()
-    {
-        return $this->belongsTo(Grupo::class, 'grup_id_grupo', 'grup_id_grupo');
-    }
 }

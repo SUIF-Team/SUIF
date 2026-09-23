@@ -13,11 +13,10 @@ return [
     /*
     |--------------------------------------------------------------------------
     | Database Connections
+    | Las demás conexiones vienen del framework. sqlite se declara aquí porque
+    | la del framework activa las llaves foráneas y las pruebas —que corren
+    | sobre SQLite en memoria— se escribieron sin ellas.
     |--------------------------------------------------------------------------
-    |
-    | Migrado desde: config/database.php (clase Database PDO custom)
-    | Ahora usa el sistema de conexiones nativo de Laravel / Eloquent.
-    |
     */
 
     'connections' => [
@@ -26,21 +25,6 @@ return [
             'driver'   => 'sqlite',
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix'   => '',
-        ],
-
-        'mysql' => [
-            'driver'      => 'mysql',
-            'host'        => env('DB_HOST', '127.0.0.1'),
-            'port'        => env('DB_PORT', '3306'),
-            'database'    => env('DB_DATABASE', 'forge'),
-            'username'    => env('DB_USERNAME', 'forge'),
-            'password'    => env('DB_PASSWORD', ''),
-            'unix_socket' => env('DB_SOCKET', ''),
-            'charset'     => 'utf8mb4',
-            'collation'   => 'utf8mb4_unicode_ci',
-            'prefix'      => '',
-            'strict'      => true,
-            'engine'      => null,
         ],
 
         // Conexión principal del proyecto SUIF — PostgreSQL 18
@@ -55,44 +39,6 @@ return [
             'prefix'   => '',
             'schema'   => 'public',
             'sslmode'  => 'prefer',
-        ],
-
-        'sqlsrv' => [
-            'driver'   => 'sqlsrv',
-            'host'     => env('DB_HOST', 'localhost'),
-            'port'     => env('DB_PORT', '1433'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
-            'charset'  => 'utf8',
-            'prefix'   => '',
-        ],
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Migration Repository Table
-    |--------------------------------------------------------------------------
-    */
-
-    'migrations' => 'migrations',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Redis Databases
-    |--------------------------------------------------------------------------
-    */
-
-    'redis' => [
-
-        'client' => 'predis',
-
-        'default' => [
-            'host'     => env('REDIS_HOST', '127.0.0.1'),
-            'password' => env('REDIS_PASSWORD', null),
-            'port'     => env('REDIS_PORT', 6379),
-            'database' => 0,
         ],
 
     ],

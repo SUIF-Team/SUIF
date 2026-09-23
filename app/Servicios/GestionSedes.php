@@ -5,6 +5,7 @@ namespace App\Servicios;
 use App\Models\Evaluacion;
 use App\Models\Grupo;
 use App\Models\Sede;
+use App\Support\NombrePersona;
 use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -18,6 +19,10 @@ use Illuminate\Support\Facades\DB;
  * El lugar y su programación se capturan por separado: la sede se da de alta
  * sola y queda «Por programar» hasta que el módulo de grupos le registra su
  * primera aplicación. Hasta entonces no se le muestra a la persona.
+ *
+ * A la persona tampoco se le muestran las aplicaciones que ya terminaron: el
+ * administrador las conserva en su bandeja como historial, pero el catálogo de
+ * selección sólo ofrece las que siguen vigentes.
  */
 class GestionSedes
 {
@@ -49,36 +54,29 @@ class GestionSedes
         ];
     }
 
-    public function catalogoParticipante(string $buscar = ''): Collection
+    /**
+     * El catálogo que ve la persona. A diferencia de la bandeja administrativa,
+     * aquí las aplicaciones que ya terminaron desaparecen: ofrecer un horario al
+     * que nadie puede llegar sólo sirve para que alguien aparte un lugar inútil.
+     *
+     * Una sede cuyas aplicaciones vencieron todas se queda sin horarios, deja de
+     * estar «programada» y se cae por el filtro que ya existía.
+     */
+    public function catalogoParticipante(): Collection
     {
         return $this->filasCatalogo()
-            ->where('programada', true)
-            ->filter(function (array $sede) use ($buscar): bool {
-                if ($buscar === '') {
-                    return true;
-                }
-
-                return mb_stripos($sede['nombre'], $buscar) !== false
-                    || mb_stripos($sede['direccion'], $buscar) !== false;
-            })
-            ->values();
-    }
-
-    /**
-     * Lista plana de horarios para el sondeo de cupos del participante.
-     */
-    public function disponibilidadParticipante(): array
-    {
-        return $this->catalogoParticipante()
-            ->flatMap(fn (array $sede): array => array_map(
-                fn (array $horario): array => [
-                    'evaluacion_id' => $horario['evaluacion_id'],
-                    'disponibles' => $horario['disponibles'],
-                    'con_cupo' => $horario['con_cupo'],
-                ],
-                $sede['horarios']
+            ->map(fn (array $sede): array => $this->armarSede(
+                $sede['id'],
+                $sede['nombre'],
+                $sede['direccion'],
+                $sede['cupo'],
+                array_values(array_filter(
+                    $sede['horarios'],
+                    fn (array $horario): bool => $horario['vigente']
+                ))
             ))
-            ->all();
+            ->where('programada', true)
+            ->values();
     }
 
     /**
@@ -185,6 +183,7 @@ class GestionSedes
                 'disponibles' => $sede['disponibles'],
                 'estado' => $sede['estado'],
                 'estado_clave' => $sede['estado_clave'],
+                'estado_papel' => $sede['estado_papel'],
             ])
             ->values();
     }
@@ -198,6 +197,80 @@ class GestionSedes
         }
 
         return $grupo;
+    }
+
+    /**
+     * Las personas citadas a un grupo, para pasar lista el día del examen.
+     *
+     * Nadie se inscribe a un grupo directamente: la persona elige un horario y
+     * eso escribe SOLICITUD.SOLI_ID_EVALUACION, así que la lista se arma
+     * recorriendo esa cadena al revés. Es el mismo camino que
+     * sedeSeleccionadaPorUsuario(), sólo que partiendo del grupo.
+     *
+     * No filtra por estado de pago: seleccionarParaUsuario() no deja elegir
+     * horario sin el pago validado, de modo que estar en esta lista ya implica
+     * haber pagado.
+     *
+     * Trae también lo que pide el alta en la plataforma del examen —folio,
+     * RFC y correo principal—, porque son las mismas personas: quien pasa
+     * lista y quien da de alta deben trabajar sobre el mismo padrón.
+     *
+     * @return array{grupo: array<string, mixed>, personas: array<int, array<string, string>>}
+     */
+    public function listaDeGrupo(int $idGrupo): array
+    {
+        $grupo = $this->grupo($idGrupo);
+
+        /* El correo principal más reciente de cada persona, igual que
+           GestionClaves::correoPrincipal(), pero para todo el grupo en una
+           sola consulta en lugar de una por renglón. */
+        $correos = DB::table('comunicacion as co')
+            ->join('tipo_comunicacion as tc', 'tc.tico_id_tipo_comunicacion', '=', 'co.comu_id_tipo_comunicacion')
+            ->where('tc.tico_tipo_comunicacion', 'Correo principal')
+            ->selectRaw('co.comu_id_persona, MAX(co.comu_id_comunicacion) as id_comunicacion')
+            ->groupBy('co.comu_id_persona');
+
+        $personas = DB::table('solicitud as so')
+            ->join('evaluacion as e', 'e.eval_id_evaluacion', '=', 'so.soli_id_evaluacion')
+            ->join('persona as p', 'p.pers_id_persona', '=', 'so.soli_id_persona')
+            ->leftJoinSub($correos, 'uc', 'uc.comu_id_persona', '=', 'p.pers_id_persona')
+            ->leftJoin('comunicacion as correo', 'correo.comu_id_comunicacion', '=', 'uc.id_comunicacion')
+            ->where('e.grup_id_grupo', $idGrupo)
+            ->orderBy('p.pers_apellido_paterno')
+            ->orderBy('p.pers_apellido_materno')
+            ->orderBy('p.pers_nombre')
+            ->select([
+                'so.soli_id_solicitud',
+                'p.pers_curp',
+                'p.pers_rfc',
+                'p.pers_nombre',
+                'p.pers_apellido_paterno',
+                'p.pers_apellido_materno',
+                'correo.comu_descripcion',
+            ])
+            ->get()
+            ->values()
+            ->map(fn (object $fila, int $indice): array => [
+                'numero' => (string) ($indice + 1),
+                'curp' => (string) $fila->pers_curp,
+                'nombre_completo' => NombrePersona::administrativo(
+                    $fila->pers_apellido_paterno,
+                    $fila->pers_apellido_materno,
+                    $fila->pers_nombre
+                ),
+                'folio' => (string) $fila->soli_id_solicitud,
+                'nombre' => trim((string) $fila->pers_nombre),
+                'apellidos' => NombrePersona::administrativo(
+                    $fila->pers_apellido_paterno,
+                    $fila->pers_apellido_materno,
+                    null
+                ),
+                'correo' => trim((string) $fila->comu_descripcion),
+                'rfc' => trim((string) $fila->pers_rfc),
+            ])
+            ->all();
+
+        return ['grupo' => $grupo, 'personas' => $personas];
     }
 
     public function crearGrupo(array $datos): Grupo
@@ -319,6 +392,11 @@ class GestionSedes
             ->where('p.pers_id_usuario', $idUsuario)
             ->orderByDesc('so.soli_id_solicitud')
             ->select([
+                'so.soli_id_solicitud',
+                'p.pers_nombre',
+                'p.pers_apellido_paterno',
+                'p.pers_apellido_materno',
+                'p.pers_curp',
                 's.sede_nombre',
                 's.sede_direccion',
                 'g.grup_fecha_inicio',
@@ -333,6 +411,13 @@ class GestionSedes
         }
 
         return [
+            'folio' => (int) $fila->soli_id_solicitud,
+            'persona' => trim(implode(' ', array_filter([
+                $fila->pers_nombre,
+                $fila->pers_apellido_paterno,
+                $fila->pers_apellido_materno,
+            ]))),
+            'curp' => (string) $fila->pers_curp,
             'nombre' => $fila->sede_nombre,
             'direccion' => $fila->sede_direccion,
             'fecha_inicio' => (string) $fila->grup_fecha_inicio,
@@ -348,7 +433,7 @@ class GestionSedes
             $referencia = DB::table('evaluacion as e')
                 ->join('grupo as g', 'g.grup_id_grupo', '=', 'e.grup_id_grupo')
                 ->where('e.eval_id_evaluacion', $idEvaluacion)
-                ->select('g.sede_id_sede')
+                ->select('g.sede_id_sede', 'g.grup_fecha_fin', 'g.grup_hora_fin')
                 ->first();
 
             if (!$referencia) {
@@ -385,6 +470,12 @@ class GestionSedes
                 throw new DomainException('La selección de sede se habilita cuando tu pago ha sido validado.');
             }
 
+            /* El catálogo ya oculta las aplicaciones vencidas, pero quien dejó
+               la pestaña abierta todavía tiene el horario viejo en pantalla. */
+            if (!$this->vigente($referencia->grup_fecha_fin, $referencia->grup_hora_fin)) {
+                throw new DomainException('El horario que elegiste ya concluyó. Selecciona otro.');
+            }
+
             if ($this->ocupados($idEvaluacion) >= $sede->sede_cupo) {
                 throw new DomainException('El horario seleccionado ya no tiene lugares disponibles.');
             }
@@ -407,6 +498,45 @@ class GestionSedes
         }
 
         $grupo->delete();
+    }
+
+    /**
+     * El renglón de sede que consumen las pantallas. Recibe los horarios ya
+     * decididos —todos en la bandeja administrativa, sólo los vigentes en el
+     * catálogo de la persona— y deriva de ellos el resto del estado, para que
+     * las dos vistas no tengan cada una su propia idea de qué es «con cupo».
+     */
+    private function armarSede(int $id, string $nombre, string $direccion, int $cupo, array $horarios): array
+    {
+        $programada = $horarios !== [];
+        $con_cupo = (bool) array_filter($horarios, fn (array $horario): bool => $horario['con_cupo']);
+
+        return [
+            'id' => $id,
+            'nombre' => $nombre,
+            'direccion' => $direccion,
+            'cupo' => $cupo,
+            'ocupados' => array_sum(array_column($horarios, 'ocupados')),
+            'disponibles' => array_sum(array_column($horarios, 'disponibles')),
+            'programada' => $programada,
+            'con_cupo' => $con_cupo,
+            'estado_clave' => !$programada ? 'pendiente' : ($con_cupo ? 'con-cupo' : 'sin-cupo'),
+            /* La clave sirve para filtrar; el papel dice de qué color se pinta. */
+            'estado_papel' => !$programada ? 'revision' : ($con_cupo ? 'exito' : 'peligro'),
+            'estado' => !$programada ? 'Por programar' : ($con_cupo ? 'Con cupo' : 'Sin cupo'),
+            'horarios' => $horarios,
+        ];
+    }
+
+    /**
+     * Una aplicación deja de ofrecerse en cuanto pasa su fecha y hora de fin.
+     * Se compara contra la zona horaria de la aplicación y no contra UTC: el
+     * examen se programa en hora local y ahí es donde tiene que vencer.
+     */
+    private function vigente(mixed $fecha_fin, mixed $hora_fin): bool
+    {
+        return $this->momento($fecha_fin, $hora_fin)
+            ->greaterThan(Carbon::now(config('app.timezone')));
     }
 
     private function filasCatalogo(): Collection
@@ -459,27 +589,19 @@ class GestionSedes
                             'ocupados' => $ocupados,
                             'disponibles' => $disponibles,
                             'con_cupo' => $disponibles > 0,
+                            'vigente' => $this->vigente($fila->grup_fecha_fin, $fila->grup_hora_fin),
                         ];
                     })
                     ->values()
                     ->all();
 
-                $programada = $horarios !== [];
-                $con_cupo = (bool) array_filter($horarios, fn (array $horario): bool => $horario['con_cupo']);
-
-                return [
-                    'id' => (int) $sede->sede_id_sede,
-                    'nombre' => $sede->sede_nombre,
-                    'direccion' => $sede->sede_direccion,
-                    'cupo' => $cupo,
-                    'ocupados' => array_sum(array_column($horarios, 'ocupados')),
-                    'disponibles' => array_sum(array_column($horarios, 'disponibles')),
-                    'programada' => $programada,
-                    'con_cupo' => $con_cupo,
-                    'estado_clave' => !$programada ? 'pendiente' : ($con_cupo ? 'con-cupo' : 'sin-cupo'),
-                    'estado' => !$programada ? 'Por programar' : ($con_cupo ? 'Con cupo' : 'Sin cupo'),
-                    'horarios' => $horarios,
-                ];
+                return $this->armarSede(
+                    (int) $sede->sede_id_sede,
+                    (string) $sede->sede_nombre,
+                    (string) $sede->sede_direccion,
+                    $cupo,
+                    $horarios
+                );
             })
             ->sortBy('nombre')
             ->values();
@@ -539,6 +661,7 @@ class GestionSedes
                     'disponibles' => $disponibles,
                     'con_cupo' => $disponibles > 0,
                     'estado_clave' => $disponibles > 0 ? 'con-cupo' : 'sin-cupo',
+                    'estado_papel' => $disponibles > 0 ? 'exito' : 'peligro',
                     'estado' => $disponibles > 0 ? 'Con cupo' : 'Sin cupo',
                 ];
             });

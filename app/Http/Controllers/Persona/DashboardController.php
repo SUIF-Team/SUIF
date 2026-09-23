@@ -33,7 +33,10 @@ class DashboardController extends Controller
         if (!$avance->solicitudAprobada()) {
             $sesion = $this->normalizarEstado([]);
         } else {
-            $sesion['referencia_generada'] = $avance->tienePago();
+            /* La referencia cuenta cuando ya trae número: el pago compartido de
+               una referencia especial existe desde que la empresa captura, pero
+               hasta que la DEC no la emite no hay con qué pagar. */
+            $sesion['referencia_generada'] = $avance->referenciaAsignada();
             $sesion['pago_estado'] = $avance->estadoPagoVista();
             $sesion = $this->normalizarEstado($sesion);
         }
@@ -55,7 +58,7 @@ class DashboardController extends Controller
         $capturado = $avance->tieneSolicitud();
         $documentacion = $avance->documentacionEstado();
         $aprobada = $avance->solicitudAprobada();
-        $rechazada = $avance->estadoSolicitud() === 'Rechazada';
+        $rechazada = $avance->solicitudCerrada();
 
         $pasos = [];
 
@@ -202,12 +205,14 @@ class DashboardController extends Controller
         $textoBoton = $textoBoton
             ?: (in_array($estado, ['completed', 'review'], true) ? 'Ver' : 'Continuar');
 
-        return compact('numero', 'titulo', 'descripcion', 'estado', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
+        $clase = $this->claseEstado($estado);
+
+        return compact('numero', 'titulo', 'descripcion', 'estado', 'clase', 'etiqueta', 'ruta', 'mostrarBoton', 'textoBoton');
     }
 
     private function estadoGeneral(AvancePersona $avance, array $sesion)
     {
-        if ($avance->estadoSolicitud() === 'Rechazada') {
+        if ($avance->solicitudCerrada()) {
             return $this->presentacionEstado('rejected');
         }
 
@@ -235,8 +240,26 @@ class DashboardController extends Controller
     {
         return [
             'texto' => $this->etiquetaEstado($estado),
-            'clase' => $estado,
+            'clase' => $this->claseEstado($estado),
         ];
+    }
+
+    /**
+     * El papel del color de cada etapa, no su nombre interno: la vista pinta
+     * .estado--exito y .paso--exito, y quien lea esto sabe de qué color sale.
+     * Mismo patrón que ConvocatoriaController.
+     */
+    private function claseEstado($estado)
+    {
+        $clases = [
+            'completed' => 'exito',
+            'pending' => 'neutro',
+            'review' => 'revision',
+            'in-progress' => 'info',
+            'rejected' => 'peligro',
+        ];
+
+        return isset($clases[$estado]) ? $clases[$estado] : 'neutro';
     }
 
     private function etiquetaEstado($estado)

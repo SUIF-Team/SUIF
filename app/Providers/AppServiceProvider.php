@@ -5,7 +5,11 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Servicios\AvancePersona;
 use App\Models\Usuario;
+use App\Support\Admin\AccesoAdministrativo;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
@@ -17,16 +21,100 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Gate::define('gestionar-pagos', function (Usuario $usuario): bool {
-            return $usuario->tienePrivilegio('Gestionar Pagos');
+        /* El login se ataca por CURP: el primer límite frena la fuerza bruta
+           sobre una cuenta y el segundo los barridos de CURPs desde una
+           misma dirección. */
+        RateLimiter::for('login', function (Request $request) {
+            $curp = mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8');
+
+            return [
+                Limit::perMinute(5)->by('login:'.$curp.'|'.$request->ip()),
+                Limit::perMinute(20)->by('login-ip:'.$request->ip()),
+            ];
         });
 
-        Gate::define('gestionar-sedes', function (Usuario $usuario): bool {
-            return $usuario->rol?->rol_tipo_rol === 'Administrador';
+        /* El alta de pre-registro es pública, crea cuentas y envía correo:
+           sin freno permite registros masivos. */
+        RateLimiter::for('preregistro', function (Request $request) {
+            return Limit::perMinute(5)->by('preregistro:'.$request->ip());
         });
 
-        Gate::define('gestionar-referencias', function (Usuario $usuario): bool {
-            return $usuario->rol?->rol_tipo_rol === 'Administrador';
+        /* Recuperar la clave es público, envía correo y revoca la clave
+           vigente: sin freno permite barrer CURPs o bombardear a una
+           persona con restablecimientos. */
+        RateLimiter::for('recuperar-clave', function (Request $request) {
+            return Limit::perMinute(5)->by('recuperar-clave:'.$request->ip());
+        });
+
+        /* El autollenado devuelve el nombre de quien trae esa CURP. Es un dato
+           personal servido a una sesión válida: el tope por minuto sobra para
+           teclear —una CURP no se escribe en dos segundos— y el de la hora
+           cubre cuatro listas completas del máximo de participantes, así que
+           deja trabajar y no deja barrer el padrón. */
+        RateLimiter::for('buscar-persona', function (Request $request) {
+            $identidad = (string) ($request->user()?->getAuthIdentifier() ?? $request->ip());
+
+            return [
+                Limit::perMinute(30)->by('buscar-persona:'.$identidad),
+                Limit::perHour(200)->by('buscar-persona-hora:'.$identidad),
+            ];
+        });
+
+        /* Todos los permisos se resuelven contra PRIVILEGIO_ROL y ninguno
+           contra el nombre del rol. Con un solo administrador daba lo mismo;
+           con uno por área, comparar contra la cadena "Administrador" deja
+           fuera a los demás y obliga a volver aquí cada vez que se agrega un
+           rol. El privilegio es el dato que el esquema ya modelaba. */
+        $permisos = [
+            'validar-registro' => AccesoAdministrativo::VALIDACION_REGISTRO,
+            'gestionar-pagos' => AccesoAdministrativo::GESTIONAR_PAGOS,
+            'gestionar-referencias' => AccesoAdministrativo::GESTIONAR_REFERENCIAS,
+            'gestionar-sedes' => AccesoAdministrativo::GESTIONAR_SEDES,
+            'gestionar-usuarios' => AccesoAdministrativo::GESTIONAR_USUARIOS,
+            'generar-reportes' => AccesoAdministrativo::GENERAR_REPORTES,
+            'gestionar-convocatorias' => AccesoAdministrativo::GESTIONAR_CONVOCATORIAS,
+            /* Revertir una resolución ya notificada le toca a quien la dictó:
+               la UIF reanuda y cancela lo que dictaminó en documentación, y la
+               DEC reanuda los pagos que resolvió. Son permisos con nombre
+               propio aunque hoy coincidan con el privilegio de su módulo: ahí
+               se separan el día que la regla cambie. */
+            'reanudar-tramite' => AccesoAdministrativo::VALIDACION_REGISTRO,
+            'reanudar-pago' => AccesoAdministrativo::GESTIONAR_PAGOS,
+        ];
+
+        foreach ($permisos as $permiso => $privilegio) {
+            Gate::define(
+                $permiso,
+                fn (Usuario $usuario): bool => $usuario->tienePrivilegio($privilegio)
+            );
+        }
+
+        /* La puerta de la zona administrativa. Basta un privilegio del
+           catálogo para entrar; qué se puede hacer ahí dentro lo deciden los
+           permisos de cada módulo. */
+        Gate::define('acceder-admin', function (Usuario $usuario): bool {
+            return app(AccesoAdministrativo::class)->esAdministrador($usuario);
+        });
+
+        /* La pantalla de reportes es de todas las áreas y de ninguna: cada
+           reporte lleva dentro los datos de un módulo distinto y exige el
+           permiso de ese módulo. Este permiso sólo abre la puerta; lo que se
+           ve una vez dentro lo decide otra vez el permiso de cada reporte.
+
+           No reutiliza 'generar-reportes' porque ese privilegio es el de
+           certificados y resultados de examen, que no aparecen aquí. */
+        Gate::define('ver-reportes', function (Usuario $usuario): bool {
+            foreach ([
+                AccesoAdministrativo::VALIDACION_REGISTRO,
+                AccesoAdministrativo::GESTIONAR_PAGOS,
+                AccesoAdministrativo::GESTIONAR_SEDES,
+            ] as $privilegio) {
+                if ($usuario->tienePrivilegio($privilegio)) {
+                    return true;
+                }
+            }
+
+            return false;
         });
 
             /* La barra de avance recibe siempre el avance real de la persona. */

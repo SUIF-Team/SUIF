@@ -10,7 +10,7 @@ description: "Aplica las convenciones de SUIF al crear, modificar o revisar cód
 - Mantén el stack fijado a Laravel `^13.8` y PHP 8.4.23 (ver README). No cambies estas versiones sin acordarlo con el equipo, y usa `bootstrap/app.php` (no `Kernel.php`) para configurar middleware, rutas y excepciones.
 - Trabaja con PostgreSQL y la configuración existente. No sustituyas el framework por PHP plano, `include()`/`require()`, sesiones manuales ni consultas sin Eloquent o el query builder de Laravel.
 - Conserva el alcance del sistema: certificaciones, resultados, documentos, pagos, sedes, referencias y paneles de persona y administración. No implementes una aplicación de exámenes.
-- Ejecuta el entorno Docker en `http://localhost:8088` cuando sea necesario. Mantén Apache sirviendo `public/`; no expongas `resources/views` ni agregues `/public` a las URLs.
+- Ejecuta la aplicación con Apache nativo sirviendo `public/` (sin Docker: en desarrollo el vhost local y en la VM `http://localhost`); no expongas `resources/views` ni agregues `/public` a las URLs.
 
 ## Ubicar cada responsabilidad
 
@@ -23,7 +23,7 @@ description: "Aplica las convenciones de SUIF al crear, modificar o revisar cód
 
 ## Construir vistas y assets
 
-- Carga los assets directamente desde `public/assets`; aunque el contenedor ya trae Node/Vite disponibles para el futuro, hoy no hay una etapa de compilación obligatoria — no muevas assets existentes a `resources/` sin acordarlo primero.
+- Carga los assets directamente desde `public/assets`; Node/Vite quedan disponibles para el futuro, pero hoy no hay una etapa de compilación obligatoria — no muevas assets existentes a `resources/` sin acordarlo primero.
 - Mantén estilos globales y reutilizables en `public/assets/css/app.css`.
 - Mantén estilos de componentes compartidos en `public/assets/css/partials/` y estilos exclusivos de cada pantalla en `public/assets/css/pages/`.
 - Usa `public/assets/img/backgrounds/fondo-sistema.jpg` como fondo institucional compartido del login y del sistema. Referéncialo desde CSS estático con `url('/assets/img/backgrounds/fondo-sistema.jpg')` o una variable CSS equivalente; no lo dupliques ni uses estilos inline o `data:` URI.

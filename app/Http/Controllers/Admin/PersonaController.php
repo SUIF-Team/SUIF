@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\GestionClaves;
 use App\Support\Admin\ConsultaPersonasRegistradas;
 use App\Support\Admin\ConsultaPreRegistros;
 use App\Support\Admin\OrigenBandejaAdmin;
@@ -11,7 +12,6 @@ use Illuminate\Http\Request;
 /**
  * Admin\PersonaController
  *
- * Migrado desde: app/controllers/admin/PersonaController.php
  * Responsabilidad: listado, búsqueda y gestión de personas por el administrador.
  */
 class PersonaController extends Controller
@@ -25,7 +25,7 @@ class PersonaController extends Controller
             ->map(function (array $persona) use ($origen_bandeja): array {
                 $persona['ruta_expediente'] = route('admin.personas.show', [
                     'id' => $persona['id'],
-                    'origen' => $origen_bandeja->contexto(OrigenBandejaAdmin::PREREGISTROS)['origen'],
+                    'origen' => $origen_bandeja->contexto()['origen'],
                 ]);
 
                 return $persona;
@@ -46,7 +46,15 @@ class PersonaController extends Controller
     {
         // TODO futuro: definir un expediente general antes de enlazar una
         // persona que puede tener varias solicitudes.
-        $personas = $consulta_personas->personas();
+        $personas = collect($consulta_personas->personas())
+            ->map(function (array $persona): array {
+                $persona['ruta_restaurar_clave'] = route('admin.personas.registradas.restaurar-clave', [
+                    'id' => $persona['id'],
+                ]);
+
+                return $persona;
+            })
+            ->all();
 
         return view('admin.personas-registradas', [
             'datos_vista' => [
@@ -56,6 +64,55 @@ class PersonaController extends Controller
         ]);
     }
 
+    /**
+     * Genera una clave de acceso nueva para una persona de la bandeja y la
+     * envía a su correo principal. La clave solo se muestra al administrador
+     * cuando el correo no pudo salir: ese aviso es la única copia.
+     */
+    public function restaurarClave(
+        Request $request,
+        string $id,
+        ConsultaPersonasRegistradas $consulta_personas,
+        GestionClaves $gestion_claves
+    )
+    {
+        $persona = ctype_digit($id) ? $consulta_personas->persona((int) $id) : null;
+
+        if (!$persona) {
+            return $this->responder($request, 'warning', 'La persona solicitada no fue encontrada.');
+        }
+
+        $clave = $gestion_claves->generar();
+        $gestion_claves->actualizar($persona['id_usuario'], $clave);
+
+        $correo = $gestion_claves->correoPrincipal((int) $id);
+
+        if ($correo === null) {
+            return $this->responder(
+                $request,
+                'warning',
+                'La clave de '.$persona['nombre_completo'].' fue restaurada, pero no tiene un correo principal registrado. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.'
+            );
+        }
+
+        if (!$gestion_claves->enviar($correo, $clave)) {
+            return $this->responder(
+                $request,
+                'warning',
+                'La clave de '.$persona['nombre_completo'].' fue restaurada, pero el correo no pudo enviarse. Anótala y entrégala por otro medio: '.$clave.'. No volverá a mostrarse.'
+            );
+        }
+
+        /* Sin destino: la acción se hace desde la bandeja y termina en la
+           bandeja. El aviso puede traer la clave a mano cuando el correo no
+           salió, así que recargar la lista sería justo perderla de vista. */
+        return $this->responder(
+            $request,
+            'success',
+            'La clave de '.$persona['nombre_completo'].' fue restaurada y enviada a su correo principal.'
+        );
+    }
+
     public function show(
         Request $request,
         string $id,
@@ -63,7 +120,7 @@ class PersonaController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
 
         abort_unless(ctype_digit($id), 404);
 

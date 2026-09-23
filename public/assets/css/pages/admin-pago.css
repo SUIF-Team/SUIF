@@ -1,9 +1,9 @@
+/* Revisión del pago: comprobante, datos del CFDI, resolución y formato.
+   Se apoya en admin-preregistro.css —el marco del expediente— y en los
+   componentes compartidos. */
+
 .admin-pago-detalle-tarjeta {
     min-width: 0;
-}
-
-.admin-pago-progreso {
-    overflow: visible;
 }
 
 .admin-pago-comprobante {
@@ -14,7 +14,7 @@
     justify-content: space-between;
     gap: 1rem;
     border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
+    border-radius: var(--radio-control);
     background: #fcfbf9;
 }
 
@@ -26,124 +26,56 @@
 
 .admin-pago-comprobante h3 {
     color: var(--text-dark);
-    font-size: 0.875rem;
-    font-weight: 700;
 }
 
 .admin-pago-comprobante p {
     margin-top: 0.25rem;
     color: var(--text-muted);
-    font-size: 0.8125rem;
-}
-
-.admin-pago-enlace-comprobante,
-.admin-pago-acciones .admin-preregistro-boton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
+    font-size: var(--fs-auxiliar);
 }
 
 .admin-pago-enlace-comprobante {
     flex: 0 0 auto;
-    color: var(--text-dark);
 }
 
 .admin-pago-datos .admin-preregistro-dato dd {
     overflow-wrap: anywhere;
 }
 
-.admin-pago-archivo-no-disponible,
-.admin-pago-motivo,
-.admin-pago-rechazo {
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: #fcfbf9;
-}
-
-.admin-pago-archivo-no-disponible {
-    padding: 0.5rem 0.75rem;
-    color: var(--text-muted);
-    font-size: 0.8125rem;
-    font-weight: 700;
-}
-
-.admin-pago-motivo {
-    margin-top: 1.5rem;
-    padding: 1rem;
-}
-
-.admin-pago-motivo h3,
-.admin-pago-motivo p {
-    margin: 0;
-}
-
-.admin-pago-motivo h3 {
-    color: #a53630;
-    font-size: 0.875rem;
-}
-
-.admin-pago-motivo p {
-    margin-top: 0.4rem;
-    color: var(--text-dark);
-    overflow-wrap: anywhere;
-}
-
+/* Sólo los dos botones de decisión: el motivo del rechazo se despliega aparte,
+   en su propia tarjeta debajo de ésta. */
 .admin-pago-resolucion {
     margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* La tarjeta toma relleno y tamaño de título de .admin-preregistro-detalle;
+   aquí sólo va el rojo del rechazo y la forma del formulario. */
+.admin-pago-rechazo-panel h2 {
+    margin-bottom: 0.75rem;
+    color: var(--peligro-texto);
+}
+
+.admin-pago-rechazo-panel form {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-    gap: 1rem;
+    gap: 0.4rem;
 }
 
-.admin-pago-rechazo {
-    padding: 1rem;
-    display: grid;
-    gap: 0.5rem;
-}
-
-.admin-pago-rechazo label {
-    color: #a53630;
-    font-size: 0.875rem;
-    font-weight: 700;
-}
-
-.admin-pago-rechazo textarea {
-    width: 100%;
-    padding: 0.6rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.5rem;
-    background: var(--surface-white);
-    color: var(--text-dark);
-    font: inherit;
-    resize: vertical;
-}
-
-.admin-pago-rechazo textarea:focus {
-    border-color: #a53630;
-    outline: 3px solid rgba(165, 54, 48, 0.16);
-    outline-offset: 0;
-}
-
-.admin-pago-rechazo p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-}
-
-.admin-pago-rechazo .admin-preregistro-boton {
-    justify-self: start;
+.admin-pago-rechazo-panel-acciones {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
 }
 
 @media (max-width: 767.98px) {
     .admin-pago-progreso {
         display: grid;
         grid-template-columns: 1fr;
-    }
-
-    .admin-pago-progreso .admin-preregistro-paso {
-        min-width: 0;
     }
 
     .admin-pago-comprobante {
@@ -155,7 +87,47 @@
         width: 100%;
     }
 
-    .admin-pago-resolucion {
-        grid-template-columns: 1fr;
+    .admin-pago-resolucion,
+    .admin-pago-rechazo-panel-acciones {
+        flex-direction: column;
     }
+
+    .admin-pago-resolucion form,
+    .admin-pago-resolucion .boton,
+    .admin-pago-rechazo-panel-acciones .boton,
+    .admin-pago-formato-formulario .boton {
+        width: 100%;
+    }
+}
+
+/* ─── Datos con los que se emitirá el CFDI ───────────────────────────── */
+
+.admin-pago-fiscales {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.admin-pago-fiscales h3 {
+    margin: 0 0 0.5rem;
+    color: var(--text-dark);
+}
+
+/* ─── Formato de pago de la DEC ──────────────────────────────────────── */
+
+.admin-pago-formato h2 {
+    margin-bottom: 0.75rem;
+}
+
+.admin-pago-formato-formulario {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+/* Crece hasta un ancho de nombre y no más: estirado a toda la tarjeta, el
+   selector deja el botón lejos de lo que confirma. */
+.admin-pago-formato-campo {
+    flex: 0 1 26rem;
 }

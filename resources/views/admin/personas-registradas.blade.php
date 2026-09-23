@@ -3,8 +3,8 @@
 @section('title', 'SUIF — Personas registradas')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-preregistro.css') }}">
-<link rel="stylesheet" href="{{ asset('assets/css/pages/admin-bandeja-preregistros.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-bandeja-preregistros.css') }}">
 @endsection
 
 @section('content')
@@ -20,24 +20,37 @@
     <div class="admin-bandeja-preregistros-contenedor">
         <header class="admin-bandeja-preregistros-encabezado">
             <h1 id="bandeja-personas-registradas-titulo">Personas registradas</h1>
-            <p>Consulta todas las personas registradas en el sistema y el estado actual de su solicitud.</p>
+            <p>Consulta y gestiona a las personas registradas en el sistema y el estado actual de su solicitud.</p>
         </header>
+
+        {{-- Sin clase propia: el componente ya elige el papel a partir del tipo. --}}
+        <alertas :mensaje="aviso.mensaje" :tipo="aviso.tipo"></alertas>
 
         @include('admin.partials.bandeja-filtros', [
             'prefijo_filtros' => 'bandeja-personas-registradas',
             'estados_filtro' => array_merge(['Todos'], $datos_vista['estados']),
         ])
 
-        <section class="admin-bandeja-preregistros-tarjeta admin-bandeja-preregistros-solicitudes" aria-labelledby="personas-registradas-listado-titulo">
-            <h2 id="personas-registradas-listado-titulo">Personas</h2>
+        <section class="tabla-contenedor" aria-label="Personas">
+            {{-- La región viva es el conteo y no la lista: con el filtro
+                 aplicándose al escribir, releer la bandeja entera en cada
+                 pausa no le sirve a nadie. El caso vacío lo anuncia el
+                 mensaje del final, que ya tiene su propio role="status". --}}
+            <p class="visually-hidden" role="status" v-if="personasFiltradas.length">@{{ resumenResultados }}</p>
 
-            <div class="admin-bandeja-preregistros-lista" aria-live="polite">
-                <div class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-fila--sin-accion admin-bandeja-preregistros-encabezados" aria-hidden="true">
+            <div class="tabla-desplazable">
+                {{-- El @can duplica el middleware de la ruta a propósito:
+                     quien no puede gestionar usuarios ve la bandeja sin la
+                     columna de acción, exactamente como antes. --}}
+                <div class="admin-bandeja-preregistros-fila @cannot('gestionar-usuarios') admin-bandeja-preregistros-fila--sin-accion @endcannot admin-bandeja-preregistros-encabezados" aria-hidden="true">
                     <span>Persona</span>
                     <span>Estado</span>
+                    @can('gestionar-usuarios')
+                        <span>Acción</span>
+                    @endcan
                 </div>
 
-                <article v-for="persona in personasFiltradas" :key="persona.id" class="admin-bandeja-preregistros-fila admin-bandeja-preregistros-fila--sin-accion admin-bandeja-preregistros-solicitud">
+                <article v-for="persona in personasFiltradas" :key="persona.id" class="admin-bandeja-preregistros-fila @cannot('gestionar-usuarios') admin-bandeja-preregistros-fila--sin-accion @endcannot admin-bandeja-preregistros-solicitud">
                     <div class="admin-bandeja-preregistros-persona">
                         <span class="admin-bandeja-preregistros-avatar" aria-hidden="true">@{{ iniciales(persona) }}</span>
                         <div>
@@ -46,15 +59,55 @@
                         </div>
                     </div>
                     <div class="admin-bandeja-preregistros-estado-contenedor">
-                        <span class="admin-bandeja-preregistros-estado" :class="claseEstado(persona)">@{{ persona.estado }}</span>
+                        <span class="estado" :class="claseEstado(persona)">@{{ persona.estado }}</span>
                     </div>
+                    @can('gestionar-usuarios')
+                        <div class="admin-bandeja-preregistros-accion">
+                            <button
+                                type="button"
+                                class="boton boton--secundario"
+                                v-on:click="abrirRestaurar(persona, $event)">Restaurar clave</button>
+                        </div>
+                    @endcan
                 </article>
 
-                <p v-if="!personasFiltradas.length" class="admin-bandeja-preregistros-vacio" role="status">
+                <p v-if="!personasFiltradas.length" class="vacio" role="status">
                     No se encontraron personas con los filtros seleccionados.
                 </p>
             </div>
         </section>
+
+        {{-- Modal único de confirmación controlado por Vue: las filas se
+             re-renderizan al filtrar, así que el patrón de reversión en JS
+             llano perdería sus escuchadores. Los estilos son los del
+             diálogo compartido, que cargan los tres layouts. --}}
+        @can('gestionar-usuarios')
+            <div class="dialogo" v-if="persona_seleccionada" v-on:keydown.esc="cerrarRestaurar">
+                <div class="dialogo__velo" v-on:click="cerrarRestaurar"></div>
+                <section
+                    class="dialogo__tarjeta"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="restaurar-clave-titulo"
+                    aria-describedby="restaurar-clave-descripcion">
+                    <h2 class="dialogo__titulo" id="restaurar-clave-titulo">¿Restaurar la clave de acceso?</h2>
+                    <p class="dialogo__texto" id="restaurar-clave-descripcion">Se generará una clave nueva para @{{ persona_seleccionada.nombre_completo }} y se enviará a su correo principal. La clave anterior dejará de funcionar.</p>
+                    <form
+                        method="POST"
+                        :action="persona_seleccionada.ruta_restaurar_clave"
+                        class="dialogo__acciones"
+                        v-on:submit.prevent="restaurar($event)">
+                        @csrf
+                        <button class="boton boton--secundario" type="button" ref="cancelar_restaurar" :disabled="restaurando" v-on:click="cerrarRestaurar">
+                            Cancelar
+                        </button>
+                        <button class="boton boton--exito" type="submit" :disabled="restaurando">
+                            @{{ restaurando ? 'Restaurando…' : 'Restaurar clave' }}
+                        </button>
+                    </form>
+                </section>
+            </div>
+        @endcan
 
         <back-navigation
             destino="{{ route('admin.dashboard') }}"
@@ -65,7 +118,5 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
-<script src="{{ asset('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-bandeja-preregistros.js') }}"></script>
 @endsection

@@ -5,19 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Persona;
+use App\Support\Admin\AccesoAdministrativo;
 use Illuminate\Support\Facades\Hash;
 
 /**
  * AuthController
  *
- * Migrado desde: app/controllers/AuthController.php
- * Responsabilidad: autenticación de usuarios (login, logout, registro).
- *
- * TODO: implementar lógica de negocio usando facades nativas de Laravel:
- *   - Illuminate\Support\Facades\Auth  (en lugar de core/Auth.php)
- *   - Illuminate\Support\Facades\Session (en lugar de core/Session.php)
- *   - Illuminate\Support\Facades\Validator (en lugar de core/Validator.php)
- *   - @csrf en las vistas Blade (en lugar de core/Csrf.php)
+ * Responsabilidad: autenticación de usuarios (login y logout).
  */
 class AuthController extends Controller
 {
@@ -34,7 +28,7 @@ class AuthController extends Controller
         /**
      * Valida la CURP y la clave de acceso, y abre la sesión de la persona.
      */
-    public function login(Request $request)
+    public function login(Request $request, AccesoAdministrativo $acceso)
     {
         $datos = $this->validate($request, [
             'curp' => 'required|string|size:18',
@@ -50,23 +44,51 @@ class AuthController extends Controller
         // Un solo mensaje para ambos casos: no se revela si la CURP existe.
         if (!$persona || !$persona->usuario
             || !Hash::check($datos['clave'], $persona->usuario->usua_clave_acceso)) {
-            return back()
-                ->withInput($request->only('curp'))
-                ->with('error', 'La CURP o la clave de acceso no son correctas.');
+            return $this->fallaDeAcceso($request, 'La CURP o la clave de acceso no son correctas.');
+        }
+
+        /* La baja de un administrador retira el acceso sin borrar el renglón.
+           A quien la tiene se le dice por qué no entra: ya demostró que conoce
+           su clave, así que repetirle el mensaje genérico sólo lo confundiría
+           y no protege nada. */
+        if (!$persona->usuario->tieneAcceso()) {
+            return $this->fallaDeAcceso($request, 'Esta cuenta ya no tiene acceso al sistema.');
         }
 
         Auth::login($persona->usuario);
         $request->session()->regenerate();
 
-        if ($persona->usuario->rol?->rol_tipo_rol === 'Administrador') {
-            return redirect()->route('admin.dashboard');
+        /* Cada quien entra por donde trabaja. El mapa de destinos vive en
+           AccesoAdministrativo para que el login y el tablero no puedan
+           discrepar: aterrizar en una pantalla que el rol no abre daría un 403
+           como primera pantalla de la sesión. */
+        $destino = route($acceso->rutaInicial($persona->usuario));
+
+        /* Sin mensaje: entrar no necesita anunciarse, y el redirect de siempre
+           tampoco lo llevaba. Al formulario sólo le hace falta saber a dónde ir. */
+        return $request->expectsJson()
+            ? response()->json(['tipo' => 'success', 'mensaje' => '', 'redirigir' => $destino])
+            : redirect()->to($destino);
+    }
+
+    /**
+     * Un intento fallido no debe tirar la pantalla.
+     *
+     * Equivocarse de clave es el error más repetido del sistema, y hasta ahora
+     * cada intento recargaba el formulario: la clave se perdía —withInput sólo
+     * conserva la CURP, y así debe seguir— y el foco volvía al principio. El
+     * mensaje es el mismo para CURP inexistente y clave incorrecta, para no
+     * revelar qué cuentas existen.
+     */
+    private function fallaDeAcceso(Request $request, string $mensaje)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['tipo' => 'error', 'mensaje' => $mensaje], 422);
         }
 
-        if ($persona->usuario->tienePrivilegio('Gestionar Pagos')) {
-            return redirect()->route('admin.pagos.index');
-        }
-
-        return redirect()->route('persona.dashboard');
+        return back()
+            ->withInput($request->only('curp'))
+            ->with('error', $mensaje);
     }
 
     /**

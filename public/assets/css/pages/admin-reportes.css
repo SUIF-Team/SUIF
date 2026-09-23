@@ -1,0 +1,89 @@
+/* Pantalla de descarga de reportes administrativos: un reporte por renglón,
+   cada uno con su filtro y su botón. La tarjeta, el campo y el botón son los
+   compartidos. */
+
+.admin-reportes {
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
+}
+
+.admin-reportes-contenedor {
+    width: min(100%, var(--admin-ancho));
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.admin-reportes-encabezado h1,
+.admin-reportes-encabezado p,
+.admin-reportes-reporte h2,
+.admin-reportes-reporte p {
+    margin-top: 0;
+}
+
+.admin-reportes-encabezado h1 {
+    margin-bottom: 0.4rem;
+    color: var(--text-dark);
+}
+
+.admin-reportes-encabezado p {
+    margin-bottom: 0;
+    color: var(--text-muted);
+}
+
+/* Un reporte por renglón: cada uno tiene su propio filtro y su botón, y
+   ponerlos en columnas estrechas apretaría los selectores. */
+.admin-reportes-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-reportes-reporte {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.admin-reportes-reporte h2 {
+    margin-bottom: 0.35rem;
+    font-size: var(--fs-subtitulo);
+    color: var(--text-dark);
+}
+
+.admin-reportes-reporte p {
+    margin-bottom: 0;
+    max-width: 46ch;
+    color: var(--text-muted);
+}
+
+/* El selector tiene que dejar leer el nombre de una convocatoria o de un grupo
+   entero, así que no se encoge al ancho del campo compartido. */
+.admin-reportes-campo .control {
+    min-width: 16rem;
+    max-width: 100%;
+}
+
+.admin-reportes-acciones {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* En pantallas angostas el formulario deja de caber al lado de la descripción
+   y pasa debajo, ocupando el ancho completo. */
+@media (max-width: 860px) {
+    .admin-reportes-reporte {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-reportes-formulario,
+    .admin-reportes-campo,
+    .admin-reportes-campo .control {
+        width: 100%;
+        min-width: 0;
+    }
+}

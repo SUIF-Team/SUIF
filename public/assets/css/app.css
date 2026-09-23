@@ -3,6 +3,23 @@
  * Los componentes y las páginas mantienen sus estilos en archivos separados.
  */
 
+/* El atributo hidden lo apaga cualquier regla con display propio, así que
+   había que repetir la excepción componente por componente (.pr-modal[hidden],
+   .admin-reversion-modal[hidden], .admin-sedes-modal[hidden]… hoy todos son
+   .dialogo). Con las pantallas que ya no recargan, ocultar y mostrar en sitio
+   es constante: se declara una vez y hidden vuelve a significar lo que dice. */
+[hidden] {
+    display: none !important;
+}
+
+/* Mismo empate, otro atributo: [v-cloak] mide lo mismo que la clase del
+   diálogo que oculta, así que un .modal con display propio le gana por ir
+   después y el bloque se pinta entero hasta que Vue monta. Declararlo aquí
+   —una vez, y antes que las hojas de página— lo resuelve en todas. */
+[v-cloak] {
+    display: none !important;
+}
+
 :root {
     --unam-blue: #112f4b;
     --unam-blue-dark: #0b1a2e;
@@ -14,11 +31,65 @@
     --text-dark: #1a1a1a;
     --text-muted: #555555;
     --font-sans: 'Open Sans', Arial, sans-serif;
+    /* El nombre del sistema en el encabezado y la navbar de la landing. */
     --font-nav: 'Raleway', Arial, sans-serif;
     --font-serif: 'Merriweather', Georgia, serif;
+
+    /* Escala tipografica del sistema. Un token por papel; ver
+       docs/superpowers/specs/2026-09-01-identidad-tipografica-design.md */
+    --fs-cifra: 2rem;
+    --fs-pagina: 1.5rem;
+    --fs-seccion: 1.125rem;
+    --fs-subtitulo: 1rem;
+    --fs-cuerpo: 0.9375rem;
+    --fs-ui: 0.875rem;
+    --fs-auxiliar: 0.8125rem;
+    --fs-micro: 0.75rem;
+    /* Ancho común de los contenedores del panel administrativo; ver
+       docs/superpowers/specs/2026-09-05-ancho-contenedores-admin-design.md */
+    --admin-ancho: 1200px;
     --navbar-height: 120px;
-    --alto-navbar: var(--navbar-height);
     --fondo-sistema: url('/assets/img/backgrounds/fondo-sistema.jpg');
+
+    /* Papel semántico del color. Un estado se dice con estos valores y no con un
+       color inventado por pantalla: antes había 240 colores escritos a mano para
+       cinco papeles. El mapa es el de la spec de notificaciones administrativas
+       —completado verde, revisión dorado, rechazado rojo, pendiente gris— y se
+       decidió en docs/superpowers/specs/2026-09-15-identidad-cromatica-design.md */
+    --exito-fondo: #eafaf1;
+    --exito-texto: #207a45;
+    --exito-borde: #b9dfc7;
+    --exito-solido: #207a45;
+    --peligro-fondo: #fde8e8;
+    --peligro-texto: #a53630;
+    --peligro-borde: #f3b0ae;
+    --peligro-solido: #991b1b;
+    --revision-fondo: #fdf6ec;
+    --revision-texto: #8b6717;
+    --revision-borde: #ecd9a8;
+    --info-fondo: #eef2f7;
+    --info-texto: #112f4b;
+    --info-borde: #c9d6e6;
+    --neutro-fondo: #ebe9e3;
+    --neutro-texto: var(--text-muted);
+
+    /* Forma y medida de los controles. Dos radios: el del control y el de la caja
+       que lo contiene. El alto es el area tocable minima recomendada. */
+    --radio-control: 8px;
+    --radio-caja: 12px;
+    --alto-control: 44px;
+    --borde-control: #8c8a83;
+    --inactivo-fondo: #e6e4de;
+    --inactivo-texto: #5f5f5a;
+
+    /* Foco visible. El anillo anterior —dorado al 55%— se mezclaba con el fondo y
+       daba 1.74:1 sobre la crema del sistema, por debajo del 3:1 que pide WCAG
+       para un indicador. Solido, el mismo dorado oscuro llega a 4.88:1; sobre
+       fondo azul (navbar y pie) se usa la variante clara. Mide 2 px, el grosor
+       minimo que pide WCAG 2.2 para el perimetro del foco. */
+    --foco-anillo: 2px solid var(--unam-gold-dark);
+    --foco-anillo-claro: 2px solid var(--unam-gold);
+    --foco-separacion: 2px;
 }
 
 *,
@@ -56,6 +127,71 @@ body.pagina-sistema {
     background-attachment: fixed;
     color: var(--text-dark);
     font-family: var(--font-sans);
+    font-size: var(--fs-cuerpo);
+    line-height: 1.5;
+}
+
+/* Base tipografica del sistema.
+   Va con :where() a proposito: deja la especificidad en (0,1,0), asi gana a
+   Bootstrap —que se carga antes— y pierde ante cualquier regla de pagina. La
+   norma queda en una frase: la base vence a Bootstrap, la pagina vence a la
+   base. Sin esto, una clase de boton usada a la vez en <a> y en <button> se
+   veria distinta en cada etiqueta. La landing no entra: nada de esto cuelga
+   de .pagina-sistema por casualidad. */
+.pagina-sistema :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.pagina-sistema :where(h1) {
+    font-size: var(--fs-pagina);
+}
+
+.pagina-sistema :where(h2) {
+    font-size: var(--fs-seccion);
+}
+
+.pagina-sistema :where(h3, h4, h5, h6) {
+    font-size: var(--fs-subtitulo);
+}
+
+/* La etiqueta nunca es menor que su campo: ambos miden --fs-ui y la jerarquia
+   la marca el peso. */
+.pagina-sistema :where(label, legend) {
+    font-size: var(--fs-ui);
+    font-weight: 600;
+}
+
+.pagina-sistema :where(input, select, textarea, button, .btn) {
+    font-size: var(--fs-ui);
+    font-weight: 400;
+}
+
+.pagina-sistema :where(button, .btn) {
+    font-weight: 600;
+}
+
+.pagina-sistema :where(td) {
+    font-size: var(--fs-ui);
+}
+
+/* Encabezado de tabla y rotulo de lista de datos son el mismo papel: el rotulo
+   micro que titula un valor. Van juntos para que ninguna pantalla los invente
+   por su cuenta, que es como acabaron con seis tamanos distintos. */
+.pagina-sistema :where(th, dt) {
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pagina-sistema :where(small, .small) {
+    font-size: var(--fs-auxiliar);
+}
+
+.pagina-sistema :where(strong, b) {
+    font-weight: 600;
 }
 
 /* Interacción compartida por los logotipos de ambos encabezados. */
@@ -98,10 +234,19 @@ body.pagina-sistema {
     color: #ffffff;
 }
 
+/* Un solo anillo para todo lo que recibe foco, y sólo con el teclado. Antes sólo
+   lo tenían <a> y <button>; los campos y las etiquetas que envuelven un input de
+   archivo no mostraban nada. Un <label> que sólo agrupa rótulo y campo no entra:
+   el foco lo enseña el campo, y rodear la etiqueta entera con su texto se leía
+   como un error. Los <label> que sí son el control lo declaran ellos. */
 a:focus-visible,
-button:focus-visible {
-    outline: 3px solid rgba(181, 139, 42, 0.55);
-    outline-offset: 3px;
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: var(--foco-anillo);
+    outline-offset: var(--foco-separacion);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -123,4 +268,86 @@ button:focus-visible {
     body.pagina-sistema {
         background-attachment: scroll;
     }
+}
+
+/* Aviso de privacidad que aparece al entrar, y el bloque simplificado que se
+   reutiliza en el pre-registro. Viven aqui porque los cuatro layouts cargan
+   este archivo. */
+.aviso-banner {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1080;
+    padding: 0.9rem 1rem;
+    border-top: 3px solid var(--unam-gold);
+    background: var(--unam-blue);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    box-shadow: 0 -6px 20px rgba(11, 26, 46, 0.25);
+}
+
+.aviso-banner[hidden] {
+    display: none;
+}
+
+.aviso-banner__contenido {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.aviso-banner__texto {
+    margin: 0;
+    flex: 1 1 320px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.aviso-banner__texto a {
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.aviso-banner__boton {
+    flex: 0 0 auto;
+    padding: 0.5rem 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--unam-gold);
+    color: var(--unam-blue-dark);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.aviso-banner__boton:hover,
+.aviso-banner__boton:focus-visible {
+    background: #d3a63f;
+}
+
+.aviso-simple {
+    font-family: var(--font-sans);
+    line-height: 1.65;
+}
+
+.aviso-simple__titulo {
+    margin: 0 0 1rem;
+    color: var(--unam-blue);
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+}
+
+.aviso-simple p {
+    margin: 0 0 1rem;
+}
+
+.aviso-simple__enlace {
+    margin-bottom: 0;
+    font-weight: 600;
 }

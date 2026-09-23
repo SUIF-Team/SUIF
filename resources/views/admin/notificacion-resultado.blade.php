@@ -4,6 +4,9 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-preregistro.css') }}">
+@if(!empty($formato))
+<link rel="stylesheet" href="{{ asset_versionado('assets/css/pages/admin-pago.css') }}">
+@endif
 @endsection
 
 @section('content')
@@ -21,7 +24,7 @@
     data-vista='@json($datos_vista)'
     aria-labelledby="resultado-notificacion-titulo"
     v-cloak>
-    <header class="admin-preregistro-tarjeta admin-preregistro-perfil">
+    <header class="tarjeta admin-preregistro-perfil">
         <div class="admin-preregistro-usuario">
             <span class="admin-preregistro-avatar" aria-hidden="true">{{ $persona['iniciales'] }}</span>
             <div>
@@ -29,25 +32,29 @@
                 <p>CURP: {{ $persona['curp'] }} · {{ $persona['entidad_federativa'] }}</p>
             </div>
         </div>
-        <span class="admin-preregistro-estado {{ $notificacion['clase_estado'] }}" role="status">
+        <span class="estado {{ $notificacion['clase_estado'] }}" role="status">
             {{ $notificacion['estado_general'] }}
         </span>
     </header>
 
-    <nav class="admin-preregistro-progreso {{ $notificacion['clase_progreso'] }}" aria-label="Progreso del trámite">
+    <nav class="pasos admin-preregistro-progreso {{ $notificacion['clase_progreso'] }}" aria-label="Progreso del trámite">
         @foreach ($notificacion['pasos'] as $paso)
-            <div class="admin-preregistro-paso {{ $paso['clase'] }}" @if ($paso['actual']) aria-current="step" @endif>
-                <span class="admin-preregistro-paso-titulo">{{ $paso['titulo'] }}</span>
-                <span class="admin-preregistro-paso-estado">{{ $paso['estado'] }}</span>
+            <div class="paso {{ $paso['clase'] }}" @if ($paso['actual']) aria-current="step" @endif>
+                <span class="paso__titulo">{{ $paso['titulo'] }}</span>
+                <span class="paso__estado">{{ $paso['estado'] }}</span>
             </div>
         @endforeach
     </nav>
 
-    <main class="admin-preregistro-tarjeta admin-preregistro-resultado-principal">
-        <div class="admin-preregistro-paso admin-preregistro-resultado-mensaje {{ $notificacion['clase_mensaje'] }}" role="status" aria-live="polite">
+    <main class="tarjeta admin-preregistro-resultado-principal">
+        <div class="admin-preregistro-resultado-mensaje {{ $notificacion['clase_mensaje'] }}" role="status" aria-live="polite">
             <h2>{{ $notificacion['titulo'] }}</h2>
         </div>
     </main>
+
+    @include('partials.admin.formato-pago', ['formato' => $formato ?? null])
+
+    @include('partials.admin.acciones-reversion', ['acciones' => $notificacion['acciones'] ?? []])
 
     <back-navigation
         destino="{{ $notificacion['ruta_regreso'] }}"
@@ -57,7 +64,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/vue@3.5.41/dist/vue.global.prod.js"></script>
-<script src="{{ asset('assets/js/components/BackNavigation.js') }}"></script>
 <script src="{{ asset_versionado('assets/js/pages/admin-preregistro.js') }}"></script>
+<script src="{{ asset_versionado('assets/js/pages/admin-reversion.js') }}"></script>
 @endsection

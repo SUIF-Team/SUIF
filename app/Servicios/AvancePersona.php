@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\DB;
 class AvancePersona
 {
     private $idSolicitud = null;
+    private $idPersona = null;
     private $idPago = null;
     private $idEvaluacion = null;
     private $estadoSolicitud = null;
+    private $motivoSolicitud = null;
     private $documentos = [];
     private $pago = null;
 
@@ -30,10 +32,11 @@ class AvancePersona
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->where('p.pers_id_usuario', $idUsuario)
             ->orderByDesc('s.soli_id_solicitud')
-            ->select('s.soli_id_solicitud', 's.soli_id_pago', 's.soli_id_evaluacion')
+            ->select('s.soli_id_solicitud', 's.soli_id_persona', 's.soli_id_pago', 's.soli_id_evaluacion')
             ->first();
 
         $this->idSolicitud = $solicitud ? $solicitud->soli_id_solicitud : null;
+        $this->idPersona = $solicitud ? $solicitud->soli_id_persona : null;
         $this->idPago = $solicitud ? $solicitud->soli_id_pago : null;
         $this->idEvaluacion = $solicitud ? $solicitud->soli_id_evaluacion : null;
 
@@ -41,12 +44,18 @@ class AvancePersona
             return;
         }
 
-        /* El estado vigente es el último renglón de la bitácora. */
-        $this->estadoSolicitud = DB::table('estado_solicitud as e')
+        /* El estado vigente es el último renglón de la bitácora; el motivo
+           viaja con él para poder explicarle a la persona por qué se cerró
+           su trámite. */
+        $estado = DB::table('estado_solicitud as e')
             ->join('c_estado_solicitud as c', 'c.esso_id_c_estado_solicitud', '=', 'e.esso_id_c_estado_solicitud')
             ->where('e.esso_id_solicitud', $this->idSolicitud)
             ->orderByDesc('e.esso_id_estado_solicitud')
-            ->value('c.esso_estado_solicitud');
+            ->select('c.esso_estado_solicitud', 'e.esso_motivo_rechazo')
+            ->first();
+
+        $this->estadoSolicitud = $estado ? $estado->esso_estado_solicitud : null;
+        $this->motivoSolicitud = $estado ? $estado->esso_motivo_rechazo : null;
 
         $this->documentos = $this->cargarDocumentos();
         $this->pago = $this->cargarPago();
@@ -62,6 +71,11 @@ class AvancePersona
         return $this->idSolicitud;
     }
 
+    public function idPersona()
+    {
+        return $this->idPersona;
+    }
+
     public function estadoSolicitud()
     {
         return $this->estadoSolicitud;
@@ -70,6 +84,19 @@ class AvancePersona
     public function tienePago()
     {
         return $this->pago !== null;
+    }
+
+    /**
+     * El pago ya trae su número de referencia.
+     *
+     * No es lo mismo que tenerlo: el pago compartido de una referencia especial
+     * nace en cuanto la empresa captura a sus participantes, pero la referencia
+     * la emite la DEC después. Entre un momento y el otro hay pago y no hay con
+     * qué pagar, así que el paso sigue abierto y el de Pago sigue cerrado.
+     */
+    public function referenciaAsignada()
+    {
+        return $this->tienePago() && trim((string) $this->pago->pago_referencia_bancaria) !== '';
     }
 
     public function tieneSedeSeleccionada()
@@ -102,9 +129,23 @@ class AvancePersona
             : null;
     }
 
-    public function montoPago()
+    /**
+     * Comprobante que la persona pidió de su pago: 'ticket', 'cfdi' o null si
+     * todavía no elige. Desde que se elige al subir el comprobante, null sólo
+     * queda en pagos anteriores a ese cambio y no bloquea el trámite.
+     */
+    public function comprobanteElegido()
     {
-        return $this->tienePago() ? $this->pago->pago_monto_pagado : null;
+        if (!$this->tienePago()) {
+            return null;
+        }
+
+        return ComprobanteFiscal::tipoDesdeUsoCfdi($this->pago->pago_uso_cfdi);
+    }
+
+    public function tieneDatosFiscales()
+    {
+        return $this->tienePago() && $this->pago->pago_id_dato_fiscal !== null;
     }
 
     /**
@@ -114,6 +155,29 @@ class AvancePersona
     public function solicitudAprobada()
     {
         return $this->estadoSolicitud === 'Aprobada';
+    }
+
+    /**
+     * El trámite terminó sin certificación. Hoy sólo lo cierra una
+     * interrupción; el historial conserva las cancelaciones de cuando esa
+     * acción todavía existía.
+     */
+    public function solicitudCerrada()
+    {
+        return in_array($this->estadoSolicitud, ['Rechazada', 'Cancelada'], true);
+    }
+
+    /**
+     * Motivo con el que el administrador cerró el trámite. Puede venir vacío:
+     * los cierres anteriores a esta pantalla no capturaban explicación.
+     */
+    public function motivoSolicitudCerrada()
+    {
+        if (!$this->solicitudCerrada()) {
+            return null;
+        }
+
+        return trim((string) $this->motivoSolicitud) ?: null;
     }
 
     /**
@@ -156,14 +220,6 @@ class AvancePersona
         }
 
         return 'en_proceso';
-    }
-
-    /**
-     * Estado de un documento en particular.
-     */
-    public function estadoDocumento($slug)
-    {
-        return isset($this->documentos[$slug]) ? $this->documentos[$slug] : 'pendiente';
     }
 
     private function cargarDocumentos()
@@ -233,7 +289,9 @@ class AvancePersona
             ->select([
                 'p.pago_id_pago',
                 'p.pago_comprobante_path',
-                'p.pago_monto_pagado',
+                'p.pago_referencia_bancaria',
+                'p.pago_uso_cfdi',
+                'p.pago_id_dato_fiscal',
                 'cep.esta_estado_pago',
                 'ep.espa_comentario',
             ])

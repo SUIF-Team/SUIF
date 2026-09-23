@@ -26,11 +26,11 @@
     display: grid;
     gap: 0.35rem;
     border-top: 1px solid #405064;
-    font-size: 0.78rem;
+    font-size: var(--fs-auxiliar);
 }
 
 .persona-soporte strong {
-    font-size: 0.9rem;
+    font-size: var(--fs-ui);
 }
 
 .persona-soporte a {
@@ -80,7 +80,6 @@
         padding: 0 0 0 1.5rem;
         border-top: 0;
         border-left: 1px solid #405064;
-        text-align: right;
     }
 }
 
@@ -100,83 +99,31 @@
         padding: 1rem 0 0;
         border-top: 1px solid #405064;
         border-left: 0;
-        text-align: left;
     }
 }
 
+/* Los pasos son los compartidos en su variante oscura (.pasos--oscuro):
+   misma anatomía y mismos papeles que en el dashboard, con superficies para
+   el azul del lateral. Aquí sólo el hueco que empuja el soporte al pie. */
 .progreso {
-    display: flex;
-    flex-direction: column;
     gap: 0.65rem;
     margin-bottom: auto;
 }
 
 .progreso-paso {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 14px;
-    border-radius: 8px;
-    background: #1f2937;
-    color: #fff;
     text-decoration: none;
     transition: background-color 0.2s ease;
 }
 
-.progreso-paso:hover,
-.progreso-paso:focus-visible {
+/* Sólo los navegables: el paso bloqueado es un <span> y no reacciona. */
+a.progreso-paso:hover {
     background: #263042;
-}
-
-.progreso-paso__numero {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #3a4457;
-    color: #cbd5e1;
-    font-size: 13px;
-    font-weight: 700;
 }
 
 .progreso-paso__texto {
     display: flex;
     flex-direction: column;
     min-width: 0;
-}
-
-.progreso-paso__texto strong {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.progreso-paso__texto small {
-    color: #9ca3af;
-    font-size: 12px;
-}
-
-.progreso-paso--activo {
-    box-shadow: inset 0 0 0 1.5px #b38612;
-}
-
-.progreso-paso--activo .progreso-paso__numero {
-    background: #b38612;
-    color: #fff;
-}
-
-.progreso-paso--completo .progreso-paso__numero {
-    background: #16a34a;
-    color: #fff;
-}
-
-.progreso-paso--completo .progreso-paso__texto small {
-    color: #86efac;
-}
-
-.progreso-paso--pendiente {
-    opacity: 0.6;
 }
 
 /* ─── Barra superior del área de contenido ───────────────────────────── */
@@ -188,51 +135,8 @@
     padding: 1.25rem 2rem 0;
 }
 
-.persona-barra__salir {
-    margin-left: auto;
-}
-
-.persona-barra__volver {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.9rem;
-    border: 1px solid #c7d0da;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #112f4b;
-    font-size: 0.88rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.persona-barra__volver:hover,
-.persona-barra__volver:focus-visible {
-    background: #eef2f7;
-    border-color: #112f4b;
-}
-
 /* ─── Shell sin barra lateral (dashboard) ────────────────────────────── */
 
 .persona-shell--sin-sidebar {
     grid-template-columns: minmax(0, 1fr);
-}
-
-/* ─── Pasos bloqueados de la barra de avance ─────────────────────────── */
-
-.progreso-paso--bloqueado {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.progreso-paso--bloqueado:hover,
-.progreso-paso--bloqueado:focus-visible {
-    background: #1f2937;
-}
-
-.progreso-paso--bloqueado .progreso-paso__numero {
-    background: #2b3444;
-    color: #8b95a5;
-    font-size: 11px;
 }

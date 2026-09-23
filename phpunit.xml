@@ -19,10 +19,17 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <!-- Con el driver 'file' las pruebas leerían storage/framework/down
+             del servidor real y responderían 503 durante un mantenimiento;
+             con 'array' cada corrida empieza fuera de mantenimiento. -->
+        <env name="APP_MAINTENANCE_DRIVER" value="array"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!-- Sin esto, las pruebas que simulan un fallo de correo escriben en el
+             log real; corridas como root, crean el log del día con dueño root
+             y Apache ya no puede escribir en él. -->
+        <env name="LOG_CHANNEL" value="null"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

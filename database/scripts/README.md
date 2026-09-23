@@ -2,6 +2,31 @@
 
 Orden de ejecución en una instalación nueva:
 
+> Atajo: `suif_instalacion_completa.sql` equivale a correr los nueve pasos de
+> abajo en su orden, en un solo archivo y —a diferencia de `suif.sql`— sin
+> ningún `drop`, así que admite `ON_ERROR_STOP` desde el primer paso:
+>
+>     psql -v ON_ERROR_STOP=1 -h HOST -U suif -d suif -f suif_instalacion_completa.sql
+>
+> Es un archivo GENERADO por concatenación de los nueve: no se edita a mano, y
+> si el responsable de la base cambia alguno de los fuentes, se regenera.
+> Sólo para bases vacías; sobre una base con datos se siguen usando los
+> scripts numerados, que son idempotentes.
+
+> Atajo 2: `suif_esquema_final.sql` es ese mismo resultado ya APLANADO. No
+> concatena los nueve, sino que reconstruye el estado al que llegan: cada
+> columna nace con el tipo y la obligatoriedad que tiene hoy y no queda un
+> solo `ALTER` de migración, así que se lee como el retrato del esquema
+> actual. Instala exactamente lo mismo —36 tablas, 35 llaves foráneas, los
+> mismos índices y catálogos— y también es sólo para bases vacías:
+>
+>     psql -v ON_ERROR_STOP=1 --single-transaction -h HOST -U suif -d suif \
+>          -f suif_esquema_final.sql
+>
+> Úsalo para consultar el esquema o entregarlo a quien pida «el script de la
+> base»; para desplegar sobre una base con datos, los scripts numerados.
+
+
 1. `suif.sql`               — esquema base (35 tablas)
 2. `suif_evaluacion_grupo.sql` — EVALUACION apunta a GRUPO
 3. `suif_ajustes_esquema.sql` — correcciones de tipos y restricciones
@@ -9,6 +34,17 @@ Orden de ejecución en una instalación nueva:
 5. `suif_grupos_multiples.sql` — varias aplicaciones de examen por sede
 6. `suif_referencias_bancarias.sql` — catálogo de referencias bancarias
 7. `suif_rfc_persona.sql` — RFC de la persona en PERSONA
+8. `suif_referencia_fecha_emision.sql` — fecha de emisión en REFERENCIA_BANCARIA
+9. `suif_roles_administrativos.sql` — roles administrativos y catálogo de privilegios
+10. `suif_comprobante_fiscal.sql` — comprobante fiscal del pago (ticket o CFDI)
+11. `suif_convocatorias.sql` — catálogo de estados de convocatoria y el privilegio que abre su módulo
+12. `suif_formato_pago.sql` — forma de pago, banco y responsable del pago; régimen fiscal de la DEC
+
+`suif_referencia_fecha_emision.sql` agrega `REBA_FECHA_EMISION`, la fecha en
+que el banco emitió la referencia. Va DESPUÉS de
+`suif_referencias_bancarias.sql`, que es quien crea la tabla. Córrelo ANTES de
+publicar el código: sin esa columna, la carga del catálogo falla con
+`column reba_fecha_emision does not exist`.
 
 `suif_evaluacion_grupo.sql` va ANTES que `suif_ajustes_esquema.sql`, no
 después: es el que crea `EVALUACION.GRUP_ID_GRUPO`, y sin esa columna
@@ -119,13 +155,221 @@ También siembra `C_ESTADO_PAGO` (Pendiente, Completado, Declinado), que
 `suif.sql` crea vacío y sin el cual la revisión del comprobante no puede
 registrar nada.
 
-## Los otros cinco se pueden repetir
+## Los otros nueve se pueden repetir
 
 `suif_ajustes_esquema.sql`, `suif_evaluacion_grupo.sql`,
-`suif_catalogos.sql`, `suif_grupos_multiples.sql` y
-`suif_referencias_bancarias.sql` son idempotentes: volver a ejecutarlos no
-duplica ni destruye nada. Por eso la regla al desplegar es correrlos
-SIEMPRE, sin preguntarse si ya se corrieron.
+`suif_catalogos.sql`, `suif_grupos_multiples.sql`,
+`suif_referencias_bancarias.sql`, `suif_roles_administrativos.sql`,
+`suif_comprobante_fiscal.sql`, `suif_convocatorias.sql` y
+`suif_formato_pago.sql` son idempotentes:
+volver a ejecutarlos no duplica ni destruye nada. Por eso la regla al desplegar
+es correrlos SIEMPRE, sin preguntarse si ya se corrieron.
+
+## Hay tres tipos de administrador y los permisos salen de PRIVILEGIO_ROL
+
+`suif_roles_administrativos.sql` es **requisito de despliegue** del módulo de
+administradores. Hace cuatro cosas:
+
+- Agrega `USUARIO.USUA_ACTIVO` (`BOOLEAN NOT NULL DEFAULT TRUE`). Dar de baja a
+  un administrador no borra su renglón: le retira el acceso. `PERSONA` y
+  `USUARIO` son el rastro de quién dictaminó cada expediente.
+- Renombra el rol 2 de `Administrador` a `Superusuario`. Era el único
+  administrador y tenía todo el catálogo; ahora es el rol sin límites y su
+  nombre lo dice. Mismo patrón que el refactor «Participante → Persona».
+- Da de alta `Admin UIF` y `Admin DEC`. `ROL_TIPO_ROL` mide 15 caracteres, por
+  eso los nombres son cortos y la columna no se toca.
+- Siembra los seis privilegios y los reparte. **Sin esto nadie tiene acceso a
+  nada**: `suif.sql` crea `PRIVILEGIO` vacío y `suif_catalogos.sql` no lo
+  llena. Hasta ahora lo sembraba en tiempo de ejecución `suif:crear-admin`.
+
+El reparto es:
+
+| Rol | Privilegios |
+|---|---|
+| `Superusuario` | los seis |
+| `Admin UIF` | `Validación Registro` |
+| `Admin DEC` | `Gestionar Pagos`, `Gestionar Referencias` |
+
+Los `setval` van **antes** de los `INSERT`. `suif_catalogos.sql` ya alinea la
+secuencia de `ROL`, así que hoy no corrigen nada; están primero por si la base
+llegó a este punto sin haber corrido catálogos completo, porque entonces un
+alta sin id explícito chocaría con una llave existente.
+
+### suif_revierte_roles_administrativos.sql quedó obsoleto
+
+Deshace el renombre del rol 2 para devolverlo a `Administrador`. Servía cuando
+el módulo se retiró en agosto y el código volvía a comparar el nombre del rol.
+**No lo ejecutes después de `suif_roles_administrativos.sql`**: dejaría al rol
+2 con un nombre que ningún permiso reconoce y la cuenta entraría al sistema sin
+poder abrir nada. Se conserva sólo para quien restaure un dump de aquellas
+fechas.
+
+## suif_reconstruye_tablas_perdidas.sql: recuperación, no instalación
+
+No va en el orden de arriba y no se ejecuta en una instalación nueva. Repone
+ocho tablas —`privilegio`, `privilegio_rol`, `tipo_documento`,
+`c_estado_pago`, `pago`, `estado_pago`, `evaluacion` y
+`referencia_bancaria`— sobre una base a la que le faltan, sin tocar las que
+sigan vivas. Si ya están todas, no hace nada.
+
+Se escribió después de que la suite de pruebas corriera contra la base real:
+con la configuración de Laravel cacheada, `phpunit.xml` no logra imponer
+SQLite en memoria y las pruebas borran su propio esquema donde estén
+apuntando. Ver la nota de `AGENTS.md` sobre `config:clear`.
+
+**No uses `suif.sql` para esto**: empieza con `drop table` de las 36 tablas y
+se llevaría también las que sobrevivieron.
+
+Córrelo con `--single-transaction`, para que un error revierta todo en vez de
+dejar la base a medias, y después vuelve a pasar `suif_catalogos.sql`, que es
+idempotente y repone el resto de los catálogos:
+
+    psql -v ON_ERROR_STOP=1 --single-transaction -h HOST -U suif -d suif \
+         -f suif_reconstruye_tablas_perdidas.sql
+
+Lo que el script no puede devolver son los datos capturados: los pagos, sus
+resoluciones y el catálogo de referencias nacen vacíos. Las referencias se
+recargan desde el CSV de la DEC. Y como `SOLICITUD` conservaba la liga a
+pagos y evaluaciones que ya no existen, esas columnas se ponen en nulo: quien
+ya había elegido sede tendrá que elegirla otra vez.
+
+## suif_limpia_datos.sql: reiniciar el padrón sin reinstalar
+
+No va en el orden de arriba y no se ejecuta en una instalación nueva. Vacía los
+datos capturados —personas participantes, solicitudes, documentos, pagos,
+evaluaciones— y deja en pie los doce catálogos, las convocatorias con su
+bitácora y las cuentas administrativas, para no tener que volver a levantar la
+base desde cero cuando se decide arrancar un padrón limpio.
+
+    psql -v ON_ERROR_STOP=1 -h HOST -U suif -d suif -f suif_limpia_datos.sql
+
+Va **sin** `--single-transaction`, al revés que los demás: éste trae su propio
+`BEGIN`/`COMMIT` y la bandera abriría una transacción de más, con dos avisos de
+psql. Con `ON_ERROR_STOP=1` basta —un error corta la sesión antes del `COMMIT`
+y la base se revierte sola—.
+
+Dos decisiones que conviene tener presentes antes de correrlo:
+
+- **`SEDE` y `REFERENCIA_BANCARIA` se borran.** Las sedes se recapturan desde la
+  pantalla y las referencias se recargan del CSV de la DEC. Hasta entonces nadie
+  puede elegir horario ni recibir su referencia de pago.
+- **Los administradores sobreviven.** Se borra sólo lo que cuelga del rol
+  `Persona`, así que no hay que volver a correr `suif:crear-admin`. Por eso
+  `PERSONA` y `USUARIO` se limpian con `DELETE` y no con `TRUNCATE`, y sus
+  secuencias no se reinician.
+
+`CONVOCATORIA` y `ESTADO_CONVOCATORIA` se conservan a propósito: el pre-registro
+exige convocatoria `Vigente` dentro de su ventana de fechas, y vaciar la bitácora
+lo rompería en silencio. Si las fechas de la convocatoria ya vencieron, se da de
+alta una nueva desde la pantalla del módulo.
+
+El script no borra archivos. Los que subió la gente quedan huérfanos en
+`storage/app/private/` (`documentos`, `comprobantes`, `referencias`,
+`certificados`, `facturas`, `legacy`), `storage/app/preregistro` y
+`storage/app/referencias`. Limpiarlos es un paso manual aparte.
+
+Termina con un `SELECT` de conteos —`BORRADO` debe quedar en cero, `CONSERVA`
+con renglones— para leer de un vistazo que hizo lo que debía. Y como todo lo que
+toca producción: respaldo con `pg_dump` primero y ensayo sobre una base temporal
+restaurada de ese dump, según `deploy/README.md`.
+
+## El comprobante del pago se elige una sola vez
+
+`suif_comprobante_fiscal.sql` es **requisito de despliegue** del selector de
+ticket o CFDI. Va DESPUÉS de `suif.sql`, que es quien crea `PAGO`,
+`DATO_FISCAL`, `REGIMEN_FISCAL` y `TIPO_COMUNICACION`. Hace tres cosas:
+
+- Convierte `PAGO.PAGO_USO_CFDI` de `VARCHAR(25)` a `BOOLEAN`. La columna
+  existía desde el diseño original y ninguna línea de PHP la escribía; ahora
+  guarda la elección de la persona: `NULL` no eligió —pedir comprobante es
+  opcional—, `FALSE` ticket sin efectos fiscales, `TRUE` CFDI de gastos en
+  general. Queda del mismo tipo que `DATO_FISCAL.DAFI_USO_CFDI`, que ya era
+  `BOOL`. La conversión traduce lo que hubiera: los ambientes sembrados con
+  `suif_lleno.sql` traen `'G03'`.
+- Da de alta el tipo de comunicación `Correo facturación`. El correo al que se
+  manda el CFDI puede no ser el de la cuenta de la persona, así que se guarda
+  como un renglón más de `COMUNICACION`.
+- **Siembra `REGIMEN_FISCAL`**, que hasta ahora sólo llenaba `suif_lleno.sql`
+  —el archivo de datos de prueba que nunca se corre en producción—. Sin esas
+  cuatro filas el `<select>` del formulario de facturación sale vacío y nadie
+  puede pedir su CFDI. Es un catálogo del SAT, no datos de prueba.
+
+Córrelo ANTES de publicar el código: sin la conversión, guardar la elección
+falla con `column "pago_uso_cfdi" is of type character varying`.
+
+Como altera el tipo de una columna, aquí el respaldo previo no es una
+formalidad. El procedimiento completo —respaldo, verificación del dump y
+ensayo sobre una base temporal— está en `deploy/README.md`.
+
+## La convocatoria se administra desde el sistema
+
+`suif_convocatorias.sql` es **requisito de despliegue** del módulo de
+convocatorias. Va DESPUÉS de `suif_catalogos.sql` —que es quien siembra la
+convocatoria vigente— y de `suif_roles_administrativos.sql`, que crea el rol
+`Superusuario` al que se le reparte el privilegio. Hace tres cosas:
+
+- **Siembra `C_ESTADO_CONVOCATORIA`** con `Vigente`, `Cerrada` e
+  `Interrumpida`. `suif.sql` la crea vacía y `suif_catalogos.sql` la salta, así
+  que en producción se quedaba sin un solo renglón: era, junto con
+  `ESTADO_CONVOCATORIA`, una tabla muerta desde el diseño original. Los tres
+  nombres caben en los 15 caracteres de `ESCO_ESTADO_CONVOCATORIA`, así que la
+  columna no se toca.
+
+  En una base de desarrollo hay que contar con lo que dejó `suif_lleno.sql`, que
+  sí la sembró con otros nombres —`Abierta`, `Cerrada`, `En Evaluación`— e ids
+  explícitos. El script reutiliza `Cerrada`, agrega los dos que faltan y deja
+  los otros dos donde están: son renglones de otro archivo y ningún código los
+  consulta.
+- Da de alta el privilegio `Gestionar Convocatorias` y **se lo reparte sólo al
+  `Superusuario`**. El día que la gestión le toque a otra área basta con un
+  renglón más en `PRIVILEGIO_ROL`: el código autoriza contra el privilegio y
+  nunca contra el nombre del rol.
+- **Le pone estado a las convocatorias que ya existían.** La más reciente de las
+  que no tienen ninguno queda `Vigente` y las demás `Cerrada`, que es la regla
+  del módulo —una sola vigente a la vez—. Sin este relleno la convocatoria que
+  siembra `suif_catalogos.sql` se quedaría sin estado y el pre-registro dejaría
+  de encontrarla, porque a partir de ahora exige `Vigente` además de la ventana
+  de fechas.
+
+  En una base con `suif_lleno.sql` las tres convocatorias de prueba son de 2025
+  y principios de 2026: la 3 queda `Vigente` y las otras dos `Cerrada`, pero
+  ninguna admite registro porque su ventana de fechas ya venció. Eso no lo causa
+  este script —el filtro por fechas ya las descartaba—; para probar el
+  pre-registro ahí hay que dar de alta una convocatoria con fechas vigentes desde
+  la pantalla nueva.
+
+Córrelo ANTES de publicar el código: sin el catálogo, guardar una convocatoria
+falla con «El catálogo de estados de convocatoria está incompleto», y sin el
+privilegio la pantalla responde 403 hasta para el Superusuario.
+
+Volver a ejecutarlo no reabre nada: sólo toca las convocatorias que no tengan
+ningún renglón de estado, y ni siquiera marca vigente a la más reciente si en la
+base ya hay otra convocatoria vigente.
+
+## El formato de pago de la DEC
+
+`suif_formato_pago.sql` es **requisito de despliegue** del formato de pago con
+el que la DEC emite el CFDI o el ticket. Va DESPUÉS de
+`suif_comprobante_fiscal.sql`, que siembra `REGIMEN_FISCAL`. Hace tres cosas:
+
+- Crea `METODO_PAGO`, `BANCO` y `RESPONSABLE`, y siembra las cuatro formas de
+  pago —las casillas del formato— y los bancos. Los responsables no se
+  siembran: son nombres de personas y se capturan desde el módulo
+  «Responsables de pago». Darlos de baja no borra el renglón (`RESP_ACTIVO`):
+  los pagos que ya atendieron lo siguen referenciando.
+- Agrega a `PAGO` las columnas `PAGO_ID_METODO_PAGO`, `PAGO_ID_BANCO` y
+  `PAGO_ID_RESPONSABLE`, **nulables**, con sus llaves foráneas. Sustituye al
+  borrador `suif14092026.sql`, que las dejaba `NOT NULL`: `PAGO` nace al
+  asignar la referencia, antes de que exista cualquiera de esos datos, y el
+  `ALTER` abortaba sobre una tabla con renglones.
+- Amplía `REFI_REGIMEN_FISCAL` a 100 caracteres y deja los 11 regímenes con
+  el texto exacto de la lista de la DEC. Los ids 1 a 4 conservan su régimen,
+  así que `DATO_FISCAL` no se entera.
+
+Córrelo ANTES de publicar el código: sin las tablas, el expediente del pago y
+el formulario del comprobante fallan con `relation "metodo_pago" does not
+exist`. Después da de alta a los responsables desde el tablero: sin uno
+activo, el expediente no ofrece generar el formato.
 
 ## Antes de tocar producción
 

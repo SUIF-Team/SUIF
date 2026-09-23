@@ -1,0 +1,82 @@
+/* Módulo de administradores.
+
+   El grueso del diseño lo aportan los componentes compartidos y
+   admin-sedes.css. Aquí sólo vive lo que no existía: la CURP monoespaciada y
+   el selector de tipo en forma de tarjetas. */
+
+.admin-administradores-curp {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: var(--fs-ui);
+    letter-spacing: 0.04em;
+    color: var(--text-dark);
+    background: none;
+    padding: 0;
+}
+
+/* La celda va centrada, pero text-align no alcanza a los hijos de un flex: sin
+   esto los enlaces se pegaban a la izquierda y no coincidían con su encabezado. */
+.admin-administradores-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.admin-administradores-acciones form {
+    margin: 0;
+}
+
+/* Selector de tipo. Tarjetas en vez de un <select> porque cada opción necesita
+   explicar qué abre: es la decisión con más consecuencias del formulario. Cada
+   tarjeta es la opción compartida; aquí va la rejilla y el texto de dos
+   renglones que no cabe en ella. */
+.admin-administradores-roles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.75rem;
+    border: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+}
+
+.admin-administradores-roles-leyenda {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.admin-administradores-rol {
+    align-items: flex-start;
+    font-weight: 400;
+}
+
+.admin-administradores-rol input {
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.admin-administradores-rol-cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.admin-administradores-rol-nombre {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.admin-administradores-rol-descripcion {
+    font-size: var(--fs-auxiliar);
+    color: var(--text-muted);
+}
+
+.admin-administradores-campo-curp {
+    text-transform: uppercase;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.04em;
+}

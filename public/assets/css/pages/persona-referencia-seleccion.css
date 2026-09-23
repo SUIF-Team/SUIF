@@ -1,0 +1,61 @@
+/* Selector del paso «Obtener referencia»: aviso de pago y las dos opciones.
+   Se carga junto con persona-referencia.css, de donde salen .referencia-shell,
+   .referencia-tarjetas, .referencia-tarjeta y .referencia-muted. */
+
+/* Es la explicación larga del paso, no un aviso corto: conserva el tamaño del
+   texto corrido y toma los colores del papel «información». */
+.referencia-aviso {
+    margin-bottom: 1.75rem;
+    padding: 1.75rem 2rem;
+    border-radius: var(--radio-caja);
+    background: var(--info-fondo);
+    color: var(--info-texto);
+}
+
+.referencia-aviso p {
+    margin: 0 0 1rem;
+}
+
+.referencia-aviso p:last-child {
+    margin-bottom: 0;
+}
+
+.referencia-seleccion__titulo {
+    margin: 0 0 1.25rem;
+    color: #172a44;
+}
+
+/* Las dos opciones se leen en paralelo: misma altura y el botón siempre al pie,
+   para que la tarjeta con más texto no empuje su botón fuera de la línea. */
+.referencia-tarjetas--seleccion {
+    align-items: stretch;
+}
+
+.referencia-tarjeta--opcion {
+    display: flex;
+    flex-direction: column;
+}
+
+.referencia-tarjeta__texto p {
+    margin: 0 0 1rem;
+    color: #4b5563;
+}
+
+.referencia-tarjeta__texto p:last-child {
+    margin-bottom: 0;
+}
+
+.referencia-tarjeta__texto strong {
+    color: #172a44;
+}
+
+.referencia-tarjeta__pie {
+    margin-top: auto;
+    padding-top: 1.75rem;
+    text-align: center;
+}
+
+.referencia-tarjeta__nota {
+    margin: 0.6rem 0 0;
+    font-size: var(--fs-auxiliar);
+}

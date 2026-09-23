@@ -1,0 +1,197 @@
+/*
+    lista-asistencia.css
+    Hoja de estilo de la lista de firmas de un grupo que genera Dompdf.
+    Carta, Helvetica 10 pt, membrete institucional arriba y una tabla con un
+    renglón por persona citada y una columna en blanco para firmar.
+
+    Dompdf no puede resolver un <link> a una URL sin habilitar enable_remote,
+    así que la plantilla incrusta este archivo, igual que comprobante-sede.css.
+
+    Todo va en unidades absolutas (pt, cm, %): Dompdf no interpreta rem ni vh.
+    La maquetación usa tablas porque su soporte de flex y grid es inexistente.
+*/
+
+@page {
+    margin: 1.6cm 1.8cm 1.4cm 1.8cm;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    font-size: 10pt;
+    line-height: 1.45;
+    color: #2b2b28;
+    margin: 0;
+}
+
+/* ── Membrete ─────────────────────────────────────────────────────────── */
+
+.membrete {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 2pt solid #16263f;
+    padding-bottom: 6pt;
+}
+
+.membrete td {
+    vertical-align: middle;
+    padding: 0 0 8pt 0;
+}
+
+.membrete__escudos {
+    width: 26%;
+    text-align: left;
+}
+
+.membrete__escudos img {
+    height: 48pt;
+}
+
+.membrete__texto {
+    text-align: center;
+    font-size: 8pt;
+    line-height: 1.35;
+    color: #16263f;
+}
+
+.membrete__texto strong {
+    display: block;
+    font-size: 8.5pt;
+    letter-spacing: 0.2pt;
+}
+
+.membrete__texto span {
+    display: block;
+    color: #6b6b66;
+}
+
+.membrete__uif {
+    width: 22%;
+    text-align: right;
+}
+
+.membrete__uif img {
+    width: 92pt;
+}
+
+/* ── Título ───────────────────────────────────────────────────────────── */
+
+.titulo {
+    margin: 16pt 0 2pt 0;
+    text-align: center;
+    font-size: 14pt;
+    font-weight: bold;
+    color: #16263f;
+}
+
+.titulo__pie {
+    margin: 0 0 14pt 0;
+    text-align: center;
+    font-size: 8.5pt;
+    color: #6b6b66;
+}
+
+/* ── Datos del grupo ──────────────────────────────────────────────────── */
+
+.datos {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14pt;
+}
+
+.datos th {
+    width: 18%;
+    text-align: left;
+    vertical-align: top;
+    padding: 2pt 8pt 2pt 0;
+    font-size: 9pt;
+    color: #6b6b66;
+    font-weight: normal;
+}
+
+.datos td {
+    padding: 2pt 0;
+    font-size: 10pt;
+}
+
+/* ── Lista de firmas ──────────────────────────────────────────────────── */
+
+.lista {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Dompdf repite thead en cada página: una lista larga no puede quedarse sin
+   encabezado en la segunda hoja. */
+.lista thead th {
+    background-color: #16263f;
+    color: #ffffff;
+    font-size: 9pt;
+    font-weight: bold;
+    text-align: left;
+    padding: 5pt 6pt;
+    border: 0.5pt solid #16263f;
+}
+
+.lista tbody td {
+    border: 0.5pt solid #b9b9b2;
+    padding: 6pt;
+    font-size: 9.5pt;
+    /* La altura del renglón es lo que hace utilizable la columna de firma:
+       una fila apretada no deja espacio para firmar sobre el papel. */
+    height: 26pt;
+    vertical-align: middle;
+}
+
+.lista__numero {
+    width: 7%;
+    text-align: center;
+}
+
+.lista__nombre {
+    width: 38%;
+}
+
+.lista__curp {
+    width: 22%;
+    font-family: "Courier", monospace;
+    font-size: 9pt;
+}
+
+.lista__firma {
+    width: 33%;
+}
+
+.vacio {
+    margin-top: 18pt;
+    padding: 10pt;
+    border: 0.5pt dashed #b9b9b2;
+    text-align: center;
+    font-size: 9.5pt;
+    color: #6b6b66;
+}
+
+/* ── Cierre ───────────────────────────────────────────────────────────── */
+
+.cierre {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 34pt;
+}
+
+.cierre td {
+    width: 50%;
+    text-align: center;
+    padding: 0 18pt;
+}
+
+.cierre__linea {
+    display: block;
+    border-top: 0.5pt solid #2b2b28;
+    margin-bottom: 4pt;
+}
+
+.cierre__rotulo {
+    display: block;
+    font-size: 8.5pt;
+    color: #6b6b66;
+}

@@ -45,3 +45,5 @@
 <button type="button" class="back-to-top" data-back-to-top aria-label="Volver al inicio de la página">
     <i class="fas fa-arrow-up" aria-hidden="true"></i>
 </button>
+
+@include('partials.aviso-privacidad-banner')

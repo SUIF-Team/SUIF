@@ -14,9 +14,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 /**
- * Admin\DocumentacionController
+ * Admin\DocumentoController
  *
- * Migrado desde: app/controllers/admin/DocumentacionController.php
  * Responsabilidad: revisión y validación de documentación de personas por el administrador.
  */
 class DocumentoController extends Controller
@@ -63,11 +62,15 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
         $resultado = $this->resultadoReal($expediente);
 
-        if (in_array($resultado, [RevisionDocumentos::APROBADO, RevisionDocumentos::RECHAZADO], true)) {
+        if (in_array($resultado, [
+            RevisionDocumentos::APROBADO,
+            RevisionDocumentos::RECHAZADO,
+            RevisionDocumentos::CANCELADO,
+        ], true)) {
             return redirect()->route('admin.documentos.resultado', [
                 'id' => $id,
                 'origen' => $contexto_bandeja['origen'],
@@ -102,12 +105,16 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
 
         if ($this->resultadoReal($expediente)) {
-            return $this->redirigirResultado($id, $contexto_bandeja)
-                ->with('warning', 'La documentación ya fue resuelta y no puede guardarse nuevamente.');
+            return $this->responder(
+                $request,
+                'warning',
+                'La documentación ya fue resuelta y no puede guardarse nuevamente.',
+                $this->rutaResultado($id, $contexto_bandeja)
+            );
         }
 
         $documentos = $request->input('documentos', []);
@@ -167,7 +174,18 @@ class DocumentoController extends Controller
         });
 
         if ($validador->fails()) {
-            return $this->redirigirRevision($id, $contexto_bandeja)
+            /* El dictamen lleva un comentario escrito por cada documento
+               rechazado: recargar era perder lo redactado y volver a marcarlo
+               todo desde cero. */
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'tipo' => 'error',
+                    'mensaje' => 'Hay datos por corregir.',
+                    'errors' => $validador->errors()->toArray(),
+                ], 422);
+            }
+
+            return redirect()->to($this->rutaRevision($id, $contexto_bandeja))
                 ->withErrors($validador)
                 ->withInput();
         }
@@ -180,12 +198,20 @@ class DocumentoController extends Controller
                 $request->input('fecha_limite')
             );
         } catch (DomainException $exception) {
-            return $this->redirigirRevision($id, $contexto_bandeja)
-                ->with('warning', $exception->getMessage());
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                $this->rutaRevision($id, $contexto_bandeja)
+            );
         }
 
-        return $this->redirigirResultado($id, $contexto_bandeja)
-            ->with('success', 'La revisión documental se guardó correctamente.');
+        return $this->responder(
+            $request,
+            'success',
+            'La revisión documental se guardó correctamente.',
+            $this->rutaResultado($id, $contexto_bandeja)
+        );
     }
 
     public function interrumpir(
@@ -196,27 +222,97 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
 
         if ($this->resultadoReal($expediente)) {
-            return $this->redirigirResultado($id, $contexto_bandeja)
-                ->with('warning', 'La solicitud ya fue resuelta y no puede interrumpirse nuevamente.');
+            return $this->responder(
+                $request,
+                'warning',
+                'La solicitud ya fue resuelta y no puede interrumpirse nuevamente.',
+                $this->rutaResultado($id, $contexto_bandeja)
+            );
         }
 
-        $datos = $request->validate([
-            'motivo_rechazo' => ['nullable', 'string', 'max:255'],
+        /* El motivo es obligatorio aquí y no en el servicio: la regla es de
+           esta pantalla, que es la que se lo enseña a la persona. Cabe en 255
+           porque ese es el ancho de ESSO_MOTIVO_RECHAZO. */
+        $validador = Validator::make($request->all(), [
+            'motivo_rechazo' => ['required', 'string', 'max:255'],
+        ], [
+            'motivo_rechazo.required' => 'Escribe el motivo por el que se interrumpe el trámite.',
+            'motivo_rechazo.max' => 'El motivo no puede pasar de 255 caracteres.',
         ]);
 
-        try {
-            $revision_documentos->interrumpir((int) $id, $datos['motivo_rechazo'] ?? null);
-        } catch (DomainException $exception) {
-            return $this->redirigirRevision($id, $contexto_bandeja)
-                ->with('warning', $exception->getMessage());
+        /* Vuelve a la revisión con withInput() para no tirar las decisiones
+           documentales que el administrador ya había marcado. */
+        if ($validador->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'tipo' => 'error',
+                    'mensaje' => $validador->errors()->first(),
+                    'errors' => $validador->errors()->toArray(),
+                ], 422);
+            }
+
+            return redirect()->to($this->rutaRevision($id, $contexto_bandeja))
+                ->withErrors($validador)
+                ->withInput();
         }
 
-        return $this->redirigirResultado($id, $contexto_bandeja)
-            ->with('success', 'La solicitud se rechazó y el historial fue actualizado.');
+        try {
+            $revision_documentos->interrumpir((int) $id, $validador->validated()['motivo_rechazo']);
+        } catch (DomainException $exception) {
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                $this->rutaRevision($id, $contexto_bandeja)
+            );
+        }
+
+        return $this->responder(
+            $request,
+            'success',
+            'La solicitud se rechazó y el historial fue actualizado.',
+            $this->rutaResultado($id, $contexto_bandeja)
+        );
+    }
+
+    /**
+     * Devuelve a revisión un expediente ya resuelto.
+     *
+     * Termina en la pantalla de revisión, no en la de resultado: el expediente
+     * completo vuelve a esperar dictamen.
+     */
+    public function reanudar(
+        Request $request,
+        string $id,
+        ConsultaPreRegistros $consulta_pre_registros,
+        RevisionDocumentos $revision_documentos,
+        OrigenBandejaAdmin $origen_bandeja
+    )
+    {
+        $contexto_bandeja = $origen_bandeja->contexto();
+        $this->expedienteReal($id, $consulta_pre_registros);
+
+        try {
+            $revision_documentos->reanudar((int) $id);
+        } catch (DomainException $exception) {
+            return $this->responder(
+                $request,
+                'warning',
+                $exception->getMessage(),
+                $this->rutaResultado($id, $contexto_bandeja)
+            );
+        }
+
+        return $this->responder(
+            $request,
+            'success',
+            'El trámite volvió a revisión y el expediente completo espera dictamen.',
+            $this->rutaRevision($id, $contexto_bandeja)
+        );
     }
 
     public function resultado(
@@ -227,7 +323,7 @@ class DocumentoController extends Controller
         OrigenBandejaAdmin $origen_bandeja
     )
     {
-        $contexto_bandeja = $origen_bandeja->contexto($request->input('origen'));
+        $contexto_bandeja = $origen_bandeja->contexto();
         $expediente = $this->expedienteReal($id, $consulta_pre_registros);
         $resultado = $this->resultadoReal($expediente);
 
@@ -247,13 +343,14 @@ class DocumentoController extends Controller
         } elseif ($resultado === RevisionDocumentos::REVISION) {
             $estados['preregistro'] = 'Completado';
             $estados['documentacion'] = 'En revisión';
+        } elseif ($resultado === RevisionDocumentos::CANCELADO) {
+            $estados['preregistro'] = 'Completado';
+            $estados['documentacion'] = 'Cancelado';
         }
 
         $notificacion = $notificacion_resultado->paraPreRegistro($expediente['persona'], $estados);
         $notificacion = array_merge($notificacion, [
             'ruta_regreso' => $contexto_bandeja['ruta'],
-            'etiqueta_regreso' => $contexto_bandeja['etiqueta_resultado'],
-            'etiqueta_regreso_accesible' => $contexto_bandeja['etiqueta_resultado'],
         ]);
 
         return view('admin.notificacion-resultado', [
@@ -296,6 +393,7 @@ class DocumentoController extends Controller
         return match ($expediente['estados']['general']) {
             'Aprobada' => RevisionDocumentos::APROBADO,
             'Rechazada' => RevisionDocumentos::RECHAZADO,
+            'Cancelada' => RevisionDocumentos::CANCELADO,
             default => collect($expediente['persona']['documentos'])
                 ->contains(fn (array $documento): bool => $documento['estado'] === 'Rechazado')
                     ? RevisionDocumentos::REVISION
@@ -345,17 +443,19 @@ class DocumentoController extends Controller
         return ['comentarios' => $comentarios, 'fecha_limite' => $fecha_limite];
     }
 
-    private function redirigirRevision(string $id, array $contexto_bandeja)
+    /* Devuelven la URL y no un redirect: el mismo valor sirve para el destino
+       del redirect de siempre y para el campo 'redirigir' del JSON. */
+    private function rutaRevision(string $id, array $contexto_bandeja): string
     {
-        return redirect()->route('admin.documentos.show', [
+        return route('admin.documentos.show', [
             'id' => $id,
             'origen' => $contexto_bandeja['origen'],
         ]);
     }
 
-    private function redirigirResultado(string $id, array $contexto_bandeja)
+    private function rutaResultado(string $id, array $contexto_bandeja): string
     {
-        return redirect()->route('admin.documentos.resultado', [
+        return route('admin.documentos.resultado', [
             'id' => $id,
             'origen' => $contexto_bandeja['origen'],
         ]);

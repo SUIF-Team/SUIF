@@ -1,0 +1,63 @@
+/* Convocatorias: sólo lo que no cubren los componentes ni las clases de sedes,
+   que es de donde sale el resto de esta pantalla. El color de cada estado lo
+   decide GestionConvocatorias y lo pinta el chip compartido. */
+
+/* El nombre de la convocatoria vigente es texto, no una cifra: no puede heredar
+   los 2rem del indicador numérico o desborda la tarjeta.
+
+   El selector lleva el elemento porque compite con `.admin-sedes-estadistica p`,
+   que ya vale (0,1,1): una clase suelta pierde y el nombre salía enorme. */
+.admin-sedes-estadistica p.admin-convocatorias-estadistica-texto {
+    font-size: var(--fs-cuerpo);
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.admin-sedes-estadistica p.admin-convocatorias-sin-datos {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Las cinco fechas se leen en dos bloques —vigencia y registro— y cada uno
+   necesita su rótulo para que no parezcan cinco campos sueltos. */
+.admin-convocatorias-subtitulo {
+    grid-column: 1 / -1;
+    margin: 0.5rem 0 0;
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Bloque de estado del formulario. Cerrar o interrumpir no es editar la
+   convocatoria: cambia lo que ve quien intenta registrarse, así que vive en su
+   propia tarjeta y no entre los campos. */
+.admin-convocatorias-estado-actual {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-convocatorias-estado-sello {
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+}
+
+.admin-convocatorias-estado-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.admin-convocatorias-estado-acciones form {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .admin-convocatorias-estado-acciones { flex-direction: column; }
+    .admin-convocatorias-estado-acciones .boton { width: 100%; }
+}

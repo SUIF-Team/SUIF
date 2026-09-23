@@ -48,8 +48,10 @@ class FormatoPreRegistro
      * completo, RFC sin homoclave y homoclave. Lo demás —la firma autógrafa y
      * la casilla «(si / no)» del consentimiento— se llena a mano.
      *
-     * El año no se calcula: va escrito en la plantilla como 2024, igual que
-     * las fechas del Diario Oficial que cita cada formato.
+     * La fecha de suscripción es la del sistema y viaja completa en una sola
+     * variable, para que ninguna de sus partes vuelva a quedar escrita en la
+     * plantilla. No debe confundirse con las fechas del Diario Oficial que
+     * cita cada formato: esas sí son fijas y viven en el cuerpo de cada una.
      */
     public function datos()
     {
@@ -58,8 +60,7 @@ class FormatoPreRegistro
 
         return [
             'lugar' => $this->valor('entidad_federativa'),
-            'dia' => $hoy->translatedFormat('j'),
-            'mes' => $hoy->translatedFormat('F'),
+            'fecha' => $hoy->translatedFormat('j \d\e F \d\e Y'),
             'nombre' => $this->nombreCompleto(),
             'rfcBase' => mb_substr($rfc, 0, 10, 'UTF-8'),
             'homoclave' => mb_substr($rfc, 10, 3, 'UTF-8'),

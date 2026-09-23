@@ -1,0 +1,59 @@
+/*
+ * Datos de facturación de la persona.
+ *
+ * Campos, botones, cajas de mensaje y avisos viven en partials/componentes.css:
+ * aquí queda la composición de la pantalla.
+ */
+
+/* Mismo respiro que las demás pantallas de persona; el ancho se limita porque un
+   formulario de seis campos estirado a todo un monitor se lee mal, y los márgenes
+   automáticos lo centran dentro de .persona-main. */
+.facturacion-shell {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 5rem);
+}
+
+.facturacion-tarjeta {
+    padding: 2rem;
+}
+
+.facturacion-tarjeta h1 {
+    margin: 0 0 0.4rem;
+    color: #172a44;
+}
+
+.facturacion-muted {
+    margin: 0 0 1.5rem;
+    color: var(--text-muted);
+}
+
+.facturacion-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+/* El RFC se guarda en mayúsculas; que se vea así mientras se escribe evita la
+   sorpresa de verlo cambiar al enviar. */
+.facturacion-campo__rfc {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.facturacion-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .facturacion-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .facturacion-acciones {
+        flex-direction: column-reverse;
+    }
+}

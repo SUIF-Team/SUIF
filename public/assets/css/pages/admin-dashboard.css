@@ -1,8 +1,9 @@
-/* Panel administrativo: indicadores, acciones y salida. */
+/* Panel administrativo: indicadores y acciones. La tarjeta y el botón son los
+   compartidos; aquí queda el fondo de la pantalla y el reparto en rejilla. */
 
 .admin-dashboard {
     flex: 1 0 auto;
-    padding: clamp(2rem, 5vw, 4rem) 1.25rem;
+    padding: clamp(2rem, 5vw, 4rem) 1rem;
     background-color: rgba(255, 255, 255, 0.91);
     background-image:
         linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
@@ -13,17 +14,19 @@
 }
 
 .admin-dashboard-contenedor {
-    width: min(100%, 1200px);
+    width: min(100%, var(--admin-ancho));
     margin: 0 auto;
 }
 
 .admin-dashboard-titulo {
     margin: 0 0 1.8rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-family: var(--font-serif);
+    font-size: var(--fs-pagina);
     font-weight: 700;
 }
+
+/* ─── Indicadores ────────────────────────────────────────────────────── */
 
 .admin-dashboard-indicadores {
     display: grid;
@@ -35,60 +38,45 @@
 .admin-dashboard-indicador {
     min-height: 142px;
     padding: 1.4rem;
-    border: 1px solid var(--border-light);
-    border-radius: 0.65rem;
-    background: var(--surface-white);
-    box-shadow: 0 1px 2px rgba(17, 47, 75, 0.08);
 }
 
 .admin-dashboard-indicador h2 {
     margin: 0 0 0.75rem;
     color: var(--text-dark);
-    font-size: 0.95rem;
-    font-weight: 700;
-    line-height: 1.4;
+    font-family: var(--font-sans);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .admin-dashboard-indicador p {
     margin: 0;
-    font-size: 2.25rem;
+    font-size: var(--fs-cifra);
     font-weight: 700;
     line-height: 1;
 }
 
 .admin-dashboard-indicador .admin-dashboard-indicador-sin-datos {
     max-width: 13rem;
-    font-size: 1rem;
-    line-height: 1.35;
+    font-size: var(--fs-cuerpo);
 }
 
-.admin-dashboard-indicador-azul p {
-    color: #1e5095;
-}
+/* La cifra toma el color del papel que le da el controlador: lo que hay que
+   atender en ámbar, lo hecho en verde y lo informativo en azul. */
+.admin-dashboard-indicador--info p { color: var(--unam-blue); }
+.admin-dashboard-indicador--revision p { color: var(--revision-texto); }
+.admin-dashboard-indicador--exito p { color: var(--exito-texto); }
 
-.admin-dashboard-indicador-naranja p {
-    color: #a05a2c;
-}
-
-.admin-dashboard-indicador-verde p {
-    color: #297a38;
-}
+/* ─── Acciones ───────────────────────────────────────────────────────── */
 
 .admin-dashboard-acciones {
     margin-bottom: 2rem;
-    padding: clamp(1.25rem, 3vw, 2rem);
-    border: 1px solid var(--border-light);
-    border-radius: 0.8rem;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 4px 10px rgba(17, 47, 75, 0.08);
 }
 
 .admin-dashboard-acciones > h2 {
     margin: 0 0 1.5rem;
     color: var(--text-dark);
-    font-family: var(--font-nav);
-    font-size: 1.2rem;
-    font-weight: 700;
 }
 
 .admin-dashboard-acciones-grid {
@@ -105,56 +93,19 @@
     align-items: flex-start;
     gap: 1rem;
     border: 1px solid var(--border-light);
-    border-radius: 0.65rem;
+    border-radius: var(--radio-caja);
     background: #f2f0eb;
 }
 
 .admin-dashboard-accion h3 {
     margin: 0 0 0.3rem;
     color: var(--text-dark);
-    font-size: 0.98rem;
-    font-weight: 700;
 }
 
 .admin-dashboard-accion p {
     margin: 0;
     color: var(--text-muted);
-    font-size: 0.8rem;
-    line-height: 1.5;
-}
-
-.admin-dashboard-accion-pendiente {
-    padding: 0.4rem 1rem;
-    border: 1px solid #a9a9a9;
-    border-radius: 999px;
-    background: #e2e2e2;
-    color: #656565;
-    cursor: not-allowed;
-    font-size: 0.82rem;
-    font-weight: 700;
-    line-height: 1;
-    user-select: none;
-}
-
-.admin-dashboard-accion-disponible {
-    padding: 0.4rem 1rem;
-    border: 1px solid var(--unam-blue);
-    border-radius: 999px;
-    background: var(--unam-blue);
-    color: #ffffff;
-    font-size: 0.82rem;
-    font-weight: 700;
-    line-height: 1;
-    text-decoration: none;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.admin-dashboard-accion-disponible:hover,
-.admin-dashboard-accion-disponible:focus-visible {
-    border-color: var(--unam-blue-dark);
-    background: var(--unam-blue-dark);
-    color: #ffffff;
-    transform: translateY(-1px);
+    font-size: var(--fs-auxiliar);
 }
 
 @media (min-width: 768px) {
@@ -169,7 +120,7 @@
         justify-content: space-between;
     }
 
-    .admin-dashboard-accion-pendiente {
+    .admin-dashboard-accion .boton {
         flex-shrink: 0;
     }
 }

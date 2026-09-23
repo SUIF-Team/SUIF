@@ -3,43 +3,41 @@
 namespace App\Http\Controllers\Persona;
 
 use App\Http\Controllers\Controller;
+use App\Servicios\ComprobanteSede;
 use App\Servicios\GestionSedes;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class SedeController extends Controller
 {
-    public function index(Request $request, GestionSedes $gestion)
+    /**
+     * A partir de aquí el cupo se muestra como «bajo». Viaja al cliente en vez
+     * de repetirse en la plantilla y en el script.
+     */
+    private const UMBRAL_CUPO_BAJO = 15;
+
+    public function index(GestionSedes $gestion)
     {
         $idUsuario = (int) Auth::id();
         $seleccionada = $gestion->sedeSeleccionadaPorUsuario($idUsuario);
 
         if ($seleccionada) {
-            $fechaInicio = Carbon::parse($seleccionada['fecha_inicio'])->locale('es');
-            $fechaFin = Carbon::parse($seleccionada['fecha_fin'])->locale('es');
-            $seleccionada['fecha'] = $fechaInicio
-                ->locale('es')
-                ->translatedFormat('d \d\e F \d\e Y');
-            if (!$fechaInicio->isSameDay($fechaFin)) {
-                $seleccionada['fecha'] .= '–'.$fechaFin->translatedFormat('d \d\e F \d\e Y');
-            }
-            $seleccionada['horario'] = $seleccionada['hora_inicio'].'–'.$seleccionada['hora_fin'].' h';
-
             return view('persona.sede', [
                 'confirmada' => true,
-                'sede' => $seleccionada,
+                'sede' => ComprobanteSede::conFormato($seleccionada),
+                'mapa' => ComprobanteSede::urlMapa((string) $seleccionada['direccion']),
             ]);
         }
 
-        $buscar = trim((string) $request->query('buscar'));
-
         return view('persona.sede', [
             'confirmada' => false,
-            'sedes' => $gestion->catalogoParticipante($buscar),
-            'buscarActual' => $buscar,
+            'vista' => [
+                'sedes' => $gestion->catalogoParticipante(),
+                'umbralCupoBajo' => self::UMBRAL_CUPO_BAJO,
+            ],
         ]);
     }
 
@@ -54,20 +52,70 @@ class SedeController extends Controller
         try {
             $gestion->seleccionarParaUsuario((int) Auth::id(), (int) $datos['evaluacion_id']);
         } catch (DomainException $exception) {
-            return redirect()
-                ->route('persona.sede.index')
-                ->withErrors(['sede' => $exception->getMessage()]);
+            /* El caso que se repite: entre un sondeo y el siguiente alguien más
+               tomó el último lugar. La pantalla lo dice sin recargar para que la
+               persona elija otro horario con el catálogo todavía delante. */
+            return $this->responder(
+                $request,
+                'error',
+                $exception->getMessage(),
+                route('persona.sede.index'),
+                [],
+                'sede'
+            );
         }
 
-        return redirect()
-            ->route('persona.sede.index')
-            ->with('success', 'Tu sede y horario quedaron confirmados.');
+        /* Confirmar lleva al resumen, que es otra pantalla: aquí sí se navega. */
+        return $this->responder(
+            $request,
+            'success',
+            'Tu sede y horario quedaron confirmados.',
+            route('persona.sede.index')
+        );
     }
 
+    /**
+     * Sondeo del catálogo mientras la persona elige.
+     *
+     * Devuelve el catálogo completo, no sólo los cupos: una aplicación puede
+     * vencer o darse de baja con la pantalla abierta, y entonces el renglón no
+     * cambia de número, desaparece. La búsqueda la aplica el navegador sobre
+     * este catálogo completo.
+     */
     public function disponibilidad(GestionSedes $gestion): JsonResponse
     {
         return response()->json([
-            'sedes' => $gestion->disponibilidadParticipante(),
+            'sedes' => $gestion->catalogoParticipante(),
+        ]);
+    }
+
+    /**
+     * Comprobante de la sede y el horario confirmados.
+     *
+     * El PDF no se guarda en ningún lado: se arma en memoria en cada clic con
+     * la asignación vigente. La persona se resuelve desde la sesión, así que
+     * nadie puede pedir el comprobante de alguien más.
+     */
+    public function comprobante(GestionSedes $gestion, ComprobanteSede $comprobante)
+    {
+        $seleccionada = $gestion->sedeSeleccionadaPorUsuario((int) Auth::id());
+
+        if (!$seleccionada) {
+            return redirect()
+                ->route('persona.sede.index')
+                ->withErrors(['sede' => 'Confirma tu sede y horario antes de generar el comprobante.']);
+        }
+
+        $pdf = Pdf::loadView($comprobante->vista(), $comprobante->datos($seleccionada))
+            ->setPaper('letter');
+
+        /* La respuesta se arma a mano porque download() del paquete no admite
+           cabeceras extra y este documento lleva datos personales. */
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$comprobante->nombreArchivo().'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
         ]);
     }
 }

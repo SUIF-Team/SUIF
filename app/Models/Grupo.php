@@ -27,14 +27,4 @@ class Grupo extends Model
             'grup_fecha_fin' => 'date:Y-m-d',
         ];
     }
-
-    public function sede()
-    {
-        return $this->belongsTo(Sede::class, 'sede_id_sede', 'sede_id_sede');
-    }
-
-    public function evaluacion()
-    {
-        return $this->hasOne(Evaluacion::class, 'grup_id_grupo', 'grup_id_grupo');
-    }
 }

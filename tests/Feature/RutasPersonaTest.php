@@ -22,4 +22,38 @@ class RutasPersonaTest extends TestCase
             parse_url(route('admin.personas.registradas.index'), PHP_URL_PATH)
         );
     }
+
+    public function test_el_paso_de_referencia_expone_el_selector_y_los_dos_caminos(): void
+    {
+        $this->assertTrue(Route::has('persona.referencia.index'));
+        $this->assertTrue(Route::has('persona.referencia.individual'));
+
+        /* El selector se queda con la URI de siempre para que los enlaces ya
+           existentes —barra de avance, tablero, documentación— entren por él. */
+        $this->assertSame('/persona/referencia', parse_url(route('persona.referencia.index'), PHP_URL_PATH));
+        $this->assertSame(
+            '/persona/referencia/individual',
+            parse_url(route('persona.referencia.individual'), PHP_URL_PATH)
+        );
+
+        /* El camino especial se captura y se envía en la misma URI. */
+        $this->assertTrue(Route::has('persona.referencia.especial'));
+        $this->assertTrue(Route::has('persona.referencia.especial.store'));
+        $this->assertSame(
+            '/persona/referencia/especial',
+            parse_url(route('persona.referencia.especial'), PHP_URL_PATH)
+        );
+    }
+
+    public function test_las_rutas_de_desarrollo_quedaron_retiradas(): void
+    {
+        /* reiniciar mutaba la sesión por GET y demo apuntaba a un método
+           inexistente: ninguna debe volver a registrarse. */
+        $this->assertFalse(Route::has('persona.preregistro.reiniciar'));
+        $this->assertFalse(Route::has('persona.resultados.demo'));
+
+        /* Sin ruta registrada el 404 se resuelve antes que el middleware auth. */
+        $this->get('/persona/preregistro/reiniciar')->assertNotFound();
+        $this->get('/persona/resultados/demo/aprobado')->assertNotFound();
+    }
 }

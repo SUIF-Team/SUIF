@@ -43,7 +43,7 @@
 
     function cerrarModal() {
         modal.hidden = true;
-        document.body.classList.remove('admin-sedes-modal-abierto');
+        document.body.classList.remove('dialogo-abierto');
         if (focoAnterior) {
             focoAnterior.focus();
         }
@@ -52,7 +52,7 @@
     abrir.addEventListener('click', function () {
         focoAnterior = document.activeElement;
         modal.hidden = false;
-        document.body.classList.add('admin-sedes-modal-abierto');
+        document.body.classList.add('dialogo-abierto');
         cancelar.focus();
     });
 

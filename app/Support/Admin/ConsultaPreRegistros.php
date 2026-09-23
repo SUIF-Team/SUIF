@@ -2,6 +2,7 @@
 
 namespace App\Support\Admin;
 
+use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -11,6 +12,15 @@ class ConsultaPreRegistros
 
     /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
     private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
+
+    /**
+     * Los desenlaces de un trámite: los únicos que trae el reporte de registros.
+     *
+     * Se escriben como en el catálogo porque estos tres no tienen variantes de
+     * mayúsculas entre los scripts de la base; la que sí las tiene, «En
+     * revisión», no está en la lista.
+     */
+    private const ESTADOS_RESUELTOS = ['Aprobada', 'Rechazada', 'Cancelada'];
 
     /**
      * Obtiene una fila por persona pre-registrada. La clave de acceso confirma
@@ -28,10 +38,94 @@ class ConsultaPreRegistros
     }
 
     /**
+     * Reporte de los registros al sistema: un renglón por solicitud resuelta.
+     *
+     * La unidad es la solicitud y no la persona porque quien participa en dos
+     * convocatorias se registró dos veces, y el reporte cuenta registros. Por
+     * eso no pasa por ultimasSolicitudes(), que es justo lo contrario: deja
+     * una sola solicitud por persona para la bandeja de revisión.
+     *
+     * Sólo trae los trámites que llegaron a un desenlace —Aprobada, Rechazada
+     * o Cancelada—; quien sigue en Pre-registro o En revisión no aparece. El
+     * reporte se lee en orden ascendente de folio, que es como se revisa un
+     * expediente: el primer registro arriba. No se limita a convocatorias
+     * vigentes: es histórico.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function todasLasSolicitudes(?int $id_convocatoria = null): array
+    {
+        return DB::table('solicitud as s')
+            ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
+            ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
+            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
+            ->join('convocatoria as cv', 'cv.conv_id_convocatoria', '=', 's.soli_id_convocatoria')
+            ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
+            /* La sede se elige al final del trámite: la mayoría de los
+               renglones no la tendrá, y eso es un dato del reporte. */
+            ->leftJoin('evaluacion as ev', 'ev.eval_id_evaluacion', '=', 's.soli_id_evaluacion')
+            ->leftJoin('grupo as gr', 'gr.grup_id_grupo', '=', 'ev.grup_id_grupo')
+            ->leftJoin('sede as sd', 'sd.sede_id_sede', '=', 'gr.sede_id_sede')
+            /* El estado vigente es el último renglón de la bitácora. La misma
+               subconsulta que usa la bandeja: aquí sirve para publicarlo en la
+               última columna y para dejar fuera los trámites sin resolver. */
+            ->joinSub($this->ultimosEstados(), 'ultimo_estado', function ($join): void {
+                $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
+            })
+            ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
+            ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
+            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotNull('u.usua_clave_acceso')
+            ->whereIn('ces.esso_estado_solicitud', self::ESTADOS_RESUELTOS)
+            ->when(
+                $id_convocatoria,
+                fn (Builder $consulta): Builder => $consulta
+                    ->where('s.soli_id_convocatoria', $id_convocatoria)
+            )
+            ->orderBy('s.soli_id_solicitud')
+            ->select([
+                's.soli_id_solicitud',
+                'p.pers_nombre',
+                'p.pers_apellido_paterno',
+                'p.pers_apellido_materno',
+                'p.pers_curp',
+                'p.pers_rfc',
+                'p.pers_fecha_registro',
+                'ef.enfe_entidad_federativa',
+                'cv.conv_nombre',
+                'sd.sede_nombre',
+                'gr.grup_fecha_inicio',
+                'gr.grup_hora_inicio',
+                'gr.grup_hora_fin',
+                'ces.esso_estado_solicitud as estado',
+            ])
+            ->get()
+            ->map(fn (object $fila): array => [
+                'folio' => (string) $fila->soli_id_solicitud,
+                'curp' => (string) $fila->pers_curp,
+                'nombre_completo' => $this->nombreCompleto($fila),
+                'rfc' => trim((string) ($fila->pers_rfc ?? '')),
+                'entidad_federativa' => (string) ($fila->enfe_entidad_federativa ?? ''),
+                'fecha_registro' => (string) $fila->pers_fecha_registro,
+                'convocatoria' => (string) ($fila->conv_nombre ?? ''),
+                'sede' => (string) ($fila->sede_nombre ?? ''),
+                'fecha_grupo' => (string) ($fila->grup_fecha_inicio ?? ''),
+                'horario' => $fila->grup_hora_inicio
+                    ? trim((string) $fila->grup_hora_inicio).' a '.trim((string) $fila->grup_hora_fin)
+                    : '',
+                'estado' => (string) $fila->estado,
+            ])
+            ->all();
+    }
+
+    /**
      * Estados con los que se puede filtrar la bandeja. Son los tres que le
      * importan a quien revisa; se toman del catálogo para conservar su
      * escritura exacta y se comparan sin distinguir mayúsculas, porque los
      * scripts de la base no coinciden entre sí («En revisión» / «En Revisión»).
+     *
+     * «Cancelada» quedó fuera: ya no se pueden cancelar trámites, así que
+     * filtrar por ese estado sólo devolvería expedientes históricos.
      */
     public function estados(): array
     {
@@ -213,11 +307,11 @@ class ConsultaPreRegistros
      */
     private function nombreCompleto(object $solicitud): string
     {
-        return trim(implode(' ', array_filter([
-            $solicitud->pers_nombre,
+        return NombrePersona::administrativo(
             $solicitud->pers_apellido_paterno,
             $solicitud->pers_apellido_materno,
-        ])));
+            $solicitud->pers_nombre
+        );
     }
 
     private function normalizarBandeja(object $solicitud): array
@@ -231,7 +325,7 @@ class ConsultaPreRegistros
             'curp' => (string) $solicitud->pers_curp,
             'rfc' => (string) $solicitud->pers_rfc,
             'fecha_registro' => $solicitud->pers_fecha_registro.' 00:00:00',
-            'estado_bandeja' => (string) $solicitud->estado_solicitud,
+            'estado_bandeja' => $this->etiquetaEstado((string) $solicitud->estado_solicitud),
             'clase_estado' => $this->claseEstado((string) $solicitud->estado_solicitud),
         ];
     }
@@ -287,25 +381,52 @@ class ConsultaPreRegistros
                 'preregistro' => 'Rechazado',
                 'documentacion' => 'Pendiente',
             ],
+            /* Ya no se cancelan trámites, pero el historial conserva los que se
+               cancelaron: el pre-registro sigue completado y lo que quedó
+               detenido es la documentación. */
+            'Cancelada' => [
+                'general' => 'Cancelada',
+                'preregistro' => 'Completado',
+                'documentacion' => 'Cancelado',
+            ],
             'En revisión', 'En Revisión' => [
                 'general' => 'En revisión',
                 'preregistro' => 'Completado',
                 'documentacion' => 'En revisión',
             ],
             default => [
-                'general' => $estado_solicitud,
+                'general' => $this->etiquetaEstado($estado_solicitud),
                 'preregistro' => 'Completado',
                 'documentacion' => 'Pendiente',
             ],
         };
     }
 
+    /* El administrador atiende expedientes, no etapas del catálogo.
+       Pre-registro y Documentación son fases previas al envío: se pintan con
+       el mismo badge ámbar que En revisión, pero el filtro de la bandeja sólo
+       ofrece En revisión, Aprobada y Rechazada, así que esas filas quedaban a
+       la vista y fuera de todo filtro. Se presentan con la etiqueta que el
+       filtro sí tiene, y la usan por igual la bandeja y el expediente para que
+       una misma solicitud no cambie de nombre al abrirla.
+
+       El catálogo no se toca: PreRegistroController siembra 'Pre-registro'
+       buscando la fila por nombre, y renombrarlo rompería el alta de toda
+       solicitud. Ninguna comparación del flujo distingue Pre-registro de En
+       revisión: todas buscan Aprobada, Rechazada o Cancelada. */
+    private function etiquetaEstado(string $estado_solicitud): string
+    {
+        return in_array($estado_solicitud, ['Pre-registro', 'Documentación'], true)
+            ? 'En revisión'
+            : $estado_solicitud;
+    }
+
     private function claseEstado(string $estado_solicitud): string
     {
         return match ($estado_solicitud) {
-            'Aprobada' => 'admin-bandeja-preregistros-estado-aceptado',
-            'Rechazada' => 'admin-bandeja-preregistros-estado-rechazado',
-            default => 'admin-bandeja-preregistros-estado-revision',
+            'Aprobada' => 'estado--exito',
+            'Rechazada', 'Cancelada' => 'estado--peligro',
+            default => 'estado--revision',
         };
     }
 

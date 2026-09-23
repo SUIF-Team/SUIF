@@ -1,0 +1,9 @@
+[Unit]
+Description=Vigila el .env de SUIF para respaldarlo cada vez que cambia
+
+[Path]
+PathChanged=/var/www/SUIF/.env
+Unit=suif-env-respaldo.service
+
+[Install]
+WantedBy=paths.target

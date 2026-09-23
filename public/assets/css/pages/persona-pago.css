@@ -1,74 +1,13 @@
-/* Estado del pago: subir comprobante y seguimiento de su revisión. */
-
-.pago-paso {
-    margin-bottom: auto;
-    padding: 14px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    border-radius: 8px;
-    background: #1f2937;
-    color: #fff;
-}
-
-.pago-paso span {
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #b38612;
-    font-size: 13px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.pago-paso strong,
-.pago-paso small {
-    display: block;
-}
-
-.pago-paso strong {
-    font-size: 14px;
-}
-
-.pago-paso small {
-    color: #9ca3af;
-    font-size: 12px;
-}
+/*
+ * Pago de la persona: subir el comprobante y seguir su revisión.
+ *
+ * Cajas de mensaje, chips, campos, botones, opciones y el diálogo viven en
+ * partials/componentes.css; aquí queda la composición de la pantalla y lo propio
+ * del comprobante.
+ */
 
 .pago-shell {
     padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 5rem);
-}
-
-.pago-alerta {
-    margin-bottom: 1.25rem;
-    padding: 13px 16px;
-    border-radius: 10px;
-    background: #eef7f0;
-    color: #245f35;
-}
-
-.pago-alerta--error {
-    background: #fff0f0;
-    color: #9b1717;
-}
-
-.pago-alerta--error ul {
-    margin: 0.4rem 0 0;
-    padding-left: 1.1rem;
-}
-
-.pago-demo {
-    margin-bottom: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px dashed #d7dce5;
-    font-size: 0.8rem;
-    color: #6b7280;
-}
-
-.pago-demo a {
-    margin-right: 0.75rem;
 }
 
 .pago-tarjetas {
@@ -80,9 +19,6 @@
 
 .pago-tarjeta {
     padding: 2rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
 }
 
 .pago-tarjeta--sola {
@@ -93,75 +29,94 @@
 .pago-tarjeta h1 {
     margin: 0 0 0.4rem;
     color: #172a44;
-    font-size: 1.4rem;
 }
 
+/* El título de la tarjeta dice en qué punto está el pago. Va en el dorado
+   institucional y sin cursiva: la cursiva de Merriweather no se carga y el
+   navegador la inclinaba a mano. */
 .pago-tarjeta__titulo {
     margin: 0 0 0.6rem;
-    color: #b38612;
-    font-size: 1rem;
-    font-style: italic;
+    color: var(--unam-gold-dark);
+    font-size: var(--fs-subtitulo);
 }
 
 .pago-tarjeta__titulo--error {
-    color: #b91c1c;
+    color: var(--peligro-texto);
 }
 
 .pago-muted {
     margin: 0 0 1.25rem;
-    color: #6b7280;
-    font-size: 0.9rem;
+    color: var(--text-muted);
 }
 
 .pago-estatus-linea {
     margin: 0;
-    color: #6b7280;
-    font-size: 0.95rem;
+    color: var(--text-muted);
 }
 
-.pago-chip {
+.pago-estatus-linea .estado {
     margin-left: 0.4rem;
-    padding: 0.3rem 0.85rem;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 700;
-}
-
-.pago-chip--revision {
-    background: #ffe8cf;
-    color: #9a5b13;
-}
-
-.pago-chip--validado {
-    background: #d8ecdf;
-    color: #075b2c;
-}
-
-.pago-chip--rechazado {
-    background: #fcdede;
-    color: #9b1717;
 }
 
 .pago-form {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
     align-items: center;
+    gap: 0.75rem;
 }
 
+/* Los datos declarados ocupan el ancho completo del formulario, que por lo demás
+   alinea el adjunto y el botón en una sola línea. */
+.pago-datos {
+    flex-basis: 100%;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    border: 0;
+}
+
+.pago-datos__titulo {
+    margin-bottom: 0.75rem;
+    padding: 0;
+    color: #172a44;
+}
+
+.pago-datos__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pago-campo--banco {
+    margin-top: 0.75rem;
+    max-width: 22rem;
+}
+
+.pago-opciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pago-opciones .opcion {
+    align-items: flex-start;
+}
+
+.pago-opcion__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.pago-opcion__texto small {
+    color: var(--text-muted);
+    font-size: var(--fs-auxiliar);
+    font-weight: 400;
+}
+
+/* La etiqueta se ve como un botón y esconde su input dentro. */
 .pago-archivo {
     position: relative;
     overflow: hidden;
-    display: inline-flex;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.65rem 1.1rem;
-    border: 1px solid #d9dee7;
-    border-radius: 8px;
-    background: #f7f8fa;
-    color: #172a44;
-    font-size: 0.85rem;
-    cursor: pointer;
 }
 
 .pago-archivo input {
@@ -171,156 +126,31 @@
     cursor: pointer;
 }
 
-.pago-boton {
-    min-width: 150px;
-    padding: 0.65rem 1.25rem;
-    border: 0;
-    border-radius: 8px;
-    background: #111827;
-    color: #fff;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.pago-boton:hover,
-.pago-boton:focus-visible {
-    background: #1f2937;
-}
-
-.pago-boton--bloqueado {
-    background: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-.pago-tracker {
-    padding: 2rem;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 10px 14px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.pago-tracker__titulo {
-    margin: 0 0 1.5rem;
-    color: #172a44;
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.pago-tracker__linea {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.pago-tracker__paso {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: 7rem;
-}
-
-.pago-tracker__paso span {
-    width: 2.2rem;
-    height: 2.2rem;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #e5e7eb;
-    color: #6b7280;
-    font-size: 0.85rem;
-    font-weight: 700;
-}
-
-.pago-tracker__paso small {
-    color: #6b7280;
-    font-size: 0.8rem;
-}
-
-.pago-tracker__paso--completo span {
-    background: #16a34a;
-    color: #fff;
-}
-
-.pago-tracker__paso--activo span {
-    background: #d97706;
-    color: #fff;
-}
-
-.pago-tracker__paso--error span {
-    background: #dc2626;
-    color: #fff;
-}
-
-.pago-tracker__conector {
-    height: 2px;
-    flex: 1;
-    margin: 1.1rem -0.5rem 0;
-    background: #e5e7eb;
-}
-
-.pago-tracker__conector--completo {
-    background: #16a34a;
-}
-
-.pago-tracker__conector--error {
-    background: #dc2626;
-}
-
-@media (max-width: 900px) {
-    .pago-tarjetas {
-        grid-template-columns: 1fr;
-    }
-
-    .pago-tracker__linea {
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .pago-tracker__conector {
-        display: none;
-    }
+/* Con el archivo ya elegido el botón cambia de papel: deja de pedir y confirma. */
+.pago-archivo--cargado {
+    border-color: var(--exito-solido);
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
 }
 
 /* ─── Confirmación de lo adjuntado ───────────────────────────────────── */
 
-/* El input va oculto, así que el label es quien muestra el foco del teclado. */
-.pago-archivo:focus-within {
-    outline: 2px solid #172a44;
-    outline-offset: 2px;
-}
-
-.pago-archivo--cargado {
-    border-color: #16a34a;
-    background: #d8ecdf;
-    color: #075b2c;
-    font-weight: 600;
-}
-
 .pago-adjunto {
     flex-basis: 100%;
     display: flex;
-    gap: 0.5rem;
     align-items: baseline;
+    gap: 0.5rem;
     margin: 0;
     padding: 0.6rem 0.85rem;
-    border-radius: 8px;
-    background: #d8ecdf;
-    color: #075b2c;
-    font-size: 0.85rem;
-}
-
-.pago-adjunto[hidden] {
-    display: none;
+    border-radius: var(--radio-control);
+    background: var(--exito-fondo);
+    color: var(--exito-texto);
+    font-size: var(--fs-auxiliar);
 }
 
 .pago-adjunto--error {
-    background: #fcdede;
-    color: #9b1717;
+    background: var(--peligro-fondo);
+    color: var(--peligro-texto);
 }
 
 .pago-adjunto__detalle {
@@ -329,23 +159,74 @@
     overflow-wrap: anywhere;
 }
 
-.pago-adjunto__quitar {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
-    font-size: 0.8rem;
-    text-decoration: underline;
-    cursor: pointer;
+/* ─── Seguimiento de la validación ───────────────────────────────────── */
+
+.pago-tracker {
+    padding: 2rem;
+    text-align: center;
 }
 
-.pago-boton[disabled] {
-    background: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
+.pago-tracker__titulo {
+    margin: 0 0 1.5rem;
+    color: #172a44;
 }
 
-.pago-boton[disabled]:hover,
-.pago-boton[disabled]:focus-visible {
-    background: #e5e7eb;
+/* ─── Comprobante fiscal: ticket o CFDI ──────────────────────────────── */
+
+/* Tarjeta de ancho completo, entre las dos del estatus y el seguimiento: el bloque
+   lleva diálogo y una nota larga, y en media columna no cabría. */
+.pago-comprobante {
+    margin-bottom: 1.5rem;
+    padding: 2rem;
+}
+
+.pago-comprobante__titulo {
+    margin: 0 0 0.6rem;
+    color: #172a44;
+}
+
+.pago-comprobante__opciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.pago-opcion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--borde-control);
+    border-radius: var(--radio-control);
+}
+
+.pago-opcion__titulo {
+    margin: 0;
+    color: #172a44;
+}
+
+/* El botón se pega abajo para que las dos tarjetas queden parejas aunque sus
+   descripciones midan distinto. */
+.pago-opcion .boton {
+    margin-top: auto;
+    align-self: flex-start;
+}
+
+.pago-comprobante__elegido,
+.pago-comprobante__aviso {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+}
+
+.pago-comprobante__aviso:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+    .pago-tarjetas,
+    .pago-datos__grid,
+    .pago-opciones,
+    .pago-comprobante__opciones {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

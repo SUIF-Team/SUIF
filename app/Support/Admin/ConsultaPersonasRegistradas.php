@@ -2,6 +2,7 @@
 
 namespace App\Support\Admin;
 
+use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -46,6 +47,28 @@ class ConsultaPersonasRegistradas
             ))
             ->values()
             ->all();
+    }
+
+    /**
+     * Una persona de la bandeja, con el id de su usuario para operar la
+     * cuenta. Devuelve null si no está en la bandeja: solo se restauran
+     * claves de personas con solicitud aprobada, rol Persona/Candidato y
+     * clave vigente.
+     */
+    public function persona(int $id_persona): ?array
+    {
+        $persona = $this->consultaPersonas()
+            ->addSelect('u.usua_id_usuario')
+            ->where('p.pers_id_persona', $id_persona)
+            ->first();
+
+        if (!$persona) {
+            return null;
+        }
+
+        return $this->normalizarPersona($persona) + [
+            'id_usuario' => (int) $persona->usua_id_usuario,
+        ];
     }
 
     public function resumenDashboard(): array
@@ -125,11 +148,11 @@ class ConsultaPersonasRegistradas
 
     private function normalizarPersona(object $persona): array
     {
-        $nombre_completo = trim(implode(' ', array_filter([
-            $persona->pers_nombre,
+        $nombre_completo = NombrePersona::administrativo(
             $persona->pers_apellido_paterno,
             $persona->pers_apellido_materno,
-        ])));
+            $persona->pers_nombre
+        );
 
         return [
             'id' => (string) $persona->pers_id_persona,
@@ -147,9 +170,9 @@ class ConsultaPersonasRegistradas
     private function claseEstado(string $estado): string
     {
         return match ($estado) {
-            'Aprobada' => 'admin-bandeja-preregistros-estado-aceptado',
-            'Rechazada', 'Cancelada' => 'admin-bandeja-preregistros-estado-rechazado',
-            default => 'admin-bandeja-preregistros-estado-revision',
+            'Aprobada' => 'estado--exito',
+            'Rechazada', 'Cancelada' => 'estado--peligro',
+            default => 'estado--revision',
         };
     }
 }

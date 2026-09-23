@@ -9,17 +9,100 @@
 @section('content')
 <section class="pr-shell">
     <div class="pr-layout">
-        <main class="pr-card">
-            @if(session('success'))<div class="pr-alert">{{ session('success') }}</div>@endif
-            @if($errors->any())<div class="pr-alert pr-error"><strong>Revisa la información:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        <main class="tarjeta pr-card">
+            @if(session('success'))
+                <div class="notificacion notificacion--exito" role="status">
+                    <i class="fa-solid fa-circle-check notificacion__icono" aria-hidden="true"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="notificacion notificacion--error" role="alert">
+                    <i class="fa-solid fa-circle-exclamation notificacion__icono" aria-hidden="true"></i>
+                    <div>
+                        <strong>Corrige estos datos:</strong>
+                        <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                    </div>
+                </div>
+            @endif
 
             @if($verFormatos)
                 @include('partials.preregistro-formatos', ['soloConsulta' => true])
+            @elseif($solicitudRechazada)
+                {{-- El trámite se cerró durante la revisión: los documentos siguen
+                     "En revisión" en la bitácora, así que en vez de la tabla —que
+                     invitaría a subsanar algo que ya nadie va a revisar— se explica
+                     el porqué. Espeja el bloque .pr-aceptado de abajo. --}}
+                <div class="pr-interrumpido">
+                    <span class="pr-interrumpido__icono" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+                    <h1>Trámite interrumpido</h1>
+                    <p class="pr-muted pr-interrumpido__texto">
+                        El equipo administrativo interrumpió la revisión de tu documentación{{ $fechaEnvio ? ', enviada el '.$fechaEnvio : '' }}.
+                        Tu trámite quedó cerrado en esta etapa.
+                    </p>
+
+                    @if($motivoInterrupcion)
+                        <div class="aviso-motivo">
+                            <strong class="aviso-motivo__titulo">Motivo</strong>
+                            <p>{{ $motivoInterrupcion }}</p>
+                        </div>
+                    @else
+                        <p class="pr-muted pr-interrumpido__sin-motivo">
+                            No se registró un comentario adicional. Si necesitas más detalles,
+                            comunícate con el equipo administrativo.
+                        </p>
+                    @endif
+
+                    <div class="pr-interrumpido__acciones">
+                        <a href="{{ route('persona.dashboard') }}" class="boton boton--secundario">Volver a mi panel</a>
+                    </div>
+                </div>
+            @elseif($estado['fase'] === 'aprobado' && !$solicitudRechazada)
+                {{-- La etapa terminó: en vez de la tabla se confirma el resultado. --}}
+                <div class="pr-aceptado">
+                    <span class="pr-aceptado__icono" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                    <h1>¡Documentación aceptada!</h1>
+                    <p class="pr-muted pr-aceptado__texto">
+                        Revisamos tus documentos y todos fueron aceptados{{ $fechaAprobacion ? ' el '.$fechaAprobacion : '' }}.
+                    </p>
+
+                    <ul class="pr-aceptado__lista">
+                        @foreach($documentos as $slug => $nombre)
+                            <li class="pr-aceptado__fila">
+                                <span class="pr-aceptado__doc">{{ $nombre }}</span>
+                                <span class="estado estado--exito">Aprobado</span>
+                                <a class="boton boton--texto" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
+                                    <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                                    <span>Abrir</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="pr-aceptado__acciones">
+                        @if($solicitudAprobada)
+                            <a href="{{ route('persona.referencia.index') }}" class="boton boton--primario">Continuar</a>
+                        @else
+                            <p class="pr-muted">Falta que el equipo administrativo cierre la revisión de tu solicitud completa.</p>
+                            <a href="{{ route('persona.dashboard') }}" class="boton boton--secundario">Volver a mi panel</a>
+                        @endif
+                    </div>
+                </div>
             @else
+                {{-- Vue sustituye el contenido de este contenedor al montarse;
+                     lo que Blade pinta aquí es el respaldo para quien navega
+                     sin JavaScript, donde cada carga vuelve a ser un POST
+                     normal con su recarga. Las dos versiones tienen que decir
+                     lo mismo: al tocar la tabla, tocar también la plantilla de
+                     assets/js/pages/persona-documentos.js. --}}
+                <div
+                    id="pr-documentos-app"
+                    data-vista='@json($vista)'
+                    data-ruta-formatos="{{ route('persona.documentos.index', ['ver' => 'formatos']) }}">
                 <h1>Documentación requerida</h1>
                 <p class="pr-muted">Sube los documentos uno por uno. Cada PDF debe pesar máximo 1 MB.</p>
                 <p class="pr-volver-formatos">
-                    <a href="{{ route('persona.documentos.index', ['ver' => 'formatos']) }}">
+                    <a class="boton boton--texto" href="{{ route('persona.documentos.index', ['ver' => 'formatos']) }}">
                         <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                         Ver o descargar los formatos otra vez
                     </a>
@@ -39,12 +122,15 @@
                                 <?php
                                     $doc = isset($estado['documentos'][$slug]) ? $estado['documentos'][$slug] : null;
                                     $docEstado = $doc ? $doc['estado'] : 'pendiente';
+                                    /* El papel semántico del chip, no un nombre de color:
+                                       «cargado» informa —el documento subió, nadie lo ha
+                                       revisado— y por eso no es verde. */
                                     $clasesEstado = [
-                                        'pendiente' => 'pending',
-                                        'cargado' => 'loaded',
-                                        'revision' => 'review',
-                                        'aprobado' => 'approved',
-                                        'rechazado' => 'rejected',
+                                        'pendiente' => 'neutro',
+                                        'cargado' => 'info',
+                                        'revision' => 'revision',
+                                        'aprobado' => 'exito',
+                                        'rechazado' => 'peligro',
                                     ];
                                     $etiquetasEstado = [
                                         'pendiente' => 'Pendiente',
@@ -53,17 +139,20 @@
                                         'aprobado' => 'Aprobado',
                                         'rechazado' => 'Rechazado',
                                     ];
+                                    /* El archivo sólo se puede cambiar mientras nadie lo esté
+                                       revisando: en revisión y aprobado quedan cerrados. */
+                                    $puedeReemplazar = !in_array($docEstado, ['revision', 'aprobado'], true);
                                 ?>
                                 <tr class="pr-fila pr-fila--{{ $docEstado }}">
                                     <td data-titulo="Documento">
                                         <strong class="pr-fila__nombre">{{ $nombre }}</strong>
-                                        <span class="pr-status pr-status--{{ $clasesEstado[$docEstado] }}">{{ $etiquetasEstado[$docEstado] }}</span>
+                                        <span class="estado estado--{{ $clasesEstado[$docEstado] }}">{{ $etiquetasEstado[$docEstado] }}</span>
                                     </td>
 
                                     <td data-titulo="Formato">
                                         @if(in_array($slug, $formatos))
                                             <div class="pr-fila__acciones">
-                                                <a class="pr-btn" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
+                                                <a class="boton boton--secundario" href="{{ route('persona.preregistro.formatos.generar', $slug) }}">
                                                     <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
                                                     <span>Generar</span>
                                                 </a>
@@ -74,28 +163,29 @@
                                     </td>
 
                                     <td data-titulo="Mi archivo">
-                                        <div class="pr-fila__acciones">
+                                        {{-- Aquí no hay previsualización: depende de URL.createObjectURL,
+                                             así que sólo existe en la plantilla de Vue. El botón de
+                                             confirmar vive fuera del formulario y lo envía por su
+                                             atributo form=, para quedar en la misma fila que sus
+                                             hermanos y dejar el espacio de arriba a la previsualización. --}}
+                                        <div class="pr-fila__acciones pr-fila__acciones--archivo">
                                             @if($doc)
-                                                <a class="pr-btn pr-btn--secondary" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
+                                                <a class="boton boton--secundario" target="_blank" href="{{ route('persona.preregistro.documentos.ver', $slug) }}">
                                                     <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
                                                     <span>Abrir</span>
                                                 </a>
                                             @endif
 
-                                            @if(!in_array($estado['fase'], ['revision','aprobado']))
-                                                <form method="POST" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
+                                            @if($puedeReemplazar)
+                                                <form method="POST" id="pr-subir-{{ $slug }}" action="{{ route('persona.preregistro.documentos.store', $slug) }}" enctype="multipart/form-data" class="pr-upload-form">
                                                     @csrf
-                                                    <label class="pr-btn pr-file">
+                                                    <label class="boton boton--secundario pr-file">
                                                         <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
                                                         <span>{{ $docEstado === 'rechazado' ? 'Subsanar' : ($doc ? 'Reemplazar' : 'Adjuntar') }}</span>
                                                         <input type="file" name="archivo" accept="application/pdf" required>
                                                     </label>
-                                                    <div class="pr-preview">
-                                                        <span></span>
-                                                        <iframe title="Previsualización del archivo"></iframe>
-                                                        <button class="pr-btn" type="submit">Confirmar carga</button>
-                                                    </div>
                                                 </form>
+                                                <button class="boton boton--primario" type="submit" form="pr-subir-{{ $slug }}">Confirmar carga</button>
                                             @endif
                                         </div>
 
@@ -108,8 +198,8 @@
                                 @if($doc && $docEstado === 'rechazado' && !empty($doc['observacion']))
                                     <tr class="pr-fila-observacion">
                                         <td colspan="3">
-                                            <div class="pr-observation">
-                                                <strong>Motivo del rechazo</strong>
+                                            <div class="aviso-motivo">
+                                                <strong class="aviso-motivo__titulo">Motivo del rechazo</strong>
                                                 <p>{{ $doc['observacion'] }}</p>
                                             </div>
                                         </td>
@@ -121,10 +211,53 @@
                 </div>
 
                 @if($estado['fase'] === 'aprobado')
-                    <p class="pr-notice">Tus documentos fueron aprobados. Espera la resolución de tu solicitud.</p>
-                @elseif(!in_array($estado['fase'], ['revision','rechazado']))
-                    <form method="POST" action="{{ route('persona.preregistro.documentos.enviar') }}" class="pr-actions">@csrf<button class="pr-btn">Enviar a revisión</button></form>
+                    <p class="aviso aviso--hecho">Tus documentos fueron aprobados. Espera la resolución de tu solicitud.</p>
+                @elseif($estado['fase'] === 'revision' && !$solicitudRechazada)
+                    <p class="aviso aviso--hecho" role="status">
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        <span>
+                            Tus documentos fueron enviados a revisión{{ $fechaEnvio ? ' el '.$fechaEnvio : '' }}.
+                            Te avisaremos en cuanto el equipo administrativo los revise.
+                        </span>
+                    </p>
+                @elseif(!in_array($estado['fase'], ['revision', 'rechazado'], true) && !$solicitudRechazada)
+                    <?php
+                        /* Misma regla que enviarRevision(): los aprobados no se
+                           reenvían, así que el conteo del diálogo no miente
+                           cuando la persona está subsanando. */
+                        $porEnviar = 0;
+                        foreach (array_keys($documentos) as $slugConteo) {
+                            $docConteo = isset($estado['documentos'][$slugConteo])
+                                ? $estado['documentos'][$slugConteo]
+                                : null;
+
+                            if (!$docConteo || $docConteo['estado'] !== 'aprobado') {
+                                $porEnviar++;
+                            }
+                        }
+                    ?>
+                    <form method="POST" action="{{ route('persona.preregistro.documentos.enviar') }}" class="pr-actions" data-envio-revision>
+                        @csrf
+                        <button type="submit" class="boton boton--primario" data-boton-envio>Enviar a revisión</button>
+                    </form>
+
+                    <div class="dialogo" data-modal-envio hidden>
+                        <div class="dialogo__velo" data-cerrar-envio></div>
+                        <section class="dialogo__tarjeta" role="dialog" aria-modal="true"
+                                 aria-labelledby="pr-envio-titulo" aria-describedby="pr-envio-texto">
+                            <h2 class="dialogo__titulo" id="pr-envio-titulo">¿Enviar tus documentos a revisión?</h2>
+                            <p class="dialogo__texto" id="pr-envio-texto">
+                                Se {{ $porEnviar === 1 ? 'enviará 1 documento' : 'enviarán '.$porEnviar.' documentos' }}.
+                                Después ya no podrás reemplazarlos hasta que el equipo administrativo termine de revisarlos.
+                            </p>
+                            <div class="dialogo__acciones">
+                                <button type="button" class="boton boton--secundario" data-cerrar-envio>Cancelar</button>
+                                <button type="button" class="boton boton--primario" data-confirmar-envio>Enviar documentos</button>
+                            </div>
+                        </section>
+                    </div>
                 @endif
+                </div>
             @endif
         </main>
     </div>
@@ -132,9 +265,5 @@
 @endsection
 
 @push('scripts')
-<script>
-(function(){
-  document.querySelectorAll('.pr-upload-form input[type=file]').forEach(function(input){input.addEventListener('change',function(){var f=input.files&&input.files[0],box=input.closest('form').querySelector('.pr-preview');if(!f)return;if(f.type!=='application/pdf'||f.size>1048576){alert('Selecciona un PDF de máximo 1 MB.');input.value='';return;}box.querySelector('span').textContent=f.name+' · '+Math.ceil(f.size/1024)+' KB';box.querySelector('iframe').src=URL.createObjectURL(f);box.classList.add('is-visible');});});
-})();
-</script>
+<script src="{{ asset_versionado('assets/js/pages/persona-documentos.js') }}"></script>
 @endpush

@@ -1,0 +1,6 @@
+[Unit]
+Description=Respaldo del .env de SUIF (sólo si cambió desde la última copia)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/suif-env-respaldo.sh
