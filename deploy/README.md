@@ -173,3 +173,140 @@ En orden, después del `git pull` que traiga esta serie de cambios:
    - `systemctl is-active httpd postgresql-18` responde `active` dos veces.
 10. Agendar el simulacro mensual de restauración y resolver la copia de
     respaldos fuera del host.
+
+## Paso 3 de la depuración: configuración y almacenamiento
+
+La rama `refactor/configuracion-laravel13` hace dos cosas que exigen trabajo en
+el servidor:
+
+- Deja en `config/` sólo lo que difiere del framework y usa los nombres de
+  variables de Laravel 13 (`CACHE_STORE`, `FILESYSTEM_DISK`, `MAIL_MAILER`,
+  `QUEUE_CONNECTION`).
+- Lleva todos los archivos subidos a `storage/app/private`: el disco `local`
+  (documentos del pre-registro) pasa de `storage/app` a `storage/app/private`
+  y el de `referencias` a `storage/app/private/referencias`. Las rutas
+  guardadas en la base son relativas a cada disco, así que **no se tocan**;
+  sólo se mueven las carpetas.
+
+Se hace como root, en `/var/www/SUIF`, en este orden. **Si cualquier paso
+imprime ALTO o no cuadra, aplica la reversa del final**; nada de lo anterior
+a ella es irreversible. Las fotos de configuración `/root/cfg-*.txt` se
+guardan sin las líneas de contraseñas, llaves ni URLs, y se borran al
+terminar.
+
+`.env` está versionado en el repositorio (es un problema aparte, pendiente de
+resolver): después del paso 5, `git status` lo mostrará como modificado. Es
+esperado y no estorba al cambio de rama ni a la reversa.
+
+0. **Chequeo previo**, con el sitio arriba. Los dos destinos no deben tener
+   archivos propios (sólo un `.gitignore`), y `git status` sólo debe mostrar
+   los `.env.*` y archivos sueltos ya conocidos:
+   ```bash
+   git status --short
+   find storage/app/private/preregistro storage/app/private/referencias -mindepth 1 ! -name .gitignore 2>/dev/null | head
+   ```
+   Si el `find` imprime algo, no sigas: hay que averiguar qué son esos
+   archivos antes de mover nada.
+1. **Línea base**, todavía en la rama anterior:
+   ```bash
+   php artisan optimize:clear
+   for k in cache queue filesystems mail database logging session; do COLUMNS=150 php artisan config:show $k | grep -viE 'password|secret|token|key|url' > /root/cfg-antes-$k.txt; done
+   php artisan tinker --execute='$d=Storage::disk("local");$r=Storage::disk("referencias");$docs=DB::table("documento")->whereNotNull("docu_path")->pluck("docu_path");$refs=DB::table("referencia_bancaria")->where("reba_path","<>","")->pluck("reba_path");echo "docs ".$docs->count()." faltan ".$docs->reject(fn($p)=>$d->exists($p))->count()."; refs ".$refs->count()." faltan ".$refs->reject(fn($p)=>$r->exists($p))->count().PHP_EOL;'
+   find storage/app -type f ! -name '.git*' | wc -l
+   ```
+   Anota las dos salidas: se comparan en el paso 7. `COLUMNS` fija el ancho
+   de la salida: sin él depende del tamaño de la ventana SSH y cualquier
+   cambio de tamaño entre los pasos 1 y 6 haría diferir todas las líneas.
+2. **Respaldo** de los archivos y del `.env`, con nombres fijos que usa la
+   reversa:
+   ```bash
+   tar czf /root/suif-storage-antes-paso3.tgz storage/app && cp .env /root/env-antes-paso3.bak
+   ```
+3. **Mantenimiento y rama nueva**:
+   ```bash
+   php artisan down && git fetch origin && git switch refactor/configuracion-laravel13
+   ```
+   Si el `git switch` falla, no cambió nada: `php artisan up` y revisa el
+   mensaje antes de reintentar.
+4. **Mover las carpetas.** El bloque no mueve nada si algún destino ya tiene
+   archivos, y mueve cada carpeta sólo si existe:
+   ```bash
+   if [ -z "$(find storage/app/private/preregistro storage/app/private/referencias -mindepth 1 2>/dev/null | head -1)" ]; then
+     rmdir storage/app/private/preregistro storage/app/private/referencias 2>/dev/null
+     for d in preregistro referencias; do [ -d storage/app/$d ] && mv -v storage/app/$d storage/app/private/; done
+     chown -R apache:apache storage/app/private && ls -Zd storage/app/private/*
+   else
+     echo "ALTO: un destino ya tiene archivos; no se movió nada. Aplica la reversa."
+   fi
+   ```
+   Las carpetas deben tener el mismo dueño y el mismo contexto SELinux que
+   `comprobantes`. `mv` dentro del mismo sistema de archivos conserva el
+   contexto; si alguna quedara distinta, aplica la reversa.
+5. **Actualizar el `.env`.** Primero mira qué hay (de `REDIS_*` sólo los
+   nombres, para no mostrar la contraseña):
+   ```bash
+   grep -nE '^(APP_LOG|CACHE_|QUEUE_|BROADCAST_|FILESYSTEM_|MAIL_(MAILER|DRIVER|ENCRYPTION)|LOG_)' .env; grep -oE '^REDIS_[A-Z_]+' .env
+   ```
+   Luego renombra y borra. Manda siempre lo que leía la configuración
+   anterior: para caché y disco sólo leía la clave vieja, así que la nueva se
+   descarta aunque exista; para correo y colas leía primero la nueva y usaba
+   la vieja de respaldo.
+   ```bash
+   sed -i -e '$a\' .env
+   for par in CACHE_DRIVER:CACHE_STORE FILESYSTEM_DRIVER:FILESYSTEM_DISK; do v=${par%%:*}; n=${par##*:}; sed -i -e "/^$n=/d" -e "s/^$v=/$n=/" .env; done
+   for par in MAIL_DRIVER:MAIL_MAILER QUEUE_DRIVER:QUEUE_CONNECTION; do v=${par%%:*}; n=${par##*:}; if grep -q "^$n=" .env; then sed -i "/^$v=/d" .env; else sed -i "s/^$v=/$n=/" .env; fi; done
+   sed -i '/^\(APP_LOG\|APP_LOG_LEVEL\|BROADCAST_DRIVER\|MAIL_ENCRYPTION\|REDIS_HOST\|REDIS_PASSWORD\|REDIS_PORT\|LOG_CHANNEL\|LOG_LEVEL\|LOG_DAILY_DAYS\)=/d' .env
+   printf 'LOG_CHANNEL=daily\nLOG_LEVEL=warning\nLOG_DAILY_DAYS=14\n' >> .env
+   ```
+   El log diario ya lo pedía el checklist de seguridad. Desde aquí Laravel
+   escribe en `storage/logs/laravel-AAAA-MM-DD.log`; el `laravel.log` viejo se
+   queda como está.
+6. **Comparar la configuración efectiva**, archivo por archivo:
+   ```bash
+   php artisan optimize:clear
+   for k in cache queue filesystems mail database logging session; do COLUMNS=150 php artisan config:show $k | grep -viE 'password|secret|token|key|url' > /root/cfg-despues-$k.txt; echo "===== $k"; diff -u /root/cfg-antes-$k.txt /root/cfg-despues-$k.txt; done
+   ```
+   Diferencias esperadas, y ninguna otra:
+   - `filesystems`: cambian `disks.local.root` y `disks.referencias.root`;
+     desaparecen `cloud` y los discos `documentos`, `facturas` y
+     `certificados`; `public` y `s3` ganan claves del framework.
+   - `cache`: los stores salen del framework (desaparece `apc`, aparecen
+     `lock_path` y otros); `default` y `prefix` no cambian.
+   - `queue`: conexiones y `failed` del framework; `default` no cambia.
+   - `mail`: desaparece `mailers.smtp.encryption` y aparecen los mailers del
+     framework; `default`, el resto de `smtp` y `from` no cambian.
+   - `database`: `mysql`, `mariadb`, `sqlsrv` y `redis` del framework, y
+     `migrations` pasa a arreglo; `default`, `pgsql` y `sqlite` no cambian.
+   - `logging`: `default` pasa a `daily` y los niveles a `warning`.
+   - `session`: nada.
+
+   **Si cambia `default` en cache, queue, mail, database o filesystems, o
+   cualquier dato de `pgsql`, de `smtp` (salvo `encryption`), de `from` o de
+   `session`, aplica la reversa.**
+7. **Repetir los conteos del paso 1** (el `tinker` y el `find`). Deben dar
+   los mismos totales y los mismos faltantes; si no, reversa.
+8. **Probar y reabrir.** Las pruebas no dependen del modo mantenimiento, así
+   que corren con el sitio abajo. La cadena va unida con `&&`: si las pruebas
+   o un caché fallan, se detiene antes de `up` y el sitio sigue en
+   mantenimiento. El `chown` devuelve a Apache lo que root haya creado en
+   `storage` (vistas compiladas, log del día):
+   ```bash
+   php artisan config:clear && php artisan test && php artisan config:cache && php artisan route:cache && php artisan view:cache && chown -R apache:apache storage/logs storage/framework && php artisan up && rm -f /root/cfg-*.txt && echo LISTO
+   ```
+   Si no imprime `LISTO`, reversa.
+9. **Humo en el navegador:** ver un documento del pre-registro desde la
+   persona y desde el administrador, descargar un formato de referencia, ver
+   un comprobante de pago y subir un documento de prueba.
+
+**Reversa**, desde cualquier punto después del paso 3 y en este orden (las
+carpetas vuelven antes de cambiar de rama y sólo si no pisan nada):
+```bash
+php artisan down
+for d in preregistro referencias; do [ -d storage/app/private/$d ] && [ ! -e storage/app/$d ] && mv -v storage/app/private/$d storage/app/; done
+git switch refactor/depuracion-codigo-muerto && cp /root/env-antes-paso3.bak .env && php artisan optimize:clear && chown -R apache:apache storage/logs storage/framework && php artisan up
+rm -f /root/cfg-*.txt
+```
+
+`database/scripts/README.md` y `suif_limpia_datos.sql` todavía nombran las
+rutas viejas (`storage/app/preregistro`, `storage/app/referencias`); son del
+responsable de la base y hay que avisarle para que los actualice.

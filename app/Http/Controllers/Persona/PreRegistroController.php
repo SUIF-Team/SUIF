@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Usuario;
 use App\Servicios\AvancePersona;
 use App\Servicios\GestionClaves;
@@ -702,7 +703,8 @@ class PreRegistroController extends Controller
 
         $ruta = $request->file('archivo')->storeAs(
             'preregistro/cargas/'.$idSolicitud,
-            $documento.'-'.time().'.pdf'
+            $documento.'-'.time().'.pdf',
+            'local'
         );
 
         /* El nombre original puede venir más largo que la columna. */
@@ -768,13 +770,13 @@ class PreRegistroController extends Controller
             abort(404);
         }
 
-        $archivo = storage_path('app/'.$ruta);
+        $disco = Storage::disk('local');
 
-        if (!is_file($archivo)) {
+        if (!$disco->exists($ruta)) {
             abort(404);
         }
 
-        return response()->file($archivo, [
+        return response()->file($disco->path($ruta), [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$documento.'.pdf"',
             'Cache-Control' => 'private, no-store, max-age=0',

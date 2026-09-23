@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Mail\ClaveAcceso;
+use App\Models\Usuario;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PreRegistroTest extends TestCase
@@ -164,6 +166,60 @@ class PreRegistroTest extends TestCase
         $this->assertSame(0, DB::table('persona')->count());
 
         Mail::assertNothingSent();
+    }
+
+    /**
+     * La ruta guardada en DOCUMENTO es relativa al disco local, cuya raíz es
+     * storage/app/private: el documento se sirve desde ahí y no desde una
+     * ruta armada a mano.
+     */
+    public function test_la_persona_ve_su_documento_desde_el_disco_local(): void
+    {
+        Storage::fake('local');
+        $ruta = $this->sembrarDocumento();
+        Storage::disk('local')->put($ruta, '%PDF-1.4 prueba');
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.preregistro.documentos.ver', 'curp'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_un_documento_sin_archivo_en_el_disco_responde_404(): void
+    {
+        Storage::fake('local');
+        $this->sembrarDocumento();
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->get(route('persona.preregistro.documentos.ver', 'curp'))
+            ->assertNotFound();
+    }
+
+    private function sembrarDocumento(): string
+    {
+        $ruta = 'preregistro/cargas/1/curp-1.pdf';
+
+        DB::table('usuario')->insert(['usua_id_usuario' => 1, 'usua_id_rol' => 1]);
+        DB::table('persona')->insert([
+            'pers_id_persona' => 1,
+            'pers_id_usuario' => 1,
+            'pers_curp' => 'EAVR800101MDFNZS08',
+            'pers_nombre' => 'Rosa',
+        ]);
+        DB::table('solicitud')->insert([
+            'soli_id_solicitud' => 1,
+            'soli_id_persona' => 1,
+            'soli_id_convocatoria' => 1,
+        ]);
+        DB::table('tipo_documento')->insert(['tido_id_tipo_documento' => 1, 'tido_tipo_documento' => 'CURP']);
+        DB::table('documento')->insert([
+            'tido_id_tipo_documento' => 1,
+            'soli_id_solicitud' => 1,
+            'docu_path' => $ruta,
+            'docu_nombre' => 'curp.pdf',
+        ]);
+
+        return $ruta;
     }
 
     private function datosValidos(array $cambios = []): array

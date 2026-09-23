@@ -8,76 +8,41 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'default' => env('FILESYSTEM_DRIVER', 'local'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Cloud Filesystem Disk
-    |--------------------------------------------------------------------------
-    */
-
-    'cloud' => env('FILESYSTEM_CLOUD', 's3'),
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
-    | Discos declarados para cada subcarpeta de almacenamiento del proyecto SUIF.
+    | Todo lo que sube la gente vive bajo storage/app/private y se sirve sólo
+    | a través de los controladores. Las rutas guardadas en la base son
+    | relativas a la raíz de cada disco. Los discos public y s3 vienen del
+    | framework y SUIF no los usa.
+    |
+    | 'local' no lleva 'serve' a propósito: el del framework lo activa y
+    | registraría una ruta pública de URLs firmadas sobre estos archivos.
     |
     */
 
     'disks' => [
 
+        // Documentos del pre-registro: preregistro/cargas/{solicitud}/...
         'local' => [
             'driver' => 'local',
-            'root'   => storage_path('app'),
+            'root'   => storage_path('app/private'),
         ],
 
-        'public' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/public'),
-            'url'        => env('APP_URL') . '/storage',
-            'visibility' => 'public',
-        ],
-
-        // Disco para comprobantes de pago subidos por personas
+        // Comprobantes de pago subidos por personas
         'comprobantes' => [
             'driver' => 'local',
             'root'   => storage_path('app/private/comprobantes'),
         ],
 
-        // Disco para documentación requerida (INE, título, cédula, foto)
-        'documentos' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/documentos'),
-        ],
-
-        // Disco para referencias bancarias en PDF
+        // Formatos PDF del catálogo de referencias bancarias
         'referencias' => [
             'driver' => 'local',
-            'root'   => storage_path('app/referencias'),
-        ],
-
-        // Disco para facturas fiscales generadas
-        'facturas' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/facturas'),
-        ],
-
-        // Disco para certificados de aprobación generados
-        'certificados' => [
-            'driver' => 'local',
-            'root'   => storage_path('app/certificados'),
-        ],
-
-        's3' => [
-            'driver' => 's3',
-            'key'    => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url'    => env('AWS_URL'),
+            'root'   => storage_path('app/private/referencias'),
         ],
 
     ],
