@@ -51,7 +51,6 @@
                 </div>
             @endunless
 
-            {{-- @include('partials.alertas') --}}
             @yield('content')
         </main>
     </div>

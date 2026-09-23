@@ -1,6 +1,5 @@
 {{--
     persona/referencia.blade.php
-    Migrado desde: app/views/persona/referencia.php
     Vista para obtener, consultar y descargar la referencia bancaria de pago.
     Se llega desde el selector; el controlador ya comprobó que la solicitud
     está aprobada.

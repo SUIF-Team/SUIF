@@ -1,6 +1,5 @@
 {{--
     admin/referencias.blade.php
-    Migrado desde: app/views/admin/referencias.php
     Catálogo de referencias bancarias y la persona a la que se entregó cada una.
 --}}
 @extends('layouts.admin')

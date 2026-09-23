@@ -14,10 +14,6 @@ return [
     |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------
-    |
-    | Migrado desde: config/database.php (clase Database PDO custom)
-    | Ahora usa el sistema de conexiones nativo de Laravel / Eloquent.
-    |
     */
 
     'connections' => [

@@ -14,7 +14,6 @@ use Throwable;
 /**
  * Admin\ReferenciaController
  *
- * Migrado desde: app/controllers/admin/ReferenciaController.php
  * Responsabilidad: gestión de referencias bancarias desde el panel administrativo.
  */
 class ReferenciaController extends Controller

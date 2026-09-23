@@ -19,7 +19,6 @@
     <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/footer.css') }}">
 
     @yield('styles')
-    @yield('head')
 </head>
 <body class="@yield('body_class', 'landing-page')">
     @include('partials.navbar')

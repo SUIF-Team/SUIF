@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Gate;
 /**
  * Admin\DashboardController
  *
- * Migrado desde: app/controllers/admin/DashboardController.php
  * Responsabilidad: panel principal del administrador con métricas y accesos rápidos.
  *
  * El tablero lo abre cualquier administrador, pero no todos ven lo mismo: cada

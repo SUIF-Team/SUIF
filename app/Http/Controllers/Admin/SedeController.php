@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 /**
  * Admin\SedeController
  *
- * Migrado desde: app/controllers/admin/SedeController.php
  * Responsabilidad: alta, edición y gestión de sedes de aplicación desde el panel administrativo.
  * La programación de cada sede vive en Admin\GrupoController.
  */

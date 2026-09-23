@@ -163,7 +163,7 @@ body.pagina-sistema {
     font-weight: 600;
 }
 
-.pagina-sistema :where(input, select, textarea, button, .btn, .form-control, .form-select) {
+.pagina-sistema :where(input, select, textarea, button, .btn) {
     font-size: var(--fs-ui);
     font-weight: 400;
 }
@@ -186,7 +186,7 @@ body.pagina-sistema {
     text-transform: uppercase;
 }
 
-.pagina-sistema :where(small, .small, .form-text, .invalid-feedback) {
+.pagina-sistema :where(small, .small) {
     font-size: var(--fs-auxiliar);
 }
 

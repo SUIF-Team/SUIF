@@ -1,6 +1,5 @@
 {{--
     layouts/admin.blade.php
-    Migrado desde: app/views/layouts/admin.php
     Layout base para el panel administrativo.
 --}}
 <!DOCTYPE html>
@@ -21,12 +20,9 @@
     <link rel="stylesheet" href="{{ asset_versionado('assets/css/partials/footer.css') }}">
 
     @yield('styles')
-    @yield('head')
 </head>
 <body class="pagina-sistema d-flex min-vh-100 flex-column">
     @include('partials.navbar-sistema')
-
-    @include('partials.sidebar')
 
     <main class="flex-grow-1">
         @include('partials.alertas')

@@ -24,7 +24,6 @@ return [
     |--------------------------------------------------------------------------
     |
     | Discos declarados para cada subcarpeta de almacenamiento del proyecto SUIF.
-    | Migrado desde: storage/ subcarpetas directas → storage/app/<subcarpeta>
     |
     */
 

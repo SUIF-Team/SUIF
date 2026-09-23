@@ -1,6 +1,5 @@
 {{--
     admin/documentos.blade.php
-    Migrado desde: app/views/admin/documentos.php
     Revisión de documentación cargada por personas.
 --}}
 @extends('layouts.admin')

@@ -1,6 +1,5 @@
 {{--
     persona/pago.blade.php
-    Migrado desde: app/views/persona/pago.php
     Vista para subir comprobante de pago y ver estado del pago.
 --}}
 @extends('layouts.persona')

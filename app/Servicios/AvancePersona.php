@@ -222,14 +222,6 @@ class AvancePersona
         return 'en_proceso';
     }
 
-    /**
-     * Estado de un documento en particular.
-     */
-    public function estadoDocumento($slug)
-    {
-        return isset($this->documentos[$slug]) ? $this->documentos[$slug] : 'pendiente';
-    }
-
     private function cargarDocumentos()
     {
         $filas = DB::table('documento as d')

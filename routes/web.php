@@ -37,8 +37,6 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/recuperar-clave', [RecuperacionClaveController::class, 'formulario'])->name('clave.recuperar');
 Route::post('/recuperar-clave', [RecuperacionClaveController::class, 'restablecer'])->middleware('throttle:recuperar-clave')->name('clave.recuperar.post');
 
-// Ajuste temporal: se eliminó 'middleware' => 'auth' (va al inicio de route::group)
-
 Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
     /* Públicas: la persona todavía no tiene cuenta cuando entra aquí. */
     Route::get('/preregistro', [PreRegistroController::class, 'index'])->name('preregistro.index');

@@ -1,7 +1,7 @@
 # =============================================================================
 # SUIF — storage/.htaccess
 # Bloquear TODO acceso web directo a esta carpeta.
-# Los archivos se sirven ÚNICAMENTE a través de ArchivoController.php
+# Los archivos se sirven ÚNICAMENTE a través de los controladores de Laravel.
 # =============================================================================
 
 # Apache 2.4+

@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 /**
  * Admin\PersonaController
  *
- * Migrado desde: app/controllers/admin/PersonaController.php
  * Responsabilidad: listado, búsqueda y gestión de personas por el administrador.
  */
 class PersonaController extends Controller

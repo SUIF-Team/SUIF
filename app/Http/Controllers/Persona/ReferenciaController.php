@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Storage;
 /**
  * ReferenciaController
  *
- * Migrado desde: app/controllers/ReferenciaController.php
  * Responsabilidad: entrega y consulta de la referencia bancaria de pago.
  *
  * El paso arranca en un selector —index()— que explica los dos caminos de pago

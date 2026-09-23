@@ -14,9 +14,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 /**
- * Admin\DocumentacionController
+ * Admin\DocumentoController
  *
- * Migrado desde: app/controllers/admin/DocumentacionController.php
  * Responsabilidad: revisión y validación de documentación de personas por el administrador.
  */
 class DocumentoController extends Controller
