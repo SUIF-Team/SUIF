@@ -8,7 +8,6 @@ return [
     |--------------------------------------------------------------------------
     | Session Driver
     |--------------------------------------------------------------------------
-    | Reemplaza core/Session.php — las sesiones son gestionadas por Laravel.
     | Opciones: "file", "cookie", "database", "apc", "memcached", "redis", "array"
     */
 

@@ -63,23 +63,4 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Logging
-    |--------------------------------------------------------------------------
-    */
-
-    'log' => env('APP_LOG', 'single'),
-
-    'log_level' => env('APP_LOG_LEVEL', 'debug'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Autoloaded Service Providers y Alias de Facades
-    |--------------------------------------------------------------------------
-    | Desde Laravel 11, los providers del framework y los alias de facades
-    | se cargan automáticamente. Los providers propios de la app ahora se
-    | listan en bootstrap/providers.php.
-    */
-
 ];
