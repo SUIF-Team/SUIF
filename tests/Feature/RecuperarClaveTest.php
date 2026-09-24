@@ -24,9 +24,18 @@ class RecuperarClaveTest extends TestCase
             ['rol_id_rol' => 1, 'rol_tipo_rol' => 'Persona'],
             ['rol_id_rol' => 2, 'rol_tipo_rol' => 'Administrador'],
         ]);
+        /* Quién es administrador lo decide el privilegio, no el nombre del
+           rol: el rol 2 lo es porque tiene uno del catálogo. */
+        DB::table('privilegio')->insert([
+            ['priv_id_privilegio' => 1, 'priv_privilegio' => 'Gestionar usuarios'],
+        ]);
+        DB::table('privilegio_rol')->insert([
+            ['ropr_id_privilegio' => 1, 'ropr_id_rol' => 2],
+        ]);
         DB::table('usuario')->insert([
-            ['usua_id_usuario' => 1, 'usua_id_rol' => 1, 'usua_clave_acceso' => Hash::make('AAAA-BBBB-CCCC')],
-            ['usua_id_usuario' => 2, 'usua_id_rol' => 2, 'usua_clave_acceso' => Hash::make('DDDD-EEEE-FFFF')],
+            ['usua_id_usuario' => 1, 'usua_id_rol' => 1, 'usua_clave_acceso' => Hash::make('AAAA-BBBB-CCCC'), 'usua_activo' => true],
+            ['usua_id_usuario' => 2, 'usua_id_rol' => 2, 'usua_clave_acceso' => Hash::make('DDDD-EEEE-FFFF'), 'usua_activo' => true],
+            ['usua_id_usuario' => 3, 'usua_id_rol' => 2, 'usua_clave_acceso' => Hash::make('GGGG-HHHH-IIII'), 'usua_activo' => false],
         ]);
         DB::table('persona')->insert([
             [
@@ -41,6 +50,12 @@ class RecuperarClaveTest extends TestCase
                 'pers_curp' => 'ADMA800101MDFNZS09',
                 'pers_nombre' => 'Admin',
             ],
+            [
+                'pers_id_persona' => 3,
+                'pers_id_usuario' => 3,
+                'pers_curp' => 'BAJA800101MDFNZS07',
+                'pers_nombre' => 'Baja',
+            ],
         ]);
         DB::table('tipo_comunicacion')->insert([
             ['tico_id_tipo_comunicacion' => 1, 'tico_tipo_comunicacion' => 'Correo principal'],
@@ -48,6 +63,7 @@ class RecuperarClaveTest extends TestCase
         DB::table('comunicacion')->insert([
             ['comu_id_persona' => 1, 'comu_id_tipo_comunicacion' => 1, 'comu_descripcion' => 'rosa@example.com'],
             ['comu_id_persona' => 2, 'comu_id_tipo_comunicacion' => 1, 'comu_descripcion' => 'admin@example.com'],
+            ['comu_id_persona' => 3, 'comu_id_tipo_comunicacion' => 1, 'comu_descripcion' => 'baja@example.com'],
         ]);
     }
 
@@ -169,6 +185,28 @@ class RecuperarClaveTest extends TestCase
         );
     }
 
+    /**
+     * Dar de baja a un administrador le retira los privilegios, pero no lo
+     * convierte en persona: su clave tampoco se revoca desde aquí.
+     */
+    public function test_un_administrador_dado_de_baja_no_se_recupera_por_autoservicio(): void
+    {
+        Mail::fake();
+
+        $hash_original = DB::table('usuario')->where('usua_id_usuario', 3)->value('usua_clave_acceso');
+
+        $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'BAJA800101MDFNZS07'])
+            ->assertRedirect(route('clave.recuperar'))
+            ->assertSessionHas('success', self::MENSAJE_GENERICO);
+
+        Mail::assertNothingSent();
+        $this->assertSame(
+            $hash_original,
+            DB::table('usuario')->where('usua_id_usuario', 3)->value('usua_clave_acceso')
+        );
+    }
+
     public function test_el_envio_masivo_topa_con_el_limite_por_ip(): void
     {
         /* Payload vacío: la validación corta antes de tocar la base, pero
@@ -182,7 +220,7 @@ class RecuperarClaveTest extends TestCase
 
     private function crearEsquemaTemporal(): void
     {
-        foreach (['comunicacion', 'tipo_comunicacion', 'persona', 'usuario', 'rol'] as $tabla) {
+        foreach (['comunicacion', 'tipo_comunicacion', 'persona', 'privilegio_rol', 'privilegio', 'usuario', 'rol'] as $tabla) {
             Schema::dropIfExists($tabla);
         }
 
@@ -194,6 +232,16 @@ class RecuperarClaveTest extends TestCase
             $table->integer('usua_id_usuario')->primary();
             $table->integer('usua_id_rol');
             $table->string('usua_clave_acceso')->nullable();
+            $table->boolean('usua_activo')->default(true);
+        });
+        Schema::create('privilegio', function (Blueprint $table): void {
+            $table->integer('priv_id_privilegio')->primary();
+            $table->string('priv_privilegio', 35);
+        });
+        Schema::create('privilegio_rol', function (Blueprint $table): void {
+            $table->increments('ropr_id_privilegio_rol');
+            $table->integer('ropr_id_privilegio');
+            $table->integer('ropr_id_rol');
         });
         Schema::create('persona', function (Blueprint $table): void {
             $table->integer('pers_id_persona')->primary();

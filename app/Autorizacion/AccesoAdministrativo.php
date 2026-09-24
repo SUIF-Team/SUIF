@@ -3,12 +3,15 @@
 namespace App\Autorizacion;
 
 use App\Models\Usuario;
+use Closure;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * AccesoAdministrativo
  *
- * Responsabilidad: nombrar los privilegios del catálogo y decidir en qué
- * pantalla aterriza cada quien.
+ * Responsabilidad: nombrar los privilegios del catálogo, decidir en qué
+ * pantalla aterriza cada quien y quién es administrador o persona.
  *
  * Está aparte de los gates porque la misma respuesta hace falta en dos
  * momentos distintos —al iniciar sesión y al armar el tablero— y los dos
@@ -88,19 +91,62 @@ class AccesoAdministrativo
     /**
      * Basta un privilegio del catálogo para pisar la zona administrativa. Qué
      * se puede hacer una vez dentro lo decide el permiso de cada módulo.
+     *
+     * Quien perdió el acceso no conserva ningún privilegio, igual que en
+     * Usuario::tienePrivilegio(). Es una sola consulta y no una por
+     * privilegio porque la puerta de /persona la hace en cada petición, y
+     * para una persona —que no tiene ninguno— serían siete.
      */
     public function esAdministrador(?Usuario $usuario): bool
     {
-        if (!$usuario) {
+        if (!$usuario || !$usuario->tieneAcceso()) {
             return false;
         }
 
-        foreach ($this->privilegiosAdministrativos() as $privilegio) {
-            if ($usuario->tienePrivilegio($privilegio)) {
-                return true;
-            }
-        }
+        return self::privilegiosDelCatalogo(DB::query())
+            ->where('pr_admin.ropr_id_rol', $usuario->usua_id_rol)
+            ->exists();
+    }
 
-        return false;
+    /**
+     * Persona solicitante: una cuenta con acceso y sin ningún privilegio del
+     * catálogo. Es la única definición del sistema; no se decide por el
+     * nombre del rol, que puede cambiar o repartirse, sino por lo que el rol
+     * puede hacer.
+     *
+     * Pide el acceso vigente para que un administrador dado de baja —que ya
+     * no tiene privilegios— no pase por persona: ni entra a /persona ni
+     * puede restablecer su clave desde el formulario público.
+     */
+    public function esPersona(?Usuario $usuario): bool
+    {
+        return $usuario !== null
+            && $usuario->tieneAcceso()
+            && !$this->esAdministrador($usuario);
+    }
+
+    /**
+     * La misma frontera para las consultas que listan personas, como
+     * condición de whereNotExists() sobre la columna del rol:
+     *
+     *     ->whereNotExists(AccesoAdministrativo::rolConPrivilegioAdministrativo('u.usua_id_rol'))
+     *
+     * No mira USUA_ACTIVO a propósito: un listado es historial, y quien dejó
+     * de tener acceso sigue apareciendo en lo que ya hizo.
+     */
+    public static function rolConPrivilegioAdministrativo(string $columna_rol): Closure
+    {
+        return function (Builder $consulta) use ($columna_rol): void {
+            self::privilegiosDelCatalogo($consulta)
+                ->whereColumn('pr_admin.ropr_id_rol', $columna_rol);
+        };
+    }
+
+    private static function privilegiosDelCatalogo(Builder $consulta): Builder
+    {
+        return $consulta->selectRaw('1')
+            ->from('privilegio_rol as pr_admin')
+            ->join('privilegio as p_admin', 'p_admin.priv_id_privilegio', '=', 'pr_admin.ropr_id_privilegio')
+            ->whereIn('p_admin.priv_privilegio', array_keys(self::DESTINOS));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Autorizacion\AccesoAdministrativo;
 use App\Models\Persona;
 use App\Servicios\GestionClaves;
 use Illuminate\Http\Request;
@@ -16,10 +17,6 @@ use Illuminate\Http\Request;
  */
 class RecuperacionClaveController extends Controller
 {
-    /* Solo estos roles se recuperan solos: la clave de una cuenta
-       privilegiada no debe poder revocarse desde un formulario público. */
-    private const ROLES_RECUPERABLES = ['Persona', 'Candidato'];
-
     private const MENSAJE_GENERICO = 'Si tu CURP está registrada, enviaremos una clave de acceso nueva a tu correo principal. Revisa también tu bandeja de spam.';
 
     /**
@@ -34,7 +31,7 @@ class RecuperacionClaveController extends Controller
      * Genera y envía la clave nueva. Todas las ramas terminan con el mismo
      * mensaje: la respuesta no dice si la CURP existe ni si el correo salió.
      */
-    public function restablecer(Request $request, GestionClaves $gestion_claves)
+    public function restablecer(Request $request, GestionClaves $gestion_claves, AccesoAdministrativo $acceso)
     {
         $datos = $this->validate($request, [
             'curp' => 'required|string|size:18',
@@ -45,7 +42,7 @@ class RecuperacionClaveController extends Controller
 
         $persona = Persona::where('pers_curp', strtoupper($datos['curp']))->first();
 
-        if ($this->puedeRecuperarse($persona)) {
+        if ($this->puedeRecuperarse($persona, $acceso)) {
             $correo = $gestion_claves->correoPrincipal((int) $persona->pers_id_persona);
 
             if ($correo !== null) {
@@ -65,11 +62,16 @@ class RecuperacionClaveController extends Controller
         return $this->responder($request, 'success', self::MENSAJE_GENERICO);
     }
 
-    private function puedeRecuperarse(?Persona $persona): bool
+    /**
+     * Sólo una persona se recupera sola: la clave de una cuenta
+     * administrativa no debe poder revocarse desde un formulario público, y
+     * la de un administrador dado de baja tampoco.
+     */
+    private function puedeRecuperarse(?Persona $persona, AccesoAdministrativo $acceso): bool
     {
         return $persona !== null
             && $persona->usuario !== null
             && $persona->usuario->usua_clave_acceso !== null
-            && in_array($persona->usuario->rol?->rol_tipo_rol, self::ROLES_RECUPERABLES, true);
+            && $acceso->esPersona($persona->usuario);
     }
 }

@@ -2,14 +2,13 @@
 
 namespace App\Consultas;
 
+use App\Autorizacion\AccesoAdministrativo;
 use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ConsultaPreRegistros
 {
-    private const ROLES_PERSONA = ['Persona', 'Candidato'];
-
     /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
     private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
 
@@ -58,7 +57,6 @@ class ConsultaPreRegistros
         return DB::table('solicitud as s')
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
-            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->join('convocatoria as cv', 'cv.conv_id_convocatoria', '=', 's.soli_id_convocatoria')
             ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
             /* La sede se elige al final del trámite: la mayoría de los
@@ -74,7 +72,7 @@ class ConsultaPreRegistros
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotExists(AccesoAdministrativo::rolConPrivilegioAdministrativo('u.usua_id_rol'))
             ->whereNotNull('u.usua_clave_acceso')
             ->whereIn('ces.esso_estado_solicitud', self::ESTADOS_RESUELTOS)
             ->when(
@@ -218,14 +216,13 @@ class ConsultaPreRegistros
             })
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
-            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
             ->joinSub($this->ultimosEstados(), 'ultimo_estado', function ($join): void {
                 $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotExists(AccesoAdministrativo::rolConPrivilegioAdministrativo('u.usua_id_rol'))
             ->whereNotNull('u.usua_clave_acceso')
             ->select([
                 's.soli_id_solicitud',

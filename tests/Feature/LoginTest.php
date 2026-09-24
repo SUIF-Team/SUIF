@@ -47,6 +47,25 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    /**
+     * Sin JavaScript, un fallo de validación regresa al formulario con lo
+     * enviado en la sesión. La CURP vuelve para no teclearla otra vez; la
+     * clave no se guarda en ningún momento.
+     */
+    public function test_un_fallo_de_validacion_no_deja_la_clave_en_la_sesion(): void
+    {
+        $this->from(route('login'))
+            ->post(route('login.post'), [
+                'curp' => 'CORTA',
+                'clave' => 'AAAA-BBBB-CCCC',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('curp')
+            ->assertSessionHasInput('curp', 'CORTA');
+
+        $this->assertNull(session()->getOldInput('clave'));
+    }
+
     public function test_con_la_clave_correcta_entra_al_panel_de_persona(): void
     {
         $this->post(route('login.post'), [

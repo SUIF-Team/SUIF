@@ -2,14 +2,13 @@
 
 namespace App\Consultas;
 
+use App\Autorizacion\AccesoAdministrativo;
 use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ConsultaPersonasRegistradas
 {
-    private const ROLES_PERSONA = ['Persona', 'Candidato'];
-
     /** En minúsculas: la comparación con el catálogo ignora mayúsculas. */
     private const ESTADOS_FILTRO = ['en revisión', 'aprobada', 'rechazada'];
 
@@ -52,8 +51,8 @@ class ConsultaPersonasRegistradas
     /**
      * Una persona de la bandeja, con el id de su usuario para operar la
      * cuenta. Devuelve null si no está en la bandeja: solo se restauran
-     * claves de personas con solicitud aprobada, rol Persona/Candidato y
-     * clave vigente.
+     * claves de personas con solicitud aprobada, sin privilegios
+     * administrativos y con clave vigente.
      */
     public function persona(int $id_persona): ?array
     {
@@ -86,7 +85,6 @@ class ConsultaPersonasRegistradas
     {
         return DB::table('persona as p')
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
-            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->joinSub($this->solicitudesAprobadas(), 'solicitud_aprobada', function ($join): void {
                 $join->on('solicitud_aprobada.soli_id_persona', '=', 'p.pers_id_persona');
             })
@@ -96,7 +94,7 @@ class ConsultaPersonasRegistradas
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotExists(AccesoAdministrativo::rolConPrivilegioAdministrativo('u.usua_id_rol'))
             ->whereNotNull('u.usua_clave_acceso')
             ->where('ces.esso_estado_solicitud', 'Aprobada')
             ->select([
@@ -115,13 +113,12 @@ class ConsultaPersonasRegistradas
         return DB::table('solicitud as s')
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
-            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->joinSub($this->ultimosEstadosSolicitud(), 'ultimo_estado', function ($join): void {
                 $join->on('ultimo_estado.esso_id_solicitud', '=', 's.soli_id_solicitud');
             })
             ->join('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'ultimo_estado.id_estado')
             ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotExists(AccesoAdministrativo::rolConPrivilegioAdministrativo('u.usua_id_rol'))
             ->whereNotNull('u.usua_clave_acceso');
     }
 

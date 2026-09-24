@@ -32,4 +32,27 @@ class LandingTest extends TestCase
         $respuesta->assertSee('class="accordion-collapse collapse show"', false);
         $this->assertSame(1, substr_count($respuesta->getContent(), 'collapse show'));
     }
+
+    public function test_la_landing_no_apunta_a_un_servidor_escrito_a_mano(): void
+    {
+        $respuesta = $this->get(route('home'))->assertOk();
+
+        /* El botón del proceso llevaba la IP del servidor: se rompía en
+           cualquier otro entorno y al cambiar de dirección. */
+        $respuesta->assertDontSee('http://132.247.218.60', false);
+        $respuesta->assertSee('href="'.route('login').'" class="btn btn-pill btn-gold', false);
+    }
+
+    public function test_las_hojas_de_estilo_externas_llevan_integrity(): void
+    {
+        $contenido = $this->get(route('home'))->assertOk()->getContent();
+
+        preg_match_all('/<link[^>]+href="https:\/\/cdn[^"]+"[^>]*>/', $contenido, $etiquetas);
+
+        $this->assertCount(2, $etiquetas[0]);
+        foreach ($etiquetas[0] as $etiqueta) {
+            $this->assertStringContainsString('integrity="sha', $etiqueta);
+            $this->assertStringContainsString('crossorigin="anonymous"', $etiqueta);
+        }
+    }
 }

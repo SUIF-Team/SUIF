@@ -2,6 +2,7 @@
 
 namespace App\Consultas;
 
+use App\Autorizacion\AccesoAdministrativo;
 use App\Servicios\ComprobanteFiscal;
 use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;
@@ -16,8 +17,6 @@ class ConsultaPagos
     public const COMPLETADO = 'Completado';
 
     public const DECLINADO = 'Declinado';
-
-    private const ROLES_PERSONA = ['Persona', 'Candidato'];
 
     /**
      * Devuelve todos los comprobantes registrados para personas solicitantes.
@@ -219,7 +218,6 @@ class ConsultaPagos
             ->join('solicitud as s', 's.soli_id_pago', '=', 'pg.pago_id_pago')
             ->join('persona as p', 'p.pers_id_persona', '=', 's.soli_id_persona')
             ->join('usuario as u', 'u.usua_id_usuario', '=', 'p.pers_id_usuario')
-            ->join('rol as r', 'r.rol_id_rol', '=', 'u.usua_id_rol')
             ->leftJoin('entidad_federativa as ef', 'ef.enfe_clave_inegi', '=', 'p.pers_clave_inegi')
             /* El renglón del catálogo trae el monto que se cobró; PAGO guarda
                el que la persona declaró haber pagado. */
@@ -242,7 +240,7 @@ class ConsultaPagos
             })
             ->leftJoin('estado_solicitud as es', 'es.esso_id_estado_solicitud', '=', 'estado_solicitud_actual.id_estado')
             ->leftJoin('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->whereIn('r.rol_tipo_rol', self::ROLES_PERSONA)
+            ->whereNotExists(AccesoAdministrativo::rolConPrivilegioAdministrativo('u.usua_id_rol'))
             ->whereNotNull('pg.pago_comprobante_path')
             ->where('pg.pago_comprobante_path', '<>', '')
             ->select([

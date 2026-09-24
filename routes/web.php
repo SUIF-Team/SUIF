@@ -42,8 +42,9 @@ Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
     Route::get('/preregistro', [PreRegistroController::class, 'index'])->name('preregistro.index');
     Route::post('/preregistro/datos', [PreRegistroController::class, 'guardarDatos'])->middleware('throttle:preregistro')->name('preregistro.datos.store');
 
-    /* A partir de aquí ya existe la cuenta: se exige sesión iniciada. */
-    Route::middleware('auth')->group(function () {
+    /* A partir de aquí ya existe la cuenta: se exige sesión iniciada y que
+       sea de una persona, no de un administrador. */
+    Route::middleware(['auth', 'can:acceder-persona'])->group(function () {
         Route::get('/dashboard', [PersonaDashboardController::class, 'index'])->name('dashboard');
 
         Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');

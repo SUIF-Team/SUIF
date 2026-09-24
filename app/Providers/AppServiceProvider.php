@@ -96,6 +96,13 @@ class AppServiceProvider extends ServiceProvider
             return app(AccesoAdministrativo::class)->esAdministrador($usuario);
         });
 
+        /* La puerta del trámite, simétrica a la de arriba: un administrador
+           que abre /persona recibe 403 igual que una persona que abre /admin.
+           Una cuenta dada de baja tampoco entra, aunque conserve la sesión. */
+        Gate::define('acceder-persona', function (Usuario $usuario): bool {
+            return app(AccesoAdministrativo::class)->esPersona($usuario);
+        });
+
         /* La pantalla de reportes es de todas las áreas y de ninguna: cada
            reporte lleva dentro los datos de un módulo distinto y exige el
            permiso de ese módulo. Este permiso sólo abre la puerta; lo que se
