@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Admin;
+namespace App\Autorizacion;
 
 use App\Models\Usuario;
 

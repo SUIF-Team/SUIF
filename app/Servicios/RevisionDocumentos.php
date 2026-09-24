@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Admin;
+namespace App\Servicios;
 
 use DomainException;
 use Illuminate\Support\Collection;

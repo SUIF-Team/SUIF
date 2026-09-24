@@ -2,7 +2,7 @@
 
 namespace App\Servicios;
 
-use App\Support\Admin\ConsultaPagos;
+use App\Consultas\ConsultaPagos;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;

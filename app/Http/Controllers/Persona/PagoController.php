@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Servicios\AvancePersona;
 use App\Servicios\CatalogoReferencias;
 use App\Servicios\ComprobanteFiscal;
+use App\Servicios\ComprobantePago;
 use App\Servicios\FormatoPagoDec;
-use App\Support\Admin\RevisionPagos;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +44,7 @@ class PagoController extends Controller
         ]);
     }
 
-    public function subirComprobante(Request $request, RevisionPagos $revision_pagos, FormatoPagoDec $formato_pago)
+    public function subirComprobante(Request $request, ComprobantePago $comprobante_pago, FormatoPagoDec $formato_pago)
     {
         $avance = $this->avanceActual();
         $pago_estado = $avance->estadoPagoVista();
@@ -119,7 +119,7 @@ class PagoController extends Controller
         $disco->putFileAs(dirname($ruta), $request->file('comprobante'), basename($ruta));
 
         try {
-            $revision_pagos->registrarComprobanteDePersona((int) Auth::id(), $ruta, [
+            $comprobante_pago->registrar((int) Auth::id(), $ruta, [
                 'monto_pagado' => $datos['monto_pagado'],
                 'fecha_pago' => $datos['fecha_pago'],
                 'hora_pago' => $datos['hora_pago'],

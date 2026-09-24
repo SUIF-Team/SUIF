@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Consultas\ConsultaPagos;
 use App\Models\Usuario;
 use App\Servicios\FormatoPagoDec;
-use App\Support\Admin\ConsultaPagos;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\SiembraAdministradores;

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Support\Admin\RevisionDocumentos;
+use App\Servicios\RevisionDocumentos;
 use DomainException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;

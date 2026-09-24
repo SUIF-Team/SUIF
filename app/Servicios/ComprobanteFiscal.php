@@ -16,10 +16,10 @@ use Illuminate\Support\Facades\DB;
  * pagos anteriores a ese cambio—, FALSE es ticket sin efectos fiscales y TRUE
  * es CFDI de gastos en general.
  *
- * Vive del lado de la persona y no en App\Support\Admin porque quien escribe
- * es ella: no hay decisión administrativa que registrar y ESTADO_PAGO no se
- * toca. El molde es GestionSedes::seleccionarParaUsuario(), que resuelve la
- * otra elección irreversible del trámite.
+ * Quien escribe aquí es la persona: no hay decisión administrativa que
+ * registrar y ESTADO_PAGO no se toca. El molde es
+ * GestionSedes::seleccionarParaUsuario(), que resuelve la otra elección
+ * irreversible del trámite.
  */
 class ComprobanteFiscal
 {

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Consultas\ConsultaPagos;
 use App\Models\Usuario;
 use App\Servicios\ComprobanteFiscal;
-use App\Support\Admin\ConsultaPagos;
 use DomainException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;

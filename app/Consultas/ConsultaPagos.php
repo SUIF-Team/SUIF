@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Admin;
+namespace App\Consultas;
 
 use App\Servicios\ComprobanteFiscal;
 use App\Support\NombrePersona;

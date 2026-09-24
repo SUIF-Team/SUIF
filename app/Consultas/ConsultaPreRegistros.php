@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Admin;
+namespace App\Consultas;
 
 use App\Support\NombrePersona;
 use Illuminate\Database\Query\Builder;

@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Autorizacion\AccesoAdministrativo;
 use App\Servicios\GestionAdministradores;
-use App\Support\Admin\AccesoAdministrativo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

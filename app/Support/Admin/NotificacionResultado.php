@@ -2,6 +2,8 @@
 
 namespace App\Support\Admin;
 
+use App\Consultas\ConsultaPagos;
+use App\Servicios\RevisionDocumentos;
 use Illuminate\Support\Facades\Gate;
 
 class NotificacionResultado

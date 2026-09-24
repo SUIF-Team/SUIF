@@ -12,6 +12,11 @@
 
 - `routes/web.php` es la fuente de verdad de verbos, URIs y nombres de ruta. Genera enlaces con rutas nombradas (`route()`), no con URLs escritas manualmente.
 - Mantén MVC: controladores coordinan, vistas Blade presentan y modelos o servicios encapsulan persistencia y lógica de dominio.
+- Cada carpeta de `app/` fuera de `Http`, `Models`, `Mail`, `Console` y `Providers` tiene una sola regla; una clase que no la cumple va en otra carpeta:
+  - `app/Servicios`: reglas y operaciones del dominio. Todo lo que cambia estado (base de datos, archivos, correo) vive aquí, y también lo que decide o genera algo con esas reglas (avance de la persona, formatos PDF, listas).
+  - `app/Consultas`: leen y dan forma a datos para listados y reportes. Nunca escriben.
+  - `app/Autorizacion`: quién puede qué, a partir de `PRIVILEGIO_ROL`.
+  - `app/Support`: utilidades sin reglas del dominio y sin base de datos (nombres, códigos QR, libros de Excel, textos de notificación).
 - Las vistas viven en `resources/views/`; los layouts y parciales existentes deben reutilizarse antes de crear estructuras o componentes duplicados.
 - Los estilos compartidos están en `public/assets/css/app.css` y `public/assets/css/partials/`; los estilos exclusivos van en `public/assets/css/pages/`.
 - Los scripts compartidos viven en `public/assets/js/main.js` y los de una pantalla en `public/assets/js/pages/`. La interfaz actual usa Blade, CSS y JavaScript directo, con Vue 3 por CDN en las vistas que lo requieren.
@@ -22,7 +27,7 @@
 ## Seguridad y flujos administrativos
 
 - Usa formularios `POST`, `@csrf` y validación del servidor para operaciones de escritura.
-- La autorización administrativa se resuelve contra `PRIVILEGIO_ROL`, nunca comparando el nombre del rol: hay tres tipos de administrador y una comparación por nombre deja fuera a los demás. Los permisos se declaran en `AppServiceProvider` a partir de `App\Support\Admin\AccesoAdministrativo`, y el grupo `/admin` de `routes/web.php` exige `auth` más `can:acceder-admin`. Una pantalla que no se puede abrir tampoco se pinta en el tablero.
+- La autorización administrativa se resuelve contra `PRIVILEGIO_ROL`, nunca comparando el nombre del rol: hay tres tipos de administrador y una comparación por nombre deja fuera a los demás. Los permisos se declaran en `AppServiceProvider` a partir de `App\Autorizacion\AccesoAdministrativo`, y el grupo `/admin` de `routes/web.php` exige `auth` más `can:acceder-admin`. Una pantalla que no se puede abrir tampoco se pinta en el tablero.
 - Si un flujo aún no tiene persistencia, aísla los datos de demostración para poder reemplazarlos posteriormente.
 - No presentes como terminado un flujo que todavía carezca de controlador, validación, persistencia o autorización.
 

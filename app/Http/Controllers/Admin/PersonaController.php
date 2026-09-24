@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Consultas\ConsultaPersonasRegistradas;
+use App\Consultas\ConsultaPreRegistros;
 use App\Http\Controllers\Controller;
 use App\Servicios\GestionClaves;
-use App\Support\Admin\ConsultaPersonasRegistradas;
-use App\Support\Admin\ConsultaPreRegistros;
 use App\Support\Admin\OrigenBandejaAdmin;
 use Illuminate\Http\Request;
 

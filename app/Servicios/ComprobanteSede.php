@@ -2,6 +2,7 @@
 
 namespace App\Servicios;
 
+use App\Support\CodigoQr;
 use Illuminate\Support\Carbon;
 
 /**

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Consultas\ConsultaPagos;
+use App\Consultas\ConsultaPreRegistros;
 use App\Models\Usuario;
 use App\Servicios\CatalogoReferencias;
 use App\Servicios\GestionSedes;
-use App\Support\Admin\ConsultaPagos;
-use App\Support\Admin\ConsultaPreRegistros;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\Concerns\SiembraAdministradores;
