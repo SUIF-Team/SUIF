@@ -25,8 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
          * enviado en la sesión para devolverlo con old(). De fábrica sólo
          * omite los campos llamados password; los de SUIF se llaman clave, y
          * sin esto la clave tecleada quedaría en claro en el archivo de
-         * sesión. Es la misma lista que responder() ya excluye en
-         * Controller::CAMPOS_QUE_NO_SE_REPITEN.
+         * sesión. Con los password que Laravel ya omite, queda la misma
+         * lista que responder() excluye en Controller::CAMPOS_QUE_NO_SE_REPITEN.
          */
         $exceptions->dontFlash(['clave', 'clave_acceso', 'clave_actual']);
     })->create();
