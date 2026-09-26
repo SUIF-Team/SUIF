@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Usuario;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -74,6 +76,27 @@ class LoginTest extends TestCase
         ])->assertRedirect(route('persona.dashboard'));
 
         $this->assertAuthenticated();
+    }
+
+    /**
+     * Cerrar sesión debe matar el id que traía la cookie. Con regenerate()
+     * el id cambiaba pero la sesión anterior —con el usuario autenticado—
+     * seguía en el almacén hasta expirar, y una cookie copiada seguía
+     * sirviendo después del logout.
+     */
+    public function test_cerrar_sesion_destruye_la_sesion_anterior(): void
+    {
+        $almacen = app('session')->driver()->getHandler();
+        $id_anterior = Str::random(40);
+        $almacen->write($id_anterior, serialize(['_token' => Str::random(40)]));
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->withCookie(config('session.cookie'), $id_anterior)
+            ->post(route('logout'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertSame('', $almacen->read($id_anterior));
     }
 
     public function test_seis_intentos_seguidos_con_la_misma_curp_activan_el_freno(): void
