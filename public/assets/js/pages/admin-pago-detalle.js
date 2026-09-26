@@ -8,11 +8,6 @@
         return;
     }
 
-    /* El motivo se lee del DOM antes de montar: Blade ya escribió ahí el
-       old('motivo_rechazo') y en cuanto Vue toma el textarea el v-model lo
-       reemplazaría con el valor del estado. */
-    var campoMotivo = raiz.querySelector('#motivo-rechazo');
-
     window.Vue.createApp({
         components: {
             'back-navigation': window.SUIFComponentes.BackNavigation,
@@ -20,7 +15,11 @@
         },
         data: function () {
             return {
-                motivo: campoMotivo ? campoMotivo.value : '',
+                /* Lo que el administrador había escrito si la validación del
+                   servidor falló. Viaja en un atributo de la raíz porque Vue
+                   no interpola atributos; como texto del textarea lo
+                   compilaría. */
+                motivo: raiz.dataset.motivo || '',
                 /* Si la validación de servidor falló, el panel reaparece
                    abierto con lo que se había capturado. */
                 rechazoAbierto: raiz.hasAttribute('data-rechazo-abierto'),

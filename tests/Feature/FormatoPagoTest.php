@@ -7,6 +7,7 @@ use App\Models\Usuario;
 use App\Servicios\FormatoPagoDec;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\RevisaPlantillasVue;
 use Tests\Concerns\SiembraAdministradores;
 use Tests\TestCase;
 
@@ -20,6 +21,7 @@ use Tests\TestCase;
  */
 class FormatoPagoTest extends TestCase
 {
+    use RevisaPlantillasVue;
     use SiembraAdministradores;
 
     /* La única casilla con «X» en la vista del formato. */
@@ -201,6 +203,20 @@ class FormatoPagoTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['PAGO APROBADO', 'Generar comprobante', 'Corregir la resolución'])
             ->assertSee('Descargar formato');
+    }
+
+    public function test_el_nombre_de_la_persona_no_se_compila_en_el_resultado(): void
+    {
+        /* El nombre viaja en data-vista y lo pinta Vue: como texto de Blade
+           dentro de la raíz, Vue lo compilaría. */
+        $this->estadoPago('Completado');
+        DB::table('persona')->where('pers_id_usuario', 1)->update(['pers_nombre' => '{{ 7*7 }}']);
+
+        $respuesta = $this->actingAs(Usuario::findOrFail(4))
+            ->get(route('admin.pagos.resultado', 1))
+            ->assertOk();
+
+        $this->assertFueraDeLaPlantillaVue($respuesta->getContent(), 'data-preregistro-admin', '{{ 7*7 }}');
     }
 
     /* ── Apoyos ───────────────────────────────────────────────────────── */

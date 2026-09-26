@@ -10,6 +10,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Tests\Concerns\RevisaPlantillasVue;
 use Tests\TestCase;
 
 /**
@@ -24,6 +25,8 @@ use Tests\TestCase;
  */
 class ComprobanteFiscalTest extends TestCase
 {
+    use RevisaPlantillasVue;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -349,6 +352,28 @@ class ComprobanteFiscalTest extends TestCase
             ->assertSee('CAPA900101AB1')
             ->assertSee('626 - RESICO')
             ->assertSee('facturacion@ejemplo.mx');
+    }
+
+    public function test_la_razon_social_no_se_compila_como_plantilla_vue(): void
+    {
+        /* La razón social la escribe la persona y la lee el administrador
+           dentro de la app de Vue del detalle: si llegara como texto
+           compilable, Vue mostraría 49 y ejecutaría lo que viniera entre
+           llaves en la sesión del administrador. */
+        $this->prepararCfdi();
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->post(route('persona.facturacion.store'), array_merge(
+                $this->datosFiscalesValidos(),
+                ['razon_social' => '{{ 7*7 }}']
+            ));
+
+        $respuesta = $this->actingAs(Usuario::findOrFail(2))
+            ->get(route('admin.pagos.show', 1))
+            ->assertOk()
+            ->assertSee('{{ 7*7 }}', false);
+
+        $this->assertFueraDeLaPlantillaVue($respuesta->getContent(), 'data-pago-detalle', '{{ 7*7 }}');
     }
 
     public function test_el_administrador_ve_sin_solicitar_cuando_la_persona_no_eligio(): void

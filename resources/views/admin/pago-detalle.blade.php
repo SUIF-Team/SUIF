@@ -8,13 +8,19 @@
 @endsection
 
 @section('content')
+{{-- Vue compila como plantilla todo lo que hay dentro de esta raíz. Los
+     bloques que sólo presentan datos capturados por personas o
+     administradores llevan v-pre para que Vue no los compile: unas llaves
+     escritas en una razón social se ejecutarían en esta sesión. Nunca va en
+     un bloque con directivas o componentes. --}}
 <section
     class="admin-preregistro-flujo admin-pago-detalle"
     data-pago-detalle
+    data-motivo="{{ old('motivo_rechazo') }}"
     @error('motivo_rechazo') data-rechazo-abierto @enderror
     aria-labelledby="detalle-pago-titulo"
     v-cloak>
-    <header class="tarjeta admin-preregistro-perfil">
+    <header class="tarjeta admin-preregistro-perfil" v-pre>
         <div class="admin-preregistro-usuario">
             <span class="admin-preregistro-avatar" aria-hidden="true">{{ $pago['iniciales'] }}</span>
             <div>
@@ -63,7 +69,7 @@
             @endif
         </section>
 
-        <dl class="admin-preregistro-datos admin-pago-datos">
+        <dl class="admin-preregistro-datos admin-pago-datos" v-pre>
             {{-- La persona declara el monto que pagó; el de la referencia es el
                  que se le cobró. Revisar el comprobante es comparar los dos. --}}
             <div class="admin-preregistro-dato">
@@ -105,7 +111,7 @@
         </dl>
 
         @if($pago['datos_fiscales'])
-            <section class="admin-pago-fiscales" aria-labelledby="datos-fiscales-titulo">
+            <section class="admin-pago-fiscales" aria-labelledby="datos-fiscales-titulo" v-pre>
                 <h3 id="datos-fiscales-titulo">Datos para el CFDI</h3>
                 <dl class="admin-preregistro-datos admin-pago-datos">
                     <div class="admin-preregistro-dato">
@@ -141,7 +147,7 @@
         @endif
 
         @if($pago['motivo_rechazo'])
-            <section class="aviso-motivo" aria-labelledby="motivo-rechazo-titulo">
+            <section class="aviso-motivo" aria-labelledby="motivo-rechazo-titulo" v-pre>
                 <h3 class="aviso-motivo__titulo" id="motivo-rechazo-titulo">Motivo del rechazo</h3>
                 <p>{{ $pago['motivo_rechazo'] }}</p>
             </section>
@@ -202,8 +208,8 @@
                 action="{{ route('admin.pagos.rechazar', ['id' => $pago['id']]) }}"
                 v-on:submit.prevent="enviar($event)">
                 @csrf
-                {{-- El valor lo escribe Blade con old(); admin-pago-detalle.js lo
-                     lee del DOM antes de montar para sembrar el v-model. --}}
+                {{-- El valor lo siembra admin-pago-detalle.js desde data-motivo
+                     de la raíz: como contenido del textarea, Vue lo compilaría. --}}
                 <textarea
                     class="control"
                     id="motivo-rechazo"
@@ -213,7 +219,7 @@
                     required
                     ref="motivo"
                     v-model="motivo"
-                    aria-describedby="motivo-rechazo-ayuda">{{ old('motivo_rechazo') }}</textarea>
+                    aria-describedby="motivo-rechazo-ayuda"></textarea>
                 <p id="motivo-rechazo-ayuda" class="ayuda">Este mensaje se mostrará a la persona para que pueda subsanar su comprobante.</p>
                 @error('motivo_rechazo')
                     <p class="campo__error" role="alert">{{ $message }}</p>
