@@ -22,6 +22,10 @@ class RevisionDocumentos
     /** Estados terminales de una solicitud: los que se pueden reanudar. */
     private const ESTADOS_RESUELTOS = ['Aprobada', 'Rechazada', 'Cancelada'];
 
+    public function __construct(private readonly BitacoraSolicitud $bitacora)
+    {
+    }
+
     /**
      * Registra una resolución histórica para cada documento de la solicitud.
      *
@@ -119,7 +123,7 @@ class RevisionDocumentos
                 return self::REVISION;
             }
 
-            $this->registrarEstadoSolicitud($id_solicitud, 'Aprobada');
+            $this->bitacora->registrar($id_solicitud, 'Aprobada');
 
             return self::APROBADO;
         });
@@ -135,7 +139,7 @@ class RevisionDocumentos
 
             $motivo_rechazo = trim((string) $motivo_rechazo) ?: null;
 
-            $this->registrarEstadoSolicitud($id_solicitud, 'Rechazada', $motivo_rechazo);
+            $this->bitacora->registrar($id_solicitud, 'Rechazada', $motivo_rechazo);
 
             return self::RECHAZADO;
         });
@@ -151,14 +155,14 @@ class RevisionDocumentos
     public function reanudar(int $id_solicitud): string
     {
         return DB::transaction(function () use ($id_solicitud): string {
-            $estado = $this->estadoVigenteBloqueado($id_solicitud);
+            $estado = $this->bitacora->estadoVigenteBloqueado($id_solicitud);
 
             if (!in_array($estado, self::ESTADOS_RESUELTOS, true)) {
                 throw new DomainException('La solicitud no está resuelta: no hay nada que reanudar.');
             }
 
             $this->regresarDocumentosARevision($id_solicitud);
-            $this->registrarEstadoSolicitud($id_solicitud, 'En revisión');
+            $this->bitacora->registrar($id_solicitud, 'En revisión');
 
             return self::REVISION;
         });
@@ -180,34 +184,9 @@ class RevisionDocumentos
 
     private function bloquearSolicitudEnRevision(int $id_solicitud): void
     {
-        if ($this->estadoVigenteBloqueado($id_solicitud) !== 'En revisión') {
+        if ($this->bitacora->estadoVigenteBloqueado($id_solicitud) !== 'En revisión') {
             throw new DomainException('La solicitud ya fue resuelta o no está disponible para revisión.');
         }
-    }
-
-    /**
-     * Bloquea la solicitud y devuelve su estado vigente.
-     *
-     * Es el candado que comparten todas las transiciones administrativas: el
-     * lockForUpdate() serializa las decisiones concurrentes sobre el mismo
-     * expediente.
-     */
-    private function estadoVigenteBloqueado(int $id_solicitud): ?string
-    {
-        $solicitud = DB::table('solicitud')
-            ->where('soli_id_solicitud', $id_solicitud)
-            ->lockForUpdate()
-            ->first();
-
-        if (!$solicitud) {
-            throw new DomainException('La solicitud no existe.');
-        }
-
-        return DB::table('estado_solicitud as es')
-            ->join('c_estado_solicitud as ces', 'ces.esso_id_c_estado_solicitud', '=', 'es.esso_id_c_estado_solicitud')
-            ->where('es.esso_id_solicitud', $id_solicitud)
-            ->orderByDesc('es.esso_id_estado_solicitud')
-            ->value('ces.esso_estado_solicitud');
     }
 
     /**
@@ -290,28 +269,5 @@ class RevisionDocumentos
             )')
             ->orderBy('d.docu_id_documento')
             ->pluck('ced.esdo_estado_documento', 'd.docu_id_documento');
-    }
-
-    private function registrarEstadoSolicitud(
-        int $id_solicitud,
-        string $estado,
-        ?string $motivo_rechazo = null
-    ): void
-    {
-        $id_estado = DB::table('c_estado_solicitud')
-            ->where('esso_estado_solicitud', $estado)
-            ->value('esso_id_c_estado_solicitud');
-
-        if (!$id_estado) {
-            throw new DomainException('El catálogo de estados de solicitud está incompleto.');
-        }
-
-        DB::table('estado_solicitud')->insert([
-            'esso_id_c_estado_solicitud' => $id_estado,
-            'esso_id_solicitud' => $id_solicitud,
-            'esso_fecha' => now()->toDateString(),
-            'esso_hora' => now()->toTimeString(),
-            'esso_motivo_rechazo' => $motivo_rechazo,
-        ]);
     }
 }

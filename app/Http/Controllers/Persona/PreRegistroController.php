@@ -13,10 +13,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Usuario;
 use App\Servicios\AvancePersona;
+use App\Servicios\DocumentacionPersona;
 use App\Servicios\GestionClaves;
 use App\Servicios\GestionConvocatorias;
 use App\Servicios\FormatoPreRegistro;
 use Barryvdh\DomPDF\Facade\Pdf;
+use DomainException;
 use Illuminate\Validation\ValidationException;
 
 class PreRegistroController extends Controller
@@ -653,7 +655,7 @@ class PreRegistroController extends Controller
         ]);
     }
 
-        public function subirDocumento(Request $request, $documento)
+        public function subirDocumento(Request $request, $documento, DocumentacionPersona $documentacion)
     {
         if (!isset($this->documentos[$documento])) {
             abort(404);
@@ -710,39 +712,56 @@ class PreRegistroController extends Controller
         /* El nombre original puede venir más largo que la columna. */
         $nombreOriginal = mb_substr($request->file('archivo')->getClientOriginalName(), 0, 150);
 
-        DB::transaction(function () use ($idSolicitud, $idTipo, $ruta, $nombreOriginal) {
-            $existente = DB::table('documento')
-                ->where('soli_id_solicitud', $idSolicitud)
-                ->where('tido_id_tipo_documento', $idTipo)
-                ->first();
+        try {
+            DB::transaction(function () use ($documentacion, $idSolicitud, $idTipo, $ruta, $nombreOriginal) {
+                $documentacion->exigirAbierta((int) $idSolicitud);
 
-            if ($existente) {
-                /* Reemplazo: se actualiza el renglón, no se duplica. */
-                DB::table('documento')
-                    ->where('docu_id_documento', $existente->docu_id_documento)
-                    ->update([
+                $existente = DB::table('documento')
+                    ->where('soli_id_solicitud', $idSolicitud)
+                    ->where('tido_id_tipo_documento', $idTipo)
+                    ->first();
+
+                if ($existente) {
+                    /* Reemplazo: se actualiza el renglón, no se duplica. */
+                    DB::table('documento')
+                        ->where('docu_id_documento', $existente->docu_id_documento)
+                        ->update([
+                            'docu_nombre' => $nombreOriginal,
+                            'docu_path' => $ruta,
+                            'docu_fecha_carga' => now()->toDateString(),
+                            'docu_hora_carga' => now()->toTimeString(),
+                            'docu_fecha_autorizacion' => null,
+                            'docu_hora_autorizacion' => null,
+                        ]);
+
+                    $idDocumento = $existente->docu_id_documento;
+                } else {
+                    $idDocumento = DB::table('documento')->insertGetId([
+                        'tido_id_tipo_documento' => $idTipo,
+                        'soli_id_solicitud' => $idSolicitud,
                         'docu_nombre' => $nombreOriginal,
                         'docu_path' => $ruta,
                         'docu_fecha_carga' => now()->toDateString(),
                         'docu_hora_carga' => now()->toTimeString(),
-                        'docu_fecha_autorizacion' => null,
-                        'docu_hora_autorizacion' => null,
-                    ]);
+                    ], 'docu_id_documento');
+                }
 
-                $idDocumento = $existente->docu_id_documento;
-            } else {
-                $idDocumento = DB::table('documento')->insertGetId([
-                    'tido_id_tipo_documento' => $idTipo,
-                    'soli_id_solicitud' => $idSolicitud,
-                    'docu_nombre' => $nombreOriginal,
-                    'docu_path' => $ruta,
-                    'docu_fecha_carga' => now()->toDateString(),
-                    'docu_hora_carga' => now()->toTimeString(),
-                ], 'docu_id_documento');
-            }
+                $this->registrarEstadoDocumento($idDocumento, 'Cargado');
+            });
+        } catch (DomainException $error) {
+            /* El archivo ya se guardó antes de la transacción: sin renglón que
+               lo apunte quedaría huérfano. */
+            Storage::disk('local')->delete($ruta);
 
-            $this->registrarEstadoDocumento($idDocumento, 'Cargado');
-        });
+            return $this->responder(
+                $request,
+                'error',
+                $error->getMessage(),
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
+        }
 
         return $this->responder(
             $request,
@@ -783,7 +802,7 @@ class PreRegistroController extends Controller
         ]);
     }
 
-        public function enviarRevision(Request $request)
+        public function enviarRevision(Request $request, DocumentacionPersona $documentacion)
     {
         $idSolicitud = $this->solicitudActual();
         $documentos = $this->documentosGuardados($idSolicitud);
@@ -819,13 +838,24 @@ class PreRegistroController extends Controller
             );
         }
 
-        DB::transaction(function () use ($idSolicitud, $porRevisar) {
-            foreach ($porRevisar as $doc) {
-                $this->registrarEstadoDocumento($doc['id'], 'En revisión');
-            }
-
-            $this->registrarEstadoSolicitud($idSolicitud, 'En revisión');
-        });
+        /* La regla de solicitud abierta vive en el servicio, con la solicitud
+           bloqueada: una interrupción simultánea no se cuela entre la
+           comprobación y la escritura. */
+        try {
+            $documentacion->enviarARevision(
+                (int) $idSolicitud,
+                array_map(fn (array $doc): int => (int) $doc['id'], array_values($porRevisar))
+            );
+        } catch (DomainException $error) {
+            return $this->responder(
+                $request,
+                'error',
+                $error->getMessage(),
+                route('persona.documentos.index'),
+                [],
+                'documentos'
+            );
+        }
 
         /* Sin mensaje a propósito: la pantalla a la que se llega ya anuncia el
            envío —con su fecha y con role="status"— en el aviso bajo la tabla.
@@ -949,24 +979,6 @@ class PreRegistroController extends Controller
             'esdo_comentarios' => $comentario,
             'esdo_fecha' => now()->toDateString(),
             'esdo_hora' => now()->toTimeString(),
-        ]);
-    }
-
-    /**
-     * Registra un cambio de estado de la solicitud completa.
-     */
-    private function registrarEstadoSolicitud($idSolicitud, $estado, $motivo = null)
-    {
-        $idEstado = DB::table('c_estado_solicitud')
-            ->where('esso_estado_solicitud', $estado)
-            ->value('esso_id_c_estado_solicitud');
-
-        DB::table('estado_solicitud')->insert([
-            'esso_id_c_estado_solicitud' => $idEstado,
-            'esso_id_solicitud' => $idSolicitud,
-            'esso_fecha' => now()->toDateString(),
-            'esso_hora' => now()->toTimeString(),
-            'esso_motivo_rechazo' => $motivo,
         ]);
     }
 
