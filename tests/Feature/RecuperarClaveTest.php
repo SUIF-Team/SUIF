@@ -2,18 +2,23 @@
 
 namespace Tests\Feature;
 
-use App\Mail\ClaveRestablecida;
+use App\Mail\EnlaceRecuperacion;
+use App\Models\Usuario;
+use App\Servicios\GestionClaves;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class RecuperarClaveTest extends TestCase
 {
-    private const MENSAJE_GENERICO = 'Si tu CURP está registrada, enviaremos una clave de acceso nueva a tu correo principal. Revisa también tu bandeja de spam.';
+    private const MENSAJE_GENERICO = 'Si tu CURP está registrada, enviaremos a tu correo principal un enlace para crear una clave nueva. Revisa también tu bandeja de spam.';
+
+    private const ENLACE_INVALIDO = 'El enlace ya no es válido';
 
     protected function setUp(): void
     {
@@ -71,6 +76,8 @@ class RecuperarClaveTest extends TestCase
     {
         $this->assertTrue(Route::has('clave.recuperar'));
         $this->assertTrue(Route::has('clave.recuperar.post'));
+        $this->assertTrue(Route::has('clave.restablecer'));
+        $this->assertTrue(Route::has('clave.restablecer.post'));
         $this->assertTrue(Route::has('admin.personas.registradas.restaurar-clave'));
         $this->assertSame('/recuperar-clave', parse_url(route('clave.recuperar'), PHP_URL_PATH));
     }
@@ -85,7 +92,7 @@ class RecuperarClaveTest extends TestCase
         $this->get(route('clave.recuperar'))
             ->assertOk()
             ->assertSee('Recuperar clave de acceso')
-            ->assertSee('Enviar clave nueva');
+            ->assertSee('Enviar enlace');
     }
 
     /**
@@ -110,7 +117,7 @@ class RecuperarClaveTest extends TestCase
             ->assertSessionHas('success', self::MENSAJE_GENERICO);
     }
 
-    public function test_actualiza_el_hash_y_envia_la_clave_al_correo_principal(): void
+    public function test_envia_un_enlace_y_no_toca_la_clave(): void
     {
         Mail::fake();
 
@@ -118,21 +125,123 @@ class RecuperarClaveTest extends TestCase
             ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
             ->assertRedirect(route('clave.recuperar'));
 
-        $hash = DB::table('usuario')->where('usua_id_usuario', 1)->value('usua_clave_acceso');
+        /* Pedir la recuperación ya no revoca nada: quien conozca una CURP
+           ajena no puede dejar a su dueña fuera. */
+        $this->assertTrue(Hash::check('AAAA-BBBB-CCCC', $this->hash(1)));
 
-        /* La clave anterior dejó de servir y la nueva viaja solo en el correo. */
-        $this->assertFalse(Hash::check('AAAA-BBBB-CCCC', $hash));
-        Mail::assertSent(ClaveRestablecida::class, function (ClaveRestablecida $correo) use ($hash): bool {
+        Mail::assertSent(EnlaceRecuperacion::class, function (EnlaceRecuperacion $correo): bool {
             return $correo->hasTo('rosa@example.com')
-                && preg_match('/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/', $correo->clave) === 1
-                && Hash::check($correo->clave, $hash);
+                && str_contains($correo->enlace, '/recuperar-clave/1/')
+                && str_contains($correo->enlace, 'signature=');
         });
+    }
 
-        /* La respuesta jamás trae la clave. */
-        $this->assertDoesNotMatchRegularExpression(
-            '/[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/',
-            (string) session('success')
-        );
+    public function test_el_correo_lleva_el_enlace_sin_escapar(): void
+    {
+        /* Correo de texto: con {{ }} el & de la firma saldría como &amp; y el
+           enlace dejaría de servir. */
+        $enlace = $this->pedirEnlace();
+
+        $texto = view('emails.enlace-recuperacion', ['enlace' => $enlace, 'vigencia' => 60])->render();
+
+        $this->assertStringContainsString($enlace, $texto);
+        $this->assertStringNotContainsString('&amp;', $texto);
+    }
+
+    public function test_abrir_el_enlace_muestra_el_boton_y_no_cambia_la_clave(): void
+    {
+        $enlace = $this->pedirEnlace();
+
+        /* Los antivirus de correo abren los enlaces: el GET no gasta nada. */
+        $respuesta = $this->get($enlace)
+            ->assertOk()
+            ->assertSee('Generar clave nueva');
+
+        $this->assertStringContainsString('no-store', (string) $respuesta->headers->get('Cache-Control'));
+
+        $this->assertTrue(Hash::check('AAAA-BBBB-CCCC', $this->hash(1)));
+    }
+
+    public function test_confirmar_genera_la_clave_y_la_muestra_una_vez(): void
+    {
+        $enlace = $this->pedirEnlace();
+
+        $respuesta = $this->post($enlace)->assertOk();
+
+        preg_match('/class="codigo__valor">([A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4})</', $respuesta->getContent(), $coincidencia);
+        $this->assertNotEmpty($coincidencia, 'La pantalla debe mostrar la clave generada.');
+
+        $this->assertTrue(Hash::check($coincidencia[1], $this->hash(1)));
+        $this->assertStringContainsString('no-store', (string) $respuesta->headers->get('Cache-Control'));
+        $this->assertFalse(Hash::check('AAAA-BBBB-CCCC', $this->hash(1)));
+    }
+
+    public function test_el_enlace_sirve_una_sola_vez(): void
+    {
+        $enlace = $this->pedirEnlace();
+
+        $this->post($enlace)->assertOk();
+        $hash = $this->hash(1);
+
+        /* La huella ya no coincide con la clave nueva. */
+        $this->get($enlace)->assertForbidden()->assertSee(self::ENLACE_INVALIDO);
+        $this->post($enlace)->assertForbidden()->assertSee(self::ENLACE_INVALIDO);
+
+        $this->assertSame($hash, $this->hash(1));
+    }
+
+    public function test_el_enlace_caduca_en_una_hora(): void
+    {
+        $enlace = $this->pedirEnlace();
+
+        $this->travel(GestionClaves::VIGENCIA_ENLACE_MINUTOS + 1)->minutes();
+
+        $this->post($enlace)->assertForbidden()->assertSee(self::ENLACE_INVALIDO);
+        $this->assertTrue(Hash::check('AAAA-BBBB-CCCC', $this->hash(1)));
+    }
+
+    public function test_un_enlace_alterado_no_sirve(): void
+    {
+        $enlace = $this->pedirEnlace();
+
+        /* Otro usuario en la misma firma: la firma deja de cuadrar. */
+        $this->post(str_replace('/recuperar-clave/1/', '/recuperar-clave/2/', $enlace))
+            ->assertForbidden();
+
+        /* Firma válida con una huella que no es la de la clave vigente. */
+        $this->post($this->enlaceFirmado(1, str_repeat('0', 32)))->assertForbidden();
+
+        $this->assertTrue(Hash::check('AAAA-BBBB-CCCC', $this->hash(1)));
+    }
+
+    public function test_un_enlace_firmado_no_abre_una_cuenta_administrativa(): void
+    {
+        $gestion = app(GestionClaves::class);
+        $hash = $this->hash(2);
+
+        $this->post($this->enlaceFirmado(2, $gestion->huella(Usuario::findOrFail(2))))
+            ->assertForbidden();
+
+        $this->assertSame($hash, $this->hash(2));
+    }
+
+    public function test_una_misma_curp_topa_aunque_cambie_la_ip(): void
+    {
+        Mail::fake();
+
+        /* Llenarle el buzón a una persona desde muchas direcciones. */
+        for ($i = 1; $i <= 3; $i++) {
+            $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$i}"])
+                ->from(route('clave.recuperar'))
+                ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
+                ->assertRedirect(route('clave.recuperar'));
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.4'])
+            ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
+            ->assertStatus(429);
+
+        Mail::assertSent(EnlaceRecuperacion::class, 3);
     }
 
     public function test_curp_inexistente_no_envia_correo_ni_toca_la_base(): void
@@ -150,21 +259,6 @@ class RecuperarClaveTest extends TestCase
             $hash_original,
             DB::table('usuario')->where('usua_id_usuario', 1)->value('usua_clave_acceso')
         );
-    }
-
-    public function test_si_el_correo_falla_la_clave_anterior_sigue_sirviendo(): void
-    {
-        Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP fuera de servicio'));
-
-        $this->from(route('clave.recuperar'))
-            ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08'])
-            ->assertRedirect(route('clave.recuperar'))
-            ->assertSessionHas('success', self::MENSAJE_GENERICO);
-
-        /* El hash solo cambia cuando el correo salió: sin correo la persona
-           se quedaría sin ningún canal para conocer la clave nueva. */
-        $hash = DB::table('usuario')->where('usua_id_usuario', 1)->value('usua_clave_acceso');
-        $this->assertTrue(Hash::check('AAAA-BBBB-CCCC', $hash));
     }
 
     public function test_el_rol_administrador_no_se_recupera_por_autoservicio(): void
@@ -216,6 +310,40 @@ class RecuperarClaveTest extends TestCase
         }
 
         $this->post(route('clave.recuperar.post'), [])->assertStatus(429);
+    }
+
+    /** Pide la recuperación de la persona 1 y devuelve el enlace del correo. */
+    private function pedirEnlace(): string
+    {
+        Mail::fake();
+
+        $this->from(route('clave.recuperar'))
+            ->post(route('clave.recuperar.post'), ['curp' => 'EAVR800101MDFNZS08']);
+
+        $enlace = null;
+
+        Mail::assertSent(EnlaceRecuperacion::class, function (EnlaceRecuperacion $correo) use (&$enlace): bool {
+            $enlace = $correo->enlace;
+
+            return true;
+        });
+
+        return $enlace;
+    }
+
+    private function enlaceFirmado(int $id_usuario, string $huella): string
+    {
+        return url(URL::temporarySignedRoute(
+            'clave.restablecer',
+            now()->addHour(),
+            ['usuario' => $id_usuario, 'huella' => $huella],
+            absolute: false
+        ));
+    }
+
+    private function hash(int $id_usuario): string
+    {
+        return (string) DB::table('usuario')->where('usua_id_usuario', $id_usuario)->value('usua_clave_acceso');
     }
 
     private function crearEsquemaTemporal(): void

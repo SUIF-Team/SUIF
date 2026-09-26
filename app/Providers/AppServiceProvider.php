@@ -39,11 +39,20 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by('preregistro:'.$request->ip());
         });
 
-        /* Recuperar la clave es público, envía correo y revoca la clave
-           vigente: sin freno permite barrer CURPs o bombardear a una
-           persona con restablecimientos. */
+        /* Recuperar la clave es público y envía correo. Ya no revoca la clave
+           vigente —sólo manda un enlace—, pero sin freno permitiría barrer
+           CURPs desde una dirección o llenarle el buzón a una persona desde
+           muchas. El límite por CURP sólo aplica cuando hay CURP: un envío
+           vacío no llega a la base y no debe gastar el cupo de nadie. */
         RateLimiter::for('recuperar-clave', function (Request $request) {
-            return Limit::perMinute(5)->by('recuperar-clave:'.$request->ip());
+            $curp = mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8');
+            $limites = [Limit::perMinute(5)->by('recuperar-clave:'.$request->ip())];
+
+            if ($curp !== '') {
+                $limites[] = Limit::perHour(3)->by('recuperar-clave-curp:'.$curp);
+            }
+
+            return $limites;
         });
 
         /* El autollenado devuelve el nombre de quien trae esa CURP. Es un dato
