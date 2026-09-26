@@ -20,6 +20,7 @@
 - Las vistas viven en `resources/views/`; los layouts y parciales existentes deben reutilizarse antes de crear estructuras o componentes duplicados.
 - Los estilos compartidos están en `public/assets/css/app.css` y `public/assets/css/partials/`; los estilos exclusivos van en `public/assets/css/pages/`.
 - Los scripts compartidos viven en `public/assets/js/main.js` y los de una pantalla en `public/assets/js/pages/`. La interfaz actual usa Blade, CSS y JavaScript directo, con Vue 3 por CDN en las vistas que lo requieren.
+- Vue compila como plantilla el HTML de su nodo raíz, así que unas llaves escritas por un usuario se ejecutan en el navegador aunque Blade las haya escapado. Dentro de una raíz de Vue, Blade no imprime como texto datos capturados por una persona o un administrador: llegan por `data-vista` con `@json` y los pinta Vue, o el bloque que los contiene lleva `v-pre`. Los textos fijos del servidor sí pueden imprimirse. La prueba es `Tests\Concerns\RevisaPlantillasVue`.
 - No uses estilos inline ni bloques `<style>` en Blade. Reutiliza el fondo institucional, navbar, footer, componentes y clases de estado existentes cuando apliquen.
 - Mantén nombres de dominio y textos de interfaz en español. Aplica PSR-12 en PHP y conserva cambios pequeños, acotados y revisables.
 - No alteres flujos ajenos ni archivos modificados por otra persona si no forman parte de la tarea.
@@ -28,6 +29,7 @@
 
 - Usa formularios `POST`, `@csrf` y validación del servidor para operaciones de escritura.
 - La autorización administrativa se resuelve contra `PRIVILEGIO_ROL`, nunca comparando el nombre del rol: hay tres tipos de administrador y una comparación por nombre deja fuera a los demás. Los permisos se declaran en `AppServiceProvider` a partir de `App\Autorizacion\AccesoAdministrativo`, y el grupo `/admin` de `routes/web.php` exige `auth` más `can:acceder-admin`. «Persona» tampoco se decide por el nombre del rol: es una cuenta con acceso y sin privilegios del catálogo (`AccesoAdministrativo::esPersona()` en PHP y `rolConPrivilegioAdministrativo()` en consultas), y el grupo autenticado de `/persona` exige `can:acceder-persona`. Una pantalla que no se puede abrir tampoco se pinta en el tablero.
+- La persona sólo modifica su expediente mientras la solicitud está abierta (`DocumentacionPersona::ESTADOS_ABIERTOS`). La regla se comprueba en el servicio, con la solicitud bloqueada y dentro de la transacción que escribe; esconder el botón en la vista no basta. Una solicitud resuelta sólo la reabre `RevisionDocumentos::reanudar()`.
 - Si un flujo aún no tiene persistencia, aísla los datos de demostración para poder reemplazarlos posteriormente.
 - No presentes como terminado un flujo que todavía carezca de controlador, validación, persistencia o autorización.
 
