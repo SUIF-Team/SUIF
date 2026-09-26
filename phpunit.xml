@@ -19,6 +19,10 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- Sin esto las pruebas heredan el APP_URL del .env: en el servidor
+             route() y asset() salen con su IP y LandingTest la confunde con
+             una dirección escrita a mano. -->
+        <env name="APP_URL" value="http://localhost"/>
         <!-- Con el driver 'file' las pruebas leerían storage/framework/down
              del servidor real y responderían 503 durante un mantenimiento;
              con 'array' cada corrida empieza fuera de mantenimiento. -->
