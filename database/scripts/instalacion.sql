@@ -1,33 +1,23 @@
 /*==============================================================*/
-/* SUIF — Esquema final                                         */
+/* SUIF — Instalación de la base de datos                       */
 /*                                                              */
-/* Reconstrucción del estado ACTUAL de la base en un solo       */
-/* script, con todos los complementos ya incorporados: las      */
-/* columnas nacen con el tipo y la obligatoriedad que tienen     */
-/* hoy, y no queda ni un solo ALTER de migración.                */
+/* El estado ACTUAL de la base en un solo script: las columnas  */
+/* nacen con el tipo y la obligatoriedad que tienen hoy y no    */
+/* queda ni un solo ALTER de migración. Equivale a correr, en   */
+/* orden, los doce scripts de historico/ sobre una base vacía,  */
+/* salvo la llave redundante fk_evaluacion_grupo (ver la        */
+/* segunda parte).                                              */
 /*                                                              */
-/* Se diferencia de los otros dos archivos completos:            */
+/* SOLO para una base VACÍA. No hay ningún drop, así que corre  */
+/* con ON_ERROR_STOP desde la primera línea:                    */
 /*                                                              */
-/*   suif.sql                      esquema base del 11/08/2026,  */
-/*                                 empieza borrando la base.     */
-/*   suif_instalacion_completa.sql los nueve scripts pegados en  */
-/*                                 orden: el esquema base más    */
-/*                                 sus parches, tal cual.        */
-/*   suif_esquema_final.sql        ESTE: el resultado de correr  */
-/*                                 esos nueve, ya aplanado.      */
+/*   psql -v ON_ERROR_STOP=1 --single-transaction \             */
+/*        -h 127.0.0.1 -U suif -d suif -f instalacion.sql       */
 /*                                                              */
-/* SOLO para una base VACÍA. No hay ningún drop, así que corre   */
-/* con ON_ERROR_STOP desde la primera línea:                     */
-/*                                                              */
-/*   psql -v ON_ERROR_STOP=1 --single-transaction \              */
-/*        -h HOST -U suif -d suif -f suif_esquema_final.sql      */
-/*                                                              */
-/* Sobre una base con datos NO se usa: ahí siguen valiendo los   */
-/* scripts numerados del README, que son idempotentes.           */
-/*                                                              */
-/* Contiene 36 tablas, sus índices, sus llaves foráneas y los    */
-/* catálogos con los que el sistema arranca. No incluye          */
-/* suif_lleno.sql (datos de prueba de desarrollo).               */
+/* Contiene 39 tablas, sus índices, sus llaves foráneas y los   */
+/* catálogos con los que el sistema arranca. No trae datos de   */
+/* prueba ni cuentas: el primer Superusuario se crea con        */
+/* php artisan suif:crear-admin.                                */
 /*==============================================================*/
 
 
@@ -47,6 +37,18 @@ create table AUTORIZACION_SOLICITUD (
 
 create unique index AUTORIZACION_SOLICITUD_PK on AUTORIZACION_SOLICITUD (
 AUSO_ID_AUTORIZACION_SOLICITUD
+);
+
+/*==============================================================*/
+/* Table: BANCO                                                 */
+/*                                                              */
+/* Banco emisor de la tarjeta, que el formato de pago de la DEC */
+/* pide en «TARJETA». No tiene pantalla: se siembra aquí.       */
+/*==============================================================*/
+create table BANCO (
+   BANC_ID_BANCO        SERIAL               not null,
+   BANC_BANCO           VARCHAR(75)          not null,
+   constraint pk_banco primary key (BANC_ID_BANCO)
 );
 
 /*==============================================================*/
@@ -429,6 +431,19 @@ SEDE_ID_SEDE, GRUP_FECHA_INICIO, GRUP_HORA_INICIO
 );
 
 /*==============================================================*/
+/* Table: METODO_PAGO                                           */
+/*                                                              */
+/* Las cuatro casillas de forma de pago del formato de la DEC.  */
+/* La aplicación las busca por nombre (App\Servicios\           */
+/* FormatoPagoDec): el texto no se cambia sin tocar el código.  */
+/*==============================================================*/
+create table METODO_PAGO (
+   MEPA_ID_METODO_PAGO  SERIAL               not null,
+   MEPA_METODO_PAGO     VARCHAR(55)          not null,
+   constraint pk_metodo_pago primary key (MEPA_ID_METODO_PAGO)
+);
+
+/*==============================================================*/
 /* Table: NIVEL_PROFESIONAL                                     */
 /*==============================================================*/
 create table NIVEL_PROFESIONAL (
@@ -450,6 +465,15 @@ NIPR_ID_NIVEL_PROFESIONAL
 /* esas cuatro columnas son opcionales y se llenan más adelante */
 /* en el trámite. Lo único obligatorio al nacer es la           */
 /* referencia y la ruta de su PDF.                              */
+/*                                                              */
+/* PAGO_USO_CFDI es la elección del comprobante: NULL no eligió */
+/* (pedirlo es opcional), FALSE ticket sin efectos fiscales,    */
+/* TRUE CFDI de gastos en general.                              */
+/*                                                              */
+/* Forma de pago, banco y responsable también son nulables: la  */
+/* forma se declara al subir el comprobante, el banco sólo si   */
+/* se pagó con tarjeta y el responsable lo elige la DEC al      */
+/* generar el formato de pago.                                  */
 /*==============================================================*/
 create table PAGO (
    PAGO_ID_PAGO         SERIAL               not null,
@@ -460,8 +484,11 @@ create table PAGO (
    PAGO_FECHA_PAGO      DATE                 null,
    PAGO_HORA_PAGO       TIME                 null,
    PAGO_COMPROBANTE_PATH VARCHAR(200)         null,
-   PAGO_USO_CFDI        VARCHAR(25)          null,
+   PAGO_USO_CFDI        BOOLEAN              null,
    PAGO_NO_EMPLEADO     INT4                 null,
+   PAGO_ID_METODO_PAGO  INT4                 null,
+   PAGO_ID_BANCO        INT4                 null,
+   PAGO_ID_RESPONSABLE  INT4                 null,
    constraint PK_PAGO primary key (PAGO_ID_PAGO)
 );
 
@@ -604,15 +631,36 @@ REBA_ID_PAGO
 
 /*==============================================================*/
 /* Table: REGIMEN_FISCAL                                        */
+/*                                                              */
+/* REFI_REGIMEN_FISCAL mide 100: guarda el texto exacto de la   */
+/* lista de la DEC, cuyo renglón más largo son 81 caracteres.   */
 /*==============================================================*/
 create table REGIMEN_FISCAL (
    REFI_ID_REGIMEN_FISCAL SERIAL               not null,
-   REFI_REGIMEN_FISCAL  VARCHAR(35)          not null,
+   REFI_REGIMEN_FISCAL  VARCHAR(100)         not null,
    constraint PK_REGIMEN_FISCAL primary key (REFI_ID_REGIMEN_FISCAL)
 );
 
 create unique index REGIMEN_FISCAL_PK on REGIMEN_FISCAL (
 REFI_ID_REGIMEN_FISCAL
+);
+
+/*==============================================================*/
+/* Table: RESPONSABLE                                           */
+/*                                                              */
+/* Personal de la DEC que atiende los pagos. No se siembra: son */
+/* nombres de personas y se capturan desde el módulo            */
+/* «Responsables de pago». RESP_ACTIVO es la baja lógica, igual */
+/* que USUA_ACTIVO: PAGO lo referencia y un formato ya emitido  */
+/* debe poder generarse otra vez con el mismo nombre.           */
+/*==============================================================*/
+create table RESPONSABLE (
+   RESP_ID_RESPONSABLE  SERIAL               not null,
+   RESP_NOMBRE          VARCHAR(55)          not null,
+   RESP_APELLIDO_PATERNO VARCHAR(55)          not null,
+   RESP_APELLIDO_MATERNO VARCHAR(55)          null,
+   RESP_ACTIVO          BOOLEAN              not null default TRUE,
+   constraint pk_responsable primary key (RESP_ID_RESPONSABLE)
 );
 
 /*==============================================================*/
@@ -823,8 +871,8 @@ USUA_ID_USUARIO
 /* bases que llegaron aquí por parches cargan además una llave  */
 /* redundante llamada fk_evaluacion_grupo, sobre la misma       */
 /* columna que FK_EVALUACI_REFERENCE_GRUPO. La creó             */
-/* suif_evaluacion_grupo.sql, que sólo preguntaba por su propio */
-/* nombre. Es inofensiva y aquí no se reproduce.                */
+/* historico/02_evaluacion_grupo.sql, que sólo preguntaba por   */
+/* su propio nombre. Es inofensiva y aquí no se reproduce.      */
 /*==============================================================*/
 
 alter table CERTIFICACION
@@ -925,6 +973,21 @@ alter table GRUPO
 alter table PAGO
    add constraint FK_PAGO_RELATIONS_DATO_FIS foreign key (PAGO_ID_DATO_FISCAL)
       references DATO_FISCAL (DAFI_ID_DATO_FISCAL)
+      on delete restrict on update restrict;
+
+alter table PAGO
+   add constraint fk_pago_metodo_pago foreign key (PAGO_ID_METODO_PAGO)
+      references METODO_PAGO (MEPA_ID_METODO_PAGO)
+      on delete restrict on update restrict;
+
+alter table PAGO
+   add constraint fk_pago_banco foreign key (PAGO_ID_BANCO)
+      references BANCO (BANC_ID_BANCO)
+      on delete restrict on update restrict;
+
+alter table PAGO
+   add constraint fk_pago_responsable foreign key (PAGO_ID_RESPONSABLE)
+      references RESPONSABLE (RESP_ID_RESPONSABLE)
       on delete restrict on update restrict;
 
 alter table PERSONA
@@ -1078,7 +1141,8 @@ INSERT INTO privilegio (priv_id_privilegio, priv_privilegio) VALUES
     (3, 'Generación Reportes'),
     (4, 'Gestionar usuarios'),
     (5, 'Gestionar Referencias'),
-    (6, 'Gestionar Sedes');
+    (6, 'Gestionar Sedes'),
+    (7, 'Gestionar Convocatorias');
 
 SELECT setval(pg_get_serial_sequence('privilegio', 'priv_id_privilegio'),
               (SELECT MAX(priv_id_privilegio) FROM privilegio));
@@ -1090,6 +1154,10 @@ SELECT setval(pg_get_serial_sequence('privilegio', 'priv_id_privilegio'),
 /*   Admin UIF     pre-registro y documentación                  */
 /*   Admin DEC     pagos y el catálogo de referencias, que es    */
 /*                 la DEC quien lo emite                         */
+/*                                                              */
+/* Las convocatorias, por ahora, sólo el Superusuario. Si otra  */
+/* área las gestiona, basta un renglón más: el código autoriza  */
+/* contra el privilegio, nunca contra el nombre del rol.        */
 /*--------------------------------------------------------------*/
 INSERT INTO privilegio_rol (ropr_id_privilegio_rol, ropr_id_rol, ropr_id_privilegio) VALUES
     (1, 2, 1),   /* Superusuario — Validación Registro   */
@@ -1100,18 +1168,23 @@ INSERT INTO privilegio_rol (ropr_id_privilegio_rol, ropr_id_rol, ropr_id_privile
     (6, 2, 6),   /* Superusuario — Gestionar Sedes       */
     (7, 3, 1),   /* Admin UIF    — Validación Registro   */
     (8, 4, 2),   /* Admin DEC    — Gestionar Pagos       */
-    (9, 4, 5);   /* Admin DEC    — Gestionar Referencias */
+    (9, 4, 5),   /* Admin DEC    — Gestionar Referencias */
+    (10, 2, 7);  /* Superusuario — Gestionar Convocatorias */
 
 SELECT setval(pg_get_serial_sequence('privilegio_rol', 'ropr_id_privilegio_rol'),
               (SELECT MAX(ropr_id_privilegio_rol) FROM privilegio_rol));
 
 /*--------------------------------------------------------------*/
 /* Tipos de comunicación — correos y teléfono de la persona      */
+/*                                                              */
+/* El correo de facturación es un tipo aparte porque el CFDI    */
+/* puede ir a una cuenta distinta de la que entra al sistema.   */
 /*--------------------------------------------------------------*/
 INSERT INTO tipo_comunicacion (tico_id_tipo_comunicacion, tico_tipo_comunicacion) VALUES
     (1, 'Correo principal'),
     (2, 'Correo alterno'),
-    (3, 'Teléfono celular');
+    (3, 'Teléfono celular'),
+    (4, 'Correo facturación');
 
 SELECT setval(pg_get_serial_sequence('tipo_comunicacion', 'tico_id_tipo_comunicacion'),
               (SELECT MAX(tico_id_tipo_comunicacion) FROM tipo_comunicacion));
@@ -1210,11 +1283,103 @@ INSERT INTO convocatoria (
 SELECT setval(pg_get_serial_sequence('convocatoria', 'conv_id_convocatoria'),
               (SELECT MAX(conv_id_convocatoria) FROM convocatoria));
 
+/*--------------------------------------------------------------*/
+/* Estados de la convocatoria y estado inicial de la vigente     */
+/*                                                              */
+/* El pre-registro exige una convocatoria «Vigente» dentro de   */
+/* su ventana de fechas. Sólo puede haber una vigente a la vez. */
+/* La fecha y la hora son las del reloj local de la sesión de   */
+/* psql: un sello de instalación, no una resolución dictada.    */
+/*--------------------------------------------------------------*/
+INSERT INTO c_estado_convocatoria (esco_id_c_estado_convocatoria, esco_estado_convocatoria) VALUES
+    (1, 'Vigente'),
+    (2, 'Cerrada'),
+    (3, 'Interrumpida');
+
+SELECT setval(pg_get_serial_sequence('c_estado_convocatoria', 'esco_id_c_estado_convocatoria'),
+              (SELECT MAX(esco_id_c_estado_convocatoria) FROM c_estado_convocatoria));
+
+INSERT INTO estado_convocatoria (
+    esco_id_estado_convocatoria,
+    esco_id_c_estado_convocatoria,
+    esco_id_convocatoria,
+    esco_fecha,
+    esco_hora
+) VALUES (1, 1, 1, CURRENT_DATE, LOCALTIME);
+
+SELECT setval(pg_get_serial_sequence('estado_convocatoria', 'esco_id_estado_convocatoria'),
+              (SELECT MAX(esco_id_estado_convocatoria) FROM estado_convocatoria));
+
+/*--------------------------------------------------------------*/
+/* Régimen fiscal — texto exacto de la lista de la DEC           */
+/*                                                              */
+/* Los ids 1 a 4 son 601, 605, 612 y 626, como desde el primer  */
+/* catálogo. El texto se copia tal cual del Excel de la DEC,    */
+/* incluido «REGIMEN» sin acento en el 601, para que coincida   */
+/* con su lista desplegable.                                    */
+/*--------------------------------------------------------------*/
+INSERT INTO regimen_fiscal (refi_id_regimen_fiscal, refi_regimen_fiscal) VALUES
+    (1, '601 REGIMEN GENERAL DE LEY PERSONAS MORALES'),
+    (2, '605 RÉGIMEN DE SUELDOS Y SALARIOS E INGRESOS ASIMILADOS A SALARIOS'),
+    (3, '612 RÉGIMEN DE LAS PERSONAS FÍSICAS CON ACTIVIDADES EMPRESARIALES Y PROFESIONALES'),
+    (4, '626 RÉGIMEN SIMPLIFICADO DE CONFIANZA'),
+    (5, '602 RÉGIMEN SIMPLIFICADO DE LEY PERSONAS MORALES'),
+    (6, '603 PERSONAS MORALES CON FINES NO LUCRATIVOS'),
+    (7, '604 RÉGIMEN DE PEQUEÑOS CONTRIBUYENTES'),
+    (8, '606 RÉGIMEN DE ARRENDAMIENTO'),
+    (9, '607 RÉGIMEN DE ENAJENACIÓN O ADQUISICIÓN DE BIENES'),
+    (10, '616 SIN OBLIGACIONES FISCALES'),
+    (11, '618 RÉGIMEN SIMPLIFICADO DE LEY PERSONAS FÍSICAS');
+
+SELECT setval(pg_get_serial_sequence('regimen_fiscal', 'refi_id_regimen_fiscal'),
+              (SELECT MAX(refi_id_regimen_fiscal) FROM regimen_fiscal));
+
+/*--------------------------------------------------------------*/
+/* Formas de pago — las cuatro casillas del formato de la DEC    */
+/*--------------------------------------------------------------*/
+INSERT INTO metodo_pago (mepa_id_metodo_pago, mepa_metodo_pago) VALUES
+    (1, 'Tarjeta de crédito'),
+    (2, 'Tarjeta de débito'),
+    (3, 'Depósito bancario'),
+    (4, 'Transferencia');
+
+SELECT setval(pg_get_serial_sequence('metodo_pago', 'mepa_id_metodo_pago'),
+              (SELECT MAX(mepa_id_metodo_pago) FROM metodo_pago));
+
+/*--------------------------------------------------------------*/
+/* Bancos — «Otro» va al final para que nadie se quede sin       */
+/* poder enviar su comprobante                                   */
+/*--------------------------------------------------------------*/
+INSERT INTO banco (banc_id_banco, banc_banco) VALUES
+    (1, 'BBVA'),
+    (2, 'Banamex'),
+    (3, 'Santander'),
+    (4, 'Banorte'),
+    (5, 'HSBC'),
+    (6, 'Scotiabank'),
+    (7, 'Inbursa'),
+    (8, 'Banco Azteca'),
+    (9, 'BanCoppel'),
+    (10, 'Banregio'),
+    (11, 'BanBajío'),
+    (12, 'Afirme'),
+    (13, 'American Express'),
+    (14, 'Nu'),
+    (15, 'Mercado Pago'),
+    (16, 'Hey Banco'),
+    (17, 'Otro');
+
+SELECT setval(pg_get_serial_sequence('banco', 'banc_id_banco'),
+              (SELECT MAX(banc_id_banco) FROM banco));
+
 
 /*==============================================================*/
 /* COMPROBACIÓN                                                 */
 /*                                                              */
-/* tablas debe dar 36; el resto son los catálogos sembrados.    */
+/* Debe dar: 39 tablas, 32 entidades, 4 roles, 7 privilegios,   */
+/* 10 privilegios por rol, 6 tipos de documento, 3 estados de   */
+/* pago, 1 estado de convocatoria (Vigente), 11 regímenes,     */
+/* 4 formas de pago y 17 bancos.                                */
 /*==============================================================*/
 SELECT
     (SELECT COUNT(*) FROM information_schema.tables
@@ -1226,4 +1391,7 @@ SELECT
     (SELECT COUNT(*) FROM privilegio_rol)     AS privilegios_por_rol,
     (SELECT COUNT(*) FROM tipo_documento)     AS tipos_documento,
     (SELECT COUNT(*) FROM c_estado_pago)      AS estados_pago,
-    (SELECT COUNT(*) FROM convocatoria)       AS convocatorias;
+    (SELECT COUNT(*) FROM estado_convocatoria) AS estados_convocatoria,
+    (SELECT COUNT(*) FROM regimen_fiscal)     AS regimenes,
+    (SELECT COUNT(*) FROM metodo_pago)        AS formas_pago,
+    (SELECT COUNT(*) FROM banco)              AS bancos;

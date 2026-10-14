@@ -80,7 +80,7 @@ class CrearAdministrador extends Command
 
         if (!$rol) {
             $this->error(sprintf(
-                'No existe el rol "%s". Ejecuta antes database/scripts/suif_roles_administrativos.sql.',
+                'No existe el rol "%s". Instala antes la base con database/scripts/instalacion.sql.',
                 GestionAdministradores::SUPERUSUARIO
             ));
 

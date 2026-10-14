@@ -571,7 +571,7 @@ class PreRegistroController extends Controller
             return null;
         }
 
-        /* Los tipos 1, 2 y 3 quedan fijos en suif_catalogos.sql. */
+        /* Los tipos 1, 2 y 3 quedan fijos en database/scripts/instalacion.sql. */
         $contactos = DB::table('comunicacion')
             ->where('comu_id_persona', $persona->pers_id_persona)
             ->pluck('comu_descripcion', 'comu_id_tipo_comunicacion');

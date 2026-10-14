@@ -241,7 +241,7 @@ class TramiteInterrumpidoTest extends TestCase
     /**
      * Solicitud con los seis documentos del catálogo, cada uno con el estado
      * vigente indicado (los que no se indican quedan «En revisión»). Los
-     * catálogos llevan los identificadores de suif_catalogos.sql.
+     * catálogos llevan los identificadores de instalacion.sql.
      *
      * @param array<string, string> $estados slug => estado del documento
      */

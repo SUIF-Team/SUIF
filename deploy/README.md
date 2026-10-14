@@ -355,9 +355,8 @@ git switch refactor/depuracion-codigo-muerto && cp /root/env-antes-paso3.bak .en
 rm -f /root/cfg-*.txt
 ```
 
-`database/scripts/README.md` y `suif_limpia_datos.sql` todavía nombran las
-rutas viejas (`storage/app/preregistro`, `storage/app/referencias`); son del
-responsable de la base y hay que avisarle para que los actualice.
+`database/scripts/limpiar_padron.sql` ya nombra las rutas nuevas
+(`storage/app/private/preregistro` y `storage/app/private/referencias`).
 
 ## Sacar `.env` de git y rotar las credenciales
 

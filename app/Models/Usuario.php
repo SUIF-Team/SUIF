@@ -58,7 +58,7 @@ class Usuario extends Authenticatable
     /**
      * Dar de baja a un administrador no borra su renglón: le retira el acceso.
      *
-     * USUA_ACTIVO la agrega suif_roles_administrativos.sql con DEFAULT TRUE.
+     * USUA_ACTIVO nace con DEFAULT TRUE (database/scripts/instalacion.sql).
      * Cuando el atributo no existe —una base anterior a ese script, o el
      * esquema reducido que arman las pruebas— se responde que sí hay acceso,
      * que es como se comportaba el sistema hasta ahora.
