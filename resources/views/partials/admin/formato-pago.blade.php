@@ -9,9 +9,13 @@
 
     Es un POST normal que Vue no intercepta: la respuesta es el archivo, así
     que el navegador lo descarga sin salir de la pantalla.
+
+    Queda dentro de la raíz de Vue de ambas pantallas y lista nombres de
+    responsables que captura un administrador: v-pre evita que Vue los
+    compile. Sin directivas aquí, no cambia nada más.
 --}}
 @if(!empty($formato))
-    <section class="tarjeta admin-preregistro-detalle admin-pago-formato" aria-labelledby="formato-pago-titulo">
+    <section class="tarjeta admin-preregistro-detalle admin-pago-formato" aria-labelledby="formato-pago-titulo" v-pre>
         <h2 id="formato-pago-titulo">Generar comprobante</h2>
 
         @if($formato['motivo'])

@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Usuario;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -47,6 +49,25 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    /**
+     * Sin JavaScript, un fallo de validación regresa al formulario con lo
+     * enviado en la sesión. La CURP vuelve para no teclearla otra vez; la
+     * clave no se guarda en ningún momento.
+     */
+    public function test_un_fallo_de_validacion_no_deja_la_clave_en_la_sesion(): void
+    {
+        $this->from(route('login'))
+            ->post(route('login.post'), [
+                'curp' => 'CORTA',
+                'clave' => 'AAAA-BBBB-CCCC',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('curp')
+            ->assertSessionHasInput('curp', 'CORTA');
+
+        $this->assertNull(session()->getOldInput('clave'));
+    }
+
     public function test_con_la_clave_correcta_entra_al_panel_de_persona(): void
     {
         $this->post(route('login.post'), [
@@ -55,6 +76,27 @@ class LoginTest extends TestCase
         ])->assertRedirect(route('persona.dashboard'));
 
         $this->assertAuthenticated();
+    }
+
+    /**
+     * Cerrar sesión debe matar el id que traía la cookie. Con regenerate()
+     * el id cambiaba pero la sesión anterior —con el usuario autenticado—
+     * seguía en el almacén hasta expirar, y una cookie copiada seguía
+     * sirviendo después del logout.
+     */
+    public function test_cerrar_sesion_destruye_la_sesion_anterior(): void
+    {
+        $almacen = app('session')->driver()->getHandler();
+        $id_anterior = Str::random(40);
+        $almacen->write($id_anterior, serialize(['_token' => Str::random(40)]));
+
+        $this->actingAs(Usuario::findOrFail(1))
+            ->withCookie(config('session.cookie'), $id_anterior)
+            ->post(route('logout'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertSame('', $almacen->read($id_anterior));
     }
 
     public function test_seis_intentos_seguidos_con_la_misma_curp_activan_el_freno(): void

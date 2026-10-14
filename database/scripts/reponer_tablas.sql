@@ -17,12 +17,12 @@
 --
 -- Las otras 28 sobrevivieron, PERSONA y SOLICITUD incluidas.
 --
--- Este script NO usa drop en ninguna parte, a propósito: suif.sql sí lo
+-- Este script NO usa drop en ninguna parte, a propósito: historico/01_esquema_base.sql sí lo
 -- hace y reconstruiría el esquema entero a costa de lo que quedó vivo.
 --
--- Deja el mismo esquema que habrían dejado suif.sql, suif_ajustes_esquema.sql,
--- suif_referencias_bancarias.sql y suif_referencia_fecha_emision.sql juntos.
--- Después de correrlo hay que ejecutar suif_catalogos.sql, que es
+-- Deja el mismo esquema que habrían dejado los scripts 01, 03, 06 y 08 de
+-- historico/ juntos (esquema base, ajustes y referencias bancarias).
+-- Después de correrlo hay que ejecutar historico/04_catalogos.sql, que es
 -- idempotente y repone el resto de los catálogos.
 
 --
@@ -43,7 +43,7 @@ create table if not exists PRIVILEGIO_ROL (
 );
 
 -- VARCHAR(60) y no (35): "Autorización de la publicación" no cabía, y
--- suif_ajustes_esquema.sql ya la había ampliado.
+-- historico/03_ajustes_esquema.sql ya la había ampliado.
 create table if not exists TIPO_DOCUMENTO (
    TIDO_ID_TIPO_DOCUMENTO SERIAL               not null,
    TIDO_TIPO_DOCUMENTO  VARCHAR(60)          not null,
@@ -58,7 +58,7 @@ create table if not exists C_ESTADO_PAGO (
 
 -- Cuatro columnas nacen nulas: el renglón de PAGO se crea al asignar la
 -- referencia, y en ese momento todavía no hay datos fiscales, ni fecha de
--- pago, ni comprobante. Es lo que hacía suif_referencias_bancarias.sql.
+-- pago, ni comprobante. Es lo que hacía historico/06_referencias_bancarias.sql.
 create table if not exists PAGO (
    PAGO_ID_PAGO         SERIAL               not null,
    PAGO_ID_DATO_FISCAL  INT4                 null,
@@ -134,7 +134,7 @@ create unique index if not exists REFERENCIA_BANCARIA_PAGO_AK on REFERENCIA_BANC
 -- sus renglones apuntando a estos identificadores, así que la llave hacia
 -- TIPO_DOCUMENTO no se puede validar mientras el catálogo esté vacío.
 --
--- Por lo mismo se conservan los números de suif_catalogos.sql: cambiarlos
+-- Por lo mismo se conservan los números de historico/04_catalogos.sql: cambiarlos
 -- dejaría cada documento cargado con un tipo equivocado.
 INSERT INTO tipo_documento (tido_id_tipo_documento, tido_tipo_documento) VALUES
     (1, 'Solicitud firmada'),
@@ -169,7 +169,7 @@ UPDATE certificacion SET eval_id_evaluacion = NULL WHERE eval_id_evaluacion IS N
 -- 5. Llaves foráneas
 --
 
--- Se conservan los nombres originales de suif.sql para que el esquema quede
+-- Se conservan los nombres originales del esquema base para que el esquema quede
 -- indistinguible del que había. Los de referencia_bancaria van en
 -- minúsculas porque así los declaró su propio script.
 DO $$

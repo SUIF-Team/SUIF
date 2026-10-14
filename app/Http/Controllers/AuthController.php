@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Autorizacion\AccesoAdministrativo;
+use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Persona;
-use App\Support\Admin\AccesoAdministrativo;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -97,8 +97,13 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-        $request->session()->flush();
-        $request->session()->regenerate();
+
+        /* invalidate() vacía los datos y DESTRUYE la sesión anterior en el
+           almacén. regenerate() sólo cambiaba el id: el archivo viejo, con
+           el usuario autenticado, seguía vivo hasta expirar y una cookie
+           copiada seguía sirviendo después de cerrar sesión. */
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('login');
     }

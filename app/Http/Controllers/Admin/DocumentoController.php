@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Consultas\ConsultaPreRegistros;
 use App\Http\Controllers\Controller;
-use App\Support\Admin\ConsultaPreRegistros;
+use App\Servicios\RevisionDocumentos;
 use App\Support\Admin\NotificacionResultado;
 use App\Support\Admin\OrigenBandejaAdmin;
-use App\Support\Admin\RevisionDocumentos;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;

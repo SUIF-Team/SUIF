@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Servicios;
+namespace App\Support;
 
 use BaconQrCode\Common\ErrorCorrectionLevel;
 use BaconQrCode\Encoder\Encoder;

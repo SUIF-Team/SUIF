@@ -82,7 +82,7 @@ class ReferenciaEspecialTest extends TestCase
         DB::table('tipo_comunicacion')->insert([
             ['tico_id_tipo_comunicacion' => 1, 'tico_tipo_comunicacion' => 'Correo principal'],
             /* El correo del CFDI es otro tipo de comunicación: lo siembra
-               suif_comprobante_fiscal.sql y sin él no se puede pedir la
+               database/scripts/instalacion.sql y sin él no se puede pedir la
                referencia especial. */
             ['tico_id_tipo_comunicacion' => 4, 'tico_tipo_comunicacion' => 'Correo facturación'],
         ]);

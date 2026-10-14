@@ -78,7 +78,7 @@ composer install --no-interaction --prefer-dist
 php artisan key:generate
 ```
 
-Después crea la base `suif`, define en `.env` los valores reales de `DB_*` (una contraseña local no vacía que no se reutilice fuera de desarrollo) y carga el esquema con los scripts de `database/scripts/` según su `README.md` — para una base vacía basta `suif_instalacion_completa.sql`.
+Después crea la base `suif`, define en `.env` los valores reales de `DB_*` (una contraseña local no vacía que no se reutilice fuera de desarrollo) y carga el esquema con `database/scripts/instalacion.sql` (ver su `README.md`).
 
 Para comprobar el entorno:
 
@@ -92,7 +92,7 @@ La salida de PHP debe empezar con `PHP 8.4` y Composer debe indicar una versión
 
 ### Producción (VM AlmaLinux)
 
-El despliegue corre en una VM AlmaLinux con Apache (`httpd`) y PostgreSQL 18 nativos; el `DocumentRoot` es `/var/www/SUIF/public` y Laravel conecta a `127.0.0.1:5432`. El procedimiento completo de instalación está en `docs/SUIF-Instalacion-Entorno-AlmaLinux10.docx` y las reglas operativas en `AGENTS.md` (sección «Entorno y verificación»).
+El despliegue corre en una VM AlmaLinux con Apache (`httpd`) y PostgreSQL 18 nativos; el `DocumentRoot` es `/var/www/SUIF/public` y Laravel conecta a `127.0.0.1:5432`. El procedimiento de instalación del server está en `docs/SUIF-Instalacion-Entorno-AlmaLinux10.docx` (su carga de la base quedó desfasada: hoy se usa `database/scripts/instalacion.sql`); la máquina virtual de desarrollo se monta con `docs/SUIF-Guia-Instalacion-VM-Desarrollo.pdf`. Las reglas operativas en `AGENTS.md` (sección «Entorno y verificación»).
 
 Después de cada `git pull` en la VM ejecuta `php artisan optimize:clear` y vuelve a cachear en orden (`config:cache`, `route:cache`, `view:cache`): un caché de rutas viejo conserva rutas retiradas y deja middleware nuevos sin aplicar.
 
@@ -141,12 +141,12 @@ Define `DB_PASSWORD` únicamente en el archivo `.env` local, que no se versiona.
 - No agregar paquetes Composer, npm, bundlers ni frameworks nuevos sin validar su compatibilidad y acordar el cambio.
 - Mantener la separación MVC: las vistas presentan, los controladores coordinan y los modelos/persistencia encapsulan datos.
 - Usar formularios `POST`, protección CSRF con `@csrf` —Laravel 13 renombró el middleware a `PreventRequestForgery`— y validación del lado servidor al implementar flujos.
-- Correr `database/scripts/suif_roles_administrativos.sql` antes de publicar: sin él `PRIVILEGIO` está vacío y nadie tiene acceso a ningún módulo.
+- Un cambio de esquema se entrega como script incremental en `database/scripts/historico/` y se incorpora en el mismo cambio a `instalacion.sql`; sin los catálogos de privilegios que siembra, nadie tiene acceso a ningún módulo.
 - Antes de cambios estructurales en PostgreSQL, definir migraciones y contar con respaldo del ambiente afectado.
 - Mantener los cambios pequeños, revisables y documentar los límites o `TODO` que permanezcan.
 
 ## Documentación de referencia
 
-El directorio `docs/` conserva material institucional de referencia, incluido el instructivo, convocatoria, preguntas frecuentes y lineamientos de pago, además del instructivo de instalación del servidor (`docs/SUIF-Instalacion-Entorno-AlmaLinux10.docx`). Esos documentos no sustituyen la implementación de los flujos en la aplicación.
+El directorio `docs/` conserva material institucional de referencia, incluido el instructivo, convocatoria, preguntas frecuentes y lineamientos de pago, además del instructivo de instalación del servidor (`docs/SUIF-Instalacion-Entorno-AlmaLinux10.docx`) y la guía de la VM de desarrollo (`docs/SUIF-Guia-Instalacion-VM-Desarrollo.pdf`). Esos documentos no sustituyen la implementación de los flujos en la aplicación.
 
 La operación del servidor —respaldo diario de PostgreSQL y checklist de despliegue— está documentada en [deploy/README.md](deploy/README.md).

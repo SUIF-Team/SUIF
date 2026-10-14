@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Consultas\ConsultaPagos;
 use App\Http\Controllers\Controller;
 use App\Servicios\FormatoPagoDec;
 use App\Servicios\GestionResponsables;
-use App\Support\Admin\ConsultaPagos;
+use App\Servicios\RevisionPagos;
 use App\Support\Admin\NotificacionResultado;
-use App\Support\Admin\RevisionPagos;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

@@ -293,7 +293,7 @@ trait SiembraAdministradores
 
     /**
      * Los cuatro roles y el reparto de privilegios, igual que
-     * database/scripts/suif_roles_administrativos.sql.
+     * database/scripts/instalacion.sql.
      */
     protected function sembrarRolesYPrivilegios(): void
     {

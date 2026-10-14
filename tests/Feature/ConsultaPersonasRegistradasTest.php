@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Consultas\ConsultaPagos;
+use App\Consultas\ConsultaPersonasRegistradas;
+use App\Consultas\ConsultaPreRegistros;
 use App\Models\Usuario;
-use App\Support\Admin\ConsultaPagos;
-use App\Support\Admin\ConsultaPersonasRegistradas;
-use App\Support\Admin\ConsultaPreRegistros;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;

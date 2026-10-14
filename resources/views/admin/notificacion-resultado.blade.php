@@ -24,12 +24,16 @@
     data-vista='@json($datos_vista)'
     aria-labelledby="resultado-notificacion-titulo"
     v-cloak>
+    {{-- La persona la pinta Vue desde data-vista: como texto de Blade dentro
+         de la raíz, Vue compilaría lo que ella hubiera escrito entre llaves.
+         Se leen los campos tal cual y no los computados de
+         admin-preregistro.js, que esperan nombre y primer_apellido. --}}
     <header class="tarjeta admin-preregistro-perfil">
         <div class="admin-preregistro-usuario">
-            <span class="admin-preregistro-avatar" aria-hidden="true">{{ $persona['iniciales'] }}</span>
+            <span class="admin-preregistro-avatar" aria-hidden="true">@{{ persona.iniciales }}</span>
             <div>
-                <h1 id="resultado-notificacion-titulo">{{ $persona['nombre_completo'] }}</h1>
-                <p>CURP: {{ $persona['curp'] }} · {{ $persona['entidad_federativa'] }}</p>
+                <h1 id="resultado-notificacion-titulo">@{{ persona.nombre_completo }}</h1>
+                <p>CURP: @{{ persona.curp }} · @{{ persona.entidad_federativa }}</p>
             </div>
         </div>
         <span class="estado {{ $notificacion['clase_estado'] }}" role="status">

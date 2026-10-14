@@ -14,15 +14,15 @@
         <h1 id="recuperar-clave-titulo" class="login-titulo-formulario">Recuperar clave de acceso</h1>
 
         <p class="recuperar-clave-descripcion">
-            Escribe tu CURP y enviaremos una clave de acceso nueva al correo principal que
-            registraste. La clave anterior dejará de funcionar.
+            Escribe tu CURP y enviaremos al correo principal que registraste un enlace
+            para crear una clave nueva. Tu clave actual sigue funcionando hasta que lo uses.
         </p>
 
         {{-- La raíz de Vue envuelve el formulario y no es el formulario: Vue
              compila los hijos del elemento montado. Sin JavaScript se ve el
              mensaje que ya sirvió el servidor y el envío es el de siempre. --}}
         <div id="recuperar-clave-app" data-formulario-ajax data-exito="{{ session('success') }}">
-        {{-- Pedir clave nueva termina en esta misma pantalla, asi que la
+        {{-- Pedir el enlace termina en esta misma pantalla, asi que la
              confirmacion se pinta aqui. Sin Vue manda el <noscript>. --}}
         @if(session('success'))
             <noscript>
@@ -64,7 +64,7 @@
             <div class="login-acciones">
                 <button type="submit" class="boton boton--primario" :disabled="enviando">
                     <span v-if="enviando" v-cloak>Enviando…</span>
-                    <span v-else>Enviar clave nueva</span>
+                    <span v-else>Enviar enlace</span>
                 </button>
             </div>
         </form>

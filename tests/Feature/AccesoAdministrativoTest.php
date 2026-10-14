@@ -74,6 +74,34 @@ class AccesoAdministrativoTest extends TestCase
             ->assertForbidden();
     }
 
+    /**
+     * La puerta simétrica: el trámite es de la persona. Un administrador que
+     * lo abre no ve su propio tablero vacío, recibe 403 igual que una
+     * persona en /admin. La puerta corta antes del controlador, así que no
+     * hace falta el esquema del trámite.
+     */
+    public function test_un_administrador_no_pisa_la_zona_de_la_persona(): void
+    {
+        foreach ([2, 3, 4] as $id_usuario) {
+            $administrador = Usuario::findOrFail($id_usuario);
+
+            $this->actingAs($administrador)->get(route('persona.dashboard'))->assertForbidden();
+            $this->actingAs($administrador)->get(route('persona.pago.index'))->assertForbidden();
+            $this->actingAs($administrador)->post(route('persona.preregistro.documentos.enviar'))->assertForbidden();
+        }
+    }
+
+    public function test_un_administrador_dado_de_baja_tampoco_pasa_por_persona(): void
+    {
+        DB::table('usuario')->where('usua_id_usuario', 3)->update(['usua_activo' => false]);
+        $dado_de_baja = Usuario::findOrFail(3);
+
+        /* Sin acceso no conserva privilegios, pero eso no lo vuelve persona:
+           con la sesión abierta no le queda ninguna de las dos zonas. */
+        $this->actingAs($dado_de_baja)->get(route('persona.dashboard'))->assertForbidden();
+        $this->actingAs($dado_de_baja)->get(route('admin.personas.index'))->assertForbidden();
+    }
+
     public function test_cada_administrador_recibe_403_en_los_modulos_de_la_otra_area(): void
     {
         $uif = Usuario::findOrFail(3);

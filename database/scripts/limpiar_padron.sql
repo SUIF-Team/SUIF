@@ -1,12 +1,11 @@
 /*==============================================================*/
-/* suif_limpia_datos.sql                                        */
+/* limpiar_padron.sql                                           */
 /*                                                              */
 /* Vacía los datos capturados y deja en pie los catálogos, las  */
 /* convocatorias y las cuentas administrativas.                 */
 /*                                                              */
-/* NO va en el orden de instalación de README.md. Es una        */
-/* herramienta de operación, como                               */
-/* suif_reconstruye_tablas_perdidas.sql, y se corre a mano      */
+/* NO es parte de la instalación. Es una herramienta de         */
+/* operación, como reponer_tablas.sql, y se corre a mano        */
 /* cuando se decide reiniciar el padrón.                        */
 /*                                                              */
 /* ESTE SCRIPT BORRA DATOS Y NO SE PUEDE DESHACER.              */
@@ -18,7 +17,7 @@
 /* antes de tocar producción (ver deploy/README.md).            */
 /*                                                              */
 /*   psql -v ON_ERROR_STOP=1 -h HOST -U suif -d suif \          */
-/*        -f suif_limpia_datos.sql                              */
+/*        -f limpiar_padron.sql                                 */
 /*                                                              */
 /* SIN --single-transaction: este script trae su propio BEGIN/  */
 /* COMMIT. La bandera abriría una transacción de más y psql     */
@@ -27,11 +26,12 @@
 /* error corta la sesión antes del COMMIT y todo se revierte.   */
 /*                                                              */
 /* Qué SOBREVIVE:                                               */
-/*  - Los doce catálogos que siembran los scripts idempotentes: */
+/*  - Los catálogos que siembra instalacion.sql:                */
 /*    ENTIDAD_FEDERATIVA, ROL, PRIVILEGIO, PRIVILEGIO_ROL,      */
 /*    TIPO_COMUNICACION, NIVEL_PROFESIONAL, TIPO_DOCUMENTO,     */
 /*    C_ESTADO_DOCUMENTO, C_ESTADO_SOLICITUD, C_ESTADO_PAGO,    */
-/*    REGIMEN_FISCAL y C_ESTADO_CONVOCATORIA.                   */
+/*    REGIMEN_FISCAL, C_ESTADO_CONVOCATORIA, METODO_PAGO y      */
+/*    BANCO, más los RESPONSABLE de pago capturados.            */
 /*  - CONVOCATORIA y su bitácora ESTADO_CONVOCATORIA. Sin ellas */
 /*    el pre-registro no encuentra convocatoria vigente y deja  */
 /*    de funcionar en silencio.                                 */
@@ -46,8 +46,7 @@
 /*                                                              */
 /* Lo que NO hace: borrar los archivos subidos. Quedan          */
 /* huérfanos en storage/app/private/{documentos,comprobantes,   */
-/* referencias,certificados,facturas,legacy},                   */
-/* storage/app/preregistro y storage/app/referencias. Si se     */
+/* referencias,certificados,facturas,legacy,preregistro}. Si se */
 /* quieren limpiar, es un paso manual aparte.                   */
 /*==============================================================*/
 

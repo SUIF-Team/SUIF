@@ -32,18 +32,23 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-/* Recuperación pública de la clave: la persona escribe su CURP y recibe
-   una clave nueva en su correo principal. */
+/* Recuperación pública de la clave: la persona escribe su CURP y recibe en
+   su correo principal un enlace firmado de un solo uso. La firma la valida
+   el controlador —no el middleware signed— para que un enlace caducado o ya
+   usado muestre una pantalla que lleve a pedir otro. */
 Route::get('/recuperar-clave', [RecuperacionClaveController::class, 'formulario'])->name('clave.recuperar');
 Route::post('/recuperar-clave', [RecuperacionClaveController::class, 'restablecer'])->middleware('throttle:recuperar-clave')->name('clave.recuperar.post');
+Route::get('/recuperar-clave/{usuario}/{huella}', [RecuperacionClaveController::class, 'confirmar'])->name('clave.restablecer');
+Route::post('/recuperar-clave/{usuario}/{huella}', [RecuperacionClaveController::class, 'generar'])->name('clave.restablecer.post');
 
 Route::group(['prefix' => 'persona', 'as' => 'persona.'], function () {
     /* Públicas: la persona todavía no tiene cuenta cuando entra aquí. */
     Route::get('/preregistro', [PreRegistroController::class, 'index'])->name('preregistro.index');
     Route::post('/preregistro/datos', [PreRegistroController::class, 'guardarDatos'])->middleware('throttle:preregistro')->name('preregistro.datos.store');
 
-    /* A partir de aquí ya existe la cuenta: se exige sesión iniciada. */
-    Route::middleware('auth')->group(function () {
+    /* A partir de aquí ya existe la cuenta: se exige sesión iniciada y que
+       sea de una persona, no de un administrador. */
+    Route::middleware(['auth', 'can:acceder-persona'])->group(function () {
         Route::get('/dashboard', [PersonaDashboardController::class, 'index'])->name('dashboard');
 
         Route::post('/preregistro/avanzar', [PreRegistroController::class, 'avanzar'])->name('preregistro.avanzar');

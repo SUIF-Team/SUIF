@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Consultas\ConsultaPagos;
+use App\Consultas\ConsultaPersonasRegistradas;
 use App\Http\Controllers\Controller;
 use App\Servicios\ReferenciaEspecial;
-use App\Support\Admin\ConsultaPagos;
-use App\Support\Admin\ConsultaPersonasRegistradas;
 use Illuminate\Support\Facades\Gate;
 
 /**

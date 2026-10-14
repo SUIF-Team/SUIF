@@ -2,15 +2,15 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Servicios\AvancePersona;
+use App\Autorizacion\AccesoAdministrativo;
 use App\Models\Usuario;
-use App\Support\Admin\AccesoAdministrativo;
+use App\Servicios\AvancePersona;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,11 +39,20 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by('preregistro:'.$request->ip());
         });
 
-        /* Recuperar la clave es público, envía correo y revoca la clave
-           vigente: sin freno permite barrer CURPs o bombardear a una
-           persona con restablecimientos. */
+        /* Recuperar la clave es público y envía correo. Ya no revoca la clave
+           vigente —sólo manda un enlace—, pero sin freno permitiría barrer
+           CURPs desde una dirección o llenarle el buzón a una persona desde
+           muchas. El límite por CURP sólo aplica cuando hay CURP: un envío
+           vacío no llega a la base y no debe gastar el cupo de nadie. */
         RateLimiter::for('recuperar-clave', function (Request $request) {
-            return Limit::perMinute(5)->by('recuperar-clave:'.$request->ip());
+            $curp = mb_strtoupper(trim((string) $request->input('curp')), 'UTF-8');
+            $limites = [Limit::perMinute(5)->by('recuperar-clave:'.$request->ip())];
+
+            if ($curp !== '') {
+                $limites[] = Limit::perHour(3)->by('recuperar-clave-curp:'.$curp);
+            }
+
+            return $limites;
         });
 
         /* El autollenado devuelve el nombre de quien trae esa CURP. Es un dato
@@ -94,6 +103,13 @@ class AppServiceProvider extends ServiceProvider
            permisos de cada módulo. */
         Gate::define('acceder-admin', function (Usuario $usuario): bool {
             return app(AccesoAdministrativo::class)->esAdministrador($usuario);
+        });
+
+        /* La puerta del trámite, simétrica a la de arriba: un administrador
+           que abre /persona recibe 403 igual que una persona que abre /admin.
+           Una cuenta dada de baja tampoco entra, aunque conserve la sesión. */
+        Gate::define('acceder-persona', function (Usuario $usuario): bool {
+            return app(AccesoAdministrativo::class)->esPersona($usuario);
         });
 
         /* La pantalla de reportes es de todas las áreas y de ninguna: cada

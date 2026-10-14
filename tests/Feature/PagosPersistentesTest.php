@@ -2,9 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Consultas\ConsultaPagos;
 use App\Models\Usuario;
-use App\Support\Admin\ConsultaPagos;
-use App\Support\Admin\RevisionPagos;
+use App\Servicios\ComprobantePago;
+use App\Servicios\RevisionPagos;
 use DomainException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
@@ -70,7 +71,7 @@ class PagosPersistentesTest extends TestCase
     {
         app(RevisionPagos::class)->rechazar(1, 'El archivo no corresponde al pago.');
 
-        app(RevisionPagos::class)->registrarComprobanteDePersona(
+        app(ComprobantePago::class)->registrar(
             1,
             'solicitudes/100/comprobante-corregido.pdf',
             [

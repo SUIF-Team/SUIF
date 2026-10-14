@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Consultas\ConsultaPagos;
+use App\Consultas\ConsultaPreRegistros;
 use App\Http\Controllers\Controller;
 use App\Servicios\CatalogoReferencias;
 use App\Servicios\GestionConvocatorias;
 use App\Servicios\GestionSedes;
-use App\Servicios\LibroExcel;
 use App\Servicios\ListaAsistencia;
 use App\Servicios\RegistroPlataformas;
-use App\Support\Admin\ConsultaPagos;
-use App\Support\Admin\ConsultaPreRegistros;
+use App\Support\LibroExcel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Http\Request;
