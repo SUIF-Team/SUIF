@@ -162,9 +162,7 @@ class SeleccionReferenciaTest extends TestCase
             $table->string('pago_referencia_bancaria_path', 200)->nullable();
         });
 
-        Schema::table('referencia_bancaria', function (Blueprint $table): void {
-            $table->string('reba_path', 200)->nullable();
-        });
+        /* REBA_PATH ya la crea el esquema común: el tablero la necesita. */
 
         /* CONV_MONTO_RECUPERACION la crea el esquema común desde que existe el
            módulo de convocatorias. Volver a declararla aquí revienta la tabla. */

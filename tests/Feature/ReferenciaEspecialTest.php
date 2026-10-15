@@ -596,10 +596,10 @@ class ReferenciaEspecialTest extends TestCase
             $table->string('pago_referencia_bancaria_path', 200)->nullable();
         });
 
-        /* REBA_FECHA_ASIGNACION ya la crea el esquema común: los reportes
-           también la necesitan. Repetirla aquí revienta la tabla. */
+        /* REBA_FECHA_ASIGNACION y REBA_PATH ya las crea el esquema común: los
+           reportes y el tablero también las necesitan. Repetirlas aquí revienta
+           la tabla. */
         Schema::table('referencia_bancaria', function (Blueprint $table): void {
-            $table->string('reba_path', 200)->nullable();
             $table->time('reba_hora_asignacion')->nullable();
         });
 

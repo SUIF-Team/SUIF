@@ -21,11 +21,18 @@
         @if (!empty($indicadores))
             <section class="admin-dashboard-indicadores" aria-label="Resumen administrativo">
                 @foreach ($indicadores as $indicador)
-                    <article class="tarjeta admin-dashboard-indicador {{ $indicador['clase'] }}">
+                    <article class="tarjeta tarjeta--compacta admin-dashboard-indicador {{ $indicador['clase'] }}">
                         <h2>{{ $indicador['titulo'] }}</h2>
                         <p @class(['admin-dashboard-indicador-sin-datos' => $indicador['sin_datos']])>
                             {{ $indicador['valor'] }}
                         </p>
+                        {{-- El color solo no basta para avisar: el estado se dice con texto. --}}
+                        @if (!empty($indicador['aviso']))
+                            <p class="admin-dashboard-indicador-aviso">{{ $indicador['aviso'] }}</p>
+                        @endif
+                        @if (!empty($indicador['enlace']))
+                            <a class="boton boton--primario admin-dashboard-indicador-enlace" href="{{ route($indicador['enlace']) }}">Subir referencias</a>
+                        @endif
                     </article>
                 @endforeach
             </section>

@@ -237,6 +237,7 @@ class ConsultaPersonasRegistradasTest extends TestCase
             $table->increments('reba_id_referencia_bancaria');
             $table->integer('reba_id_pago')->nullable();
             $table->string('reba_referencia', 20);
+            $table->string('reba_path', 200)->nullable();
             $table->decimal('reba_monto', 10, 4)->nullable();
             $table->date('reba_vigencia')->nullable();
         });

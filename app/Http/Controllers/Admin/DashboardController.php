@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Consultas\ConsultaPagos;
 use App\Consultas\ConsultaPersonasRegistradas;
 use App\Http\Controllers\Controller;
+use App\Servicios\CatalogoReferencias;
 use App\Servicios\ReferenciaEspecial;
 use Illuminate\Support\Facades\Gate;
 
@@ -23,7 +24,8 @@ class DashboardController extends Controller
     public function index(
         ConsultaPersonasRegistradas $consulta_personas,
         ConsultaPagos $consulta_pagos,
-        ReferenciaEspecial $referencias_especiales
+        ReferenciaEspecial $referencias_especiales,
+        CatalogoReferencias $catalogo
     ) {
         /*
          * Los accesos siguen el orden del trámite. Certificados va al final
@@ -115,7 +117,7 @@ class DashboardController extends Controller
         ];
 
         return view('admin.dashboard', [
-            'indicadores' => $this->indicadores($consulta_personas, $consulta_pagos, $referencias_especiales),
+            'indicadores' => $this->indicadores($consulta_personas, $consulta_pagos, $referencias_especiales, $catalogo),
             'acciones' => $this->permitidas($acciones),
         ]);
     }
@@ -132,7 +134,8 @@ class DashboardController extends Controller
     private function indicadores(
         ConsultaPersonasRegistradas $consulta_personas,
         ConsultaPagos $consulta_pagos,
-        ReferenciaEspecial $referencias_especiales
+        ReferenciaEspecial $referencias_especiales,
+        CatalogoReferencias $catalogo
     ): array {
         $indicadores = [];
         $resumen = null;
@@ -176,6 +179,23 @@ class DashboardController extends Controller
                 'valor' => number_format($referencias_especiales->totalPendientes()),
                 'clase' => 'admin-dashboard-indicador--revision',
                 'sin_datos' => false,
+            ];
+
+            /* Se cuentan las que asignar() puede repartir, no todas las libres:
+               una sin su PDF no le sirve a nadie. El aviso llega antes de que
+               se acaben porque tramitar un paquete nuevo con el banco tarda. */
+            $quedan = $catalogo->resumen()['entregables'];
+            $pocas = $quedan <= CatalogoReferencias::MINIMO_ENTREGABLES;
+
+            $indicadores[] = [
+                'titulo' => 'Referencias listas para entregar',
+                'valor' => number_format($quedan),
+                'clase' => $pocas ? 'admin-dashboard-indicador--peligro' : 'admin-dashboard-indicador--info',
+                'sin_datos' => false,
+                'aviso' => $pocas
+                    ? 'Quedan '.CatalogoReferencias::MINIMO_ENTREGABLES.' o menos: es momento de tramitar nuevas referencias.'
+                    : null,
+                'enlace' => $pocas ? 'admin.referencias.carga' : null,
             ];
         }
 

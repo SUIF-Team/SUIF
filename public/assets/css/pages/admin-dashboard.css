@@ -35,13 +35,9 @@
     margin-bottom: 1.8rem;
 }
 
-.admin-dashboard-indicador {
-    min-height: 142px;
-    padding: 1.4rem;
-}
-
+/* El relleno lo pone .tarjeta--compacta y la altura, el contenido. */
 .admin-dashboard-indicador h2 {
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.4rem;
     color: var(--text-dark);
     font-family: var(--font-sans);
     font-size: var(--fs-micro);
@@ -62,11 +58,31 @@
     font-size: var(--fs-cuerpo);
 }
 
+.admin-dashboard-indicador .admin-dashboard-indicador-aviso {
+    margin-top: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: var(--fs-auxiliar);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.admin-dashboard-indicador-enlace {
+    margin-top: 0.75rem;
+}
+
 /* La cifra toma el color del papel que le da el controlador: lo que hay que
-   atender en ámbar, lo hecho en verde y lo informativo en azul. */
+   atender en ámbar, lo hecho en verde, lo informativo en azul y lo que está
+   por acabarse en rojo, que además tiñe la tarjeta entera. */
 .admin-dashboard-indicador--info p { color: var(--unam-blue); }
 .admin-dashboard-indicador--revision p { color: var(--revision-texto); }
 .admin-dashboard-indicador--exito p { color: var(--exito-texto); }
+
+.admin-dashboard-indicador--peligro {
+    border-color: var(--peligro-borde);
+    background: var(--peligro-fondo);
+}
+
+.admin-dashboard-indicador--peligro p { color: var(--peligro-texto); }
 
 /* ─── Acciones ───────────────────────────────────────────────────────── */
 

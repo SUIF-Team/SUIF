@@ -40,6 +40,13 @@ class CatalogoReferencias
     private const MAX_DESCOMPRIMIDO = 300 * 1024 * 1024;
 
     /**
+     * Con estas o menos referencias listas para entregar, el tablero avisa que
+     * es momento de tramitar otro paquete: el banco tarda en emitirlas y, si el
+     * catálogo se vacía, la persona aprobada se queda sin con qué pagar.
+     */
+    public const MINIMO_ENTREGABLES = 20;
+
+    /**
      * Qué cuenta como «tiene su formato PDF», en SQL.
      *
      * Vive en un solo lugar porque de esto depende que una referencia se pueda

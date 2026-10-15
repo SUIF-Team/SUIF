@@ -163,6 +163,7 @@ class AccesoAdministrativoTest extends TestCase
             /* Cuántos pagos faltan por validar es dato de la DEC. */
             ->assertDontSee('Pagos por validar')
             ->assertDontSee('Certificados pendientes')
+            ->assertDontSee('Referencias listas para entregar')
             ->assertSee('Solicitudes en revisión');
     }
 
